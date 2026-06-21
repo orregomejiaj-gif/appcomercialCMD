@@ -8,7 +8,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Seguimiento Comercial CMD V3.3.0 — Cooperativa Minuto de Dios</title>
+<title>Seguimiento Comercial CMD V3.4.0 — Cooperativa Minuto de Dios</title>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -1154,6 +1154,14 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
   </div>
   <!-- SEGUIMIENTO COORD -->
   <div id="seg-coord" style="display:none">
+    <!-- 5 SEMAFOROS GERENCIALES (Pipeline) PARA LA SEDE EN CURSO -->
+    <div class="card" id="card-5sem-coord">
+      <div class="card-hdr"><div class="cico"><i class="ti ti-gauge"></i></div><h2>Cómo va esta sede — Pipeline Gerencial</h2></div>
+      <div id="coord-5sem-contenido">
+        <div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Selecciona la sede en la Hoja 1 para ver sus indicadores.</div>
+      </div>
+    </div>
+
     <!-- GESTION DE LEADS -->
     <div class="card">
       <div class="card-hdr"><div class="cico"><i class="ti ti-funnel"></i></div><h2>Gestión de Leads</h2></div>
@@ -2392,6 +2400,13 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     <div class="card-hdr"><div class="cico"><i class="ti ti-trending-up"></i></div><h2>Proyección y cumplimiento de meta</h2></div>
     <div id="proyeccion-content"></div>
   </div>
+  <div class="card" id="card-5sem-analisis">
+    <div class="card-hdr"><div class="cico"><i class="ti ti-gauge"></i></div><h2>Pipeline Gerencial — esta sede</h2></div>
+    <div id="analisis-5sem-contenido">
+      <div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Calculando indicadores...</div>
+    </div>
+    <div id="analisis-5sem-narrativa" style="margin-top:12px"></div>
+  </div>
   <div class="card" id="card-chart">
     <div class="card-hdr"><div class="cico"><i class="ti ti-chart-donut"></i></div><h2>Peso de la sede vs total global</h2></div>
     <div class="chart-wrap"><canvas id="chartPeso"></canvas></div>
@@ -2835,6 +2850,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 
 <script>
+
+
 
 
 
@@ -3542,6 +3559,7 @@ function onSedesChange(){
   // También actualizar el semáforo
   setTimeout(function(){
     if(typeof actualizarSemaforoProyeccion==='function') actualizarSemaforoProyeccion();
+    if(typeof coordRenderar5Semaforos==='function')       coordRenderar5Semaforos();
   }, 150);
 }
 
@@ -4813,6 +4831,7 @@ function renderAnalisis(){
 
 function renderAnalisisCoord(){
   setTimeout(function(){
+  if(typeof analisisRenderar5SemaforosYNarrativa==='function') analisisRenderar5SemaforosYNarrativa();
   var s=state.seguimiento;
   var m=state.metas;
 
@@ -7105,6 +7124,144 @@ function pgActualizarSemaforoBoton(){
   if(elHdr){ elHdr.textContent = sem.emoji; elHdr.style.display = 'inline'; }
 }
 
+/**
+ * Renderiza los 5 semáforos del Pipeline Gerencial, filtrados a la(s)
+ * sede(s) seleccionada(s) en la Hoja 1, dentro del propio flujo de
+ * Seguimiento (Hoja 2 - Coordinación). Reutiliza el mismo motor de
+ * cálculo y los mismos datos cargados para el Pipeline Gerencial.
+ */
+function coordRenderar5Semaforos(){
+  var cont = document.getElementById('coord-5sem-contenido');
+  if(!cont) return;
+
+  var sedes = state.sedes || [];
+  if(!sedes.length){
+    cont.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Selecciona la sede en la Hoja 1 para ver sus indicadores.</div>';
+    return;
+  }
+
+  var datos = (window._coloc_data || []).filter(function(d){ return sedes.indexOf(d.sede) >= 0; });
+  if(!datos.length){
+    cont.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Sin datos de Colocación disponibles para '+sedes.join(', ')+'.</div>';
+    return;
+  }
+
+  var metaTotal = 0, ejecTotal = 0;
+  datos.forEach(function(d){ metaTotal += d.meta_n||0; ejecTotal += d.acum_n||0; });
+  var fechaCargue = datos[0].fecha || '';
+
+  var resumen = window._resumenGerencial || {enTurnoPorSede:{}, logueadosPorSede:{}, seguimientosPorSede:{}};
+  var totalesPorSede = (typeof totalAsesoresPorSede === 'function') ? totalAsesoresPorSede() : {};
+  var totalAsesores = 0, totalEnTurno = 0, totalLogueados = 0;
+  sedes.forEach(function(s){
+    totalAsesores  += totalesPorSede[s] || 0;
+    totalEnTurno   += resumen.enTurnoPorSede[s] || 0;
+    totalLogueados += resumen.logueadosPorSede[s] || 0;
+  });
+
+  var todos = calcular5Semaforos({
+    sede: sedes[0],
+    metaTotal: metaTotal,
+    ejecutadoHoy: ejecTotal,
+    fechaCargueStr: fechaCargue,
+    totalAsesores: totalAsesores,
+    enTurno: totalEnTurno,
+    logueados: totalLogueados,
+  });
+
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">';
+  html += pgSemaforoCard(todos.cobertura.emoji, 'Cobertura asesores', (todos.cobertura.pct*100).toFixed(0)+'%', todos.cobertura.enTurno+' de '+todos.cobertura.total);
+  html += pgSemaforoCard(todos.login.emoji, 'Login efectivo', (todos.login.pct*100).toFixed(0)+'%', todos.login.logueados+' logueados hoy');
+  html += pgSemaforoCard(todos.avance.emoji, 'Avance vs. esperado', (todos.avance.indiceAvance*100).toFixed(0)+'%', 'Esperado: '+Math.round(todos.avance.metaEsperadaHoy).toLocaleString('es-CO'));
+  html += pgSemaforoCard(todos.proyeccion.emoji, 'Proyección cierre', (todos.proyeccion.pctProyeccion*100).toFixed(0)+'%', Math.round(todos.proyeccion.proyeccionCierre).toLocaleString('es-CO')+' al cierre');
+  html += pgSemaforoCard(todos.productividad.emoji, 'Productividad', (todos.productividad.indice*100).toFixed(0)+'%', 'vs. lo requerido');
+  html += '</div>';
+
+  cont.innerHTML = html;
+}
+
+/**
+ * Renderiza los 5 semáforos + una interpretación narrativa del resultado
+ * (fortalezas, riesgos, qué frente atacar primero), en la Hoja de
+ * Análisis. Misma fuente de datos que coordRenderar5Semaforos.
+ */
+function analisisRenderar5SemaforosYNarrativa(){
+  var cont = document.getElementById('analisis-5sem-contenido');
+  var nar = document.getElementById('analisis-5sem-narrativa');
+  if(!cont) return;
+
+  var sedes = state.sedes || [];
+  if(!sedes.length){
+    cont.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Sin sede(s) seleccionada(s) en este seguimiento.</div>';
+    if(nar) nar.innerHTML = '';
+    return;
+  }
+
+  var datos = (window._coloc_data || []).filter(function(d){ return sedes.indexOf(d.sede) >= 0; });
+  if(!datos.length){
+    cont.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Sin datos de Colocación disponibles para '+sedes.join(', ')+'.</div>';
+    if(nar) nar.innerHTML = '';
+    return;
+  }
+
+  var metaTotal = 0, ejecTotal = 0;
+  datos.forEach(function(d){ metaTotal += d.meta_n||0; ejecTotal += d.acum_n||0; });
+  var fechaCargue = datos[0].fecha || '';
+
+  var resumen = window._resumenGerencial || {enTurnoPorSede:{}, logueadosPorSede:{}, seguimientosPorSede:{}};
+  var totalesPorSede = (typeof totalAsesoresPorSede === 'function') ? totalAsesoresPorSede() : {};
+  var totalAsesores = 0, totalEnTurno = 0, totalLogueados = 0;
+  sedes.forEach(function(s){
+    totalAsesores  += totalesPorSede[s] || 0;
+    totalEnTurno   += resumen.enTurnoPorSede[s] || 0;
+    totalLogueados += resumen.logueadosPorSede[s] || 0;
+  });
+
+  var todos = calcular5Semaforos({
+    sede: sedes[0],
+    metaTotal: metaTotal,
+    ejecutadoHoy: ejecTotal,
+    fechaCargueStr: fechaCargue,
+    totalAsesores: totalAsesores,
+    enTurno: totalEnTurno,
+    logueados: totalLogueados,
+  });
+
+  var html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px">';
+  html += pgSemaforoCard(todos.cobertura.emoji, 'Cobertura asesores', (todos.cobertura.pct*100).toFixed(0)+'%', todos.cobertura.enTurno+' de '+todos.cobertura.total);
+  html += pgSemaforoCard(todos.login.emoji, 'Login efectivo', (todos.login.pct*100).toFixed(0)+'%', todos.login.logueados+' logueados hoy');
+  html += pgSemaforoCard(todos.avance.emoji, 'Avance vs. esperado', (todos.avance.indiceAvance*100).toFixed(0)+'%', 'Esperado: '+Math.round(todos.avance.metaEsperadaHoy).toLocaleString('es-CO'));
+  html += pgSemaforoCard(todos.proyeccion.emoji, 'Proyección cierre', (todos.proyeccion.pctProyeccion*100).toFixed(0)+'%', Math.round(todos.proyeccion.proyeccionCierre).toLocaleString('es-CO')+' al cierre');
+  html += pgSemaforoCard(todos.productividad.emoji, 'Productividad', (todos.productividad.indice*100).toFixed(0)+'%', 'vs. lo requerido');
+  html += '</div>';
+  cont.innerHTML = html;
+
+  if(nar){
+    var frentes = [
+      {nombre:'cobertura de asesores',  nivel:todos.cobertura.nivel,     pct:todos.cobertura.pct},
+      {nombre:'login efectivo',         nivel:todos.login.nivel,         pct:todos.login.pct},
+      {nombre:'avance vs. lo esperado', nivel:todos.avance.nivel,        pct:todos.avance.indiceAvance},
+      {nombre:'proyección de cierre',   nivel:todos.proyeccion.nivel,    pct:todos.proyeccion.pctProyeccion},
+      {nombre:'productividad por sede', nivel:todos.productividad.nivel, pct:todos.productividad.indice},
+    ];
+    var orden = {rojo:0, naranja:1, amarillo:2, verde:3};
+    frentes.sort(function(a,b){ return (orden[a.nivel]||9) - (orden[b.nivel]||9); });
+    var critico = frentes[0];
+    var fuerte = frentes[frentes.length-1];
+
+    var msg = '';
+    if(critico.nivel === 'verde'){
+      msg = 'Los 5 frentes están en verde — esta sede va alineada con lo que debería llevar hoy. Mantener el ritmo actual.';
+    } else {
+      msg = 'El frente más débil es <strong>'+critico.nombre+'</strong> ('+(critico.pct*100).toFixed(0)+'%) — es el primero a atacar. '
+          + 'El más fuerte es <strong>'+fuerte.nombre+'</strong> ('+(fuerte.pct*100).toFixed(0)+'%).';
+    }
+    var colorFondo = critico.nivel==='verde' ? '#f0fdf4' : critico.nivel==='amarillo' ? '#fffbeb' : '#fef2f2';
+    var colorTexto = critico.nivel==='verde' ? '#15803d' : critico.nivel==='amarillo' ? '#92400e' : '#dc2626';
+    nar.innerHTML = '<div style="background:'+colorFondo+';border-radius:10px;padding:10px 14px;font-size:12px;color:'+colorTexto+';line-height:1.6">'+msg+'</div>';
+  }
+}
+
 function abrirPipelineGerencial(){
   var el = document.getElementById('modal-pipeline-gerencial');
   if(!el) return;
@@ -8433,6 +8590,7 @@ function showTab(id, btn){
     }
     activateSheet('h2', btn);
     actualizarInfoSeg();
+    if(typeof coordRenderar5Semaforos==='function') coordRenderar5Semaforos();
     return;
   }
   // H3: requiere guardar Hoja 2
@@ -10089,7 +10247,7 @@ function enviarCorreoAnticipo(){
 // ── APP VERSION DISPLAY ──
 // Fuente única de verdad: cambiar SOLO este número en cada actualización.
 // Se refleja automáticamente en el footer del login y en el badge del header.
-var APP_VERSION = '3.3.0';
+var APP_VERSION = '3.4.0';
 (function(){
   function showVersion(v){
     var badge = document.getElementById('app-version-badge');
@@ -14833,6 +14991,8 @@ function calcMetaTotalProceso(){
   window._mtsMetaN=totN;
   return totN;
 }
+
+
 
 
 
