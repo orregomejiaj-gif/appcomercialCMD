@@ -1,1 +1,1 @@
-# appcomercialCMD
+# SCICCMD
