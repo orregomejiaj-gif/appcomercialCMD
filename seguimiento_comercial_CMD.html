@@ -2939,7 +2939,11 @@ var _DATA = {
 };
 
 // Inyectar en variables globales del SCIC
+// Bloque "best-effort": actualiza los datos maestros en memoria. Va envuelto en
+// try/catch para que un fallo aquí (p.ej. dependencias aún no inicializadas en
+// este punto del bloque) no aborte el resto del script ni rompa el inicio de sesión.
 (function(){
+ try{
   // Colocación
   if(typeof window._coloc_data === 'undefined' || !window._coloc_data || !window._coloc_data.length){
     window._coloc_data = _DATA.coloc;
@@ -2960,6 +2964,7 @@ var _DATA = {
     + ' | hub=' + _DATA.hubspot.total.toLocaleString());
   // Construir MUS si está disponible
   if(typeof SCIC_construirMUS === 'function') SCIC_construirMUS();
+ }catch(_e){ try{ console.warn('[SCIC] Inyección de datos maestros omitida:', _e && _e.message); }catch(_){} }
 })();
 
 // ════════════════════════════════════════════════════════════
