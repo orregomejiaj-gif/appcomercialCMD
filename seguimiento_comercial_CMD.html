@@ -5731,6 +5731,27 @@ function _parseCumpleMMDD(s){
     }catch(e){ renderLoginDashboard(); }
   };
 
+  // Botones que no tenían handler definido (cumplir su función):
+  // - "Herramientas PYV" llamaba abrirHerramientasPYV (inexistente) -> alias de abrirHerramientas.
+  if(typeof window.abrirHerramientasPYV!=='function'){
+    window.abrirHerramientasPYV=function(t){ try{ if(typeof abrirHerramientas==='function') return abrirHerramientas(t||'frag'); }catch(e){ console.warn('[SCIC] abrirHerramientasPYV:',e&&e.message); } };
+  }
+  // - "Proyectos Especiales" en el selector de seguimiento no tenía iniciador.
+  if(typeof window.iniciarSeguimientoProyectos!=='function'){
+    window.iniciarSeguimientoProyectos=function(){
+      try{
+        if(typeof cerrarModalSeg==='function')cerrarModalSeg();
+        if(typeof poblarSelectRectorias==='function')poblarSelectRectorias();
+        if(typeof navState==='object'&&navState){navState.modoSeleccionado='proyectos';navState.h0Completada=true;navState.h1Guardada=false;navState.h2Guardada=false;}
+        if(typeof setMode==='function')setMode('proyectos');
+        if(typeof mostrarTabs==='function')mostrarTabs();
+        if(typeof applyNavState==='function')applyNavState();
+        if(typeof initEmpSelectors==='function')initEmpSelectors();
+        if(typeof activateSheet==='function')activateSheet('h1',document.querySelector('.tab[onclick*="h1"]'));
+      }catch(e){ console.warn('[SCIC] iniciarSeguimientoProyectos:',e&&e.message); }
+    };
+  }
+
   // Render inicial + reintentos para datos asíncronos de Sheets.
   setTimeout(function(){ try{_lgiCargarCumple();}catch(e){} }, 600);
   setTimeout(function(){ try{ if(!(typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM&&EMPLEADOS_CUM.length)) _lgiCargarCumple(true); }catch(e){} }, 5000);
