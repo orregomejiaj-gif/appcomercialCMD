@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.5.0   (APP_VERSION = 'SCIC-4.5')
+  Versión actual: 4.6.0   (APP_VERSION = 'SCIC-4.6')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -32,7 +32,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SCIC v4.5 — Cooperativa Minuto de Dios</title>
+<title>SCIC v4.6 — Cooperativa Minuto de Dios</title>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -797,7 +797,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </div>
     <!-- Version -->
     <div style="text-align:center;margin-top:20px;color:rgba(255,255,255,.25);font-size:10px">
-      App Seguimiento Comercial CMD · Proceso PYV · <span id="app-version-footer">v3.0.0</span>
+      App Seguimiento Comercial CMD · Proceso PYV · <span id="app-version-footer">v4.6.0</span>
     </div>
   </div>
 </div>
@@ -808,7 +808,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(200,151,30,.25);border-radius:40px;padding:7px 18px;margin-bottom:12px">
         <div style="width:22px;height:15px;background:linear-gradient(135deg,#C8971E,#FFD900);border-radius:3px;display:flex;align-items:center;justify-content:center"><span style="color:#003D45;font-weight:900;font-size:7px">CMD</span></div>
         <span style="color:rgba(255,255,255,.8);font-size:11px;font-weight:600">Cooperativa Minuto de Dios</span>
-        <span style="color:#C8971E;font-size:8px;font-weight:700;background:rgba(200,151,30,.15);padding:2px 6px;border-radius:7px">SCIC v4.5</span>
+        <span style="color:#C8971E;font-size:8px;font-weight:700;background:rgba(200,151,30,.15);padding:2px 6px;border-radius:7px">SCIC v4.6</span>
       </div>
       <div style="color:#fff;font-size:20px;font-weight:900;letter-spacing:-.5px">Sistema Cognitivo de <span style="color:#C8971E">Inteligencia Comercial</span></div>
       <div style="color:rgba(255,255,255,.35);font-size:10px;margin-top:4px">Proceso PYV &middot; 19 Rector&iacute;as &middot; 101 Sedes &middot; Colombia 2026</div>
@@ -842,69 +842,60 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
           <i class="ti ti-arrow-right" style="margin-right:5px;font-size:11px"></i>Ingresar al SCIC
         </button>
-        <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.15);font-size:8px">SCIC v4.5 &middot; Cooperativa Minuto de Dios &middot; 2026</div>
+        <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.15);font-size:8px">SCIC v4.6 &middot; Cooperativa Minuto de Dios &middot; 2026</div>
       </div>
-      <!-- KPIs -->
-      <div>
-        <!-- Período + barra días hábiles -->
+      <!-- DASHBOARD FUSIONADO (resumen + estado de gestión del canal) -->
+      <div id="login-dashboard">
+        <!-- Período + barra días hábiles + estado del canal -->
         <div style="background:rgba(200,151,30,.1);border:1px solid rgba(200,151,30,.22);border-radius:11px;padding:11px 13px;margin-bottom:9px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
-            <div><div style="color:#C8971E;font-size:8px;font-weight:700;text-transform:uppercase">S2 2026 · Mayo→Octubre · 122 dh</div>
-            <div style="color:#fff;font-size:11px;font-weight:700"><span id="mts-dias-trans">37</span> dh transcurridos &middot; <span style="color:#C8971E" id="mts-dias-rest">85</span> restantes</div></div>
-            <div style="text-align:right"><div style="color:rgba(255,255,255,.3);font-size:8px">vs curva</div><div style="color:#dc2626;font-size:19px;font-weight:900">52%</div></div>
+            <div><div style="color:#C8971E;font-size:8px;font-weight:700;text-transform:uppercase" id="lgi-periodo-label">Período · Cooperativa Minuto de Dios</div>
+            <div style="color:#fff;font-size:11px;font-weight:700"><span id="lgi-dias-trans">—</span> dh transcurridos &middot; <span style="color:#C8971E" id="lgi-dias-rest">—</span> restantes</div></div>
+            <div style="text-align:right"><div style="color:rgba(255,255,255,.3);font-size:8px">cumplimiento</div><div id="lgi-curva-pct" style="color:#fbbf24;font-size:19px;font-weight:900">—</div></div>
           </div>
           <div style="background:rgba(255,255,255,.08);border-radius:3px;height:7px;position:relative;overflow:visible;margin-bottom:4px">
-            <div id="mts-barra" style="height:100%;border-radius:3px;background:#dc2626;width:52%"></div>
-            <div style="position:absolute;left:30.3%;top:-3px;width:2px;height:13px;background:#FFD900;border-radius:1px" title="Deberías estar aquí"></div>
+            <div id="lgi-barra" style="height:100%;border-radius:3px;background:#fbbf24;width:0%;transition:width .4s"></div>
+            <div id="lgi-curva-marker" style="position:absolute;left:0%;top:-3px;width:2px;height:13px;background:#FFD900;border-radius:1px" title="Deberías estar aquí"></div>
           </div>
           <div style="display:flex;justify-content:space-between">
-            <span style="color:rgba(255,255,255,.3);font-size:8px">Ritmo: <b style="color:#C8971E">150.0 c/dh</b></span>
-            <span style="color:rgba(255,255,255,.3);font-size:8px">Necesario: <b style="color:#dc2626">344.9 c/dh</b></span>
+            <span style="color:rgba(255,255,255,.3);font-size:8px">Ritmo: <b style="color:#C8971E" id="lgi-ritmo">—</b></span>
+            <span style="color:rgba(255,255,255,.3);font-size:8px">Necesario: <b style="color:#fb923c" id="lgi-necesario">—</b></span>
           </div>
         </div>
-        <!-- Fila 1: Meta · Deberías · Llevas -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:7px">
+        <!-- Fila 1: Meta S2 · Meta del día · Asesores turno · Cumplimiento -->
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px;margin-bottom:7px">
           <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:10px">
-            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Meta S2</div>
-            <div style="color:#FFD900;font-size:19px;font-weight:900" id="mts-meta-n">34,868</div>
+            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Meta período</div>
+            <div style="color:#FFD900;font-size:18px;font-weight:900" id="lgi-meta">—</div>
             <div style="color:rgba(255,255,255,.2);font-size:7px">créditos</div>
           </div>
           <div style="background:rgba(200,151,30,.08);border:1px solid rgba(200,151,30,.25);border-radius:9px;padding:10px;position:relative">
             <div style="position:absolute;top:5px;right:6px;background:rgba(200,151,30,.25);color:#C8971E;font-size:7px;font-weight:700;padding:1px 4px;border-radius:3px">HOY</div>
-            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Deberías</div>
-            <div style="color:#C8971E;font-size:19px;font-weight:900">10,575</div>
-            <div style="color:rgba(255,255,255,.2);font-size:7px">30.3% meta</div>
+            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Meta del día</div>
+            <div style="color:#C8971E;font-size:18px;font-weight:900" id="lgi-metadia">—</div>
+            <div style="color:rgba(255,255,255,.2);font-size:7px">créditos/dh</div>
           </div>
-          <div style="background:rgba(220,38,38,.07);border:1px solid rgba(220,38,38,.2);border-radius:9px;padding:10px">
-            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Llevas</div>
-            <div style="color:#dc2626;font-size:19px;font-weight:900" id="mts-ejec-n">5,549</div>
-            <div style="color:rgba(255,255,255,.2);font-size:7px" id="mts-pct-n">15.9% &middot; atrás: <b style="color:#dc2626">5,026</b></div>
+          <div style="background:rgba(96,165,250,.07);border:1px solid rgba(96,165,250,.22);border-radius:9px;padding:10px">
+            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Asesores turno</div>
+            <div style="color:#60a5fa;font-size:18px;font-weight:900" id="lgi-asesores">—</div>
+            <div style="color:rgba(255,255,255,.2);font-size:7px" id="lgi-asesores-sub">activos</div>
           </div>
-        </div>
-        <!-- Fila 2: SIGEC · GLPI · Pipeline -->
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:7px">
-          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:10px">
-            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:5px">SIGEC</div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:rgba(255,255,255,.4);font-size:9px">Facturadas</span><span style="color:#60a5fa;font-weight:700;font-size:9px">5,761</span></div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:rgba(255,255,255,.4);font-size:9px">Abiertas</span><span style="color:#fbbf24;font-weight:700;font-size:9px">789</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.4);font-size:9px">Pend.doc</span><span style="color:#f87171;font-weight:700;font-size:9px">31</span></div>
-          </div>
-          <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:10px">
-            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:5px">GLPI</div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:rgba(255,255,255,.4);font-size:9px">Aprobadas</span><span style="color:#60a5fa;font-weight:700;font-size:9px">535</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.4);font-size:9px">Abiertas</span><span style="color:#fbbf24;font-weight:700;font-size:9px">62</span></div>
-          </div>
-          <div style="background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.18);border-radius:9px;padding:10px">
-            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:5px">Pipeline</div>
-            <div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="color:rgba(255,255,255,.4);font-size:9px">Leads</span><span style="color:#a78bfa;font-weight:700;font-size:9px">5,645</span></div>
-            <div style="display:flex;justify-content:space-between"><span style="color:rgba(255,255,255,.4);font-size:9px">Renov.</span><span style="color:#34d399;font-weight:700;font-size:9px">5,631</span></div>
+          <div style="background:rgba(52,211,153,.07);border:1px solid rgba(52,211,153,.2);border-radius:9px;padding:10px">
+            <div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:3px">Cumplim.</div>
+            <div style="color:#34d399;font-size:18px;font-weight:900" id="lgi-pct">—</div>
+            <div style="color:rgba(255,255,255,.2);font-size:7px" id="lgi-ejec">— colocados</div>
           </div>
         </div>
-        <!-- Brecha -->
-        <div style="background:rgba(220,38,38,.06);border:1px solid rgba(220,38,38,.18);border-radius:9px;padding:10px;display:flex;align-items:center;justify-content:space-between">
-          <div><div style="color:rgba(255,255,255,.35);font-size:7px;font-weight:700;text-transform:uppercase;margin-bottom:2px">Brecha vs meta</div>
-          <div style="color:#f87171;font-size:19px;font-weight:900">29,319 créditos</div></div>
-          <div id="mts-semaforo" style="background:rgba(220,38,38,.2);color:#dc2626;border-radius:7px;padding:5px 12px;font-size:10px;font-weight:700">ROJO</div>
+        <!-- Proyección / estado de gestión del canal -->
+        <div id="lgi-proyeccion" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px;margin-bottom:7px;min-height:54px">
+          <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:center">Calculando proyección de cierre…</div>
+        </div>
+        <!-- Cumpleaños -->
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:10px">
+          <div style="color:rgba(255,255,255,.45);font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">🎂 Cumpleaños</div>
+          <div id="lgi-cumple" style="max-height:120px;overflow-y:auto">
+            <div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;padding:6px">Cargando…</div>
+          </div>
         </div>
       </div>
     </div>
@@ -921,7 +912,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       </div>
       <div>
         <div style="color:#fff;font-size:13px;font-weight:800;line-height:1.1">Sistema Cognitivo de Inteligencia Comercial</div>
-        <div style="color:rgba(255,255,255,.35);font-size:10px">Proceso PYV · Cooperativa Minuto de Dios · <span id="menu-version" style="color:#C8971E">SCIC v4.5</span></div>
+        <div style="color:rgba(255,255,255,.35);font-size:10px">Proceso PYV · Cooperativa Minuto de Dios · <span id="menu-version" style="color:#C8971E">SCIC v4.6</span></div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:14px">
@@ -1068,7 +1059,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
     <!-- PIE DE PÁGINA -->
     <div style="text-align:center;margin-top:20px;color:rgba(255,255,255,.1);font-size:9px;padding-bottom:16px">
-      SCIC v4.5 · Cooperativa Minuto de Dios · Proceso PYV · 29/06/2026
+      SCIC v4.6 · Cooperativa Minuto de Dios · Proceso PYV · 29/06/2026
       <br>Desarrollado por el equipo de Inteligencia Comercial · Medellín, Colombia
     </div>
   </div>
@@ -2954,14 +2945,14 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 
 // ════════════════════════════════════════════════════════════
-// SCIC v4.5 — FIXES CRÍTICOS — NO MINIFICAR — 2026-06-29
+// SCIC v4.6 — FIXES CRÍTICOS — NO MINIFICAR — 2026-06-29
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.5';
+var APP_VERSION = 'SCIC-4.6';
 
 // ════════════════════════════════════════════════════════════
-// SCIC v4.5 — DATOS MAESTROS HARDCODEADOS
+// SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
 // Fuente: 8 Repositorios CMD (xlsx jun-2026)
 // Se actualizan vía proxy cuando hay conexión
 // ════════════════════════════════════════════════════════════
@@ -3044,7 +3035,7 @@ var _DATA = {
   window._hubspot_data = _DATA.hubspot;
   // Cartera
   window._cartera_data = _DATA.cartera;
-  console.log('[SCIC v4.5] Datos maestros cargados: '
+  console.log('[SCIC v4.6] Datos maestros cargados: '
     + _DATA.coloc.length + ' sedes | acum=' + _DATA.acum_s2.toLocaleString()
     + ' | leads=' + _DATA.leads.total_nuevos.toLocaleString()
     + ' | hub=' + _DATA.hubspot.total.toLocaleString());
@@ -3280,7 +3271,7 @@ function loginIngresar(){
     if(_av)_av.textContent=(usuario.charAt(0)||'U').toUpperCase();
     if(_mn)_mn.textContent=usuario;
     guardarLS&&guardarLS();
-    mostrarAlertaNav&&mostrarAlertaNav('Bienvenido/a '+usuario+' al SCIC v4.5');
+    mostrarAlertaNav&&mostrarAlertaNav('Bienvenido/a '+usuario+' al SCIC v4.6');
     return;
   }
   if(!emp){
@@ -3298,7 +3289,7 @@ function loginIngresar(){
     if(_av)_av.textContent=(usuario.charAt(0)||'U').toUpperCase();
     if(_mn)_mn.textContent=usuario;
     guardarLS&&guardarLS();
-    mostrarAlertaNav&&mostrarAlertaNav('Bienvenido/a '+usuario+' al SCIC v4.5');
+    mostrarAlertaNav&&mostrarAlertaNav('Bienvenido/a '+usuario+' al SCIC v4.6');
     return;
   }
   if(emp.estado&&emp.estado.toLowerCase().indexOf('inactiv')>=0){
@@ -3692,7 +3683,7 @@ if(typeof _cargarMemoriaSheet==='function') window._cargarMemoriaSheet=_cargarMe
 // ════════════════════════════════════════════════════════════
 
 // ════════════════════════════════════════════════════════════
-// NUEVAS FUNCIONES DEL MENÚ SCIC v4.5
+// NUEVAS FUNCIONES DEL MENÚ SCIC v4.6
 // ════════════════════════════════════════════════════════════
 
 function abrirHubSpotActividad() {
@@ -5573,6 +5564,122 @@ https://minutodediosportal.com/login/
       }
     });
   }catch(e){ console.warn('[SCIC fix] reubicar hojas:', e&&e.message); }
+})();
+</script>
+<!-- ═══════════ SCIC v4.6 — DASHBOARD FUSIONADO EN LOGIN ═══════════
+     Funde el modal de bienvenida (modal-top-sedes) dentro de la página de
+     login: resumen de indicadores, estado de gestión del canal, proyección,
+     meta del día, asesores del turno y cumpleaños. Reutiliza la misma capa de
+     datos (window._mts*, EMPLEADOS_BD, EMPLEADOS_CUM) ya cargada desde Sheets. -->
+<script>
+(function(){
+  var fmt=function(n){return (Number(n)||0).toLocaleString('es-CO');};
+  var setTxt=function(id,v){var el=document.getElementById(id); if(el)el.textContent=v;};
+
+  function renderLoginProyeccion(metaN,ejecN,debemos,diasTot,diasTra){
+    var el=document.getElementById('lgi-proyeccion'); if(!el)return;
+    if(!metaN){el.style.cssText='background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px;margin-bottom:7px;min-height:54px';el.innerHTML='<div style="font-size:11px;color:rgba(255,255,255,.35);text-align:center;padding:6px">Sin datos de meta cargados aún…</div>';return;}
+    var proy = diasTra>0? Math.round(ejecN/diasTra*diasTot) : ejecN;
+    var proyPct = metaN>0? Math.round(proy/metaN*100):0;
+    var ritmoPct = debemos>0? Math.round(ejecN/debemos*100) : proyPct;
+    var emoji,msg,col,bg;
+    if(ritmoPct>=100){emoji='🤩';msg='Proyección por encima del objetivo';col='#4ade80';bg='rgba(74,222,128,.13)';}
+    else if(ritmoPct>=90){emoji='😄';msg='Muy cerca del objetivo del período';col='#86efac';bg='rgba(134,239,172,.12)';}
+    else if(ritmoPct>=75){emoji='🏃';msg='En camino — esfuerzo adicional';col='#a3e635';bg='rgba(163,230,53,.12)';}
+    else if(ritmoPct>=55){emoji='😟';msg='Atención — debemos acelerar el ritmo';col='#fbbf24';bg='rgba(251,191,36,.14)';}
+    else if(ritmoPct>=30){emoji='😨';msg='Riesgo alto — acción inmediata';col='#f87171';bg='rgba(248,113,113,.14)';}
+    else {emoji='🚨';msg='Situación crítica — intervención urgente';col='#ef4444';bg='rgba(239,68,68,.16)';}
+    var brecha=Math.max(0,metaN-ejecN);
+    function card(t,v,c){return '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px"><div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">'+t+'</div><div style="font-size:14px;font-weight:900;color:'+c+'">'+v+'</div></div>';}
+    el.style.cssText='background:'+bg+';border:1.5px solid '+col+'55;border-radius:11px;padding:12px;margin-bottom:7px';
+    el.innerHTML='<div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">'
+      +'<div style="font-size:26px;line-height:1">'+emoji+'</div>'
+      +'<div style="flex:1"><div style="font-size:12px;font-weight:800;color:'+col+'">'+msg+'</div>'
+      +'<div style="font-size:9px;color:rgba(255,255,255,.45);margin-top:2px">Proyección de cierre: <strong style="color:#fff">'+fmt(proy)+'</strong> créditos ('+proyPct+'% de la meta)</div></div></div>'
+      +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">'
+      +card('Debemos hoy', fmt(debemos), '#FFD900')
+      +card('Vamos', fmt(ejecN), '#4ade80')
+      +card('Brecha', fmt(brecha), '#f87171')
+      +'</div>';
+  }
+
+  function renderLoginCumple(){
+    var el=document.getElementById('lgi-cumple'); if(!el)return;
+    var arr = (typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM)?EMPLEADOS_CUM:[];
+    if(!arr.length){el.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;padding:6px">Cargando cumpleaños…</div>';return;}
+    var o=new Date(); o.setHours(0,0,0,0);
+    var hoyKey=String(o.getMonth()+1).padStart(2,'0')+'-'+String(o.getDate()).padStart(2,'0');
+    var lim=new Date(o); lim.setDate(o.getDate()+7);
+    var hoy=[],sem=[];
+    arr.forEach(function(e){ var a=(e.cumpleanos||'').trim(); if(!a||a.length<3)return;
+      var t=a.split('-'),mm,dd; if(t.length===3){mm=t[1];dd=t[2].substring(0,2);} else if(t.length===2){mm=t[0];dd=t[1].substring(0,2);} else return;
+      mm=mm.padStart(2,'0'); dd=dd.padStart(2,'0'); if(isNaN(parseInt(mm))||isNaN(parseInt(dd)))return;
+      if(mm+'-'+dd===hoyKey){hoy.push(e);} else { var y=o.getFullYear(); var u=new Date(y,parseInt(mm)-1,parseInt(dd)); if(u<=o)u=new Date(y+1,parseInt(mm)-1,parseInt(dd)); if(u>o&&u<=lim){sem.push({e:e,dias:Math.round((u-o)/864e5)});} }
+    });
+    sem.sort(function(a,b){return a.dias-b.dias;});
+    if(!hoy.length&&!sem.length){el.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;padding:6px">Sin cumpleaños esta semana</div>';return;}
+    var html='';
+    hoy.forEach(function(e){ html+='<div style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:7px;padding:6px 9px;margin-bottom:4px;display:flex;align-items:center;gap:7px"><span style="font-size:15px">🎉</span><div><div style="font-size:11px;font-weight:700;color:#fff">'+(e.nombre||'')+'</div><div style="font-size:8px;color:rgba(255,255,255,.4)">¡Hoy! · '+(e.sede||'')+'</div></div></div>'; });
+    sem.forEach(function(x){ var e=x.e; html+='<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:7px;padding:6px 9px;margin-bottom:4px;display:flex;align-items:center;gap:7px"><span style="font-size:13px">🎂</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:#e2e8f0">'+(e.nombre||'')+'</div><div style="font-size:8px;color:rgba(255,255,255,.35)">'+(e.sede||'')+'</div></div><span style="background:#003D45;color:#FFD900;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px">'+(x.dias===1?'mañana':'en '+x.dias+'d')+'</span></div>'; });
+    el.innerHTML=html;
+  }
+
+  function renderLoginDashboard(){
+    try{
+      var metaN=window._mtsMetaN||0, ejecN=window._mtsEjecN||0;
+      var pctN=window._mtsPctN|| (metaN?Math.round(ejecN/metaN*100):0);
+      var diasTot=window._mtsDiasTotal||0, diasTra=window._mtsDiasTrans||0;
+      var diasRest=Math.max(0,diasTot-diasTra), debemos=window._mtsDebemos||0;
+      var per=(typeof periodoActivoPorFecha==='function')?periodoActivoPorFecha(new Date()):'';
+      setTxt('lgi-periodo-label',(per?('Período '+per+' · '):'')+'Cooperativa Minuto de Dios');
+      setTxt('lgi-dias-trans',diasTra||'—');
+      setTxt('lgi-dias-rest',diasRest||'—');
+      setTxt('lgi-meta',metaN?fmt(metaN):'—');
+      setTxt('lgi-ejec',(ejecN?fmt(ejecN):'—')+' colocados');
+      setTxt('lgi-pct',metaN?(pctN+'%'):'—');
+      setTxt('lgi-curva-pct',metaN?(pctN+'%'):'—');
+      setTxt('lgi-metadia',diasTot>0?fmt(Math.round(metaN/diasTot)):'—');
+      var ritmo=diasTra>0?(ejecN/diasTra):0, necesario=diasRest>0?((metaN-ejecN)/diasRest):0;
+      setTxt('lgi-ritmo',ritmo?ritmo.toFixed(1)+' c/dh':'—');
+      setTxt('lgi-necesario',necesario>0?necesario.toFixed(1)+' c/dh':'—');
+      var barra=document.getElementById('lgi-barra');
+      if(barra){barra.style.width=Math.min(100,pctN)+'%';barra.style.background=pctN>=90?'#4ade80':pctN>=55?'#fbbf24':'#f87171';}
+      var marker=document.getElementById('lgi-curva-marker');
+      if(marker&&diasTot>0)marker.style.left=Math.min(100,Math.round(diasTra/diasTot*100))+'%';
+      var cp=document.getElementById('lgi-curva-pct');
+      if(cp)cp.style.color=pctN>=90?'#4ade80':pctN>=55?'#fbbf24':'#f87171';
+      var asesores=0,total=0;
+      try{ if(typeof EMPLEADOS_BD==='object'&&EMPLEADOS_BD){
+        Object.keys(EMPLEADOS_BD).forEach(function(k){ var e=EMPLEADOS_BD[k]; if(!e)return; total++;
+          var c=(e.cargo||'').toLowerCase(), st=(e.estado||'').toLowerCase();
+          if(c.indexOf('asesor')>=0 && st.indexOf('inactiv')<0 && st.indexOf('retir')<0) asesores++;
+        });
+      }}catch(e){}
+      setTxt('lgi-asesores',asesores||total||'—');
+      setTxt('lgi-asesores-sub',asesores?'asesores activos':(total?'en directorio':'activos'));
+      renderLoginProyeccion(metaN,ejecN,debemos,diasTot,diasTra);
+      renderLoginCumple();
+    }catch(err){ console.warn('[SCIC] renderLoginDashboard:', err&&err.message); }
+  }
+  window.renderLoginDashboard=renderLoginDashboard;
+
+  // Fusión: el modal de bienvenida ya no se muestra; su contenido se renderiza en el login.
+  window.mostrarTopSedes=function(){
+    var m=document.getElementById('modal-top-sedes'); if(m)m.style.display='none';
+    try{
+      var have=window._coloc_data&&window._coloc_data.length;
+      var done=function(){ try{typeof _mtsCargarPeriodoHabiles==='function'&&_mtsCargarPeriodoHabiles();}catch(e){} try{typeof _mtsCargarMeta==='function'&&_mtsCargarMeta();}catch(e){} renderLoginDashboard(); };
+      if(!have&&typeof _cargarColocacion==='function'&&typeof periodoActivoPorFecha==='function'){
+        _cargarColocacion(periodoActivoPorFecha(new Date())).then(done).catch(done);
+      } else { done(); }
+      if(typeof _cargarTop5==='function'){ try{_cargarTop5().then(renderLoginDashboard).catch(function(){});}catch(e){} }
+    }catch(e){ renderLoginDashboard(); }
+  };
+
+  // Render inicial + reintentos para datos asíncronos de Sheets.
+  [200,800,2000,4000,7000,11000].forEach(function(ms){ setTimeout(function(){
+    try{ var m=document.getElementById('modal-top-sedes'); if(m&&m.style.display!=='none')m.style.display='none'; renderLoginDashboard(); }catch(e){}
+  }, ms); });
 })();
 </script>
 </body>
