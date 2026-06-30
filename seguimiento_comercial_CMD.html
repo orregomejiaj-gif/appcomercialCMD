@@ -5622,21 +5622,60 @@ function _parseCumpleMMDD(s){
     var el=document.getElementById('lgi-cumple'); if(!el)return;
     var arr = (typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM)?EMPLEADOS_CUM:[];
     if(!arr.length){el.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;padding:6px">Cargando cumpleaños…</div>';return;}
+    var meses=['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
     var o=new Date(); o.setHours(0,0,0,0);
-    var hoyKey=String(o.getMonth()+1).padStart(2,'0')+'-'+String(o.getDate()).padStart(2,'0');
-    var lim=new Date(o); lim.setDate(o.getDate()+7);
-    var hoy=[],sem=[];
+    var hoy=[],prox=[];
     arr.forEach(function(e){ var a=(e.cumpleanos||'').trim(); if(!a||a.length<3)return;
       var t=a.split('-'),mm,dd; if(t.length===3){mm=t[1];dd=t[2].substring(0,2);} else if(t.length===2){mm=t[0];dd=t[1].substring(0,2);} else return;
-      mm=mm.padStart(2,'0'); dd=dd.padStart(2,'0'); if(isNaN(parseInt(mm))||isNaN(parseInt(dd)))return;
-      if(mm+'-'+dd===hoyKey){hoy.push(e);} else { var y=o.getFullYear(); var u=new Date(y,parseInt(mm)-1,parseInt(dd)); if(u<=o)u=new Date(y+1,parseInt(mm)-1,parseInt(dd)); if(u>o&&u<=lim){sem.push({e:e,dias:Math.round((u-o)/864e5)});} }
+      var mi=parseInt(mm,10),di=parseInt(dd,10); if(isNaN(mi)||isNaN(di))return;
+      var y=o.getFullYear(), u=new Date(y,mi-1,di); u.setHours(0,0,0,0);
+      var dias=Math.round((u-o)/864e5);
+      if(dias===0){hoy.push({e:e,mi:mi,di:di});return;}
+      if(u<o){u=new Date(y+1,mi-1,di);u.setHours(0,0,0,0);dias=Math.round((u-o)/864e5);}
+      prox.push({e:e,dias:dias,mi:mi,di:di});
     });
-    sem.sort(function(a,b){return a.dias-b.dias;});
-    if(!hoy.length&&!sem.length){el.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;padding:6px">Sin cumpleaños esta semana</div>';return;}
+    prox.sort(function(a,b){return a.dias-b.dias;});
+    if(!hoy.length&&!prox.length){el.innerHTML='<div style="font-size:10px;color:rgba(255,255,255,.3);text-align:center;padding:6px">Sin cumpleaños registrados</div>';return;}
+    var badge=function(d,mi,di){ if(d===0)return'¡Hoy!'; if(d===1)return'mañana'; if(d<=7)return'en '+d+'d'; return di+' '+(meses[mi-1]||''); };
     var html='';
-    hoy.forEach(function(e){ html+='<div style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:7px;padding:6px 9px;margin-bottom:4px;display:flex;align-items:center;gap:7px"><span style="font-size:15px">🎉</span><div><div style="font-size:11px;font-weight:700;color:#fff">'+(e.nombre||'')+'</div><div style="font-size:8px;color:rgba(255,255,255,.4)">¡Hoy! · '+(e.sede||'')+'</div></div></div>'; });
-    sem.forEach(function(x){ var e=x.e; html+='<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:7px;padding:6px 9px;margin-bottom:4px;display:flex;align-items:center;gap:7px"><span style="font-size:13px">🎂</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:#e2e8f0">'+(e.nombre||'')+'</div><div style="font-size:8px;color:rgba(255,255,255,.35)">'+(e.sede||'')+'</div></div><span style="background:#003D45;color:#FFD900;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px">'+(x.dias===1?'mañana':'en '+x.dias+'d')+'</span></div>'; });
+    hoy.forEach(function(x){ var e=x.e; html+='<div style="background:rgba(251,191,36,.15);border:1px solid rgba(251,191,36,.3);border-radius:7px;padding:6px 9px;margin-bottom:4px;display:flex;align-items:center;gap:7px"><span style="font-size:15px">🎉</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:#fff">'+(e.nombre||'')+'</div><div style="font-size:8px;color:rgba(255,255,255,.4)">'+(e.sede||'')+'</div></div><span style="background:#fbbf24;color:#1f2937;font-size:8px;font-weight:800;padding:2px 6px;border-radius:5px">¡Hoy!</span></div>'; });
+    prox.slice(0,6).forEach(function(x){ var e=x.e; html+='<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:7px;padding:6px 9px;margin-bottom:4px;display:flex;align-items:center;gap:7px"><span style="font-size:13px">🎂</span><div style="flex:1"><div style="font-size:11px;font-weight:700;color:#e2e8f0">'+(e.nombre||'')+'</div><div style="font-size:8px;color:rgba(255,255,255,.35)">'+(e.sede||'')+'</div></div><span style="background:#003D45;color:#FFD900;font-size:8px;font-weight:700;padding:2px 6px;border-radius:5px">'+badge(x.dias,x.mi,x.di)+'</span></div>'; });
     el.innerHTML=html;
+  }
+
+  // Carga independiente de cumpleaños desde el Sheet de empleados (columnas por índice,
+  // porque las etiquetas vienen corruptas en gviz). CORREO=0 NOMBRE=1 CARGO=2 SEDE=3
+  // CEDULA=4 CELULAR=5 F.NACIMIENTO=6 ESTADO=7
+  var _lgiCumpleTried=false;
+  function _lgiCargarCumple(force){
+    try{
+      if(typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM&&EMPLEADOS_CUM.length){renderLoginCumple();return;}
+      if(_lgiCumpleTried&&!force)return; _lgiCumpleTried=true;
+      var id='1dRf-Gvs-jp5WWsXo9TFgqDICuMCPNWYIiPqTKhTJDuM';
+      var cb='_lgicum_'+Date.now();
+      var sc=document.createElement('script');
+      window[cb]=function(data){
+        try{
+          if(data&&data.table&&data.table.rows){
+            var cell=function(c){return c?String((c.v!=null&&c.v!==undefined?c.v:(c.f||''))||'').trim():'';};
+            var arr=[];
+            (data.table.rows||[]).forEach(function(row){
+              var c=row.c||[];
+              var nombre=cell(c[1]), sede=cell(c[3]), cum=_parseCumpleMMDD(cell(c[6]));
+              var estado=(cell(c[7])||'').toLowerCase();
+              if(nombre&&cum&&estado.indexOf('inactiv')<0&&estado.indexOf('retir')<0) arr.push({nombre:nombre,sede:sede,cumpleanos:cum});
+            });
+            if(arr.length){ try{window.EMPLEADOS_CUM=arr;}catch(e){} }
+            console.log('[SCIC] Cumpleaños cargados:', arr.length);
+          }
+        }catch(e){ console.warn('[SCIC] cumple parse:', e&&e.message); }
+        try{ renderLoginCumple(); }catch(e){}
+        try{ delete window[cb]; }catch(e){}
+      };
+      sc.onerror=function(){ try{delete window[cb];}catch(e){} _lgiCumpleTried=false; };
+      sc.src='https://docs.google.com/spreadsheets/d/'+id+'/gviz/tq?tqx=out:json;responseHandler:'+cb+'&sheet=EMPLEADOS&_='+Date.now();
+      document.head.appendChild(sc);
+    }catch(e){}
   }
 
   function renderLoginDashboard(){
@@ -5673,6 +5712,7 @@ function _parseCumpleMMDD(s){
       setTxt('lgi-asesores',asesores||total||'—');
       setTxt('lgi-asesores-sub',asesores?'asesores activos':(total?'en directorio':'activos'));
       renderLoginProyeccion(metaN,ejecN,debemos,diasTot,diasTra);
+      if(!(typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM&&EMPLEADOS_CUM.length)){ _lgiCargarCumple(); }
       renderLoginCumple();
     }catch(err){ console.warn('[SCIC] renderLoginDashboard:', err&&err.message); }
   }
@@ -5692,6 +5732,8 @@ function _parseCumpleMMDD(s){
   };
 
   // Render inicial + reintentos para datos asíncronos de Sheets.
+  setTimeout(function(){ try{_lgiCargarCumple();}catch(e){} }, 600);
+  setTimeout(function(){ try{ if(!(typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM&&EMPLEADOS_CUM.length)) _lgiCargarCumple(true); }catch(e){} }, 5000);
   [200,800,2000,4000,7000,11000].forEach(function(ms){ setTimeout(function(){
     try{ var m=document.getElementById('modal-top-sedes'); if(m&&m.style.display!=='none')m.style.display='none'; renderLoginDashboard(); }catch(e){}
   }, ms); });
