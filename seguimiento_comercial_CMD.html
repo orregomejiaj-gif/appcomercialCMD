@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.6.2   (APP_VERSION = 'SCIC-4.6.2')
+  Versión actual: 4.7.0   (APP_VERSION = 'SCIC-4.7.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,12 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.7.0 (2026-06-30)
+    - Menú rediseñado: aspecto comercial dinámico, KPIs en vivo desde Sheets.
+    - Hoja 1: metas de sedes seleccionadas por mes/período (renderMetasConsolidadas).
+    - Hoja 2: semáforos conectados a colocación + resumen gerencial desde Sheets.
+    - Herramientas PYV: barra de tabs con simuladores, fragmentos y más; HTML corregido.
+    - HubSpot/Malla: modal propio sin destruir panel SCIC (#h5).
   v4.6.2 (2026-06-30)
     - Navegación: #etapa-menu, #etapa-login y #etapa-password sacados de #h0;
       volverAlMenu/irEtapaMenu/volver y botón home funcionan sin recargar.
@@ -913,175 +919,195 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 </div>
 
 <!-- ═══════════ ETAPA 2: MENÚ ═══════════ -->
-<div id="etapa-menu" style="display:none;min-height:100vh;background:linear-gradient(160deg,#001418 0%,#002d33 60%,#001f1a 100%)">
-  <!-- HEADER DEL MENÚ -->
-  <div style="background:rgba(0,0,0,.25);border-bottom:1px solid rgba(200,151,30,.2);padding:10px 20px;display:flex;align-items:center;justify-content:space-between">
-    <div style="display:flex;align-items:center;gap:12px">
-      <div style="width:32px;height:22px;background:linear-gradient(135deg,#C8971E,#FFD900);border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-        <span style="color:#003D45;font-weight:900;font-size:9px">CMD</span>
+<div id="etapa-menu" class="menu-shell" style="display:none">
+  <div class="menu-hero">
+    <div class="menu-hero-glow"></div>
+    <div class="menu-topbar">
+      <div class="menu-brand">
+        <div class="menu-logo">CMD</div>
+        <div>
+          <div class="menu-brand-title">Inteligencia Comercial</div>
+          <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV · <span id="menu-version">SCIC v4.7</span></div>
+        </div>
       </div>
-      <div>
-        <div style="color:#fff;font-size:13px;font-weight:800;line-height:1.1">Sistema Cognitivo de Inteligencia Comercial</div>
-        <div style="color:rgba(255,255,255,.35);font-size:10px">Proceso PYV · Cooperativa Minuto de Dios · <span id="menu-version" style="color:#C8971E">SCIC v4.6</span></div>
+      <div class="menu-user">
+        <div class="menu-user-text">
+          <div id="menu-nombre">—</div>
+          <div id="menu-cargo-sede">—</div>
+        </div>
+        <div id="menu-avatar" class="menu-avatar">JO</div>
+        <button onclick="cerrarSesion()" class="menu-logout" title="Cerrar sesión"><i class="ti ti-logout"></i></button>
       </div>
     </div>
-    <div style="display:flex;align-items:center;gap:14px">
-      <div style="text-align:right">
-        <div style="color:#fff;font-size:13px;font-weight:700" id="menu-nombre">—</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px" id="menu-cargo-sede">—</div>
-      </div>
-      <div id="menu-avatar" style="width:36px;height:36px;background:linear-gradient(135deg,#C8971E,#FFD900);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#003D45">JO</div>
-      <button onclick="cerrarSesion()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.6);border-radius:8px;padding:6px 12px;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif" title="Cerrar sesión">
-        <i class="ti ti-logout"></i>
-      </button>
+    <div class="menu-welcome">
+      <div class="menu-welcome-label">Centro de comando comercial</div>
+      <div class="menu-welcome-title">Gestiona producción, seguimiento e inteligencia en un solo lugar</div>
     </div>
   </div>
 
-  <!-- BANDA KPIs RÁPIDOS -->
-  <div style="background:rgba(0,0,0,.15);border-bottom:1px solid rgba(255,255,255,.06);padding:10px 20px">
-    <div style="display:flex;gap:6px;overflow-x:auto;align-items:stretch">
-      <!-- Meta vs Acum -->
-      <div style="background:rgba(200,151,30,.1);border:1px solid rgba(200,151,30,.25);border-radius:9px;padding:8px 14px;flex-shrink:0;min-width:140px">
-        <div style="color:#C8971E;font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px">Acumulado S2</div>
-        <div style="display:flex;align-items:baseline;gap:5px;margin-top:2px">
-          <span style="color:#FFD900;font-size:17px;font-weight:900" id="menu-kpi-acum">5,549</span>
-          <span style="color:rgba(255,255,255,.3);font-size:9px">/ 34,868</span>
-        </div>
-        <div style="background:rgba(255,255,255,.08);border-radius:3px;height:3px;margin-top:4px">
-          <div style="width:52%;background:#dc2626;height:100%;border-radius:3px"></div>
-        </div>
-        <div style="color:#dc2626;font-size:9px;font-weight:700;margin-top:2px">52% curva · ROJO</div>
-      </div>
-      <!-- Deberías hoy -->
-      <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:9px;padding:8px 14px;flex-shrink:0;min-width:130px">
-        <div style="color:rgba(255,255,255,.35);font-size:8px;font-weight:700;text-transform:uppercase">Deberías hoy</div>
-        <div style="color:#C8971E;font-size:17px;font-weight:900">10,575</div>
-        <div style="color:rgba(255,255,255,.25);font-size:9px">37 de 122 dh · quedan 85</div>
-      </div>
-      <!-- SIGEC -->
-      <div style="background:rgba(96,165,250,.06);border:1px solid rgba(96,165,250,.18);border-radius:9px;padding:8px 14px;flex-shrink:0;min-width:120px">
-        <div style="color:rgba(255,255,255,.35);font-size:8px;font-weight:700;text-transform:uppercase">SIGEC activas</div>
-        <div style="color:#60a5fa;font-size:17px;font-weight:900">5,761</div>
-        <div style="color:rgba(255,255,255,.25);font-size:9px">Facturadas · 789 abiertas</div>
-      </div>
-      <!-- GLPI -->
-      <div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.18);border-radius:9px;padding:8px 14px;flex-shrink:0;min-width:110px">
-        <div style="color:rgba(255,255,255,.35);font-size:8px;font-weight:700;text-transform:uppercase">GLPI</div>
-        <div style="color:#a78bfa;font-size:17px;font-weight:900">535</div>
-        <div style="color:rgba(255,255,255,.25);font-size:9px">Aprobadas · 62 abiertas</div>
-      </div>
-      <!-- Leads -->
-      <div style="background:rgba(52,211,153,.06);border:1px solid rgba(52,211,153,.18);border-radius:9px;padding:8px 14px;flex-shrink:0;min-width:110px">
-        <div style="color:rgba(255,255,255,.35);font-size:8px;font-weight:700;text-transform:uppercase">Pipeline</div>
-        <div style="color:#34d399;font-size:17px;font-weight:900">5,645</div>
-        <div style="color:rgba(255,255,255,.25);font-size:9px">Leads · 5,631 renov.</div>
-      </div>
-      <!-- HubSpot -->
-      <div style="background:rgba(251,146,60,.06);border:1px solid rgba(251,146,60,.18);border-radius:9px;padding:8px 14px;flex-shrink:0;min-width:120px">
-        <div style="color:rgba(255,255,255,.35);font-size:8px;font-weight:700;text-transform:uppercase">HubSpot</div>
-        <div style="color:#fb923c;font-size:17px;font-weight:900">49,473</div>
-        <div style="color:rgba(255,255,255,.25);font-size:9px">Actividades totales</div>
-      </div>
-      <!-- Cartera -->
-      <div style="background:rgba(248,113,113,.06);border:1px solid rgba(248,113,113,.18);border-radius:9px;padding:8px 14px;flex-shrink:0;min-width:130px">
-        <div style="color:rgba(255,255,255,.35);font-size:8px;font-weight:700;text-transform:uppercase">Cartera SAP</div>
-        <div style="color:#f87171;font-size:17px;font-weight:900">$8.0B</div>
-        <div style="color:rgba(255,255,255,.25);font-size:9px">Saldo apertura</div>
-      </div>
+  <div class="menu-kpi-strip">
+    <div class="menu-kpi menu-kpi-gold">
+      <div class="menu-kpi-lbl">Acumulado S2</div>
+      <div class="menu-kpi-val"><span id="menu-kpi-acum">—</span> <span id="menu-kpi-meta" class="menu-kpi-sub">/ —</span></div>
+      <div class="menu-kpi-bar"><div id="menu-kpi-bar" style="width:0%"></div></div>
+      <div id="menu-kpi-pct" class="menu-kpi-foot">—</div>
+    </div>
+    <div class="menu-kpi">
+      <div class="menu-kpi-lbl">Deberías hoy</div>
+      <div class="menu-kpi-val" id="menu-kpi-deber">—</div>
+      <div class="menu-kpi-foot" id="menu-kpi-dh">— dh</div>
+    </div>
+    <div class="menu-kpi menu-kpi-blue">
+      <div class="menu-kpi-lbl">SIGEC</div>
+      <div class="menu-kpi-val" id="menu-kpi-sigec">—</div>
+      <div class="menu-kpi-foot" id="menu-kpi-sigec-sub">—</div>
+    </div>
+    <div class="menu-kpi menu-kpi-purple">
+      <div class="menu-kpi-lbl">GLPI</div>
+      <div class="menu-kpi-val" id="menu-kpi-glpi">—</div>
+      <div class="menu-kpi-foot" id="menu-kpi-glpi-sub">—</div>
+    </div>
+    <div class="menu-kpi menu-kpi-green">
+      <div class="menu-kpi-lbl">Pipeline</div>
+      <div class="menu-kpi-val" id="menu-kpi-leads">—</div>
+      <div class="menu-kpi-foot" id="menu-kpi-leads-sub">Leads</div>
+    </div>
+    <div class="menu-kpi menu-kpi-orange">
+      <div class="menu-kpi-lbl">HubSpot</div>
+      <div class="menu-kpi-val" id="menu-kpi-hub">—</div>
+      <div class="menu-kpi-foot">Actividades</div>
+    </div>
+    <div class="menu-kpi menu-kpi-red">
+      <div class="menu-kpi-lbl">Cartera SAP</div>
+      <div class="menu-kpi-val" id="menu-kpi-cartera">—</div>
+      <div class="menu-kpi-foot">Saldo apertura</div>
     </div>
   </div>
 
-  <!-- GRID DE BOTONES DEL MENÚ -->
-  <div style="padding:16px 20px">
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
-
-      <!-- 1. SEGUIMIENTO COMERCIAL -->
-      <button onclick="abrirModalSeguimiento()" class="menu-btn" style="background:linear-gradient(135deg,#003D45,#005a66);border:1px solid rgba(200,151,30,.3)">
-        <i class="ti ti-clipboard-check" style="font-size:26px;color:#C8971E;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">Seguimiento</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Coordinador · Asesor</div>
+  <div class="menu-body">
+    <div class="menu-section-title">Acciones principales</div>
+    <div class="menu-grid">
+      <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-feature menu-card-teal">
+        <div class="menu-card-icon"><i class="ti ti-clipboard-check"></i></div>
+        <div class="menu-card-title">Seguimiento Comercial</div>
+        <div class="menu-card-desc">Coordinador · Asesor · Metas y hojas 1-4</div>
+        <div class="menu-card-badge">PYV</div>
       </button>
-
-      <!-- 2. PIPELINE GERENCIAL -->
-      <button onclick="abrirPipelineGerencial()" class="menu-btn" style="background:linear-gradient(135deg,#1a2744,#243460);border:1px solid rgba(96,165,250,.3)">
-        <i class="ti ti-chart-bar" style="font-size:26px;color:#60a5fa;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">Pipeline Gerencial</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Producción · Sedes · Cierre</div>
+      <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-feature menu-card-purple">
+        <div class="menu-card-icon"><i class="ti ti-brain"></i></div>
+        <div class="menu-card-title">SCIC · Pulso Nacional</div>
+        <div class="menu-card-desc">Inteligencia cognitiva · 15 paneles IA</div>
+        <div class="menu-card-badge">IA</div>
       </button>
-
-      <!-- 3. SCIC PULSO NACIONAL -->
-      <button onclick="abrirSCIC('pulso')" class="menu-btn" style="background:linear-gradient(135deg,#1a1a2e,#2d1b69);border:1px solid rgba(167,139,250,.3)">
-        <i class="ti ti-brain" style="font-size:26px;color:#a78bfa;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">SCIC · Pulso</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Inteligencia Comercial</div>
+      <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue">
+        <div class="menu-card-icon"><i class="ti ti-chart-bar"></i></div>
+        <div class="menu-card-title">Pipeline Gerencial</div>
+        <div class="menu-card-desc">Producción · Sedes · Cierre</div>
       </button>
-
-      <!-- 4. SEMÁFORO / CARTERA -->
-      <button onclick="abrirEstadoCartera()" class="menu-btn" style="background:linear-gradient(135deg,#2d1515,#4a1c1c);border:1px solid rgba(248,113,113,.3)">
-        <i class="ti ti-traffic-cone" style="font-size:26px;color:#f87171;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">Cartera</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Estado · Recuperación</div>
+      <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red">
+        <div class="menu-card-icon"><i class="ti ti-traffic-cone"></i></div>
+        <div class="menu-card-title">Cartera</div>
+        <div class="menu-card-desc">Estado · Recuperación</div>
       </button>
-
-      <!-- 5. LEADS Y PIPELINE -->
-      <button onclick="abrirConsultaDinamica()" class="menu-btn" style="background:linear-gradient(135deg,#0d2818,#0f3d1f);border:1px solid rgba(52,211,153,.3)">
-        <i class="ti ti-users-group" style="font-size:26px;color:#34d399;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">Leads & Pipeline</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Consulta dinámica</div>
+      <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green">
+        <div class="menu-card-icon"><i class="ti ti-users-group"></i></div>
+        <div class="menu-card-title">Leads & Pipeline</div>
+        <div class="menu-card-desc">Consulta dinámica</div>
       </button>
-
-      <!-- 6. HISTORIAL SEGUIMIENTOS -->
-      <button onclick="abrirHistorialSeguimientos()" class="menu-btn" style="background:linear-gradient(135deg,#1a1205,#2d1f08);border:1px solid rgba(251,191,36,.3)">
-        <i class="ti ti-history" style="font-size:26px;color:#fbbf24;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">Historial</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Seguimientos registrados</div>
+      <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber">
+        <div class="menu-card-icon"><i class="ti ti-history"></i></div>
+        <div class="menu-card-title">Historial</div>
+        <div class="menu-card-desc">Seguimientos registrados</div>
       </button>
-
-      <!-- 7. ACTIVIDAD HUBSPOT -->
-      <button onclick="abrirHubSpotActividad()" class="menu-btn" style="background:linear-gradient(135deg,#1f0f05,#3d1f0a);border:1px solid rgba(251,146,60,.3)">
-        <i class="ti ti-brand-hubspot" style="font-size:26px;color:#fb923c;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">HubSpot</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Actividad comercial</div>
+      <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange">
+        <div class="menu-card-icon"><i class="ti ti-brand-hubspot"></i></div>
+        <div class="menu-card-title">HubSpot</div>
+        <div class="menu-card-desc">Actividad comercial</div>
       </button>
-
-      <!-- 8. MALLA DE TURNOS -->
-      <button onclick="abrirMallaTurnos()" class="menu-btn" style="background:linear-gradient(135deg,#0a1a2e,#0f2440);border:1px solid rgba(147,197,253,.3)">
-        <i class="ti ti-calendar-week" style="font-size:26px;color:#93c5fd;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">Malla de Turnos</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Capacidad operativa</div>
+      <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky">
+        <div class="menu-card-icon"><i class="ti ti-calendar-week"></i></div>
+        <div class="menu-card-title">Malla de Turnos</div>
+        <div class="menu-card-desc">Capacidad operativa</div>
       </button>
-
-      <!-- 9. HERRAMIENTAS PYV -->
-      <button onclick="abrirHerramientasPYV('frag')" class="menu-btn" style="background:linear-gradient(135deg,#0f1a0f,#1a2e1a);border:1px solid rgba(134,239,172,.3)">
-        <i class="ti ti-tools" style="font-size:26px;color:#86efac;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">Herramientas PYV</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">Fragmentos · Guiones · Metas</div>
+      <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime">
+        <div class="menu-card-icon"><i class="ti ti-tools"></i></div>
+        <div class="menu-card-title">Herramientas PYV</div>
+        <div class="menu-card-desc">Simuladores · Fragmentos · Guiones</div>
       </button>
-
-      <!-- 10. REUNIONES HUBSPOT -->
-      <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-btn" style="background:linear-gradient(135deg,#1a0f1a,#2d1a2d);border:1px solid rgba(216,180,254,.3)">
-        <i class="ti ti-calendar-plus" style="font-size:26px;color:#d8b4fe;margin-bottom:8px;display:block"></i>
-        <div style="color:#fff;font-size:13px;font-weight:800">Agendar Reunión</div>
-        <div style="color:rgba(255,255,255,.4);font-size:10px;margin-top:3px">HubSpot Meetings</div>
+      <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet">
+        <div class="menu-card-icon"><i class="ti ti-calendar-plus"></i></div>
+        <div class="menu-card-title">Agendar Reunión</div>
+        <div class="menu-card-desc">HubSpot Meetings</div>
       </button>
-
     </div>
-
-    <!-- PIE DE PÁGINA -->
-    <div style="text-align:center;margin-top:20px;color:rgba(255,255,255,.1);font-size:9px;padding-bottom:16px">
-      SCIC v4.6 · Cooperativa Minuto de Dios · Proceso PYV · 29/06/2026
-      <br>Desarrollado por el equipo de Inteligencia Comercial · Medellín, Colombia
+    <div class="menu-footer">
+      <span id="menu-footer-version">SCIC v4.7</span> · Cooperativa Minuto de Dios · Proceso PYV
     </div>
   </div>
 </div>
 
 <style>
-.menu-btn{
-  padding:18px 14px;border:none;border-radius:12px;cursor:pointer;text-align:center;
-  font-family:Ubuntu,sans-serif;transition:all .2s;width:100%;
-}
+.menu-shell{min-height:100vh;background:#000a0c;font-family:Ubuntu,sans-serif}
+.menu-hero{position:relative;padding:18px 22px 14px;background:linear-gradient(135deg,#001f24 0%,#003D45 45%,#002a30 100%);border-bottom:1px solid rgba(200,151,30,.2);overflow:hidden}
+.menu-hero-glow{position:absolute;top:-40%;right:-10%;width:50%;height:140%;background:radial-gradient(circle,rgba(255,217,0,.12) 0%,transparent 65%);pointer-events:none}
+.menu-topbar{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
+.menu-brand{display:flex;align-items:center;gap:12px}
+.menu-logo{width:40px;height:40px;background:linear-gradient(135deg,#C8971E,#FFD900);border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:#003D45;box-shadow:0 4px 16px rgba(255,217,0,.25)}
+.menu-brand-title{color:#fff;font-size:15px;font-weight:800;letter-spacing:-.3px}
+.menu-brand-sub{color:rgba(255,255,255,.4);font-size:10px;margin-top:2px}
+.menu-user{display:flex;align-items:center;gap:12px}
+.menu-user-text{text-align:right}
+#menu-nombre{color:#fff;font-size:13px;font-weight:700}
+#menu-cargo-sede{color:rgba(255,255,255,.45);font-size:10px;margin-top:2px}
+.menu-avatar{width:38px;height:38px;background:linear-gradient(135deg,#C8971E,#FFD900);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#003D45}
+.menu-logout{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:9px;padding:7px 11px;cursor:pointer;font-size:14px}
+.menu-welcome{position:relative;z-index:1;margin-top:14px}
+.menu-welcome-label{color:#C8971E;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.menu-welcome-title{color:#fff;font-size:17px;font-weight:800;margin-top:4px;max-width:520px;line-height:1.25}
+.menu-kpi-strip{display:flex;gap:8px;overflow-x:auto;padding:12px 18px;background:rgba(0,0,0,.35);border-bottom:1px solid rgba(255,255,255,.06);scrollbar-width:thin}
+.menu-kpi{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 14px;flex-shrink:0;min-width:128px;transition:transform .2s,box-shadow .2s}
+.menu-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.menu-kpi-lbl{color:rgba(255,255,255,.4);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.menu-kpi-val{color:#fff;font-size:18px;font-weight:900;margin-top:3px;line-height:1.1}
+.menu-kpi-sub{color:rgba(255,255,255,.35);font-size:10px;font-weight:600}
+.menu-kpi-bar{background:rgba(255,255,255,.08);border-radius:4px;height:4px;margin-top:6px;overflow:hidden}
+.menu-kpi-bar>div{height:100%;border-radius:4px;background:linear-gradient(90deg,#C8971E,#FFD900);transition:width .6s ease}
+.menu-kpi-foot{color:rgba(255,255,255,.35);font-size:9px;margin-top:4px;font-weight:600}
+.menu-kpi-gold{border-color:rgba(200,151,30,.3);background:rgba(200,151,30,.08)}
+.menu-kpi-gold .menu-kpi-val{color:#FFD900}
+.menu-kpi-blue{border-color:rgba(96,165,250,.25)} .menu-kpi-blue .menu-kpi-val{color:#60a5fa}
+.menu-kpi-purple{border-color:rgba(167,139,250,.25)} .menu-kpi-purple .menu-kpi-val{color:#a78bfa}
+.menu-kpi-green{border-color:rgba(52,211,153,.25)} .menu-kpi-green .menu-kpi-val{color:#34d399}
+.menu-kpi-orange{border-color:rgba(251,146,60,.25)} .menu-kpi-orange .menu-kpi-val{color:#fb923c}
+.menu-kpi-red{border-color:rgba(248,113,113,.25)} .menu-kpi-red .menu-kpi-val{color:#f87171}
+.menu-body{padding:18px 20px 24px}
+.menu-section-title{color:rgba(255,255,255,.35);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
+.menu-card{position:relative;padding:18px 14px;border:none;border-radius:14px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .22s cubic-bezier(.4,0,.2,1);overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.menu-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.06),transparent);opacity:0;transition:opacity .2s}
+.menu-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.45);border-color:rgba(255,255,255,.15)}
+.menu-card:hover::before{opacity:1}
+.menu-card-feature{grid-column:span 1;min-height:120px}
+@media(min-width:720px){.menu-card-feature{grid-column:span 1}}
+.menu-card-icon{font-size:28px;margin-bottom:10px;display:block;opacity:.95}
+.menu-card-title{color:#fff;font-size:13px;font-weight:800;line-height:1.2}
+.menu-card-desc{color:rgba(255,255,255,.45);font-size:10px;margin-top:5px;line-height:1.35}
+.menu-card-badge{position:absolute;top:10px;right:10px;font-size:8px;font-weight:800;padding:3px 7px;border-radius:6px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7)}
+.menu-card-teal{background:linear-gradient(145deg,rgba(0,61,69,.9),rgba(0,90,102,.7));border-color:rgba(200,151,30,.35)} .menu-card-teal .menu-card-icon{color:#C8971E}
+.menu-card-purple{background:linear-gradient(145deg,rgba(26,26,46,.95),rgba(45,27,105,.8));border-color:rgba(167,139,250,.35)} .menu-card-purple .menu-card-icon{color:#a78bfa}
+.menu-card-blue{background:linear-gradient(145deg,rgba(26,39,68,.9),rgba(36,52,96,.75));border-color:rgba(96,165,250,.3)} .menu-card-blue .menu-card-icon{color:#60a5fa}
+.menu-card-red{background:linear-gradient(145deg,rgba(45,21,21,.9),rgba(74,28,28,.75));border-color:rgba(248,113,113,.3)} .menu-card-red .menu-card-icon{color:#f87171}
+.menu-card-green{background:linear-gradient(145deg,rgba(13,40,24,.9),rgba(15,61,31,.75));border-color:rgba(52,211,153,.3)} .menu-card-green .menu-card-icon{color:#34d399}
+.menu-card-amber{background:linear-gradient(145deg,rgba(26,18,5,.9),rgba(45,31,8,.75));border-color:rgba(251,191,36,.3)} .menu-card-amber .menu-card-icon{color:#fbbf24}
+.menu-card-orange{background:linear-gradient(145deg,rgba(31,15,5,.9),rgba(61,31,10,.75));border-color:rgba(251,146,60,.3)} .menu-card-orange .menu-card-icon{color:#fb923c}
+.menu-card-sky{background:linear-gradient(145deg,rgba(10,26,46,.9),rgba(15,36,64,.75));border-color:rgba(147,197,253,.3)} .menu-card-sky .menu-card-icon{color:#93c5fd}
+.menu-card-lime{background:linear-gradient(145deg,rgba(15,26,15,.9),rgba(26,46,26,.75));border-color:rgba(134,239,172,.3)} .menu-card-lime .menu-card-icon{color:#86efac}
+.menu-card-violet{background:linear-gradient(145deg,rgba(26,15,26,.9),rgba(45,26,45,.75));border-color:rgba(216,180,254,.3)} .menu-card-violet .menu-card-icon{color:#d8b4fe}
+.menu-footer{text-align:center;margin-top:22px;color:rgba(255,255,255,.15);font-size:9px}
+.herr-tab{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
+.herr-tab:hover,.herr-tab.active{background:#003D45;color:#FFD900;border-color:#003D45}
+.menu-btn{padding:18px 14px;border:none;border-radius:12px;cursor:pointer;text-align:center;font-family:Ubuntu,sans-serif;transition:all .2s;width:100%}
 .menu-btn:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 6px 20px rgba(0,0,0,.4)}
-.menu-btn:active{transform:translateY(0)}
 </style>
 <!-- Legacy compatibility hidden elements -->
 <div style="display:none">
@@ -1249,7 +1275,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     <!-- SEMÁFORO CIERRE PERIODO + CARRERA A LA META -->
     <div class="card" id="card-semaforo-cierre-coord">
       <div class="card-hdr"><div class="cico"><i class="ti ti-flag"></i></div><h2>Cierre anterior &amp; Avance activo</h2></div>
-      
+      <div id="sem-cierre-coord-h2"><div style="text-align:center;padding:12px;color:#94a3b8;font-size:12px">Cargando semáforos desde Sheets…</div></div>
     </div>
     <!-- 5 SEMAFOROS GERENCIALES (Pipeline) PARA LA SEDE EN CURSO -->
     <div class="card" id="card-5sem-coord">
@@ -2958,7 +2984,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.6.2';
+var APP_VERSION = 'SCIC-4.7.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3713,12 +3739,10 @@ function abrirHubSpotActividad() {
     'Nota':'#fbbf24','Tarea':'#f87171',
     'Respuesta al mensaje de correo':'#34d399'
   };
-  
-  var kpis = '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px">';
+  var kpis = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px">';
   kpis += '<div style="background:rgba(251,146,60,.1);border:1px solid rgba(251,146,60,.25);border-radius:10px;padding:14px;text-align:center">'
     + '<div style="color:rgba(255,255,255,.4);font-size:9px;text-transform:uppercase">Total</div>'
     + '<div style="color:#fb923c;font-size:26px;font-weight:900">' + total.toLocaleString() + '</div></div>';
-  
   Object.keys(tipos).slice(0,3).forEach(function(tipo) {
     var col = colores[tipo] || '#94a3b8';
     var s = tipo.length > 14 ? tipo.substr(0,12)+'..' : tipo;
@@ -3727,7 +3751,6 @@ function abrirHubSpotActividad() {
       + '<div style="color:' + col + ';font-size:22px;font-weight:900">' + (tipos[tipo]||0).toLocaleString() + '</div></div>';
   });
   kpis += '</div>';
-  
   var rows = '';
   asesores.slice(0,10).forEach(function(a) {
     var pct = Math.round(a.total / max_a * 100);
@@ -3738,57 +3761,85 @@ function abrirHubSpotActividad() {
       + '<div style="background:rgba(255,255,255,.06);border-radius:3px;height:4px">'
       + '<div style="width:' + pct + '%;background:linear-gradient(90deg,#fb923c,#fbbf24);height:100%;border-radius:3px"></div></div></div>';
   });
-  
-  var contenido = '<div style="background:#0f172a;min-height:100%;padding:20px;font-family:Ubuntu,sans-serif">'
-    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">'
-    + '<button onclick="volverAlMenu()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:7px 14px;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif"><i class="ti ti-arrow-left"></i> Menú</button>'
-    + '<div><div style="color:#fb923c;font-size:9px;font-weight:700;text-transform:uppercase">SCIC · Actividad Comercial</div>'
-    + '<div style="color:#fff;font-size:18px;font-weight:900">Actividad HubSpot</div></div></div>'
+  var contenido = '<div style="background:#0f172a;padding:4px 0;font-family:Ubuntu,sans-serif">'
     + kpis
     + '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px">'
     + '<div style="color:rgba(255,255,255,.5);font-size:10px;font-weight:700;text-transform:uppercase;margin-bottom:10px">Top Asesores por Actividad</div>'
-    + rows + '</div></div>';
-  
-  var h5 = document.getElementById('h5');
-  if(h5) { h5.innerHTML = contenido; activateSheet('h5', null); }
+    + (rows || '<div style="color:#94a3b8;font-size:12px;text-align:center;padding:20px">Sin datos HubSpot cargados aún</div>')
+    + '</div></div>';
+  abrirPanelMenu('Actividad HubSpot', contenido, '#fb923c');
+  if(typeof _cargarHubspot==='function') _cargarHubspot().then(function(){ abrirHubSpotActividad(); }).catch(function(){});
 }
 window.abrirHubSpotActividad = abrirHubSpotActividad;
 
 function abrirMallaTurnos() {
-  var contenido = '<div style="background:#0f172a;min-height:100%;padding:20px;font-family:Ubuntu,sans-serif">'
-    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:20px">'
-    + '<button onclick="volverAlMenu()" style="background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:#fff;border-radius:8px;padding:7px 14px;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif"><i class="ti ti-arrow-left"></i> Menú</button>'
-    + '<div><div style="color:#93c5fd;font-size:9px;font-weight:700;text-transform:uppercase">SCIC · Capacidad Operativa</div>'
-    + '<div style="color:#fff;font-size:18px;font-weight:900">Malla de Turnos</div></div></div>'
+  var malla = window._malla_data || [];
+  var nAses = Object.keys(EMPLEADOS_BD||{}).filter(function(k){ return (EMPLEADOS_BD[k].estado||'').toLowerCase()==='activo'; }).length;
+  var nFilas = Array.isArray(malla) ? malla.length : (malla.rows ? malla.rows.length : 0);
+  var nRect = Object.keys(RECTORIAS||{}).length;
+  var contenido = '<div style="font-family:Ubuntu,sans-serif">'
     + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">'
     + '<div style="background:rgba(147,197,253,.08);border:1px solid rgba(147,197,253,.2);border-radius:10px;padding:14px;text-align:center">'
-    + '<div style="color:#93c5fd;font-size:26px;font-weight:900">93</div>'
+    + '<div style="color:#93c5fd;font-size:26px;font-weight:900" id="malla-kpi-ases">' + nAses + '</div>'
     + '<div style="color:rgba(255,255,255,.4);font-size:9px;margin-top:3px">Asesores activos</div></div>'
     + '<div style="background:rgba(147,197,253,.08);border:1px solid rgba(147,197,253,.2);border-radius:10px;padding:14px;text-align:center">'
-    + '<div style="color:#93c5fd;font-size:26px;font-weight:900">765</div>'
+    + '<div style="color:#93c5fd;font-size:26px;font-weight:900" id="malla-kpi-filas">' + nFilas + '</div>'
     + '<div style="color:rgba(255,255,255,.4);font-size:9px;margin-top:3px">Registros de turno</div></div>'
     + '<div style="background:rgba(147,197,253,.08);border:1px solid rgba(147,197,253,.2);border-radius:10px;padding:14px;text-align:center">'
-    + '<div style="color:#4ade80;font-size:26px;font-weight:900">19</div>'
+    + '<div style="color:#4ade80;font-size:26px;font-weight:900">' + nRect + '</div>'
     + '<div style="color:rgba(255,255,255,.4);font-size:9px;margin-top:3px">Rectorías</div></div></div>'
-    + '<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:20px;text-align:center">'
-    + '<i class="ti ti-calendar-week" style="font-size:36px;color:#93c5fd;opacity:.6"></i>'
-    + '<div style="color:#94a3b8;font-size:12px;margin-top:12px">Los turnos detallados se cargan desde el Sheet</div>'
-    + '<div style="color:rgba(255,255,255,.2);font-size:10px;margin-top:6px">Repo MALLA TURNOS · Hoja: MALLA DE TURNOS MES ACTUAL · 765 filas</div>'
-    + '<button id="btn-cargar-malla" onclick="_cargarYMostrarMalla()" style="margin-top:14px;background:#93c5fd;color:#001f24;border:none;border-radius:8px;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer"><i class="ti ti-refresh"></i> Cargar turno desde Sheet</button>'
+    + '<div id="malla-detalle" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;max-height:50vh;overflow-y:auto">'
+    + '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px"><i class="ti ti-calendar-week" style="font-size:32px;opacity:.5"></i><div style="margin-top:10px">Cargando malla desde Sheet…</div></div>'
+    + '</div>'
+    + '<div style="text-align:center;margin-top:12px">'
+    + '<button id="btn-cargar-malla" onclick="_cargarYMostrarMalla()" style="background:#93c5fd;color:#001f24;border:none;border-radius:8px;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer"><i class="ti ti-refresh"></i> Actualizar desde Sheet</button>'
     + '</div></div>';
-  
-  var h5 = document.getElementById('h5');
-  if(h5) { h5.innerHTML = contenido; activateSheet('h5', null); }
+  abrirPanelMenu('Malla de Turnos', contenido, '#93c5fd');
+  _cargarYMostrarMalla();
 }
 window.abrirMallaTurnos = abrirMallaTurnos;
+
+function abrirPanelMenu(titulo, html, color) {
+  var m = document.getElementById('modal-menu-panel');
+  if(!m) return;
+  document.getElementById('menu-panel-titulo').textContent = titulo;
+  document.getElementById('menu-panel-titulo').style.color = color || '#FFD900';
+  document.getElementById('menu-panel-contenido').innerHTML = html;
+  m.style.display = 'flex';
+}
+window.abrirPanelMenu = abrirPanelMenu;
+function cerrarPanelMenu(){ var m=document.getElementById('modal-menu-panel'); if(m)m.style.display='none'; }
+window.cerrarPanelMenu = cerrarPanelMenu;
 
 function _cargarYMostrarMalla() {
   var btn = document.getElementById('btn-cargar-malla');
   if(btn) btn.textContent = 'Cargando...';
   if(typeof _cargarMallaTurnos === 'function') {
     _cargarMallaTurnos().then(function() {
-      if(typeof mostrarAlertaNav === 'function') mostrarAlertaNav('Malla actualizada desde Sheet');
+      var malla = window._malla_data || [];
+      var filas = Array.isArray(malla) ? malla : (malla.rows || []);
+      var el = document.getElementById('malla-detalle');
+      var kf = document.getElementById('malla-kpi-filas');
+      if(kf) kf.textContent = filas.length;
+      if(el && filas.length) {
+        var html = '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:rgba(147,197,253,.15)">';
+        var cols = Object.keys(filas[0]||{}).slice(0,6);
+        cols.forEach(function(c){ html += '<th style="padding:6px 8px;text-align:left;color:#93c5fd">' + c + '</th>'; });
+        html += '</tr></thead><tbody>';
+        filas.slice(0,50).forEach(function(row,i){
+          html += '<tr style="border-bottom:1px solid rgba(255,255,255,.06)">';
+          cols.forEach(function(c){ html += '<td style="padding:5px 8px;color:#e2e8f0">' + (row[c]||'—') + '</td>'; });
+          html += '</tr>';
+        });
+        if(filas.length > 50) html += '<tr><td colspan="'+cols.length+'" style="padding:8px;color:#94a3b8;text-align:center">… y '+(filas.length-50)+' más</td></tr>';
+        html += '</tbody></table>';
+        el.innerHTML = html;
+      } else if(el) {
+        el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">No hay datos de malla en el Sheet</div>';
+      }
+      if(typeof construirResumenGerencial==='function') construirResumenGerencial();
       if(btn) btn.textContent = 'Actualizado ✓';
+      if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Malla actualizada desde Sheet');
     }).catch(function() {
       if(btn) btn.textContent = 'Error al cargar';
     });
@@ -4321,10 +4372,26 @@ document.addEventListener('DOMContentLoaded', function(){
     <button onclick="cerrarHerramientas()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:Ubuntu,sans-serif">✕ Cerrar</button>
   </div>
 
+  <div id="herr-tabs" style="display:flex;flex-wrap:wrap;gap:5px;padding:10px 16px;background:#f1f5f9;border-bottom:1px solid #e2e8f0">
+    <button type="button" class="herr-tab" data-tab="frag" onclick="abrirHerramientas('frag')">📋 Fragmentos</button>
+    <button type="button" class="herr-tab" data-tab="sim" onclick="abrirHerramientas('sim')">🎓 Simulador Educativo</button>
+    <button type="button" class="herr-tab" data-tab="crediplus" onclick="abrirHerramientas('crediplus')">💳 Crediplus</button>
+    <button type="button" class="herr-tab" data-tab="pmad" onclick="abrirHerramientas('pmad')">🏘️ PMAD</button>
+    <button type="button" class="herr-tab" data-tab="cart" onclick="abrirHerramientas('cart')">🧮 Cartera</button>
+    <button type="button" class="herr-tab" data-tab="tip" onclick="abrirHerramientas('tip')">🏷️ Tipificaciones</button>
+    <button type="button" class="herr-tab" data-tab="req" onclick="abrirHerramientas('req')">📄 Requisitos</button>
+    <button type="button" class="herr-tab" data-tab="req-edu" onclick="abrirHerramientas('req-edu')">🎓 Req. Educativos</button>
+    <button type="button" class="herr-tab" data-tab="req-ren" onclick="abrirHerramientas('req-ren')">🔄 Req. Renovación</button>
+    <button type="button" class="herr-tab" data-tab="beneficios" onclick="abrirHerramientas('beneficios')">🎁 Beneficios</button>
+    <button type="button" class="herr-tab" data-tab="pyr" onclick="abrirHerramientas('pyr')">❓ Preguntas</button>
+    <button type="button" class="herr-tab" data-tab="whatsapp" onclick="abrirHerramientas('whatsapp')">📱 WhatsApp</button>
+    <button type="button" class="herr-tab" data-tab="sedes-sync" onclick="abrirHerramientas('sedes-sync')">🔄 Sedes Excel</button>
+  </div>
+
   <div style="padding:16px 20px;max-height:68vh;overflow-y:auto">
 
     <!-- TIPIFICACIONES -->
-    <div id="hpanel-tip" class="hpanel">
+    <div id="hpanel-tip" class="hpanel" style="display:none">
       <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
         <input type="text" id="tip-search" placeholder="Buscar tipificacion..." oninput="filtrarTipificaciones()" style="flex:1;min-width:180px;padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif">
         <select id="tip-proceso" onchange="filtrarTipificaciones()" style="padding:8px 10px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif">
@@ -4337,8 +4404,8 @@ document.addEventListener('DOMContentLoaded', function(){
       <div id="tip-results"></div>
     </div>
 
-    <!-- FRAGMENTOS -->
-    <div <div id="hpanel-whatsapp" class="hpanel" style="display:none">
+    <!-- FRAGMENTOS / WHATSAPP -->
+    <div id="hpanel-whatsapp" class="hpanel" style="display:none">
   <div id="cont-whatsapp" style="padding:8px;min-height:200px">
     <div id="proto-content" style="font-size:12px;color:#1e293b;line-height:1.6">
       <div style="text-align:center;padding:24px;color:#94a3b8">
@@ -5509,6 +5576,16 @@ https://minutodediosportal.com/login/
 
 <div id="modal-leads" style="display:none;position:fixed;inset:0;background:#00000088;z-index:3000;overflow-y:auto;padding:12px"><div style="max-width:900px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)"><div style="background:linear-gradient(135deg,#0891b2,#0e7490);padding:16px 20px;display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:15px;font-weight:800;color:#fff">&#128101; Panel de Leads</div><div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Cruce Call Center + Admitidos + SIGEC + GLPI + Base Colocaci&oacute;n</div></div><button onclick="document.getElementById('modal-leads').style.display='none'" style="background:#ffffff22;border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px">&#10005;</button></div><div id="leads-contenido" style="max-height:82vh;overflow-y:auto;padding:14px"><div style="text-align:center;padding:30px;color:#94a3b8">&#9203; Cargando...</div></div></div></div>
 
+<div id="modal-menu-panel" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:99990;align-items:center;justify-content:center;padding:16px">
+  <div style="background:#0f172a;border-radius:18px;max-width:920px;width:100%;max-height:90vh;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1)">
+    <div style="background:linear-gradient(135deg,#001f24,#003D45);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #C8971E">
+      <div id="menu-panel-titulo" style="color:#FFD900;font-size:16px;font-weight:800">Panel</div>
+      <button onclick="cerrarPanelMenu()" style="background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-family:Ubuntu,sans-serif">✕ Cerrar</button>
+    </div>
+    <div id="menu-panel-contenido" style="padding:20px;max-height:calc(90vh - 60px);overflow-y:auto"></div>
+  </div>
+</div>
+
 <div id="h5" class="sheet">
 <div style="background:linear-gradient(135deg,#001f24 0%,#003D45 50%,#004d58 100%);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #C8971E">
   <div style="display:flex;align-items:center;gap:12px">
@@ -5857,6 +5934,204 @@ function _parseCumpleMMDD(s){
   [200,800,2000,4000,7000,11000].forEach(function(ms){ setTimeout(function(){
     try{ var m=document.getElementById('modal-top-sedes'); if(m&&m.style.display!=='none')m.style.display='none'; renderLoginDashboard(); }catch(e){}
   }, ms); });
+})();
+</script>
+<!-- SCIC v4.7 — Mejoras menú, metas, semáforos, herramientas PYV -->
+<script>
+(function(){
+  var MESES_KEY = {Enero:'enero',Febrero:'febrero',Marzo:'marzo',Abril:'abril',Mayo:'mayo',Junio:'junio',Julio:'julio',Agosto:'agosto',Septiembre:'septiembre',Octubre:'octubre',Noviembre:'noviembre',Diciembre:'diciembre'};
+  function normSede(s){
+    var n = (typeof normalizarSedeColocacion==='function') ? normalizarSedeColocacion(s) : (s||'');
+    return String(n).toLowerCase().replace(/[^a-z0-9]/g,'');
+  }
+  function buscarFilasColoc(sedes){
+    var data = window._coloc_data || [];
+    if(!sedes || !sedes.length) return [];
+    var targets = sedes.map(normSede);
+    return data.filter(function(row){
+      var rs = normSede(row.sede);
+      return targets.some(function(t){ return t && (rs===t || rs.indexOf(t)>=0 || t.indexOf(rs)>=0); });
+    });
+  }
+  window.buscarFilasColoc = buscarFilasColoc;
+
+  function construirResumenGerencial(){
+    var r = window._resumenGerencial || {enTurnoPorSede:{},logueadosPorSede:{},seguimientosPorSede:{}};
+    Object.values(EMPLEADOS_BD||{}).forEach(function(e){
+      if(!e.sede) return;
+      var st = (e.estado||'').toLowerCase();
+      if(st.indexOf('inactiv')>=0 || st.indexOf('retir')>=0) return;
+      var c = (e.cargo||'').toLowerCase();
+      if(c.indexOf('asesor')>=0 || c.indexOf('coordinador')>=0){
+        r.enTurnoPorSede[e.sede] = (r.enTurnoPorSede[e.sede]||0) + 1;
+      }
+    });
+    var malla = window._malla_data || [];
+    var filas = Array.isArray(malla) ? malla : (malla.rows||[]);
+    filas.forEach(function(row){
+      var sede = row.sede || row.SEDE || row.Sede || '';
+      if(sede){ r.logueadosPorSede[sede] = (r.logueadosPorSede[sede]||0) + 1; }
+    });
+    window._resumenGerencial = r;
+  }
+  window.construirResumenGerencial = construirResumenGerencial;
+
+  function fmtN(n){ return (Number(n)||0).toLocaleString('es-CO'); }
+  function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
+
+  function actualizarMenuKPIs(){
+    try{
+      var col = window._coloc_data || (_DATA&&_DATA.coloc) || [];
+      var metaN=0, acumN=0;
+      col.forEach(function(r){ metaN+=r.meta_n||0; acumN+=r.acum_n||0; });
+      var pct = metaN>0 ? Math.round(acumN/metaN*100) : 0;
+      var sem = pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO';
+      var colSem = pct>=90?'#4ade80':pct>=70?'#fbbf24':'#f87171';
+      var el;
+      el=document.getElementById('menu-kpi-acum'); if(el) el.textContent=fmtN(acumN);
+      el=document.getElementById('menu-kpi-meta'); if(el) el.textContent='/ '+fmtN(metaN);
+      el=document.getElementById('menu-kpi-bar'); if(el){ el.style.width=Math.min(100,pct)+'%'; el.style.background=colSem; }
+      el=document.getElementById('menu-kpi-pct'); if(el){ el.textContent=pct+'% curva · '+sem; el.style.color=colSem; }
+      var deb = window._mtsDebemosHoy || (_DATA&&_DATA.debemos_hoy) || 0;
+      el=document.getElementById('menu-kpi-deber'); if(el) el.textContent=fmtN(deb);
+      var sig = (_DATA&&_DATA.sigec) || {};
+      el=document.getElementById('menu-kpi-sigec'); if(el) el.textContent=fmtN(sig.facturadas||5761);
+      el=document.getElementById('menu-kpi-sigec-sub'); if(el) el.textContent='Facturadas · '+(sig.abiertas||789)+' abiertas';
+      var glp = (_DATA&&_DATA.glpi) || {};
+      el=document.getElementById('menu-kpi-glpi'); if(el) el.textContent=fmtN(glp.aprobadas||535);
+      el=document.getElementById('menu-kpi-glpi-sub'); if(el) el.textContent='Aprobadas · '+(glp.abiertas||62)+' abiertas';
+      var ld = (_DATA&&_DATA.leads) || {};
+      el=document.getElementById('menu-kpi-leads'); if(el) el.textContent=fmtN(ld.total||5645);
+      el=document.getElementById('menu-kpi-leads-sub'); if(el) el.textContent='Leads · '+(ld.renov||5631)+' renov.';
+      var hub = window._hubspot_data || (_DATA&&_DATA.hubspot) || {};
+      el=document.getElementById('menu-kpi-hub'); if(el) el.textContent=fmtN(hub.total||49473);
+      var cart = window._cartera_data || (_DATA&&_DATA.cartera) || {};
+      el=document.getElementById('menu-kpi-cartera'); if(el) el.textContent=fmtM(cart.saldo||8e9);
+      var mv=document.getElementById('menu-version'); if(mv&&typeof APP_VERSION!=='undefined') mv.textContent=APP_VERSION.replace('SCIC-','SCIC v');
+      el=document.getElementById('menu-footer-version'); if(el&&typeof APP_VERSION!=='undefined') el.textContent=APP_VERSION.replace('SCIC-','SCIC v');
+    }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
+  }
+  window.actualizarMenuKPIs = actualizarMenuKPIs;
+
+  function refreshH1Metas(){
+    var sedes = (typeof state!=='undefined'&&state.sedes) ? state.sedes : [];
+    var card = document.getElementById('card-meta-coloc');
+    if(card) card.style.display = sedes.length ? 'block' : 'none';
+    if(!sedes.length) return;
+    if(typeof mode!=='undefined' && mode==='coord' && typeof renderMetasConsolidadas==='function'){
+      renderMetasConsolidadas();
+    } else if(typeof actualizarMetaColocacion==='function'){
+      actualizarMetaColocacion();
+    }
+    if(typeof calcMetaAsesor==='function' && mode==='asesor') calcMetaAsesor();
+  }
+  window.refreshH1Metas = refreshH1Metas;
+
+  function refreshH2Semaforos(){
+    construirResumenGerencial();
+    var sedes = (typeof state!=='undefined'&&state.sedes) ? state.sedes : [];
+    if(!sedes.length) return;
+    var sede = sedes[0];
+    var h2el = document.getElementById('sem-cierre-coord-h2');
+    if(h2el && typeof renderSemaforoCompleto==='function'){
+      try{ renderSemaforoCompleto('sem-cierre-coord-h2', sede, false); }catch(e){}
+    }
+    if(typeof coordRenderar5Semaforos==='function') coordRenderar5Semaforos();
+    var filas = buscarFilasColoc(sedes);
+    if(filas.length){
+      var metaN=filas.reduce(function(s,r){return s+(r.meta_n||0);},0);
+      var acumN=filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
+      var rc=document.getElementById('real_creditos');
+      if(rc && !rc.value) rc.value = acumN;
+      if(typeof actualizarSemaforoProyeccion==='function') actualizarSemaforoProyeccion();
+      if(typeof calcSemaforoColoc==='function') calcSemaforoColoc();
+    }
+  }
+  window.refreshH2Semaforos = refreshH2Semaforos;
+
+  if(typeof coordRenderar5Semaforos==='function'){
+    var _orig5sem = coordRenderar5Semaforos;
+    window.coordRenderar5Semaforos = function(){
+      var el = document.getElementById('coord-5sem-contenido');
+      var sedes = (typeof state!=='undefined'&&state.sedes) ? state.sedes : [];
+      if(!el || !sedes.length){ return _orig5sem(); }
+      var filas = buscarFilasColoc(sedes);
+      if(!filas.length){
+        el.innerHTML='<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Sin datos de colocación para <strong>'+sedes.join(', ')+'</strong>. Verifica el nombre de sede en el Sheet.</div>';
+        return;
+      }
+      var saved = state.sedes;
+      state.sedes = filas.map(function(r){return r.sede;});
+      try{ _orig5sem(); }finally{ state.sedes = saved; }
+    };
+  }
+
+  if(typeof actualizarMetaColocacion==='function'){
+    var _origMeta = actualizarMetaColocacion;
+    window.actualizarMetaColocacion = function(){
+      var sedes = (typeof state!=='undefined'&&state.sedes) ? state.sedes : [];
+      if(sedes.length && typeof renderMetasConsolidadas==='function' && mode==='coord'){
+        renderMetasConsolidadas();
+        return;
+      }
+      _origMeta();
+    };
+  }
+
+  window.abrirCentroHerramientasPYV = function(tab){
+    if(typeof abrirHerramientas==='function') abrirHerramientas(tab||'frag');
+  };
+
+  if(typeof abrirHerramientas==='function'){
+    var _origHerr = abrirHerramientas;
+    window.abrirHerramientas = function(tab){
+      _origHerr(tab||'frag');
+      document.querySelectorAll('.herr-tab').forEach(function(btn){
+        btn.classList.toggle('active', btn.getAttribute('data-tab')===(tab||'frag'));
+      });
+    };
+    window.abrirHerramientasPYV = window.abrirCentroHerramientasPYV;
+  }
+
+  if(typeof window._mostrarMenuPrincipal==='function'){
+    var _origMenu = window._mostrarMenuPrincipal;
+    window._mostrarMenuPrincipal = window.volverAlMenu = window.irEtapaMenu = function(){
+      _origMenu();
+      actualizarMenuKPIs();
+    };
+  }
+
+  if(typeof activateSheet==='function'){
+    var _as2 = window.activateSheet || activateSheet;
+    window.activateSheet = activateSheet = function(id, tabEl){
+      var r = _as2(id, tabEl);
+      if(id==='h1') setTimeout(refreshH1Metas, 100);
+      if(id==='h2') setTimeout(refreshH2Semaforos, 150);
+      if(id==='h3') setTimeout(function(){
+        refreshH2Semaforos();
+        if(typeof renderAnalisis==='function') renderAnalisis();
+      }, 150);
+      return r;
+    };
+  }
+
+  var _origOnSedes = typeof onSedesChange==='function' ? onSedesChange : null;
+  window.onSedesChange = function(){
+    if(_origOnSedes) _origOnSedes();
+    setTimeout(refreshH1Metas, 80);
+    setTimeout(refreshH2Semaforos, 120);
+  };
+  var _origOnMes = typeof onMesChange==='function' ? onMesChange : null;
+  window.onMesChange = function(){
+    if(_origOnMes) _origOnMes();
+    setTimeout(refreshH1Metas, 80);
+  };
+
+  construirResumenGerencial();
+  setTimeout(actualizarMenuKPIs, 500);
+  setTimeout(actualizarMenuKPIs, 3000);
+  setTimeout(construirResumenGerencial, 5000);
+  console.log('[SCIC v4.7] Mejoras menú, metas, semáforos y herramientas PYV activas');
 })();
 </script>
 </body>
