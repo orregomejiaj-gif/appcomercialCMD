@@ -3205,9 +3205,13 @@ function _cargarEmpleados(){
           if(!correo) correo=String(v[0]||'').trim().toLowerCase();
           if(!correo||correo.indexOf('@')<0) return;
           function fld(nm,ix){for(var j=0;j<cols.length;j++)if(cols[j].toUpperCase()===nm&&v[j]!==undefined)return String(v[j]||'').trim();return String(v[ix]||'').trim();}
-          EMPLEADOS_BD[correo]={correo:correo,nombre:fld('NOMBRE COMPLETO',1),cargo:fld('CARGO',2),sede:fld('SEDE',3),cedula:fld('CEDULA',4),estado:fld('ESTADO',7)||'Activo'};
+          var _nac=fld('F.NACIMIENTO',6);
+          var _cum=(typeof _parseCumpleMMDD==='function')?_parseCumpleMMDD(_nac):'';
+          EMPLEADOS_BD[correo]={correo:correo,nombre:fld('NOMBRE COMPLETO',1),cargo:fld('CARGO',2),sede:fld('SEDE',3),cedula:fld('CEDULA',4),estado:fld('ESTADO',7)||'Activo',cumpleanos:_cum};
         });
-        console.log('[SCIC] Sheet empleados actualizado: '+Object.keys(EMPLEADOS_BD).length);
+        try{ EMPLEADOS_CUM=Object.keys(EMPLEADOS_BD).map(function(k){return EMPLEADOS_BD[k];}).filter(function(e){return e&&e.cumpleanos&&e.cumpleanos.length===5;}); }catch(e){}
+        try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
+        console.log('[SCIC] Sheet empleados actualizado: '+Object.keys(EMPLEADOS_BD).length+' · cumpleaños: '+((typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM)?EMPLEADOS_CUM.length:0));
         delete window[cb];
       }catch(e){delete window[cb];}
     };
@@ -5572,6 +5576,17 @@ https://minutodediosportal.com/login/
      meta del día, asesores del turno y cumpleaños. Reutiliza la misma capa de
      datos (window._mts*, EMPLEADOS_BD, EMPLEADOS_CUM) ya cargada desde Sheets. -->
 <script>
+// Convierte F.NACIMIENTO del Sheet (formato "Date(y,m,d)" o "dd/mm") a "MM-DD".
+function _parseCumpleMMDD(s){
+  if(!s)return'';
+  s=String(s).trim();
+  var m=s.match(/Date\((\d+),(\d+),(\d+)/);
+  if(m){return String(parseInt(m[2],10)+1).padStart(2,'0')+'-'+String(parseInt(m[3],10)).padStart(2,'0');}
+  var p=s.split(/[\/\-.]/);
+  if(p.length>=2){var d=parseInt(p[0],10),mm=parseInt(p[1],10);
+    if(!isNaN(d)&&!isNaN(mm)&&mm>=1&&mm<=12&&d>=1&&d<=31)return String(mm).padStart(2,'0')+'-'+String(d).padStart(2,'0');}
+  return'';
+}
 (function(){
   var fmt=function(n){return (Number(n)||0).toLocaleString('es-CO');};
   var setTxt=function(id,v){var el=document.getElementById(id); if(el)el.textContent=v;};
