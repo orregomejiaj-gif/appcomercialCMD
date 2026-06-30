@@ -5532,6 +5532,23 @@ https://minutodediosportal.com/login/
   derivarSedeRectoria();
   setTimeout(derivarSedeRectoria, 4000);
 })();
+/* SCIC fix: la hoja de Metas (#h1) quedó anidada DENTRO de #h0 por un </div>
+   mal ubicado en el HTML; como #h0 se oculta (display:none) al navegar, #h1 (y
+   por herencia el resto del flujo de seguimiento) nunca se veía. Se reubican las
+   hojas h1..h4 como hermanas de #h0 para que activateSheet pueda mostrarlas. */
+(function(){
+  try{
+    var h0=document.getElementById('h0');
+    if(!h0||!h0.parentNode) return;
+    ['h1','h2','h3','h4'].forEach(function(hid){
+      var s=document.getElementById(hid);
+      if(s && s.parentElement===h0){
+        h0.parentNode.insertBefore(s, h0.nextSibling);
+        console.log('[SCIC fix] #'+hid+' reubicado como hermano de #h0 (estaba anidado)');
+      }
+    });
+  }catch(e){ console.warn('[SCIC fix] reubicar hojas:', e&&e.message); }
+})();
 </script>
 </body>
 </html>
