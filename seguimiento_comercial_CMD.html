@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.6.0   (APP_VERSION = 'SCIC-4.6')
+  Versión actual: 4.6.1   (APP_VERSION = 'SCIC-4.6.1')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,11 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.6.1 (2026-06-30)
+    - Seguimiento: se corrige </div> extra en #h1 que dejaba las cards de metas
+      (card-metas-coord, card-metas-asesor) fuera de la hoja visible.
+    - Seguimiento: script de reubicación mueve cards huérfanas de #h0 a #h1.
+    - Flujo Coordinador/Asesor: h1 completa con botón Guardar metas y tabs h1-h4.
   v4.5.0 (2026-06-30)
     - Login: se contiene el error de inicialización (Object.assign sobre
       RECTORIAS no declarado) que dejaba la app colgada en el login.
@@ -797,7 +802,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </div>
     <!-- Version -->
     <div style="text-align:center;margin-top:20px;color:rgba(255,255,255,.25);font-size:10px">
-      App Seguimiento Comercial CMD · Proceso PYV · <span id="app-version-footer">v4.6.0</span>
+      App Seguimiento Comercial CMD · Proceso PYV · <span id="app-version-footer">v4.6.1</span>
     </div>
   </div>
 </div>
@@ -1144,7 +1149,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="field"><label>Nombre del asesor</label><input type="text" id="asesor-nombre" list="dl-empleados" autocomplete="off" placeholder="Nombre completo"></div>
         <div class="field"><label>Coordinador a cargo</label><input type="text" id="asesor-coord" list="dl-empleados" autocomplete="off" placeholder="Nombre del coordinador"></div>
         <div class="field"><label>Ejecuta el seguimiento</label><input type="text" id="ejecutor-asesor" list="dl-empleados" autocomplete="off" placeholder="Nombre de quien evalúa"></div>
-      </div>
       </div>
       <div class="grid3" style="margin-bottom:12px">
         <div class="field"><label>Cantidad de asesores en sede</label><input type="number" id="num-asesores" min="1" value="1" oninput="calcMetaAsesor()"></div>
@@ -2949,7 +2953,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.6';
+var APP_VERSION = 'SCIC-4.6.1';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -5552,13 +5556,12 @@ https://minutodediosportal.com/login/
   derivarSedeRectoria();
   setTimeout(derivarSedeRectoria, 4000);
 })();
-/* SCIC fix: la hoja de Metas (#h1) quedó anidada DENTRO de #h0 por un </div>
-   mal ubicado en el HTML; como #h0 se oculta (display:none) al navegar, #h1 (y
-   por herencia el resto del flujo de seguimiento) nunca se veía. Se reubican las
-   hojas h1..h4 como hermanas de #h0 para que activateSheet pueda mostrarlas. */
+/* SCIC fix: hojas h1..h4 y cards de metas huérfanas en #h0 (por </div> mal
+   ubicado en el HTML) se reubican para que activateSheet las muestre al navegar. */
 (function(){
   try{
     var h0=document.getElementById('h0');
+    var h1=document.getElementById('h1');
     if(!h0||!h0.parentNode) return;
     ['h1','h2','h3','h4'].forEach(function(hid){
       var s=document.getElementById(hid);
@@ -5567,6 +5570,15 @@ https://minutodediosportal.com/login/
         console.log('[SCIC fix] #'+hid+' reubicado como hermano de #h0 (estaba anidado)');
       }
     });
+    if(h1){
+      ['card-meta-coloc','card-metas-coord','card-metas-asesor'].forEach(function(cid){
+        var card=document.getElementById(cid);
+        if(card && card.parentElement===h0){
+          h1.appendChild(card);
+          console.log('[SCIC fix] #'+cid+' movido dentro de #h1 (estaba en #h0)');
+        }
+      });
+    }
   }catch(e){ console.warn('[SCIC fix] reubicar hojas:', e&&e.message); }
 })();
 </script>
