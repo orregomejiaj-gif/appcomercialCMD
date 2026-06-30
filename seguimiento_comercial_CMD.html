@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.6.1   (APP_VERSION = 'SCIC-4.6.1')
+  Versión actual: 4.6.2   (APP_VERSION = 'SCIC-4.6.2')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,11 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.6.2 (2026-06-30)
+    - Navegación: #etapa-menu, #etapa-login y #etapa-password sacados de #h0;
+      volverAlMenu/irEtapaMenu/volver y botón home funcionan sin recargar.
+    - Seguimiento/SCIC: activateSheet oculta el menú al entrar a h1-h5.
+    - h1: pie de página movido fuera de card-metas-asesor.
   v4.6.1 (2026-06-30)
     - Seguimiento: se corrige </div> extra en #h1 que dejaba las cards de metas
       (card-metas-coord, card-metas-asesor) fuera de la hoja visible.
@@ -712,7 +717,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 <!-- TABS -->
 <div id="tabs-bar" style="display:none"><div class="tabs">
-  <button class="tab active" onclick="if(sesionActiva){volverAlMenu?volverAlMenu():irEtapaMenu();}else{showTab('h0',this);}" title="Menú principal"><span class="tdot"></span><i class="ti ti-home"></i></button>
+  <button class="tab active" onclick="if(sesionActiva){volverAlMenu();}else{showTab('h0',this);}" title="Menú principal"><span class="tdot"></span><i class="ti ti-home"></i></button>
   <button class="tab" onclick="showTab('h1',this)" title="Configurar metas del período"><span class="tdot"></span><i class="ti ti-target"></i> Metas</button>
   <button class="tab" onclick="showTab('h2',this)"><span class="tdot"></span><i class="ti ti-chart-line"></i> Hoja 2 — Seguimiento</button>
   <button class="tab" onclick="showTab('h3',this)"><span class="tdot"></span><i class="ti ti-report-analytics"></i> Hoja 3 — Análisis & Acta</button>
@@ -802,7 +807,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </div>
     <!-- Version -->
     <div style="text-align:center;margin-top:20px;color:rgba(255,255,255,.25);font-size:10px">
-      App Seguimiento Comercial CMD · Proceso PYV · <span id="app-version-footer">v4.6.1</span>
+      App Seguimiento Comercial CMD · Proceso PYV · <span id="app-version-footer">v4.6.2</span>
     </div>
   </div>
 </div>
@@ -1228,8 +1233,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     <div class="card-hdr"><div class="cico"><i class="ti ti-user-check"></i></div><h2>Meta del asesor</h2></div>
     <div id="meta-asesor-display"><p style="font-size:13px;color:var(--text2)">Selecciona sede y cantidad de asesores para ver la meta individual.</p></div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="guardarMetas()"><i class="ti ti-device-floppy"></i> Guardar metas</button>
-  <div style="text-align:center;padding:20px 16px 8px;margin-top:16px"><div style="font-size:8px;color:#c1c9d6;letter-spacing:.4px">© 2024–2026 · Cooperativa Minuto de Dios · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía · Todos los derechos reservados</div></div>
   </div>
+  <div style="text-align:center;padding:20px 16px 8px;margin-top:16px"><div style="font-size:8px;color:#c1c9d6;letter-spacing:.4px">© 2024–2026 · Cooperativa Minuto de Dios · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía · Todos los derechos reservados</div></div>
 </div>
 
 <!-- HOJA 2 -->
@@ -2953,7 +2958,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.6.1';
+var APP_VERSION = 'SCIC-4.6.2';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3647,15 +3652,17 @@ return new Promise(function(resolve,reject){
 
 
 function volverAlMenu(){
-  // Ocultar formularios de seguimiento y tabs
+  if(typeof window._mostrarMenuPrincipal==='function'){ window._mostrarMenuPrincipal(); return; }
   ["h1","h2","h3","h4","h5"].forEach(function(id){
     var el=document.getElementById(id);
     if(el){el.classList.remove("active");el.style.display="none";}
   });
+  var h0=document.getElementById("h0");if(h0){h0.classList.remove("active");h0.style.display="none";}
   document.querySelectorAll(".hpanel").forEach(function(el){el.style.display="none";});
-  var tb=document.getElementById("tabs-bar");if(tb)tb.style.display="none";
+  var tb=document.getElementById("tabs-bar");if(tb){tb.style.display="none";tb.classList.remove("visible");}
   document.querySelectorAll(".tab").forEach(function(el){el.classList.remove("active");});
-  // Mostrar menú
+  var el_login=document.getElementById("etapa-login");if(el_login)el_login.style.display="none";
+  var el_pw=document.getElementById("etapa-password");if(el_pw)el_pw.style.display="none";
   var em=document.getElementById("etapa-menu");if(em)em.style.display="block";
   navState.modoSeleccionado="";
   if(typeof mode!=="undefined")mode="";
@@ -5556,18 +5563,27 @@ https://minutodediosportal.com/login/
   derivarSedeRectoria();
   setTimeout(derivarSedeRectoria, 4000);
 })();
-/* SCIC fix: hojas h1..h4 y cards de metas huérfanas en #h0 (por </div> mal
-   ubicado en el HTML) se reubican para que activateSheet las muestre al navegar. */
+/* SCIC fix: sacar etapas de #h0 y reubicar hojas/cards huérfanas.
+   #etapa-menu dentro de #h0 quedaba oculto al activar h1-h5 (activateSheet pone
+   display:none en .sheet), impidiendo volver al menú sin recargar la página. */
 (function(){
   try{
     var h0=document.getElementById('h0');
     var h1=document.getElementById('h1');
     if(!h0||!h0.parentNode) return;
+    var parent=h0.parentNode;
+    ['etapa-password','etapa-login','etapa-menu'].forEach(function(eid){
+      var el=document.getElementById(eid);
+      if(el && h0.contains(el)){
+        parent.insertBefore(el, h0.nextSibling);
+        console.log('[SCIC fix] #'+eid+' sacado de #h0 (etapa independiente)');
+      }
+    });
     ['h1','h2','h3','h4'].forEach(function(hid){
       var s=document.getElementById(hid);
       if(s && s.parentElement===h0){
-        h0.parentNode.insertBefore(s, h0.nextSibling);
-        console.log('[SCIC fix] #'+hid+' reubicado como hermano de #h0 (estaba anidado)');
+        parent.insertBefore(s, h0.nextSibling);
+        console.log('[SCIC fix] #'+hid+' reubicado como hermano de #h0');
       }
     });
     if(h1){
@@ -5575,11 +5591,82 @@ https://minutodediosportal.com/login/
         var card=document.getElementById(cid);
         if(card && card.parentElement===h0){
           h1.appendChild(card);
-          console.log('[SCIC fix] #'+cid+' movido dentro de #h1 (estaba en #h0)');
+          console.log('[SCIC fix] #'+cid+' movido dentro de #h1');
         }
       });
     }
-  }catch(e){ console.warn('[SCIC fix] reubicar hojas:', e&&e.message); }
+    h0.style.display='none';
+    h0.classList.remove('active');
+  }catch(e){ console.warn('[SCIC fix] reubicar DOM:', e&&e.message); }
+})();
+/* SCIC fix: navegación menú ↔ seguimiento ↔ SCIC */
+(function(){
+  function ocultarAuth(){
+    ['etapa-login','etapa-password'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.display='none';
+    });
+  }
+  function actualizarMenuUsuario(){
+    try{
+      var nombre=(typeof navState!=='undefined'&&navState.nombreEjecutor)||(window.sesionActiva&&sesionActiva.nombre)||'';
+      var cargo=(typeof navState!=='undefined'&&navState.cargoEjecutor)||(window.sesionActiva&&sesionActiva.cargo)||'';
+      var sede=(typeof navState!=='undefined'&&navState.sedeEjecutor)||(window.sesionActiva&&sesionActiva.sede)||'';
+      var mn=document.getElementById('menu-nombre'); if(mn) mn.textContent=nombre||'—';
+      var mc=document.getElementById('menu-cargo-sede'); if(mc) mc.textContent=(cargo&&sede)?(cargo+' · '+sede):(cargo||sede||'—');
+      var av=document.getElementById('menu-avatar');
+      if(av&&nombre){ var p=nombre.trim().split(/\s+/); av.textContent=((p[0]||'?')[0]+(p[1]||'')[0]).toUpperCase(); }
+      var mv=document.getElementById('menu-version'); if(mv&&typeof APP_VERSION!=='undefined') mv.textContent=APP_VERSION.replace('SCIC-','SCIC v');
+    }catch(e){}
+  }
+  function mostrarMenuPrincipal(){
+    ['h1','h2','h3','h4','h5'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el){ el.classList.remove('active'); el.style.display='none'; }
+    });
+    var h0=document.getElementById('h0');
+    if(h0){ h0.classList.remove('active'); h0.style.display='none'; }
+    document.querySelectorAll('.hpanel').forEach(function(el){ el.style.display='none'; });
+    var tb=document.getElementById('tabs-bar');
+    if(tb){ tb.style.display='none'; tb.classList.remove('visible'); }
+    document.querySelectorAll('.tab').forEach(function(el){ el.classList.remove('active'); });
+    ocultarAuth();
+    var em=document.getElementById('etapa-menu');
+    if(em) em.style.display='block';
+    var hdr=document.getElementById('hdr-actions-bar');
+    if(hdr) hdr.style.display='none';
+    if(typeof navState==='object'&&navState) navState.modoSeleccionado='';
+    if(typeof mode!=='undefined') mode='';
+    actualizarMenuUsuario();
+  }
+  window._mostrarMenuPrincipal=mostrarMenuPrincipal;
+  window.volverAlMenu=mostrarMenuPrincipal;
+  window.irEtapaMenu=mostrarMenuPrincipal;
+  window.volver=function(){
+    if(window.sesionActiva) mostrarMenuPrincipal();
+    else if(typeof irEtapaLogin==='function') irEtapaLogin();
+    else mostrarMenuPrincipal();
+  };
+  if(typeof activateSheet==='function'){
+    var _origAS=activateSheet;
+    var _wrappedAS=function(id, tabEl){
+      if(id==='h1'||id==='h2'||id==='h3'||id==='h4'||id==='h5'){
+        var em=document.getElementById('etapa-menu'); if(em) em.style.display='none';
+        ocultarAuth();
+      }
+      return _origAS(id, tabEl);
+    };
+    activateSheet=_wrappedAS;
+    window.activateSheet=_wrappedAS;
+  }
+  if(typeof showTab==='function'){
+    var _origST=showTab;
+    showTab=function(e,a){
+      if(e==='h0'&&window.sesionActiva){ mostrarMenuPrincipal(); return; }
+      return _origST(e,a);
+    };
+    window.showTab=showTab;
+  }
+  console.log('[SCIC fix] Navegación menú/seguimiento/SCIC parcheada');
 })();
 </script>
 <!-- ═══════════ SCIC v4.6 — DASHBOARD FUSIONADO EN LOGIN ═══════════
