@@ -7107,15 +7107,15 @@ function _parseCumpleMMDD(s){
       return;
     }
     var sedeActual = '';
-    var grupoCount = 0;
+    var countsBySede = {};
+    lista.forEach(function(e){ var s = e.sede || 'Sin sede'; countsBySede[s] = (countsBySede[s] || 0) + 1; });
     lista.forEach(function(emp){
       var sede = emp.sede || 'Sin sede';
       if(sede !== sedeActual){
         sedeActual = sede;
-        grupoCount = lista.filter(function(x){ return (x.sede||'Sin sede')===sede; }).length;
         var hdr = document.createElement('div');
         hdr.style.cssText = 'font-size:10px;font-weight:700;color:#003D45;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid #e5e7eb;margin-top:8px;display:flex;justify-content:space-between;align-items:center';
-        hdr.innerHTML = '<span>📍 '+sede+'</span><span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:10px;font-size:9px">'+grupoCount+'</span>';
+        hdr.innerHTML = '<span>📍 '+sede+'</span><span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:10px;font-size:9px">'+(countsBySede[sede]||0)+'</span>';
         cont.appendChild(hdr);
       }
       var row = document.createElement('div');
