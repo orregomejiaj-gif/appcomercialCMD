@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.11.0   (APP_VERSION = 'SCIC-4.11.0')
+  Versión actual: 4.12.0   (APP_VERSION = 'SCIC-4.12.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,10 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.12.0 (2026-06-30)
+    - Cartera: Cygnus y SAP como carteras independientes (apertura/cierre propios).
+    - Metas por cartera: Cygnus recuperación >80% y rodada <20%; SAP >75% y <25%.
+    - Vista consolidada «Total asignada» con semáforos y cruce apertura→cierre.
   v4.11.0 (2026-06-30)
     - SIGEC menú: 6 estados (Facturada, Cerrada Fac., Cerrada, Abierta, Rechazado Motor, Pend. documentación).
     - Malla Hoy: botones con/sin turno, inicio y fin de turno, vista en malla.
@@ -3105,7 +3109,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.11.0';
+var APP_VERSION = 'SCIC-4.12.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -5873,7 +5877,7 @@ https://minutodediosportal.com/login/
     <div style="background:linear-gradient(135deg,#003D45,#00596B);padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
       <div>
         <div style="font-size:15px;font-weight:800;color:#fff">📊 Estado de Cartera</div>
-        <div style="font-size:11px;color:#FFD90099;margin-top:2px">Apertura vs Estado Actual · Cygnus + SAP</div>
+        <div style="font-size:11px;color:#FFD90099;margin-top:2px">Cygnus y SAP por separado · Metas independientes · Total asignada</div>
       </div>
       <button onclick="document.getElementById('modal-cartera').style.display='none'"
         style="background:#ffffff22;border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1;display:flex;align-items:center;justify-content:center">✕</button>
@@ -6293,7 +6297,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.11.0';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.12.0';
     var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
     var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
     var badge = document.getElementById('app-version-badge');
@@ -7421,6 +7425,368 @@ function _parseCumpleMMDD(s){
   };
 
   console.log('[SCIC v4.11.0] SIGEC 6 estados · Malla turnos · Consulta dinámica');
+
+  /* ── SCIC v4.12.0: Cartera Cygnus / SAP separadas + Total asignada ── */
+  window._cartPortafolio = window._cartPortafolio || 'cygnus';
+
+  var CARTERA_METAS = {
+    cygnus: { label: 'Cartera Cygnus', rec: 80, rodada: 20, color: '#1d4ed8', bg: '#eff6ff' },
+    sap:    { label: 'Cartera SAP',    rec: 75, rodada: 25, color: '#059669', bg: '#ecfdf5' },
+    total:  { label: 'Total asignada', rec: null, rodada: null, color: '#003D45', bg: '#f8fafc' }
+  };
+
+  function _cartFmtN(n){ return Number(n||0).toLocaleString('es-CO'); }
+  function _cartFmtM(n){
+    n = Number(n||0);
+    if(n>=1e9) return '$'+(n/1e9).toFixed(2)+'B';
+    if(n>=1e6) return '$'+Math.round(n/1e6)+'M';
+    return '$'+_cartFmtN(n);
+  }
+  function _cartSemColor(val, meta, invert){
+    if(meta==null) return '#64748b';
+    if(invert) return val<=meta?'#16a34a':val<=meta*1.25?'#ca8a04':'#dc2626';
+    return val>=meta?'#16a34a':val>=meta*0.8?'#ca8a04':'#dc2626';
+  }
+  function _cartSemBadge(val, meta, invert){
+    var c = _cartSemColor(val, meta, invert);
+    return '<span style="background:'+c+'22;color:'+c+';font-weight:800;padding:3px 8px;border-radius:6px;font-size:11px">'+val+'%</span>';
+  }
+  function _cartMergeDist(a, b){
+    var r = {Vigente:0,'1-30':0,'31-60':0,'61-90':0,'+90':0,total:0,cap:0};
+    Object.keys(r).forEach(function(k){ r[k]=(a&&a[k]||0)+(b&&b[k]||0); });
+    return r;
+  }
+  function _cartMergeFlujos(c1, c2){
+    var f = {REC:0,N_MORA:0,RODADO:0,MEJORADO:0,PERSISTE:0,NUEVO:0,V_ESTABLE:0,REC_TOTAL:0};
+    Object.keys(f).forEach(function(k){ f[k]=((c1&&c1.f&&c1.f[k])||0)+((c2&&c2.f&&c2.f[k])||0); });
+    var ps = {};
+    function mergePS(src){
+      Object.keys(src||{}).forEach(function(sede){
+        if(!ps[sede]) ps[sede]={sede:sede,REC:0,N_MORA:0,RODADO:0,MEJORADO:0,PERSISTE:0,NUEVO:0,cap_ap:0,cap_ci:0};
+        ['REC','N_MORA','RODADO','MEJORADO','PERSISTE','NUEVO','cap_ap','cap_ci'].forEach(function(k){
+          ps[sede][k]+=src[sede][k]||0;
+        });
+      });
+    }
+    mergePS(c1&&c1.porSede); mergePS(c2&&c2.porSede);
+    return {f:f, porSede:ps};
+  }
+  function _cartGetCtx(d, port){
+    if(port==='cygnus') return {
+      port:'cygnus', name:'Cygnus', meta:CARTERA_METAS.cygnus,
+      apDist:d.apDistCyg, ciDist:d.ciDistCyg, cruz:d.cruzCyg,
+      apIdx:d.apIdxCyg||{}, ciIdx:d.ciIdxCyg||{}
+    };
+    if(port==='sap') return {
+      port:'sap', name:'SAP', meta:CARTERA_METAS.sap,
+      apDist:d.apDistSAP, ciDist:d.ciDistSAP, cruz:d.cruzSAP,
+      apIdx:d.apIdxSAP||{}, ciIdx:d.ciIdxSAP||{}
+    };
+    return {
+      port:'total', name:'Total asignada', meta:CARTERA_METAS.total,
+      apDist:_cartMergeDist(d.apDistCyg,d.apDistSAP),
+      ciDist:_cartMergeDist(d.ciDistCyg,d.ciDistSAP),
+      cruz:_cartMergeFlujos(d.cruzCyg,d.cruzSAP),
+      apIdx:Object.assign({},d.apIdxCyg||{},d.apIdxSAP||{}),
+      ciIdx:Object.assign({},d.ciIdxCyg||{},d.ciIdxSAP||{})
+    };
+  }
+  function _cartRectRows(ctx, d){
+    if(ctx.port==='sap' || ctx.port==='total') return d.rectData||[];
+    var map = (typeof PG_SEDE_RECTORIA!=='undefined') ? PG_SEDE_RECTORIA : {};
+    var rows = {};
+    function add(idx, tipo){
+      Object.values(idx||{}).forEach(function(r){
+        var rect = map[r.sede] || r.sede || 'Sin rectoría';
+        if(!rows[rect]) rows[rect]={nombre:rect,ap:{Vigente:0,'1-30':0,'31-60':0,total:0,cap:0},ci:{Vigente:0,'1-30':0,'31-60':0,total:0,cap:0}};
+        var b = rows[rect][tipo];
+        b.total++; b.cap+=r.saldo||r.capital||0;
+        if(b[r.estado]!=null) b[r.estado]++;
+      });
+    }
+    add(ctx.apIdx,'ap'); add(ctx.ciIdx,'ci');
+    return Object.values(rows).sort(function(a,b){ return b.ci.total-a.ci.total; });
+  }
+  function _cartDistRow(label, dist, bg){
+    var mora = dist.total>0 ? Math.round(((dist['1-30']||0)+(dist['31-60']||0))/dist.total*100) : 0;
+    var sem = _cartSemBadge(mora, 10, true);
+    return '<tr style="background:'+bg+'"><td style="padding:7px 10px;font-weight:700">'+label+'</td>'
+      +'<td style="padding:7px 10px;text-align:right;font-weight:700">'+_cartFmtN(dist.total||0)+'</td>'
+      +'<td style="padding:7px 10px;text-align:right;color:#16a34a">'+_cartFmtN(dist.Vigente||0)+'</td>'
+      +'<td style="padding:7px 10px;text-align:right;color:#ca8a04">'+_cartFmtN(dist['1-30']||0)+'</td>'
+      +'<td style="padding:7px 10px;text-align:right;color:#dc2626">'+_cartFmtN(dist['31-60']||0)+'</td>'
+      +'<td style="padding:7px 10px;text-align:right">'+sem+'</td></tr>';
+  }
+  function _cartMetaBanner(ctx, recPct, rodPct){
+    var m = ctx.meta;
+    if(ctx.port==='total'){
+      var cyg = _cartGetCtx(window._cartData,'cygnus');
+      var sap = _cartGetCtx(window._cartData,'sap');
+      var fCyg = cyg.cruz.f||{}, fSap = sap.cruz.f||{};
+      var apC = (cyg.apDist['1-30']||0), apS = (sap.apDist['1-30']||0);
+      var recC = apC>0?Math.round((fCyg.REC||0)/apC*100):0;
+      var recS = apS>0?Math.round((fSap.REC||0)/apS*100):0;
+      var rodC = apC>0?Math.round((fCyg.RODADO||0)/apC*100):0;
+      var rodS = apS>0?Math.round((fSap.RODADO||0)/apS*100):0;
+      return '<div style="padding:10px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0">'
+        +'<div style="font-size:10px;font-weight:800;color:#003D45;margin-bottom:8px">METAS POR CARTERA (independientes)</div>'
+        +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+        +'<div style="background:#eff6ff;border-radius:10px;padding:10px;border-left:4px solid #1d4ed8">'
+        +'<div style="font-size:9px;font-weight:700;color:#1d4ed8">CYGNUS · Meta rec. &gt;80% · rodada &lt;20%</div>'
+        +'<div style="display:flex;gap:12px;margin-top:6px;font-size:11px">'
+        +'<span>Recup. '+_cartSemBadge(recC,80,false)+'</span>'
+        +'<span>Rodada '+_cartSemBadge(rodC,20,true)+'</span></div></div>'
+        +'<div style="background:#ecfdf5;border-radius:10px;padding:10px;border-left:4px solid #059669">'
+        +'<div style="font-size:9px;font-weight:700;color:#059669">SAP · Meta rec. &gt;75% · rodada &lt;25%</div>'
+        +'<div style="display:flex;gap:12px;margin-top:6px;font-size:11px">'
+        +'<span>Recup. '+_cartSemBadge(recS,75,false)+'</span>'
+        +'<span>Rodada '+_cartSemBadge(rodS,25,true)+'</span></div></div></div></div>';
+    }
+    var recOk = _cartSemColor(recPct, m.rec, false);
+    var rodOk = _cartSemColor(rodPct, m.rodada, true);
+    return '<div style="padding:10px 14px;background:'+m.bg+';border-bottom:2px solid '+m.color+'">'
+      +'<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px">'
+      +'<div style="font-size:11px;font-weight:800;color:'+m.color+'">'+m.label+'</div>'
+      +'<div style="font-size:10px;color:#64748b">Base apertura ↔ cierre · cruce por asociado</div>'
+      +'<div style="margin-left:auto;display:flex;gap:14px;flex-wrap:wrap">'
+      +'<div style="text-align:center"><div style="font-size:8px;color:#64748b;font-weight:700">RECUPERACIÓN</div>'
+      +'<div style="font-size:18px;font-weight:900;color:'+recOk+'">'+recPct+'%</div>'
+      +'<div style="font-size:8px;color:#94a3b8">Meta &gt;'+m.rec+'%</div></div>'
+      +'<div style="text-align:center"><div style="font-size:8px;color:#64748b;font-weight:700">CARTERA RODADA</div>'
+      +'<div style="font-size:18px;font-weight:900;color:'+rodOk+'">'+rodPct+'%</div>'
+      +'<div style="font-size:8px;color:#94a3b8">Meta &lt;'+m.rodada+'%</div></div></div></div></div>';
+  }
+
+  window._renderCartera = function(){
+    var d = window._cartData;
+    var el = document.getElementById('cart-contenido');
+    if(!d||!el) return;
+    var port = window._cartPortafolio || 'cygnus';
+    var ctx = _cartGetCtx(d, port);
+    var ap = ctx.apDist||{}, ci = ctx.ciDist||{}, fl = ctx.cruz.f||{};
+    var moraAp = ap['1-30']||0, moraCi = ci['1-30']||0;
+    var recPct = moraAp>0 ? Math.round((fl.REC||0)/moraAp*100) : 0;
+    var rodPct = moraAp>0 ? Math.round((fl.RODADO||0)/moraAp*100) : 0;
+    var pctMoraAp = ap.total>0 ? Math.round(moraAp/ap.total*100) : 0;
+    var pctMoraCi = ci.total>0 ? Math.round(moraCi/ci.total*100) : 0;
+    var vigAp = ap.Vigente||0, vigCi = ci.Vigente||0;
+    var capAp = ap.cap||0, capCi = ci.cap||0;
+
+    var ports = [
+      {id:'cygnus', lbl:'🔵 Cygnus', c:'#1d4ed8'},
+      {id:'sap', lbl:'🟢 SAP', c:'#059669'},
+      {id:'total', lbl:'📊 Total asignada', c:'#003D45'}
+    ];
+    var portBtns = ports.map(function(p){
+      var on = port===p.id;
+      return '<button onclick="window._cartPortafolio=\''+p.id+'\';_renderCartera()" style="padding:8px 14px;border-radius:8px;border:2px solid '+(on?p.c:'#e2e8f0')+';font-size:11px;font-weight:800;cursor:pointer;background:'+(on?p.c:'#fff')+';color:'+(on?'#fff':'#64748b')+'">'+p.lbl+'</button>';
+    }).join('');
+
+    var vistas = ['nacional','rectorias','sedes','analisis'];
+    var vistaLbl = ['🌎 Nacional','🏛️ Rectorías','🏫 Sedes','📈 Análisis'];
+    var tab = window._cartTab || 'nacional';
+    var vistaBtns = vistas.map(function(v,i){
+      var on = tab===v;
+      return '<button onclick="window._cartTab=\''+v+'\';_renderCartera()" style="padding:6px 12px;border-radius:6px;border:none;font-size:10px;font-weight:700;cursor:pointer;background:'+(on?'#003D45':'#f1f5f9')+';color:'+(on?'#fff':'#64748b')+'">'+vistaLbl[i]+'</button>';
+    }).join('');
+
+    var html = '<div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#fff">'+portBtns+'</div>';
+    html += _cartMetaBanner(ctx, recPct, rodPct);
+    html += '<div style="padding:10px 14px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #f1f5f9">'+vistaBtns
+      +'<span style="margin-left:auto;font-size:10px;color:#94a3b8;align-self:center">'+ctx.name+' · '+d.ts+'</span>'
+      +'<button onclick="_cargarCartera()" style="padding:5px 10px;border-radius:6px;border:1px solid #e2e8f0;font-size:10px;cursor:pointer;background:#fff">↺</button>'
+      +'<button onclick="exportarExcelCartera()" style="padding:5px 10px;border-radius:6px;border:none;font-size:10px;cursor:pointer;background:#003D45;color:#fff">⬇️ Excel</button></div>';
+
+    if(tab==='nacional'){
+      html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 14px;background:#f8fafc">';
+      [
+        {l:'Apertura',v:_cartFmtN(ap.total||0),s:_cartFmtN(vigAp)+' vigentes · '+_cartFmtN(moraAp)+' mora 1-30',c:ctx.meta.color},
+        {l:'Cierre actual',v:_cartFmtN(ci.total||0),s:(ci.total||0)>(ap.total||0)?'▲ '+_cartFmtN((ci.total||0)-(ap.total||0))+' nuevos':'▼ '+_cartFmtN((ap.total||0)-(ci.total||0))+' menos',c:'#1d4ed8'},
+        {l:'% Mora apertura',v:pctMoraAp+'%',s:_cartFmtN(moraAp)+' en 1-30',c:_cartSemColor(pctMoraAp,10,true)},
+        {l:'% Mora actual',v:pctMoraCi+'%',s:_cartFmtN(moraCi)+' en 1-30',c:_cartSemColor(pctMoraCi,10,true)}
+      ].forEach(function(k){
+        html += '<div style="background:#fff;border-radius:10px;padding:12px;border-top:3px solid '+k.c+';box-shadow:0 1px 4px rgba(0,0,0,.06)">'
+          +'<div style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase">'+k.l+'</div>'
+          +'<div style="font-size:22px;font-weight:900;color:'+k.c+';margin:3px 0">'+k.v+'</div>'
+          +'<div style="font-size:10px;color:#94a3b8">'+k.s+'</div></div>';
+      });
+      html += '</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 14px 12px;background:#f8fafc">';
+      [
+        {l:'Capital apertura',v:_cartFmtM(capAp)},
+        {l:'Capital actual',v:_cartFmtM(capCi)},
+        {l:'Variación capital',v:_cartFmtM(capCi-capAp),s:capCi>=capAp?'▲':'▼'}
+      ].forEach(function(k){
+        html += '<div style="background:#fff;border-radius:10px;padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)">'
+          +'<div style="font-size:9px;color:#64748b;font-weight:700;text-transform:uppercase">'+k.l+'</div>'
+          +'<div style="font-size:16px;font-weight:900;color:#003D45;margin:3px 0">'+k.v+'</div>'
+          +(k.s?'<div style="font-size:10px;color:#94a3b8">'+k.s+'</div>':'')+'</div>';
+      });
+      html += '</div>';
+
+      html += '<div style="padding:0 14px 12px"><div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:8px">FLUJOS APERTURA → CIERRE · '+ctx.name+'</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
+      [
+        {i:'✅',l:'Recuperados',v:fl.REC||0,s:recPct+'% de mora inicial',c:'#16a34a',bg:'#f0fdf4',meta:ctx.meta.rec,inv:false},
+        {i:'🚨',l:'Nuevos en mora',v:fl.N_MORA||0,s:(vigAp>0?Math.round((fl.N_MORA||0)/vigAp*100):0)+'% de vigentes',c:'#dc2626',bg:'#fef2f2'},
+        {i:'⬇️',l:'Rodados 31-60',v:fl.RODADO||0,s:rodPct+'% de mora inicial',c:'#b91c1c',bg:'#fee2e2',meta:ctx.meta.rodada,inv:true},
+        {i:'📈',l:'Mejoraron',v:fl.MEJORADO||0,s:'31-60 → 1-30',c:'#2563eb',bg:'#eff6ff'},
+        {i:'🔄',l:'Persisten',v:fl.PERSISTE||0,s:'Sin cambio',c:'#ca8a04',bg:'#fef9c3'},
+        {i:'🆕',l:'Nuevos',v:fl.NUEVO||0,s:'No en apertura',c:'#7c3aed',bg:'#f5f3ff'}
+      ].forEach(function(x){
+        html += '<div style="background:'+x.bg+';border-radius:10px;padding:12px;border-left:3px solid '+x.c+'">'
+          +'<div style="font-size:18px">'+x.i+'</div>'
+          +'<div style="font-size:9px;color:'+x.c+';font-weight:700;text-transform:uppercase;margin:4px 0 2px">'+x.l+'</div>'
+          +'<div style="font-size:20px;font-weight:900;color:'+x.c+'">'+_cartFmtN(x.v)+'</div>'
+          +'<div style="font-size:10px;color:#64748b;margin-top:2px">'+x.s+'</div></div>';
+      });
+      html += '</div></div>';
+
+      html += '<div style="padding:0 14px 14px"><div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:8px">DISTRIBUCIÓN DE ESTADOS — '+ctx.name+'</div>';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#003D45;color:#fff">'
+        +'<th style="padding:8px 10px;text-align:left">Momento</th><th style="padding:8px 10px;text-align:right">Total</th>'
+        +'<th style="padding:8px 10px;text-align:right">Vigentes</th><th style="padding:8px 10px;text-align:right">1-30</th>'
+        +'<th style="padding:8px 10px;text-align:right">31-60</th><th style="padding:8px 10px;text-align:right">% Mora</th></tr></thead><tbody>';
+      html += _cartDistRow('Apertura', ap, '#f8fafc');
+      html += _cartDistRow('Cierre actual', ci, '#fff');
+      html += '</tbody></table></div>';
+
+      if(port==='total'){
+        html += '<div style="padding:0 14px 14px"><div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:8px">DESGLOSE POR SISTEMA</div>';
+        html += '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#64748b;color:#fff">'
+          +'<th style="padding:8px 10px;text-align:left">Sistema</th><th style="padding:8px 10px;text-align:right">Ap. Total</th>'
+          +'<th style="padding:8px 10px;text-align:right">Ci. Total</th><th style="padding:8px 10px;text-align:right">Capital Ap.</th>'
+          +'<th style="padding:8px 10px;text-align:right">Capital Ci.</th></tr></thead><tbody>';
+        [['Cygnus',d.apDistCyg,d.ciDistCyg,'#eff6ff'],['SAP',d.apDistSAP,d.ciDistSAP,'#ecfdf5']].forEach(function(row,i){
+          html += '<tr style="background:'+row[3]+'"><td style="padding:7px 10px;font-weight:700">'+row[0]+'</td>'
+            +'<td style="padding:7px 10px;text-align:right">'+_cartFmtN(row[1].total||0)+'</td>'
+            +'<td style="padding:7px 10px;text-align:right">'+_cartFmtN(row[2].total||0)+'</td>'
+            +'<td style="padding:7px 10px;text-align:right">'+_cartFmtM(row[1].cap||0)+'</td>'
+            +'<td style="padding:7px 10px;text-align:right">'+_cartFmtM(row[2].cap||0)+'</td></tr>';
+        });
+        html += '</tbody></table></div>';
+      }
+    } else if(tab==='rectorias'){
+      var rects = _cartRectRows(ctx, d);
+      html += '<div style="padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:10px">DETALLE POR RECTORÍA · '+ctx.name+'</div>';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#003D45;color:#fff">'
+        +'<th style="padding:8px 10px;text-align:left">Rectoría</th>'
+        +'<th style="padding:8px 10px;text-align:right" colspan="3">APERTURA</th>'
+        +'<th style="padding:8px 10px;text-align:right" colspan="3">CIERRE</th>'
+        +'<th style="padding:8px 10px;text-align:right">% Mora</th></tr>'
+        +'<tr style="background:#dbeafe;color:#003D45;font-size:10px"><th></th>'
+        +'<th style="padding:5px 10px;text-align:right">Total</th><th style="padding:5px 10px;text-align:right">1-30</th><th style="padding:5px 10px;text-align:right">31-60</th>'
+        +'<th style="padding:5px 10px;text-align:right">Total</th><th style="padding:5px 10px;text-align:right">1-30</th><th style="padding:5px 10px;text-align:right">31-60</th><th></th></tr></thead><tbody>';
+      rects.forEach(function(r,i){
+        var pAp = r.ap.total>0?Math.round((r.ap['1-30']||0)/r.ap.total*100):0;
+        var pCi = r.ci.total>0?Math.round((r.ci['1-30']||0)/r.ci.total*100):0;
+        html += '<tr style="background:'+(i%2?'#fff':'#f8fafc')+';border-bottom:1px solid #f1f5f9">'
+          +'<td style="padding:7px 10px;font-weight:700">'+r.nombre+'</td>'
+          +'<td style="padding:7px 10px;text-align:right">'+_cartFmtN(r.ap.total)+'</td>'
+          +'<td style="padding:7px 10px;text-align:right;color:#ca8a04">'+_cartFmtN(r.ap['1-30']||0)+'</td>'
+          +'<td style="padding:7px 10px;text-align:right;color:#dc2626">'+_cartFmtN(r.ap['31-60']||0)+'</td>'
+          +'<td style="padding:7px 10px;text-align:right;font-weight:700">'+_cartFmtN(r.ci.total)+'</td>'
+          +'<td style="padding:7px 10px;text-align:right;color:#ca8a04">'+_cartFmtN(r.ci['1-30']||0)+'</td>'
+          +'<td style="padding:7px 10px;text-align:right;color:#dc2626">'+_cartFmtN(r.ci['31-60']||0)+'</td>'
+          +'<td style="padding:7px 10px;text-align:right">'+_cartSemBadge(pAp,10,true)+' → '+_cartSemBadge(pCi,10,true)+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    } else if(tab==='sedes'){
+      var porSede = Object.values(ctx.cruz.porSede||{}).sort(function(a,b){ return b.N_MORA-a.N_MORA; });
+      html += '<div style="padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:4px">DETALLE POR SEDE · '+ctx.name+'</div>';
+      html += '<div style="font-size:10px;color:#94a3b8;margin-bottom:10px">Ordenadas por nuevos en mora</div>';
+      html += '<div style="overflow-x:auto;max-height:65vh"><table style="width:100%;border-collapse:collapse;font-size:11px">'
+        +'<thead style="position:sticky;top:0"><tr style="background:#003D45;color:#fff">'
+        +'<th style="padding:8px 10px;text-align:left">Sede</th>'
+        +'<th style="padding:8px 10px;text-align:right">✅ Recup.</th>'
+        +'<th style="padding:8px 10px;text-align:right">🚨 Nuevo Mora</th>'
+        +'<th style="padding:8px 10px;text-align:right">⬇️ Rodado</th>'
+        +'<th style="padding:8px 10px;text-align:right">📈 Mejoró</th>'
+        +'<th style="padding:8px 10px;text-align:right">🔄 Persiste</th>'
+        +'<th style="padding:8px 10px;text-align:right">🆕 Nuevo</th></tr></thead><tbody>';
+      porSede.forEach(function(s,i){
+        var hl = s.N_MORA>1.5*s.REC ? 'background:#fff5f5' : '';
+        html += '<tr style="background:'+(i%2?'#fff':'#f8fafc')+';border-bottom:1px solid #f1f5f9;'+hl+'">'
+          +'<td style="padding:6px 10px;font-weight:600;font-size:10px">'+s.sede+'</td>'
+          +'<td style="padding:6px 10px;text-align:right;color:#16a34a;font-weight:700">'+_cartFmtN(s.REC)+'</td>'
+          +'<td style="padding:6px 10px;text-align:right;color:#dc2626;font-weight:700">'+_cartFmtN(s.N_MORA)+'</td>'
+          +'<td style="padding:6px 10px;text-align:right;color:#b91c1c">'+_cartFmtN(s.RODADO)+'</td>'
+          +'<td style="padding:6px 10px;text-align:right;color:#2563eb">'+_cartFmtN(s.MEJORADO)+'</td>'
+          +'<td style="padding:6px 10px;text-align:right;color:#ca8a04">'+_cartFmtN(s.PERSISTE)+'</td>'
+          +'<td style="padding:6px 10px;text-align:right;color:#7c3aed">'+_cartFmtN(s.NUEVO)+'</td></tr>';
+      });
+      html += '</tbody></table></div></div>';
+    } else if(tab==='analisis'){
+      var metaRec = ctx.meta.rec || 75;
+      var metaRod = ctx.meta.rodada || 25;
+      var tNuevaMora = vigAp>0 ? Math.round((fl.N_MORA||0)/vigAp*100) : 0;
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px 14px">';
+      html += '<div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)">'
+        +'<div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:10px">📊 TASAS DE GESTIÓN · '+ctx.name+'</div>';
+      [
+        {l:'Tasa recuperación (1-30→V)',v:recPct,meta:metaRec,inv:false},
+        {l:'Tasa rodamiento (1-30→31-60)',v:rodPct,meta:metaRod,inv:true},
+        {l:'Tasa nuevos en mora (V→1-30)',v:tNuevaMora,meta:5,inv:true},
+        {l:'Tasa mejora (31-60→1-30)',v:(fl.MEJORADO||0)+(fl.PERSISTE||0)>0?Math.round((fl.MEJORADO||0)/((fl.MEJORADO||0)+(fl.PERSISTE||0))*100):0,meta:20,inv:false}
+      ].forEach(function(x){
+        var col = _cartSemColor(x.v, x.meta, x.inv);
+        html += '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">'
+          +'<span>'+x.l+'</span><span style="font-weight:700;color:'+col+'">'+x.v+'%</span></div>'
+          +'<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden">'
+          +'<div style="height:100%;background:'+col+';border-radius:4px;width:'+Math.min(100,x.v)+'%"></div></div>'
+          +'<div style="font-size:9px;color:#94a3b8;margin-top:1px">Meta: '+(x.inv?'<':'>')+x.meta+'%</div></div>';
+      });
+      html += '</div>';
+      var cumpleRec = port==='cygnus' ? recPct>=80 : port==='sap' ? recPct>=75 : (recPct>=75);
+      var cumpleRod = port==='cygnus' ? rodPct<20 : port==='sap' ? rodPct<25 : true;
+      html += '<div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)">'
+        +'<div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:10px">💡 ANÁLISIS EJECUTIVO</div>'
+        +'<div style="font-size:10px;color:#64748b;line-height:1.7">'
+        +(port==='total'
+          ? 'Vista consolidada de cartera asignada (Cygnus + SAP). Cada cartera tiene metas independientes; revise las pestañas Cygnus y SAP para gestión detallada.'
+          : (cumpleRec
+            ? '✅ Recuperación al '+recPct+'% — cumple meta de &gt;'+metaRec+'%. '
+            : '⚠️ Recuperación al '+recPct+'% — por debajo de meta &gt;'+metaRec+'%. ')
+          +(cumpleRod
+            ? 'Cartera rodada al '+rodPct+'% — dentro de meta &lt;'+metaRod+'%.'
+            : 'Cartera rodada al '+rodPct+'% — supera meta &lt;'+metaRod+'%. Priorizar gestión de mora 1-30.'))
+        +'<br><br>'+((fl.N_MORA||0)>(fl.REC||0)
+          ? '🚨 Nuevos en mora ('+_cartFmtN(fl.N_MORA)+') superan recuperados ('+_cartFmtN(fl.REC)+'). Reforzar gestión preventiva.'
+          : '✅ Recuperados ('+_cartFmtN(fl.REC)+') superan nuevos en mora ('+_cartFmtN(fl.N_MORA)+').')
+        +'</div></div></div>';
+    }
+
+    if(d.errs&&d.errs.length){
+      html += '<div style="padding:8px 14px 12px"><div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:8px 12px;font-size:10px;color:#92400e">'
+        +'⚠️ Algunas hojas no se pudieron leer: '+d.errs.join(' | ')+'</div></div>';
+    }
+    el.innerHTML = html;
+
+    try{
+      var totCap = (d.ciDistCyg&&d.ciDistCyg.cap||0)+(d.ciDistSAP&&d.ciDistSAP.cap||0);
+      window._cartera_data = Object.assign(window._cartera_data||{}, {
+        saldo: totCap,
+        cygnus_cap: d.ciDistCyg&&d.ciDistCyg.cap||0,
+        sap_cap: d.ciDistSAP&&d.ciDistSAP.cap||0,
+        ts: d.ts
+      });
+      var kpi = document.getElementById('menu-kpi-cartera');
+      if(kpi) kpi.textContent = _cartFmtM(totCap);
+    }catch(_e){}
+  };
+
+  var _abrirEstadoCarteraLegacy = window.abrirEstadoCartera;
+  window.abrirEstadoCartera = function(){
+    window._cartPortafolio = 'cygnus';
+    window._cartTab = 'nacional';
+    var modal = document.getElementById('modal-cartera');
+    if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Modal de cartera no encontrado'); return; }
+    modal.style.display = 'block';
+    if(window._cartData) window._renderCartera();
+    else if(typeof _cargarCartera==='function') _cargarCartera();
+  };
+
+  console.log('[SCIC v4.12.0] Cartera Cygnus/SAP separadas + Total asignada');
 })();
 </script>
 </body>
