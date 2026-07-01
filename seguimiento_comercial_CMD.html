@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.8.0   (APP_VERSION = 'SCIC-4.8.0')
+  Versión actual: 4.9.0   (APP_VERSION = 'SCIC-4.9.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,10 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.9.0 (2026-06-30)
+    - Menú: panel «Cómo vamos según SIGEC» con semáforo (meta vs facturadas) y estados GLPI/SIGEC.
+    - Menú: «Deberíamos hoy» calculado con fallback desde meta y días hábiles.
+    - Versión unificada: solo en encabezado (#app-version-badge); eliminada del login y menú.
   v4.8.0 (2026-06-30)
     - Malla de Turnos: lista todos los colaboradores con turno HOY; búsqueda por nombre o cédula.
     - Herramientas PYV: selector de herramientas antes de abrir (launcher en grid).
@@ -52,7 +56,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SCIC v4.6 — Cooperativa Minuto de Dios</title>
+<title>SCIC — Cooperativa Minuto de Dios</title>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -817,7 +821,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </div>
     <!-- Version -->
     <div style="text-align:center;margin-top:20px;color:rgba(255,255,255,.25);font-size:10px">
-      App Seguimiento Comercial CMD · Proceso PYV · <span id="app-version-footer">v4.6.2</span>
+      App Seguimiento Comercial CMD · Proceso PYV
     </div>
   </div>
 </div>
@@ -828,7 +832,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(200,151,30,.25);border-radius:40px;padding:7px 18px;margin-bottom:12px">
         <div style="width:22px;height:15px;background:linear-gradient(135deg,#C8971E,#FFD900);border-radius:3px;display:flex;align-items:center;justify-content:center"><span style="color:#003D45;font-weight:900;font-size:7px">CMD</span></div>
         <span style="color:rgba(255,255,255,.8);font-size:11px;font-weight:600">Cooperativa Minuto de Dios</span>
-        <span style="color:#C8971E;font-size:8px;font-weight:700;background:rgba(200,151,30,.15);padding:2px 6px;border-radius:7px">SCIC v4.6</span>
       </div>
       <div style="color:#fff;font-size:20px;font-weight:900;letter-spacing:-.5px">Sistema Cognitivo de <span style="color:#C8971E">Inteligencia Comercial</span></div>
       <div style="color:rgba(255,255,255,.35);font-size:10px;margin-top:4px">Proceso PYV &middot; 19 Rector&iacute;as &middot; 101 Sedes &middot; Colombia 2026</div>
@@ -862,7 +865,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
           <i class="ti ti-arrow-right" style="margin-right:5px;font-size:11px"></i>Ingresar al SCIC
         </button>
-        <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.15);font-size:8px">SCIC v4.6 &middot; Cooperativa Minuto de Dios &middot; 2026</div>
+        <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.15);font-size:8px">Cooperativa Minuto de Dios &middot; 2026</div>
       </div>
       <!-- DASHBOARD FUSIONADO (resumen + estado de gestión del canal) -->
       <div id="login-dashboard">
@@ -931,7 +934,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-logo">CMD</div>
         <div>
           <div class="menu-brand-title">Inteligencia Comercial</div>
-          <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV · <span id="menu-version">SCIC v4.8</span></div>
+          <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
         </div>
       </div>
       <div class="menu-user">
@@ -981,6 +984,37 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-nac-bar-labels"><span>0%</span><span id="menu-nac-bar-pct">—%</span><span>100%</span></div>
         <div class="menu-nac-bar"><div id="menu-nac-bar-fill"></div><div id="menu-nac-bar-ideal" title="Curva ideal hoy"></div></div>
         <div class="menu-nac-proy" id="menu-nac-proy">Proyección de cierre: —</div>
+      </div>
+      <div class="menu-sigec-panel">
+        <div class="menu-sigec-hdr">
+          <div class="menu-sigec-title"><i class="ti ti-traffic-lights"></i> Cómo vamos según SIGEC</div>
+          <div class="menu-sigec-sem" id="menu-sigec-sem-lbl">—</div>
+        </div>
+        <div class="menu-sigec-main">
+          <div class="menu-sigec-circle" id="menu-sigec-circle">
+            <div class="menu-sigec-pct" id="menu-sigec-pct-big">—%</div>
+            <div class="menu-sigec-pct-sub">facturadas vs meta</div>
+          </div>
+          <div class="menu-sigec-stats">
+            <div class="menu-sigec-stat menu-sig-fact"><span class="lbl">Facturadas</span><span class="val" id="menu-sig-fact">—</span></div>
+            <div class="menu-sigec-stat menu-sig-cfac"><span class="lbl">Cerradas fac.</span><span class="val" id="menu-sig-cfac">—</span></div>
+            <div class="menu-sigec-stat menu-sig-cerr"><span class="lbl">Cerradas</span><span class="val" id="menu-sig-cerr">—</span></div>
+            <div class="menu-sigec-stat menu-sig-abi"><span class="lbl">Abiertas</span><span class="val" id="menu-sig-abi">—</span></div>
+          </div>
+        </div>
+        <div class="menu-sigec-bar-wrap">
+          <div class="menu-sigec-bar-labels"><span>0%</span><span id="menu-sigec-bar-pct">—%</span><span>100% meta</span></div>
+          <div class="menu-sigec-bar"><div id="menu-sigec-bar-fill"></div></div>
+          <div class="menu-sigec-meta-row"><span id="menu-sig-meta-txt">Meta nacional: —</span><span id="menu-sig-fact-txt">Facturadas SIGEC: —</span></div>
+        </div>
+        <div class="menu-sigec-glpi">
+          <span class="glpi-lbl">GLPI</span>
+          <span id="menu-glpi-apr">—</span> aprobadas
+          <span class="glpi-sep">·</span>
+          <span id="menu-glpi-abi">—</span> abiertas
+          <span class="glpi-sep">·</span>
+          <span id="menu-glpi-neg">—</span> negadas
+        </div>
       </div>
       <div class="menu-kpi-strip menu-kpi-compact">
         <div class="menu-kpi menu-kpi-blue"><div class="menu-kpi-lbl">SIGEC</div><div class="menu-kpi-val" id="menu-kpi-sigec">—</div></div>
@@ -1037,7 +1071,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <div class="menu-card-title">Agendar</div>
         </button>
       </div>
-      <div class="menu-footer"><span id="menu-footer-version">SCIC v4.7</span> · CMD · PYV</div>
+      <div class="menu-footer">CMD · Proceso PYV</div>
     </div>
   </div>
 </div>
@@ -1098,6 +1132,30 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-nac-bar>div:first-child{height:100%;border-radius:6px;background:linear-gradient(90deg,#C8971E,#FFD900);transition:width .8s ease}
 .menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:16px;background:#60a5fa;border-radius:2px;box-shadow:0 0 8px rgba(96,165,250,.6)}
 .menu-nac-proy{color:rgba(255,255,255,.5);font-size:10px;margin-top:10px;text-align:center}
+.menu-sigec-panel{margin-bottom:14px;padding:14px;background:rgba(0,0,0,.3);border-radius:12px;border:1px solid rgba(96,165,250,.2)}
+.menu-sigec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.menu-sigec-title{color:#60a5fa;font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px}
+.menu-sigec-sem{font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
+.menu-sigec-main{display:flex;gap:14px;align-items:center;margin-bottom:12px}
+.menu-sigec-circle{width:78px;height:78px;border-radius:50%;border:4px solid #4ade80;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:rgba(74,222,128,.08);transition:border-color .4s,background .4s}
+.menu-sigec-pct{font-size:18px;font-weight:900;color:#fff;line-height:1}
+.menu-sigec-pct-sub{font-size:7px;color:rgba(255,255,255,.45);text-align:center;margin-top:2px;padding:0 4px}
+.menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.menu-sigec-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px}
+.menu-sigec-stat .lbl{display:block;color:rgba(255,255,255,.4);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.menu-sigec-stat .val{display:block;color:#fff;font-size:16px;font-weight:900;margin-top:3px}
+.menu-sig-fact .val{color:#4ade80}
+.menu-sig-cfac .val{color:#a78bfa}
+.menu-sig-cerr .val{color:#fbbf24}
+.menu-sig-abi .val{color:#60a5fa}
+.menu-sigec-bar-wrap{padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06)}
+.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,.35);margin-bottom:5px}
+.menu-sigec-bar{height:8px;background:rgba(255,255,255,.08);border-radius:5px;overflow:hidden}
+.menu-sigec-bar>div{height:100%;border-radius:5px;background:#4ade80;transition:width .8s ease,background .4s}
+.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);margin-top:8px;flex-wrap:wrap;gap:4px}
+.menu-sigec-glpi{margin-top:10px;font-size:9px;color:rgba(255,255,255,.5);text-align:center}
+.menu-sigec-glpi .glpi-lbl{color:#c084fc;font-weight:800;margin-right:4px}
+.menu-sigec-glpi .glpi-sep{margin:0 4px;color:rgba(255,255,255,.2)}
 .menu-kpi-compact{padding:0;background:transparent;border:none;gap:6px}
 .menu-kpi-compact .menu-kpi{min-width:90px;padding:8px 10px}
 .menu-actions-panel{padding:18px 16px;background:rgba(0,0,0,.2)}
@@ -3013,7 +3071,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.8.0';
+var APP_VERSION = 'SCIC-4.9.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -5863,7 +5921,7 @@ https://minutodediosportal.com/login/
       var mc=document.getElementById('menu-cargo-sede'); if(mc) mc.textContent=(cargo&&sede)?(cargo+' · '+sede):(cargo||sede||'—');
       var av=document.getElementById('menu-avatar');
       if(av&&nombre){ var p=nombre.trim().split(/\s+/); av.textContent=((p[0]||'?')[0]+(p[1]||'')[0]).toUpperCase(); }
-      var mv=document.getElementById('menu-version'); if(mv&&typeof APP_VERSION!=='undefined') mv.textContent=APP_VERSION.replace('SCIC-','SCIC v');
+      var mv=document.getElementById('menu-version'); if(mv) mv.textContent='';
     }catch(e){}
   }
   function mostrarMenuPrincipal(){
@@ -6150,13 +6208,89 @@ function _parseCumpleMMDD(s){
   function fmtN(n){ return (Number(n)||0).toLocaleString('es-CO'); }
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
+  function aplicarVersionApp(){
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.9.0';
+    var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
+    var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
+    var badge = document.getElementById('app-version-badge');
+    if(badge){ badge.textContent = txt; badge.style.display = 'block'; }
+    ['menu-version','menu-footer-version','app-version-footer','menu-version-label','footer-version'].forEach(function(id){
+      var el = document.getElementById(id);
+      if(el) el.textContent = '';
+    });
+  }
+  window.aplicarVersionApp = aplicarVersionApp;
+
+  function obtenerSigecNacional(){
+    var sig = {facturada:0, cerrada_fac:0, cerrada:0, abierta:0, total:0};
+    try{
+      if(typeof MCM_MIX_SIGEC!=='undefined' && MCM_MIX_SIGEC.nacional){
+        var live = MCM_MIX_SIGEC.nacional();
+        if(live && live.total) return live;
+      }
+    }catch(e){}
+    var d = (_DATA && _DATA.sigec) || {};
+    sig.facturada = d.facturada || d.facturadas || 0;
+    sig.cerrada_fac = d.cerrada_fac || 0;
+    sig.cerrada = d.cerrada || d.cerradas || 0;
+    sig.abierta = d.abierta || d.abiertas || 0;
+    sig.total = sig.facturada + sig.cerrada_fac + sig.cerrada + sig.abierta + (d.rechazado||0) + (d.pend_doc||0);
+    return sig;
+  }
+
+  function obtenerGlpiNacional(){
+    try{
+      if(typeof MCM_MIX_GLPI!=='undefined' && MCM_MIX_GLPI.nacional){
+        var live = MCM_MIX_GLPI.nacional();
+        if(live && live.total) return live;
+      }
+    }catch(e){}
+    var d = (_DATA && _DATA.glpi) || {};
+    return {
+      aprobada: d.aprobada || d.aprobadas || 0,
+      abierta: d.abierta || d.abiertas || 0,
+      negada: d.negada || d.negadas || 0,
+      total: (d.aprobada||0)+(d.abierta||0)+(d.negada||0)
+    };
+  }
+
+  function renderMenuSigecSemaforo(metaN, sig, glpi){
+    var fact = sig.facturada || 0;
+    var pctSig = metaN>0 ? Math.round(fact/metaN*100) : 0;
+    var semSig = pctSig>=90?'VERDE':pctSig>=70?'AMARILLO':'ROJO';
+    var colSig = pctSig>=90?'#4ade80':pctSig>=70?'#fbbf24':'#f87171';
+    var el;
+    el=document.getElementById('menu-sig-fact'); if(el) el.textContent=fmtN(fact);
+    el=document.getElementById('menu-sig-cfac'); if(el) el.textContent=fmtN(sig.cerrada_fac||0);
+    el=document.getElementById('menu-sig-cerr'); if(el) el.textContent=fmtN(sig.cerrada||0);
+    el=document.getElementById('menu-sig-abi'); if(el) el.textContent=fmtN(sig.abierta||0);
+    el=document.getElementById('menu-sigec-pct-big'); if(el){ el.textContent=pctSig+'%'; el.style.color=colSig; }
+    el=document.getElementById('menu-sigec-sem-lbl'); if(el){ el.textContent=semSig; el.style.color=colSig; el.style.borderColor=colSig; }
+    el=document.getElementById('menu-sigec-circle'); if(el){ el.style.borderColor=colSig; el.style.background=colSig+'18'; }
+    el=document.getElementById('menu-sigec-bar-fill'); if(el){ el.style.width=Math.min(100,pctSig)+'%'; el.style.background=colSig; }
+    el=document.getElementById('menu-sigec-bar-pct'); if(el) el.textContent=pctSig+'%';
+    el=document.getElementById('menu-sig-meta-txt'); if(el) el.textContent='Meta nacional: '+fmtN(metaN);
+    el=document.getElementById('menu-sig-fact-txt'); if(el) el.textContent='Facturadas SIGEC: '+fmtN(fact);
+    el=document.getElementById('menu-glpi-apr'); if(el) el.textContent=fmtN(glpi.aprobada||0);
+    el=document.getElementById('menu-glpi-abi'); if(el) el.textContent=fmtN(glpi.abierta||0);
+    el=document.getElementById('menu-glpi-neg'); if(el) el.textContent=fmtN(glpi.negada||0);
+  }
+
   function actualizarMenuKPIs(){
     try{
       var col = window._coloc_data || (_DATA&&_DATA.coloc) || [];
       var metaN=0, acumN=0;
       col.forEach(function(r){ metaN+=r.meta_n||0; acumN+=r.acum_n||0; });
       if(!metaN && window._mtsMetaN) metaN = window._mtsMetaN;
+      if(!metaN && _DATA && _DATA.meta_s2) metaN = _DATA.meta_s2;
       if(!acumN && window._mtsEjecN) acumN = window._mtsEjecN;
+      if(!acumN && _DATA && _DATA.acum_s2) acumN = _DATA.acum_s2;
+
+      var diasTot = window._mtsDiasTotal || (_DATA&&_DATA.dh_total) || 0;
+      var diasTra = window._mtsDiasTrans || (_DATA&&_DATA.dh_trans) || 0;
+      var deb = window._mtsDebemos || 0;
+      if(!deb && metaN && diasTot>0) deb = Math.round(metaN / diasTot * diasTra);
+
       var pct = metaN>0 ? Math.round(acumN/metaN*100) : 0;
       var sem = pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO';
       var colSem = pct>=90?'#4ade80':pct>=70?'#fbbf24':'#f87171';
@@ -6165,26 +6299,22 @@ function _parseCumpleMMDD(s){
       el=document.getElementById('menu-kpi-meta'); if(el) el.textContent='/ '+fmtN(metaN);
       el=document.getElementById('menu-kpi-bar'); if(el){ el.style.width=Math.min(100,pct)+'%'; el.style.background=colSem; }
       el=document.getElementById('menu-kpi-pct'); if(el){ el.textContent=pct+'% curva · '+sem; el.style.color=colSem; }
-      var deb = window._mtsDebemosHoy || window._mtsDebemos || (_DATA&&_DATA.debemos_hoy) || 0;
-      el=document.getElementById('menu-kpi-deber'); if(el) el.textContent=fmtN(deb);
-      var sig = (_DATA&&_DATA.sigec) || {};
-      el=document.getElementById('menu-kpi-sigec'); if(el) el.textContent=fmtN(sig.facturadas||5761);
-      el=document.getElementById('menu-kpi-sigec-sub'); if(el) el.textContent='Facturadas · '+(sig.abiertas||789)+' abiertas';
-      var glp = (_DATA&&_DATA.glpi) || {};
-      el=document.getElementById('menu-kpi-glpi'); if(el) el.textContent=fmtN(glp.aprobadas||535);
-      el=document.getElementById('menu-kpi-glpi-sub'); if(el) el.textContent='Aprobadas · '+(glp.abiertas||62)+' abiertas';
+      el=document.getElementById('menu-kpi-deber'); if(el) el.textContent=fmtN(Math.round(deb));
+
+      var sig = obtenerSigecNacional();
+      var glpi = obtenerGlpiNacional();
+      el=document.getElementById('menu-kpi-sigec'); if(el) el.textContent=fmtN(sig.facturada||0);
+      el=document.getElementById('menu-kpi-sigec-sub'); if(el) el.textContent='Facturadas · '+(sig.abierta||0)+' abiertas';
+      el=document.getElementById('menu-kpi-glpi'); if(el) el.textContent=fmtN(glpi.aprobada||0);
+      el=document.getElementById('menu-kpi-glpi-sub'); if(el) el.textContent='Aprobadas · '+(glpi.abierta||0)+' abiertas';
       var ld = (_DATA&&_DATA.leads) || {};
-      el=document.getElementById('menu-kpi-leads'); if(el) el.textContent=fmtN(ld.total||5645);
-      el=document.getElementById('menu-kpi-leads-sub'); if(el) el.textContent='Leads · '+(ld.renov||5631)+' renov.';
+      el=document.getElementById('menu-kpi-leads'); if(el) el.textContent=fmtN(ld.total_nuevos||ld.total||5645);
+      el=document.getElementById('menu-kpi-leads-sub'); if(el) el.textContent='Leads · '+(ld.susceptibles||ld.renov||5631)+' renov.';
       var hub = window._hubspot_data || (_DATA&&_DATA.hubspot) || {};
       el=document.getElementById('menu-kpi-hub'); if(el) el.textContent=fmtN(hub.total||49473);
       var cart = window._cartera_data || (_DATA&&_DATA.cartera) || {};
       el=document.getElementById('menu-kpi-cartera'); if(el) el.textContent=fmtM(cart.saldo||8e9);
-      var mv=document.getElementById('menu-version'); if(mv&&typeof APP_VERSION!=='undefined') mv.textContent=APP_VERSION.replace('SCIC-','SCIC v');
-      el=document.getElementById('menu-footer-version'); if(el&&typeof APP_VERSION!=='undefined') el.textContent=APP_VERSION.replace('SCIC-','SCIC v');
 
-      var diasTot = window._mtsDiasTotal || 0;
-      var diasTra = window._mtsDiasTrans || 0;
       var pctIdeal = diasTot>0 ? Math.round(diasTra/diasTot*100) : 0;
       var brecha = Math.round(acumN - deb);
       var brechaTxt = brecha>=0 ? ('+'+fmtN(brecha)) : ('−'+fmtN(Math.abs(brecha)));
@@ -6197,7 +6327,7 @@ function _parseCumpleMMDD(s){
       el=document.getElementById('menu-nac-meta'); if(el) el.textContent=metaN?fmtN(metaN):'—';
       el=document.getElementById('menu-nac-acum'); if(el) el.textContent=acumN?fmtN(acumN):'—';
       el=document.getElementById('menu-nac-pct-txt'); if(el) el.textContent=metaN?(pct+'% de la meta nacional'):'—';
-      el=document.getElementById('menu-nac-deber'); if(el) el.textContent=deb?fmtN(Math.round(deb)):'—';
+      el=document.getElementById('menu-nac-deber'); if(el) el.textContent=metaN?fmtN(Math.round(deb)):'—';
       el=document.getElementById('menu-nac-dh'); if(el) el.textContent=diasTot?(diasTra+' de '+diasTot+' días hábiles transcurridos'):'— días hábiles';
       el=document.getElementById('menu-nac-brecha'); if(el){ el.textContent=metaN?brechaTxt:'—'; el.style.color=brechaCol; }
       el=document.getElementById('menu-nac-semaforo'); if(el){ el.textContent=metaN?brechaLbl:'—'; el.style.color=brechaCol; }
@@ -6207,6 +6337,8 @@ function _parseCumpleMMDD(s){
       el=document.getElementById('menu-nac-proy'); if(el) el.textContent=metaN&&diasTra>0
         ? ('Proyección de cierre: '+fmtN(proy)+' créditos ('+proyPct+'% meta) · Ritmo actual: '+(diasTra>0?(acumN/diasTra).toFixed(1):'—')+'/dh · Necesario: '+(Math.max(0,diasTot-diasTra)>0?((metaN-acumN)/Math.max(1,diasTot-diasTra)).toFixed(1):'—')+'/dh')
         : 'Proyección de cierre: —';
+
+      renderMenuSigecSemaforo(metaN, sig, glpi);
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
   window.actualizarMenuKPIs = actualizarMenuKPIs;
@@ -6329,8 +6461,19 @@ function _parseCumpleMMDD(s){
   if(typeof window._mostrarMenuPrincipal==='function'){
     var _origMenu = window._mostrarMenuPrincipal;
     window._mostrarMenuPrincipal = window.volverAlMenu = window.irEtapaMenu = function(){
+      try{ typeof _mtsCargarPeriodoHabiles==='function' && _mtsCargarPeriodoHabiles(); }catch(e){}
+      try{ typeof _mtsCargarMeta==='function' && _mtsCargarMeta(); }catch(e){}
       _origMenu();
       actualizarMenuKPIs();
+    };
+  }
+
+  if(typeof _arrancar==='function'){
+    var _origArrancar = _arrancar;
+    window._arrancar = function(){
+      var r = _origArrancar.apply(this, arguments);
+      aplicarVersionApp();
+      return r;
     };
   }
 
@@ -6361,10 +6504,12 @@ function _parseCumpleMMDD(s){
   };
 
   construirResumenGerencial();
+  aplicarVersionApp();
+  setTimeout(aplicarVersionApp, 100);
   setTimeout(actualizarMenuKPIs, 500);
   setTimeout(actualizarMenuKPIs, 3000);
   setTimeout(construirResumenGerencial, 5000);
-  console.log('[SCIC v4.8] Malla hoy, launcher PYV y panel nacional activos');
+  console.log('[SCIC v4.9] Semáforo SIGEC, Deberíamos hoy y versión unificada activos');
 })();
 </script>
 </body>
