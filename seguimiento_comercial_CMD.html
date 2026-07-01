@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.10.0   (APP_VERSION = 'SCIC-4.10.0')
+  Versión actual: 4.10.1   (APP_VERSION = 'SCIC-4.10.1')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,8 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.10.1 (2026-06-30)
+    - Semáforo SIGEC: agregación robusta desde filas + _sigecData + respaldo _DATA.
   v4.10.0 (2026-06-30)
     - Login: cumpleaños muestra solo quien cumple HOY.
     - Menú: botón Cumpleaños abre listado completo (modal).
@@ -3081,7 +3083,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.10.0';
+var APP_VERSION = 'SCIC-4.10.1';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6217,7 +6219,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.10.0';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.10.1';
     var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
     var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
     var badge = document.getElementById('app-version-badge');
@@ -6229,63 +6231,100 @@ function _parseCumpleMMDD(s){
   }
   window.aplicarVersionApp = aplicarVersionApp;
 
-  function obtenerSigecNacional(){
-    function cel(v){
-      if(v==null) return '';
-      if(typeof v==='object' && v.v!=null) return String(v.v).trim();
-      return String(v).trim();
-    }
-    function contarDesdeFilas(rows){
-      var sig = {facturada:0, cerrada_fac:0, cerrada:0, abierta:0, pendiente:0, rechazada:0, otro:0, total:0};
-      if(!rows || !rows.length) return sig;
-      var clas = (typeof MCM_MIX_SIGEC!=='undefined' && MCM_MIX_SIGEC._clasificar) ? MCM_MIX_SIGEC._clasificar : function(est){
-        var x=String(est||'').toLowerCase().trim();
-        if(x==='facturada') return 'facturada';
-        if(x.indexOf('cerrada fac')>=0) return 'cerrada_fac';
-        if(x==='cerrada') return 'cerrada';
-        if(x.indexOf('abierta')>=0||x.indexOf('proceso')>=0) return 'abierta';
-        if(x.indexOf('rechaz')>=0||x.indexOf('negad')>=0) return 'rechazada';
-        if(x.indexOf('pendiente')>=0) return 'pendiente';
-        return 'otro';
-      };
-      rows.forEach(function(row){
-        var cols = row._cols || [];
-        var est = cel(row.estado || row.Estado || row['Estado'] || cols[15]);
-        var cls = clas(est);
-        sig[cls] = (sig[cls]||0) + 1;
-        sig.total++;
+  function leerEstadoSigec(row){
+    if(!row) return '';
+    var cols = row._cols || row._c || [];
+    var est = '';
+    if(row.Estado != null && row.Estado !== '') est = row.Estado;
+    else if(row.estado != null && row.estado !== '') est = row.estado;
+    else {
+      Object.keys(row).forEach(function(k){
+        if(!est && k && String(k).toLowerCase().trim() === 'estado') est = row[k];
       });
-      return sig;
     }
-    var rows = window._sigecRows || [];
-    if(rows.length){
-      var n = contarDesdeFilas(rows);
-      if(n.total){
-        window._sigecNacional = n;
-        try{
-          if(typeof _DATA!=='undefined'){
-            _DATA.sigec = _DATA.sigec || {};
-            _DATA.sigec.facturada = n.facturada;
-            _DATA.sigec.cerrada_fac = n.cerrada_fac;
-            _DATA.sigec.cerrada = n.cerrada;
-            _DATA.sigec.abierta = n.abierta;
-          }
-        }catch(e){}
-        return n;
-      }
-    }
-    if(window._sigecNacional && window._sigecNacional.total) return window._sigecNacional;
-    var d = (_DATA && _DATA.sigec) || {};
-    return {
-      facturada: d.facturada || d.facturadas || 0,
-      cerrada_fac: d.cerrada_fac || 0,
-      cerrada: d.cerrada || d.cerradas || 0,
-      abierta: d.abierta || d.abiertas || 0,
-      pendiente: d.pend_doc || 0,
-      rechazada: d.rechazado || 0,
-      total: (d.facturada||0)+(d.cerrada_fac||0)+(d.cerrada||0)+(d.abierta||0)+(d.rechazado||0)+(d.pend_doc||0)
-    };
+    if((!est || est === 'Estado') && cols.length > 15) est = cols[15];
+    if(est && typeof est === 'object' && est.v != null) est = est.v;
+    return String(est || '').trim();
   }
+
+  function clasificarEstadoSigec(est){
+    var l = String(est || '').trim();
+    var x = l.toLowerCase();
+    if(l === 'Facturada' || x === 'facturada') return 'facturada';
+    if(x.indexOf('cerrada fac') >= 0) return 'cerrada_fac';
+    if(x === 'cerrada') return 'cerrada';
+    if(x.indexOf('abierta') >= 0 || x.indexOf('proceso') >= 0 || x.indexOf('validaci') >= 0) return 'abierta';
+    if(x.indexOf('rechaz') >= 0 || x.indexOf('negad') >= 0 || x.indexOf('no viable') >= 0) return 'rechazada';
+    if(x.indexOf('pendiente') >= 0 || x.indexOf('espera') >= 0) return 'pendiente';
+    return 'otro';
+  }
+
+  function procesarSigecFilas(rows){
+    var sig = {facturada:0, cerrada_fac:0, cerrada:0, abierta:0, rechazada:0, pendiente:0, otro:0, total:0, con_estado:0};
+    (rows || []).forEach(function(row){
+      var est = leerEstadoSigec(row);
+      if(est && est.toLowerCase() !== 'estado') sig.con_estado++;
+      sig.total++;
+      var cls = clasificarEstadoSigec(est);
+      sig[cls] = (sig[cls] || 0) + 1;
+    });
+    return sig;
+  }
+
+  function sumarSigecDataAgregado(){
+    var sedes = window._sigecData || [];
+    var o = {facturada:0, abierta:0, negada:0, cerrada:0, total:0};
+    sedes.forEach(function(s){
+      o.facturada += Number(s.aprobadas) || 0;
+      o.abierta += Number(s.abiertas) || 0;
+      o.negada += Number(s.negadas) || 0;
+      o.total += Number(s.total) || 0;
+    });
+    return o;
+  }
+
+  function obtenerSigecNacional(){
+    var fromRows = procesarSigecFilas(window._sigecRows || []);
+    var fromAgg = sumarSigecDataAgregado();
+    var parseOk = fromRows.con_estado > 0 && (fromRows.con_estado / Math.max(1, fromRows.total)) >= 0.3;
+    var sig = {
+      facturada: fromRows.facturada || 0,
+      cerrada_fac: fromRows.cerrada_fac || 0,
+      cerrada: fromRows.cerrada || 0,
+      abierta: fromRows.abierta || 0,
+      rechazada: fromRows.rechazada || 0,
+      pendiente: fromRows.pendiente || 0,
+      total: fromRows.total || 0
+    };
+    if(fromAgg.total){
+      if(!sig.facturada && fromAgg.facturada) sig.facturada = fromAgg.facturada;
+      if(!sig.abierta && fromAgg.abierta) sig.abierta = fromAgg.abierta;
+      if(!sig.rechazada && fromAgg.negada) sig.rechazada = fromAgg.negada;
+      if(!sig.total) sig.total = fromAgg.total;
+    }
+    if(!(sig.facturada + sig.cerrada_fac + sig.cerrada + sig.abierta)){
+      var d = (_DATA && _DATA.sigec) || {};
+      sig.facturada = sig.facturada || d.facturada || d.facturadas || 0;
+      sig.cerrada_fac = sig.cerrada_fac || d.cerrada_fac || 0;
+      sig.cerrada = sig.cerrada || d.cerrada || d.cerradas || 0;
+      sig.abierta = sig.abierta || d.abierta || d.abiertas || 0;
+      sig.rechazada = sig.rechazada || d.rechazado || 0;
+      if(!sig.total) sig.total = sig.facturada + sig.cerrada_fac + sig.cerrada + sig.abierta + sig.rechazada;
+    }
+    sig._fuente = parseOk ? 'filas' : (fromAgg.total ? 'agregado' : 'respaldo');
+    window._sigecNacional = sig;
+    try{
+      if(typeof _DATA !== 'undefined'){
+        _DATA.sigec = _DATA.sigec || {};
+        _DATA.sigec.facturada = sig.facturada;
+        _DATA.sigec.cerrada_fac = sig.cerrada_fac;
+        _DATA.sigec.cerrada = sig.cerrada;
+        _DATA.sigec.abierta = sig.abierta;
+      }
+    }catch(e){}
+    return sig;
+  }
+  window.obtenerSigecNacional = obtenerSigecNacional;
 
   function obtenerGlpiNacional(){
     function cel(v){
@@ -6324,22 +6363,25 @@ function _parseCumpleMMDD(s){
   }
 
   function renderMenuSigecSemaforo(metaN, sig, glpi){
-    var fact = sig.facturada || 0;
-    var pctSig = metaN>0 ? Math.round(fact/metaN*100) : 0;
-    var semSig = pctSig>=90?'VERDE':pctSig>=70?'AMARILLO':'ROJO';
-    var colSig = pctSig>=90?'#4ade80':pctSig>=70?'#fbbf24':'#f87171';
+    var fact = Number(sig.facturada) || 0;
+    var meta = Number(metaN) || 0;
+    if(!meta && typeof _DATA !== 'undefined' && _DATA.meta_s2) meta = _DATA.meta_s2;
+    var pctSig = meta > 0 ? Math.round(fact / meta * 100) : 0;
+    var semSig = pctSig >= 90 ? 'VERDE' : pctSig >= 70 ? 'AMARILLO' : 'ROJO';
+    var colSig = pctSig >= 90 ? '#4ade80' : pctSig >= 70 ? '#fbbf24' : '#f87171';
+    var hayDatos = fact + (sig.cerrada_fac||0) + (sig.cerrada||0) + (sig.abierta||0) > 0;
     var el;
-    el=document.getElementById('menu-sig-fact'); if(el) el.textContent=fmtN(fact);
-    el=document.getElementById('menu-sig-cfac'); if(el) el.textContent=fmtN(sig.cerrada_fac||0);
-    el=document.getElementById('menu-sig-cerr'); if(el) el.textContent=fmtN(sig.cerrada||0);
-    el=document.getElementById('menu-sig-abi'); if(el) el.textContent=fmtN(sig.abierta||0);
-    el=document.getElementById('menu-sigec-pct-big'); if(el){ el.textContent=pctSig+'%'; el.style.color=colSig; }
-    el=document.getElementById('menu-sigec-sem-lbl'); if(el){ el.textContent=semSig; el.style.color=colSig; el.style.borderColor=colSig; }
-    el=document.getElementById('menu-sigec-circle'); if(el){ el.style.borderColor=colSig; el.style.background=colSig+'18'; }
-    el=document.getElementById('menu-sigec-bar-fill'); if(el){ el.style.width=Math.min(100,pctSig)+'%'; el.style.background=colSig; }
-    el=document.getElementById('menu-sigec-bar-pct'); if(el) el.textContent=pctSig+'%';
-    el=document.getElementById('menu-sig-meta-txt'); if(el) el.textContent='Meta nacional: '+fmtN(metaN);
-    el=document.getElementById('menu-sig-fact-txt'); if(el) el.textContent='Facturadas SIGEC: '+fmtN(fact);
+    el=document.getElementById('menu-sig-fact'); if(el) el.textContent = hayDatos ? fmtN(fact) : '—';
+    el=document.getElementById('menu-sig-cfac'); if(el) el.textContent = hayDatos ? fmtN(sig.cerrada_fac||0) : '—';
+    el=document.getElementById('menu-sig-cerr'); if(el) el.textContent = hayDatos ? fmtN(sig.cerrada||0) : '—';
+    el=document.getElementById('menu-sig-abi'); if(el) el.textContent = hayDatos ? fmtN(sig.abierta||0) : '—';
+    el=document.getElementById('menu-sigec-pct-big'); if(el){ el.textContent = meta ? (pctSig+'%') : '—'; el.style.color = meta ? colSig : 'rgba(255,255,255,.4)'; }
+    el=document.getElementById('menu-sigec-sem-lbl'); if(el){ el.textContent = meta ? semSig : '—'; el.style.color = meta ? colSig : 'rgba(255,255,255,.4)'; el.style.borderColor = meta ? colSig : 'rgba(255,255,255,.15)'; }
+    el=document.getElementById('menu-sigec-circle'); if(el){ el.style.borderColor = meta ? colSig : 'rgba(255,255,255,.2)'; el.style.background = meta ? (colSig+'18') : 'rgba(255,255,255,.04)'; }
+    el=document.getElementById('menu-sigec-bar-fill'); if(el){ el.style.width = meta ? (Math.min(100,pctSig)+'%') : '0%'; el.style.background = colSig; }
+    el=document.getElementById('menu-sigec-bar-pct'); if(el) el.textContent = meta ? (pctSig+'%') : '—';
+    el=document.getElementById('menu-sig-meta-txt'); if(el) el.textContent = meta ? ('Meta nacional: '+fmtN(meta)) : 'Meta nacional: —';
+    el=document.getElementById('menu-sig-fact-txt'); if(el) el.textContent = hayDatos ? ('Facturadas SIGEC: '+fmtN(fact)+' ('+pctSig+'% meta)') : 'Facturadas SIGEC: cargando…';
     el=document.getElementById('menu-glpi-apr'); if(el) el.textContent=fmtN(glpi.aprobada||0);
     el=document.getElementById('menu-glpi-abi'); if(el) el.textContent=fmtN(glpi.abierta||0);
     el=document.getElementById('menu-glpi-neg'); if(el) el.textContent=fmtN(glpi.negada||0);
@@ -6534,9 +6576,14 @@ function _parseCumpleMMDD(s){
       try{ typeof _mtsCargarMeta==='function' && _mtsCargarMeta(); }catch(e){}
       _origMenu();
       actualizarMenuKPIs();
-      if(!(window._sigecRows && window._sigecRows.length) && typeof _cargarSIGEC==='function'){
-        _cargarSIGEC().then(function(){ actualizarMenuKPIs(); }).catch(function(){});
+      var recargar = function(){ try{ actualizarMenuKPIs(); }catch(e){} };
+      if(typeof _cargarSIGEC==='function'){
+        _cargarSIGEC().then(recargar).catch(recargar);
       }
+      if(typeof _cargarGLPI==='function'){
+        _cargarGLPI().then(recargar).catch(recargar);
+      }
+      [400, 1200, 3000, 6000].forEach(function(ms){ setTimeout(recargar, ms); });
     };
   }
 
@@ -6556,22 +6603,24 @@ function _parseCumpleMMDD(s){
 
   if(typeof _cargarSIGEC==='function'){
     var _origCargarSigec = _cargarSIGEC;
-    window._cargarSIGEC = function(){
+    var _wrapCargarSigec = function(){
       return _origCargarSigec().then(function(){
-        try{ obtenerSigecNacional(); }catch(e){}
+        try{ obtenerSigecNacional(); }catch(e){ console.warn('[SCIC] obtenerSigecNacional:', e&&e.message); }
         try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
       });
     };
+    window._cargarSIGEC = _cargarSIGEC = _wrapCargarSigec;
   }
 
   if(typeof _cargarGLPI==='function'){
     var _origCargarGlpi = _cargarGLPI;
-    window._cargarGLPI = function(){
+    var _wrapCargarGlpi = function(){
       return _origCargarGlpi().then(function(){
         try{ obtenerGlpiNacional(); }catch(e){}
         try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
       });
     };
+    window._cargarGLPI = _cargarGLPI = _wrapCargarGlpi;
   }
 
   if(typeof _arrancar==='function'){
@@ -6615,7 +6664,7 @@ function _parseCumpleMMDD(s){
   setTimeout(actualizarMenuKPIs, 500);
   setTimeout(actualizarMenuKPIs, 3000);
   setTimeout(construirResumenGerencial, 5000);
-  console.log('[SCIC v4.10] Cumpleaños hoy, botón cumpleaños y SIGEC desde sheet activos');
+  console.log('[SCIC v4.10.1] Semáforo SIGEC con agregación robusta activo');
 })();
 </script>
 </body>
