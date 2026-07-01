@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.10.4   (APP_VERSION = 'SCIC-4.10.4')
+  Versión actual: 4.11.0   (APP_VERSION = 'SCIC-4.11.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,10 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.11.0 (2026-06-30)
+    - SIGEC menú: 6 estados (Facturada, Cerrada Fac., Cerrada, Abierta, Rechazado Motor, Pend. documentación).
+    - Malla Hoy: botones con/sin turno, inicio y fin de turno, vista en malla.
+    - Consulta Dinámica: panel por sede con estado desde repositorios (colocación, SIGEC, GLPI).
   v4.10.4 (2026-06-30)
     - Menú: botón Directorio (base empleados, filtro por sede y conteo por sede).
   v4.10.3 (2026-06-30)
@@ -1013,6 +1017,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
             <div class="menu-sigec-stat menu-sig-cfac"><span class="lbl">Cerradas fac.</span><span class="val" id="menu-sig-cfac">—</span></div>
             <div class="menu-sigec-stat menu-sig-cerr"><span class="lbl">Cerradas</span><span class="val" id="menu-sig-cerr">—</span></div>
             <div class="menu-sigec-stat menu-sig-abi"><span class="lbl">Abiertas</span><span class="val" id="menu-sig-abi">—</span></div>
+            <div class="menu-sigec-stat menu-sig-rech"><span class="lbl">Rechaz. Motor</span><span class="val" id="menu-sig-rech">—</span></div>
+            <div class="menu-sigec-stat menu-sig-pend"><span class="lbl">Pend. doc.</span><span class="val" id="menu-sig-pend">—</span></div>
           </div>
         </div>
         <div class="menu-sigec-bar-wrap">
@@ -1060,8 +1066,9 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <div class="menu-card-title">Cartera</div>
         </button>
         <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green">
-          <div class="menu-card-icon"><i class="ti ti-users-group"></i></div>
-          <div class="menu-card-title">Leads</div>
+          <div class="menu-card-icon"><i class="ti ti-chart-dots-3"></i></div>
+          <div class="menu-card-title">Consulta</div>
+          <div class="menu-card-desc">Estado por sede</div>
         </button>
         <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber">
           <div class="menu-card-icon"><i class="ti ti-history"></i></div>
@@ -1163,7 +1170,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-sigec-circle{width:78px;height:78px;border-radius:50%;border:4px solid #4ade80;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:rgba(74,222,128,.08);transition:border-color .4s,background .4s}
 .menu-sigec-pct{font-size:18px;font-weight:900;color:#fff;line-height:1}
 .menu-sigec-pct-sub{font-size:7px;color:rgba(255,255,255,.45);text-align:center;margin-top:2px;padding:0 4px}
-.menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .menu-sigec-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px}
 .menu-sigec-stat .lbl{display:block;color:rgba(255,255,255,.4);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
 .menu-sigec-stat .val{display:block;color:#fff;font-size:16px;font-weight:900;margin-top:3px}
@@ -1171,6 +1178,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-sig-cfac .val{color:#a78bfa}
 .menu-sig-cerr .val{color:#fbbf24}
 .menu-sig-abi .val{color:#60a5fa}
+.menu-sig-rech .val{color:#f87171}
+.menu-sig-pend .val{color:#fb923c}
 .menu-sigec-bar-wrap{padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06)}
 .menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,.35);margin-bottom:5px}
 .menu-sigec-bar{height:8px;background:rgba(255,255,255,.08);border-radius:5px;overflow:hidden}
@@ -3096,7 +3105,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.10.4';
+var APP_VERSION = 'SCIC-4.11.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3890,11 +3899,12 @@ function _turnoDiaDesdeCols(o, diaMes) {
   var ci = 7 + (diaMes - 1) * 2;
   var hi = (o[ci]||'').toString().trim();
   var hf = (o[ci+1]||'').toString().trim();
-  if(!hi && !hf) return '';
+  if(!hi && !hf) return {texto:'', inicio:'', fin:''};
   var up = (hi+' '+hf).toUpperCase();
-  if(up.indexOf('DESCANSO')>=0 || hi==='D' || hi==='-' || hf==='-') return 'DESCANSO';
-  if(hi && hf && hi.indexOf(':')>=0 && hf.indexOf(':')>=0) return hi + ' – ' + hf;
-  return hi || hf || '';
+  if(up.indexOf('DESCANSO')>=0 || hi==='D' || hi==='-' || hf==='-') return {texto:'DESCANSO', inicio:'—', fin:'—'};
+  if(hi && hf && hi.indexOf(':')>=0 && hf.indexOf(':')>=0) return {texto: hi + ' – ' + hf, inicio: hi, fin: hf};
+  var t = hi || hf || '';
+  return {texto: t, inicio: hi || t, fin: hf || '—'};
 }
 
 function _empMatchNombre(nombre) {
@@ -3926,8 +3936,12 @@ function _procesarMallaTurnosDesdeFilas(filas) {
     var jornada = (o[5]||'').toString().trim();
     var tipo = (o[6]||'').toString().trim();
     var dias = [];
-    for(var d=1; d<=31; d++) dias.push(_turnoDiaDesdeCols(o, d));
-    var turnoHoy = dias[diaMes-1] || '';
+    for(var d=1; d<=31; d++) {
+      var td = _turnoDiaDesdeCols(o, d);
+      dias.push(td.texto || '');
+    }
+    var turnoObj = _turnoDiaDesdeCols(o, diaMes);
+    var turnoHoy = turnoObj.texto || '';
     if(dow===0) turnoHoy = 'DESCANSO';
     else if(dow===6 && jornada.toLowerCase().indexOf('extendida')<0 && !turnoHoy) turnoHoy = 'DESCANSO';
     var emp = _empMatchNombre(nombre);
@@ -3936,13 +3950,20 @@ function _procesarMallaTurnosDesdeFilas(filas) {
     var raw = {};
     raw[String(diaMes)] = turnoHoy;
     raw[(diaMes<10?'0':'')+diaMes] = turnoHoy;
-    var item = { nombre:nombre, cargo:cargo, sede:sede, jornada:jornada, tipo:tipo, correo:correo, cedula:cedula, turnoHoy:turnoHoy, dias:dias, raw:raw };
-    idx.push(item);
     var esLibre = !turnoHoy || turnoHoy==='—' || turnoHoy.toUpperCase()==='DESCANSO';
+    var item = {
+      nombre:nombre, cargo:cargo, sede:sede, jornada:jornada, tipo:tipo,
+      correo:correo, cedula:cedula, turnoHoy:turnoHoy,
+      turnoInicio: esLibre ? '—' : (turnoObj.inicio || '—'),
+      turnoFin: esLibre ? '—' : (turnoObj.fin || '—'),
+      sinTurno: esLibre, dias:dias, raw:raw
+    };
+    idx.push(item);
     if(!esLibre) turnosHoy.push(item);
   });
   window._mallaTurnosIndex = idx;
   window._mallaTurnosHoy = turnosHoy;
+  window._mallaTurnosSinHoy = idx.filter(function(it){ return it.sinTurno; });
   var arr = idx.filter(function(it){ return it.correo; }).map(function(it){
     return { correo:it.correo, nombre:it.nombre, jornada:it.jornada, tipo:it.tipo, dias:it.dias, raw:it.raw };
   });
@@ -3962,6 +3983,7 @@ function _renderTablaMallaHoy(filtro) {
   var q = (filtro||'').trim();
   var qn = _normMallaTxt(q);
   var qced = q.replace(/\D/g,'');
+  var modo = window._mallaVistaModo || 'con-turno';
   var lista;
   if(qn || qced.length>=5) {
     lista = (window._mallaTurnosIndex||[]).filter(function(it){
@@ -3972,60 +3994,95 @@ function _renderTablaMallaHoy(filtro) {
       var nom = _normMallaTxt(it.nombre);
       return nom.indexOf(qn)>=0 || qn.indexOf(nom)>=0;
     });
+  } else if(modo === 'sin-turno') {
+    lista = (window._mallaTurnosSinHoy||[]).slice();
+  } else if(modo === 'malla') {
+    lista = (window._mallaTurnosIndex||[]).slice();
   } else {
     lista = (window._mallaTurnosHoy||[]).slice();
   }
   var kf = document.getElementById('malla-kpi-filas');
   var kh = document.getElementById('malla-kpi-hoy');
+  var ks = document.getElementById('malla-kpi-sin');
   if(kf) kf.textContent = (window._mallaTurnosIndex||[]).length;
   if(kh) kh.textContent = (window._mallaTurnosHoy||[]).length;
+  if(ks) ks.textContent = (window._mallaTurnosSinHoy||[]).length;
+  ['con-turno','sin-turno','malla'].forEach(function(m){
+    var b = document.getElementById('malla-btn-'+m);
+    if(b){
+      var active = modo === m;
+      b.style.background = active ? 'rgba(74,222,128,.25)' : 'rgba(255,255,255,.06)';
+      b.style.borderColor = active ? 'rgba(74,222,128,.5)' : 'rgba(255,255,255,.15)';
+      b.style.color = active ? '#4ade80' : 'rgba(255,255,255,.7)';
+    }
+  });
   if(!lista.length) {
-    el.innerHTML = q
-      ? '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:12px">Sin resultados para «'+q.replace(/</g,'&lt;')+'»</div>'
-      : '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:12px"><i class="ti ti-calendar-off" style="font-size:28px;opacity:.5;display:block;margin-bottom:8px"></i>Nadie con turno programado hoy</div>';
+    var msg = q ? 'Sin resultados para «'+q.replace(/</g,'&lt;')+'»'
+      : (modo==='sin-turno' ? 'Nadie sin turno en la malla hoy' : (modo==='malla' ? 'Malla vacía' : 'Nadie con turno programado hoy'));
+    el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:12px">'+msg+'</div>';
     return;
   }
   var fecha = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
-  var html = '<div style="color:rgba(255,255,255,.45);font-size:10px;margin-bottom:10px">'+fecha+' · '+lista.length+' resultado'+(lista.length!==1?'s':'')+(q?'':' con turno hoy')+'</div>';
+  var modoLbl = modo==='sin-turno' ? 'sin turno hoy' : (modo==='malla' ? 'en malla completa' : 'con turno hoy');
+  var html = '<div style="color:rgba(255,255,255,.45);font-size:10px;margin-bottom:10px">'+fecha+' · '+lista.length+' colaborador'+(lista.length!==1?'es':'')+' '+modoLbl+'</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:rgba(147,197,253,.15)">';
-  ['Nombre','Cédula','Sede','Cargo','Jornada','Turno hoy'].forEach(function(h){
+  ['Nombre','Cédula','Sede','Cargo','Inicio','Fin','Estado'].forEach(function(h){
     html += '<th style="padding:8px;text-align:left;color:#93c5fd;font-size:9px;text-transform:uppercase;letter-spacing:.3px">'+h+'</th>';
   });
   html += '</tr></thead><tbody>';
   lista.sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||'','es'); });
   lista.forEach(function(it){
     var th = it.turnoHoy || (it.dias&&it.dias[hoy.getDate()-1]) || '—';
-    var col = th.toUpperCase().indexOf('DESCANSO')>=0 ? '#94a3b8' : '#4ade80';
+    var ini = it.turnoInicio || '—';
+    var fin = it.turnoFin || '—';
+    var esDesc = th.toUpperCase().indexOf('DESCANSO')>=0 || it.sinTurno;
+    var col = esDesc ? '#94a3b8' : '#4ade80';
+    var estado = esDesc ? (th.toUpperCase()==='DESCANSO'?'DESCANSO':'SIN TURNO') : 'EN TURNO';
     html += '<tr style="border-bottom:1px solid rgba(255,255,255,.06)">';
     html += '<td style="padding:7px 8px;color:#e2e8f0;font-weight:600">'+(it.nombre||'—')+'</td>';
     html += '<td style="padding:7px 8px;color:rgba(255,255,255,.5)">'+(it.cedula||'—')+'</td>';
     html += '<td style="padding:7px 8px;color:#cbd5e1;font-size:10px">'+(it.sede||'—')+'</td>';
     html += '<td style="padding:7px 8px;color:rgba(255,255,255,.55);font-size:10px">'+(it.cargo||'—')+'</td>';
-    html += '<td style="padding:7px 8px;color:rgba(255,255,255,.45);font-size:10px">'+(it.jornada||'—')+'</td>';
-    html += '<td style="padding:7px 8px;color:'+col+';font-weight:700;white-space:nowrap">'+th+'</td>';
+    html += '<td style="padding:7px 8px;color:#93c5fd;font-weight:700;white-space:nowrap">'+ini+'</td>';
+    html += '<td style="padding:7px 8px;color:#93c5fd;font-weight:700;white-space:nowrap">'+fin+'</td>';
+    html += '<td style="padding:7px 8px;color:'+col+';font-weight:700;white-space:nowrap;font-size:10px">'+estado+'</td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
   el.innerHTML = html;
 }
+window._setMallaVista = function(modo){
+  window._mallaVistaModo = modo;
+  var busq = document.getElementById('malla-buscar');
+  _renderTablaMallaHoy(busq ? busq.value : '');
+};
 window.filtrarMallaHoy = function(v){ _renderTablaMallaHoy(v); };
 
 function abrirMallaTurnos() {
+  window._mallaVistaModo = 'con-turno';
   var hoy = new Date();
   var nHoy = (window._mallaTurnosHoy||[]).length;
   var nIdx = (window._mallaTurnosIndex||[]).length;
+  var nSin = (window._mallaTurnosSinHoy||[]).length;
   var fechaLbl = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+  var btnStyle = 'cursor:pointer;border-radius:20px;padding:5px 12px;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-family:Ubuntu,sans-serif';
   var contenido = '<div style="font-family:Ubuntu,sans-serif">'
     + '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">'
     + '<div style="color:rgba(255,255,255,.5);font-size:11px"><i class="ti ti-calendar-event"></i> '+fechaLbl+'</div>'
-    + '<div style="display:flex;gap:8px">'
-    + '<span style="background:rgba(74,222,128,.12);color:#4ade80;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.25)"><span id="malla-kpi-hoy">'+nHoy+'</span> con turno hoy</span>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
+    + '<span style="background:rgba(74,222,128,.12);color:#4ade80;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.25)"><span id="malla-kpi-hoy">'+nHoy+'</span> con turno</span>'
+    + '<span style="background:rgba(248,113,113,.1);color:#f87171;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(248,113,113,.2)"><span id="malla-kpi-sin">'+nSin+'</span> sin turno</span>'
     + '<span style="background:rgba(147,197,253,.1);color:#93c5fd;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(147,197,253,.2)"><span id="malla-kpi-filas">'+nIdx+'</span> en malla</span>'
     + '</div></div>'
+    + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">'
+    + '<button type="button" id="malla-btn-con-turno" onclick="_setMallaVista(\'con-turno\')" style="'+btnStyle+'">✅ Con turno hoy</button>'
+    + '<button type="button" id="malla-btn-sin-turno" onclick="_setMallaVista(\'sin-turno\')" style="'+btnStyle+'">⛔ Sin turno hoy</button>'
+    + '<button type="button" id="malla-btn-malla" onclick="_setMallaVista(\'malla\')" style="'+btnStyle+'">📋 Toda la malla</button>'
+    + '</div>'
     + '<div style="margin-bottom:12px">'
     + '<input type="text" id="malla-buscar" placeholder="Buscar por nombre o cédula…" oninput="filtrarMallaHoy(this.value)" '
     + 'style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid rgba(147,197,253,.3);border-radius:10px;background:rgba(255,255,255,.06);color:#e2e8f0;font-size:12px;font-family:Ubuntu,sans-serif">'
-    + '<div style="color:rgba(255,255,255,.3);font-size:9px;margin-top:5px">Sin filtro: todos con turno hoy · Con búsqueda: cualquier colaborador en la malla</div>'
+    + '<div style="color:rgba(255,255,255,.3);font-size:9px;margin-top:5px">Use los botones para ver con turno, sin turno o malla completa · Columnas Inicio y Fin del turno de hoy</div>'
     + '</div>'
     + '<div id="malla-detalle" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;max-height:52vh;overflow-y:auto">'
     + '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px"><i class="ti ti-calendar-week" style="font-size:32px;opacity:.5"></i><div style="margin-top:10px">Cargando malla desde Sheet…</div></div>'
@@ -5789,6 +5846,7 @@ https://minutodediosportal.com/login/
         <div>
           <div style="font-size:10px;font-weight:700;color:#64748b;margin-bottom:4px">MÓDULO</div>
           <select id="cd-modulo" onchange="cdActualizar()" style="width:100%;padding:7px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px">
+            <option value="resumen">Resumen integral</option>
             <option value="colocacion">Colocación</option>
             <option value="matriculas">Matrículas + Cobertura</option>
             <option value="sigec">SIGEC</option>
@@ -5801,9 +5859,10 @@ https://minutodediosportal.com/login/
       <div id="cd-contenido" style="min-height:220px;max-height:60vh;overflow-y:auto">
         <div style="text-align:center;padding:40px;color:#94a3b8;font-size:12px">
           <div style="font-size:32px;margin-bottom:8px">🔎</div>
-          Selecciona un módulo para ver el análisis
+          Selecciona nivel y sede para ver el estado actual desde los repositorios
         </div>
       </div>
+      <div id="cd-fuente" style="font-size:9px;color:#94a3b8;text-align:center;margin-top:8px;padding-top:8px;border-top:1px solid #e5e7eb">Fuentes: Colocación · SIGEC · GLPI · Matrículas · Leads</div>
     </div>
   </div>
 </div>
@@ -6234,7 +6293,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.10.4';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.11.0';
     var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
     var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
     var badge = document.getElementById('app-version-badge');
@@ -6323,13 +6382,14 @@ function _parseCumpleMMDD(s){
     if(x.indexOf('cerrada fac') >= 0) return 'cerrada_fac';
     if(x === 'cerrada') return 'cerrada';
     if(x === 'abierta') return 'abierta';
-    if(x.indexOf('rechazado') >= 0 || x.indexOf('rechaz') >= 0 || x.indexOf('negad') >= 0) return 'rechazada';
+    if(x.indexOf('rechazado') >= 0 || x.indexOf('rechaz') >= 0) return 'rechazada';
+    if(x.indexOf('pendiente') >= 0 && x.indexOf('document') >= 0) return 'pendiente_doc';
     if(x.indexOf('pendiente') >= 0 || x.indexOf('espera') >= 0) return 'pendiente';
     return 'otro';
   }
 
   function procesarSigecFilas(rows){
-    var sig = {facturada:0, cerrada_fac:0, cerrada:0, abierta:0, rechazada:0, pendiente:0, otro:0, total:0, con_estado:0};
+    var sig = {facturada:0, cerrada_fac:0, cerrada:0, abierta:0, rechazada:0, pendiente_doc:0, pendiente:0, otro:0, total:0, con_estado:0};
     (rows || []).forEach(function(row){
       var est = leerEstadoSigec(row);
       if(est) sig.con_estado++;
@@ -6353,6 +6413,8 @@ function _parseCumpleMMDD(s){
           _DATA.sigec.cerrada_fac = sig.cerrada_fac;
           _DATA.sigec.cerrada = sig.cerrada;
           _DATA.sigec.abierta = sig.abierta;
+          _DATA.sigec.rechazado = sig.rechazada;
+          _DATA.sigec.pend_doc = sig.pendiente_doc;
         }
       }catch(e){}
       return sig;
@@ -6425,6 +6487,8 @@ function _parseCumpleMMDD(s){
     el=document.getElementById('menu-sig-cfac'); if(el) el.textContent = hayDatos ? fmtN(sig.cerrada_fac||0) : '—';
     el=document.getElementById('menu-sig-cerr'); if(el) el.textContent = hayDatos ? fmtN(sig.cerrada||0) : '—';
     el=document.getElementById('menu-sig-abi'); if(el) el.textContent = hayDatos ? fmtN(sig.abierta||0) : '—';
+    el=document.getElementById('menu-sig-rech'); if(el) el.textContent = hayDatos ? fmtN(sig.rechazada||0) : '—';
+    el=document.getElementById('menu-sig-pend'); if(el) el.textContent = hayDatos ? fmtN(sig.pendiente_doc||0) : '—';
     el=document.getElementById('menu-sigec-pct-big'); if(el){ el.textContent = meta ? (pctSig+'%') : '—'; el.style.color = meta ? colSig : 'rgba(255,255,255,.4)'; }
     el=document.getElementById('menu-sigec-sem-lbl'); if(el){ el.textContent = meta ? semSig : '—'; el.style.color = meta ? colSig : 'rgba(255,255,255,.4)'; el.style.borderColor = meta ? colSig : 'rgba(255,255,255,.15)'; }
     el=document.getElementById('menu-sigec-circle'); if(el){ el.style.borderColor = meta ? colSig : 'rgba(255,255,255,.2)'; el.style.background = meta ? (colSig+'18') : 'rgba(255,255,255,.04)'; }
@@ -7170,6 +7234,193 @@ function _parseCumpleMMDD(s){
   };
 
   console.log('[SCIC v4.10.4] Menú Directorio + conteo empleados por sede');
+
+  /* ── SCIC v4.11.0: Consulta Dinámica mejorada por sede ── */
+  var _cdActualizarLegacy = window.cdActualizar;
+  function _cdFmtN(n){ return (typeof fmtN==='function') ? fmtN(n) : Number(n||0).toLocaleString('es-CO'); }
+  function _cdNormSede(s){
+    return (typeof normalizarSedeColocacion==='function') ? normalizarSedeColocacion(s) : String(s||'').trim();
+  }
+  function _cdMatchSede(a,b){
+    if(!a||!b) return false;
+    var x=_cdNormSede(a).toLowerCase(), y=_cdNormSede(b).toLowerCase();
+    return x===y || x.indexOf(y)>=0 || y.indexOf(x)>=0;
+  }
+  function _cdKpiCard(lbl, val, col, sub){
+    return '<div style="background:#f8fafc;border-radius:10px;padding:10px;border-left:3px solid '+col+'">'
+      +'<div style="font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase">'+lbl+'</div>'
+      +'<div style="font-size:18px;font-weight:900;color:'+col+'">'+val+'</div>'
+      +(sub?'<div style="font-size:9px;color:#94a3b8;margin-top:2px">'+sub+'</div>':'')+'</div>';
+  }
+  function _cdSigecSede(sede){
+    var rows = window._sigecRows || [];
+    var sig = {facturada:0,cerrada_fac:0,cerrada:0,abierta:0,rechazada:0,pendiente_doc:0,total:0};
+    if(!rows.length && window._sigecNacional) return window._sigecNacional;
+    rows.forEach(function(row){
+      var cols = row._cols || row._c || [];
+      var s = row.Sede || cols[30] || '';
+      if(sede && !_cdMatchSede(s, sede)) return;
+      sig.total++;
+      var est = (typeof leerEstadoSigec==='function') ? leerEstadoSigec(row) : String(cols[15]||'').trim();
+      var cls = (typeof clasificarEstadoSigec==='function') ? clasificarEstadoSigec(est) : '';
+      if(cls && sig[cls]!=null) sig[cls]++;
+    });
+    return sig;
+  }
+  function _cdGlpiSede(sede){
+    var g = {aprobada:0,abierta:0,negada:0,total:0};
+    (window._glpiRows||[]).forEach(function(row){
+      var cols = row._cols || [];
+      var s = row.Sede || row.sede || cols[30] || cols[4] || '';
+      if(sede && s && !_cdMatchSede(s, sede)) return;
+      var est = String(row.estado||row.Estado||cols[3]||'').toLowerCase();
+      g.total++;
+      if(est.indexOf('aprob')>=0) g.aprobada++;
+      else if(est.indexOf('negad')>=0) g.negada++;
+      else if(est.indexOf('abiert')>=0) g.abierta++;
+    });
+    return g;
+  }
+  function _cdRenderPanel(){
+    var modulo = (document.getElementById('cd-modulo')||{}).value || 'resumen';
+    if(['matriculas','congelados','susceptibles'].indexOf(modulo)>=0 && typeof _cdActualizarLegacy==='function'){
+      return _cdActualizarLegacy();
+    }
+    var nivel = (document.getElementById('cd-nivel')||{}).value || 'nacional';
+    var sel = (document.getElementById('cd-rectoria')||{}).value || '';
+    var el = document.getElementById('cd-contenido');
+    if(!el) return;
+    var coloc = window._coloc_data || [];
+    var filas = coloc.filter(function(r){
+      if(nivel==='sede' && sel) return _cdMatchSede(r.sede, sel);
+      if(nivel==='rectoria' && sel) return (r.rectoria||'')===sel;
+      return true;
+    });
+    if(!filas.length) filas = coloc;
+    var meta=0, acum=0, ant=0;
+    filas.forEach(function(r){ meta+=r.meta_n||0; acum+=r.acum_n||0; ant+=r.ant_n||0; });
+    var pct = meta>0 ? Math.round(acum/meta*100) : 0;
+    var varAnt = ant>0 ? Math.round((acum-ant)/ant*100) : 0;
+    var titulo = nivel==='nacional' ? 'Nacional' : (nivel==='rectoria' ? sel||'Todas las rectorías' : sel||'Todas las sedes');
+    var sedeUnica = (nivel==='sede' && sel) ? sel : '';
+    var sig = sedeUnica ? _cdSigecSede(sedeUnica) : (typeof obtenerSigecNacional==='function' ? obtenerSigecNacional() : {});
+    var glpi = sedeUnica ? _cdGlpiSede(sedeUnica) : (typeof obtenerGlpiNacional==='function' ? obtenerGlpiNacional() : {});
+    var html = '<div style="margin-bottom:10px"><div style="font-size:13px;font-weight:800;color:#003D45">'+titulo+'</div>'
+      +'<div style="font-size:10px;color:#64748b">'+filas.length+' sede'+(filas.length!==1?'s':'')+' · Datos en vivo desde repositorios</div></div>';
+    if(modulo==='resumen' || modulo==='colocacion'){
+      html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:12px">';
+      html += _cdKpiCard('Meta #', _cdFmtN(Math.round(meta)), '#003D45');
+      html += _cdKpiCard('Ejecutado', _cdFmtN(acum), pct>=90?'#16a34a':pct>=70?'#ca8a04':'#dc2626', pct+'% cumplimiento');
+      html += _cdKpiCard('Var. año ant.', (varAnt>=0?'+':'')+varAnt+'%', varAnt>=0?'#16a34a':'#dc2626');
+      html += _cdKpiCard('Sedes', filas.length, '#6366f1');
+      html += '</div>';
+    }
+    if(modulo==='resumen' || modulo==='sigec'){
+      html += '<div style="font-size:10px;font-weight:800;color:#7c3aed;margin:10px 0 6px">📋 SIGEC — COLOCACION SIGEC</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">';
+      [['Facturadas',sig.facturada,'#4ade80'],['Cerr. fac.',sig.cerrada_fac,'#a78bfa'],['Cerradas',sig.cerrada,'#fbbf24'],
+       ['Abiertas',sig.abierta,'#60a5fa'],['Rechaz. Motor',sig.rechazada,'#f87171'],['Pend. doc.',sig.pendiente_doc,'#fb923c']].forEach(function(x){
+        html += '<div style="background:#faf5ff;border-radius:8px;padding:8px;text-align:center;border:1px solid #e9d5ff"><div style="font-size:8px;color:#7c3aed;font-weight:700">'+x[0]+'</div><div style="font-size:15px;font-weight:900;color:'+x[2]+'">'+_cdFmtN(x[1]||0)+'</div></div>';
+      });
+      html += '</div>';
+    }
+    if(modulo==='resumen' || modulo==='glpi'){
+      html += '<div style="font-size:10px;font-weight:800;color:#0891b2;margin:10px 0 6px">🎫 GLPI</div>';
+      html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px">';
+      html += _cdKpiCard('Aprobadas', _cdFmtN(glpi.aprobada||0), '#16a34a');
+      html += _cdKpiCard('Abiertas', _cdFmtN(glpi.abierta||0), '#ca8a04');
+      html += _cdKpiCard('Negadas', _cdFmtN(glpi.negada||0), '#dc2626');
+      html += '</div>';
+    }
+    if((modulo==='resumen' || modulo==='colocacion') && filas.length && nivel!=='sede'){
+      html += '<div style="font-size:10px;font-weight:800;color:#003D45;margin:10px 0 6px">📊 Detalle por sede</div>';
+      html += '<div style="overflow-x:auto;max-height:280px;border:1px solid #e5e7eb;border-radius:10px">';
+      html += '<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9;position:sticky;top:0">';
+      html += '<th style="padding:6px 8px;text-align:left">Sede</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Ejec</th><th style="padding:6px 8px;text-align:right">%</th><th style="padding:6px 8px;text-align:center">Sem</th></tr></thead><tbody>';
+      filas.sort(function(a,b){ return (b.acum_n||0)-(a.acum_n||0); }).slice(0,40).forEach(function(r){
+        var p = r.meta_n>0 ? Math.round(r.acum_n/r.meta_n*100) : 0;
+        var sem = r.semaforo || (p>=90?'VERDE':p>=70?'AMARILLO':'ROJO');
+        var sc = sem==='VERDE'?'#16a34a':sem==='AMARILLO'?'#ca8a04':'#dc2626';
+        html += '<tr style="border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="document.getElementById(\'cd-nivel\').value=\'sede\';cdCambiarNivel();document.getElementById(\'cd-rectoria\').value=\''+String(r.sede||'').replace(/'/g,"\\'")+'\';cdActualizar()">';
+        html += '<td style="padding:5px 8px;font-weight:600">'+r.sede+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;color:#64748b">'+_cdFmtN(Math.round(r.meta_n||0))+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;font-weight:700">'+_cdFmtN(r.acum_n||0)+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+sc+'">'+p+'%</td>';
+        html += '<td style="padding:5px 8px;text-align:center;font-size:9px;font-weight:800;color:'+sc+'">'+sem+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+      if(filas.length>40) html += '<div style="font-size:9px;color:#94a3b8;margin-top:4px;text-align:center">Mostrando 40 de '+filas.length+' · Clic en sede para detalle</div>';
+    }
+    if(sedeUnica){
+      var seg = (window._seguimientosPorSede||{})[_cdNormSede(sedeUnica)];
+      if(seg){
+        html += '<div style="margin-top:10px;padding:10px;background:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;font-size:10px">';
+        html += '<strong>Seguimiento comercial:</strong> '+seg.total+' registro(s) · Último: '+(seg.ultima_fecha||'—')+' · '+seg.dias_sin+' días';
+        html += '</div>';
+      }
+    }
+    el.innerHTML = html;
+    var fu = document.getElementById('cd-fuente');
+    if(fu) fu.textContent = 'Actualizado · Colocación: '+filas.length+' sedes · SIGEC: '+(sig.total||0)+' tickets · GLPI: '+(glpi.total||0);
+  }
+
+  window.cdActualizar = function(){ _cdRenderPanel(); };
+
+  window.cdCambiarNivel = function(){
+    var nivel = (document.getElementById('cd-nivel')||{}).value;
+    var sel = document.getElementById('cd-rectoria');
+    var lbl = document.getElementById('cd-label-rectoria');
+    if(!sel) return;
+    var prev = sel.value;
+    sel.innerHTML = '';
+    var coloc = window._coloc_data || [];
+    var opt0 = document.createElement('option');
+    opt0.value = '';
+    opt0.textContent = nivel==='sede' ? 'Todas las sedes' : 'Todas';
+    sel.appendChild(opt0);
+    if(nivel==='rectoria'){
+      if(lbl) lbl.textContent = 'RECTORÍA';
+      var rects = [];
+      coloc.forEach(function(r){ if(r.rectoria && rects.indexOf(r.rectoria)<0) rects.push(r.rectoria); });
+      rects.sort().forEach(function(r){ var o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o); });
+    } else if(nivel==='sede'){
+      if(lbl) lbl.textContent = 'SEDE';
+      var sedes = [];
+      coloc.forEach(function(r){ if(r.sede && sedes.indexOf(r.sede)<0) sedes.push(r.sede); });
+      sedes.sort(function(a,b){ return a.localeCompare(b,'es'); }).forEach(function(s){
+        var o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
+      });
+    } else {
+      if(lbl) lbl.textContent = 'ÁMBITO';
+    }
+    if(prev) sel.value = prev;
+    cdActualizar();
+  };
+
+  window.abrirConsultaDinamica = function(){
+    var modal = document.getElementById('modal-consulta-dinamica');
+    if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Consulta dinámica no disponible'); return; }
+    modal.style.display = 'block';
+    var modSel = document.getElementById('cd-modulo');
+    if(modSel && !modSel.querySelector('option[value="resumen"]')){
+      var o = document.createElement('option');
+      o.value = 'resumen'; o.textContent = 'Resumen integral';
+      modSel.insertBefore(o, modSel.firstChild);
+      modSel.value = 'resumen';
+    }
+    var cargar = function(){
+      cdCambiarNivel();
+      if(typeof cargarSigecContadoresMenu==='function') cargarSigecContadoresMenu().then(cdActualizar).catch(cdActualizar);
+      else cdActualizar();
+    };
+    if(!(window._coloc_data||[]).length && typeof cargarDesdeSheetsCompleto==='function'){
+      cargarDesdeSheetsCompleto(true).then(cargar);
+    } else {
+      cargar();
+    }
+  };
+
+  console.log('[SCIC v4.11.0] SIGEC 6 estados · Malla turnos · Consulta dinámica');
 })();
 </script>
 </body>
