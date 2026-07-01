@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.7.0   (APP_VERSION = 'SCIC-4.7.0')
+  Versión actual: 4.8.0   (APP_VERSION = 'SCIC-4.8.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,10 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.8.0 (2026-06-30)
+    - Malla de Turnos: lista todos los colaboradores con turno HOY; búsqueda por nombre o cédula.
+    - Herramientas PYV: selector de herramientas antes de abrir (launcher en grid).
+    - Menú: panel nacional ampliado (meta vs acumulado, deberíamos hoy, brecha, proyección).
   v4.7.0 (2026-06-30)
     - Menú rediseñado: aspecto comercial dinámico, KPIs en vivo desde Sheets.
     - Hoja 1: metas de sedes seleccionadas por mes/período (renderMetasConsolidadas).
@@ -927,7 +931,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-logo">CMD</div>
         <div>
           <div class="menu-brand-title">Inteligencia Comercial</div>
-          <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV · <span id="menu-version">SCIC v4.7</span></div>
+          <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV · <span id="menu-version">SCIC v4.8</span></div>
         </div>
       </div>
       <div class="menu-user">
@@ -945,103 +949,95 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </div>
   </div>
 
-  <div class="menu-kpi-strip">
-    <div class="menu-kpi menu-kpi-gold">
-      <div class="menu-kpi-lbl">Acumulado S2</div>
-      <div class="menu-kpi-val"><span id="menu-kpi-acum">—</span> <span id="menu-kpi-meta" class="menu-kpi-sub">/ —</span></div>
-      <div class="menu-kpi-bar"><div id="menu-kpi-bar" style="width:0%"></div></div>
-      <div id="menu-kpi-pct" class="menu-kpi-foot">—</div>
+  <div class="menu-layout">
+    <div class="menu-nacional-panel">
+      <div class="menu-nacional-hdr">
+        <div class="menu-nacional-title"><i class="ti ti-chart-dots"></i> Estado Nacional · Colocación S2</div>
+        <div class="menu-nacional-fecha" id="menu-nac-fecha">—</div>
+      </div>
+      <div class="menu-nac-grid">
+        <div class="menu-nac-card menu-nac-meta">
+          <div class="menu-nac-lbl">Meta nacional S2</div>
+          <div class="menu-nac-big" id="menu-nac-meta">—</div>
+          <div class="menu-nac-sub">Créditos facturados período</div>
+        </div>
+        <div class="menu-nac-card menu-nac-ejec">
+          <div class="menu-nac-lbl">Vamos (acumulado)</div>
+          <div class="menu-nac-big" id="menu-nac-acum">—</div>
+          <div class="menu-nac-sub" id="menu-nac-pct-txt">—% de la meta</div>
+        </div>
+        <div class="menu-nac-card menu-nac-deber">
+          <div class="menu-nac-lbl">Deberíamos hoy</div>
+          <div class="menu-nac-big" id="menu-nac-deber">—</div>
+          <div class="menu-nac-sub" id="menu-nac-dh">— días hábiles</div>
+        </div>
+        <div class="menu-nac-card menu-nac-brecha">
+          <div class="menu-nac-lbl">Brecha vs curva</div>
+          <div class="menu-nac-big" id="menu-nac-brecha">—</div>
+          <div class="menu-nac-sub" id="menu-nac-semaforo">—</div>
+        </div>
+      </div>
+      <div class="menu-nac-bar-wrap">
+        <div class="menu-nac-bar-labels"><span>0%</span><span id="menu-nac-bar-pct">—%</span><span>100%</span></div>
+        <div class="menu-nac-bar"><div id="menu-nac-bar-fill"></div><div id="menu-nac-bar-ideal" title="Curva ideal hoy"></div></div>
+        <div class="menu-nac-proy" id="menu-nac-proy">Proyección de cierre: —</div>
+      </div>
+      <div class="menu-kpi-strip menu-kpi-compact">
+        <div class="menu-kpi menu-kpi-blue"><div class="menu-kpi-lbl">SIGEC</div><div class="menu-kpi-val" id="menu-kpi-sigec">—</div></div>
+        <div class="menu-kpi menu-kpi-purple"><div class="menu-kpi-lbl">GLPI</div><div class="menu-kpi-val" id="menu-kpi-glpi">—</div></div>
+        <div class="menu-kpi menu-kpi-green"><div class="menu-kpi-lbl">Pipeline</div><div class="menu-kpi-val" id="menu-kpi-leads">—</div></div>
+        <div class="menu-kpi menu-kpi-orange"><div class="menu-kpi-lbl">HubSpot</div><div class="menu-kpi-val" id="menu-kpi-hub">—</div></div>
+        <div class="menu-kpi menu-kpi-red"><div class="menu-kpi-lbl">Cartera</div><div class="menu-kpi-val" id="menu-kpi-cartera">—</div></div>
+      </div>
     </div>
-    <div class="menu-kpi">
-      <div class="menu-kpi-lbl">Deberías hoy</div>
-      <div class="menu-kpi-val" id="menu-kpi-deber">—</div>
-      <div class="menu-kpi-foot" id="menu-kpi-dh">— dh</div>
-    </div>
-    <div class="menu-kpi menu-kpi-blue">
-      <div class="menu-kpi-lbl">SIGEC</div>
-      <div class="menu-kpi-val" id="menu-kpi-sigec">—</div>
-      <div class="menu-kpi-foot" id="menu-kpi-sigec-sub">—</div>
-    </div>
-    <div class="menu-kpi menu-kpi-purple">
-      <div class="menu-kpi-lbl">GLPI</div>
-      <div class="menu-kpi-val" id="menu-kpi-glpi">—</div>
-      <div class="menu-kpi-foot" id="menu-kpi-glpi-sub">—</div>
-    </div>
-    <div class="menu-kpi menu-kpi-green">
-      <div class="menu-kpi-lbl">Pipeline</div>
-      <div class="menu-kpi-val" id="menu-kpi-leads">—</div>
-      <div class="menu-kpi-foot" id="menu-kpi-leads-sub">Leads</div>
-    </div>
-    <div class="menu-kpi menu-kpi-orange">
-      <div class="menu-kpi-lbl">HubSpot</div>
-      <div class="menu-kpi-val" id="menu-kpi-hub">—</div>
-      <div class="menu-kpi-foot">Actividades</div>
-    </div>
-    <div class="menu-kpi menu-kpi-red">
-      <div class="menu-kpi-lbl">Cartera SAP</div>
-      <div class="menu-kpi-val" id="menu-kpi-cartera">—</div>
-      <div class="menu-kpi-foot">Saldo apertura</div>
-    </div>
-  </div>
 
-  <div class="menu-body">
-    <div class="menu-section-title">Acciones principales</div>
-    <div class="menu-grid">
-      <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-feature menu-card-teal">
-        <div class="menu-card-icon"><i class="ti ti-clipboard-check"></i></div>
-        <div class="menu-card-title">Seguimiento Comercial</div>
-        <div class="menu-card-desc">Coordinador · Asesor · Metas y hojas 1-4</div>
-        <div class="menu-card-badge">PYV</div>
-      </button>
-      <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-feature menu-card-purple">
-        <div class="menu-card-icon"><i class="ti ti-brain"></i></div>
-        <div class="menu-card-title">SCIC · Pulso Nacional</div>
-        <div class="menu-card-desc">Inteligencia cognitiva · 15 paneles IA</div>
-        <div class="menu-card-badge">IA</div>
-      </button>
-      <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue">
-        <div class="menu-card-icon"><i class="ti ti-chart-bar"></i></div>
-        <div class="menu-card-title">Pipeline Gerencial</div>
-        <div class="menu-card-desc">Producción · Sedes · Cierre</div>
-      </button>
-      <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red">
-        <div class="menu-card-icon"><i class="ti ti-traffic-cone"></i></div>
-        <div class="menu-card-title">Cartera</div>
-        <div class="menu-card-desc">Estado · Recuperación</div>
-      </button>
-      <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green">
-        <div class="menu-card-icon"><i class="ti ti-users-group"></i></div>
-        <div class="menu-card-title">Leads & Pipeline</div>
-        <div class="menu-card-desc">Consulta dinámica</div>
-      </button>
-      <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber">
-        <div class="menu-card-icon"><i class="ti ti-history"></i></div>
-        <div class="menu-card-title">Historial</div>
-        <div class="menu-card-desc">Seguimientos registrados</div>
-      </button>
-      <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange">
-        <div class="menu-card-icon"><i class="ti ti-brand-hubspot"></i></div>
-        <div class="menu-card-title">HubSpot</div>
-        <div class="menu-card-desc">Actividad comercial</div>
-      </button>
-      <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky">
-        <div class="menu-card-icon"><i class="ti ti-calendar-week"></i></div>
-        <div class="menu-card-title">Malla de Turnos</div>
-        <div class="menu-card-desc">Capacidad operativa</div>
-      </button>
-      <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime">
-        <div class="menu-card-icon"><i class="ti ti-tools"></i></div>
-        <div class="menu-card-title">Herramientas PYV</div>
-        <div class="menu-card-desc">Simuladores · Fragmentos · Guiones</div>
-      </button>
-      <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet">
-        <div class="menu-card-icon"><i class="ti ti-calendar-plus"></i></div>
-        <div class="menu-card-title">Agendar Reunión</div>
-        <div class="menu-card-desc">HubSpot Meetings</div>
-      </button>
-    </div>
-    <div class="menu-footer">
-      <span id="menu-footer-version">SCIC v4.7</span> · Cooperativa Minuto de Dios · Proceso PYV
+    <div class="menu-actions-panel">
+      <div class="menu-section-title">Acciones</div>
+      <div class="menu-grid menu-grid-compact">
+        <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal">
+          <div class="menu-card-icon"><i class="ti ti-clipboard-check"></i></div>
+          <div class="menu-card-title">Seguimiento</div>
+          <div class="menu-card-desc">Coord · Asesor</div>
+        </button>
+        <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple">
+          <div class="menu-card-icon"><i class="ti ti-brain"></i></div>
+          <div class="menu-card-title">SCIC Pulso</div>
+          <div class="menu-card-desc">Inteligencia IA</div>
+        </button>
+        <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue">
+          <div class="menu-card-icon"><i class="ti ti-chart-bar"></i></div>
+          <div class="menu-card-title">Pipeline</div>
+        </button>
+        <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red">
+          <div class="menu-card-icon"><i class="ti ti-traffic-cone"></i></div>
+          <div class="menu-card-title">Cartera</div>
+        </button>
+        <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green">
+          <div class="menu-card-icon"><i class="ti ti-users-group"></i></div>
+          <div class="menu-card-title">Leads</div>
+        </button>
+        <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber">
+          <div class="menu-card-icon"><i class="ti ti-history"></i></div>
+          <div class="menu-card-title">Historial</div>
+        </button>
+        <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange">
+          <div class="menu-card-icon"><i class="ti ti-brand-hubspot"></i></div>
+          <div class="menu-card-title">HubSpot</div>
+        </button>
+        <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky">
+          <div class="menu-card-icon"><i class="ti ti-calendar-week"></i></div>
+          <div class="menu-card-title">Malla Hoy</div>
+        </button>
+        <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime">
+          <div class="menu-card-icon"><i class="ti ti-tools"></i></div>
+          <div class="menu-card-title">Herramientas PYV</div>
+        </button>
+        <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet">
+          <div class="menu-card-icon"><i class="ti ti-calendar-plus"></i></div>
+          <div class="menu-card-title">Agendar</div>
+        </button>
+      </div>
+      <div class="menu-footer"><span id="menu-footer-version">SCIC v4.7</span> · CMD · PYV</div>
     </div>
   </div>
 </div>
@@ -1080,6 +1076,36 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-green{border-color:rgba(52,211,153,.25)} .menu-kpi-green .menu-kpi-val{color:#34d399}
 .menu-kpi-orange{border-color:rgba(251,146,60,.25)} .menu-kpi-orange .menu-kpi-val{color:#fb923c}
 .menu-kpi-red{border-color:rgba(248,113,113,.25)} .menu-kpi-red .menu-kpi-val{color:#f87171}
+.menu-layout{display:grid;grid-template-columns:1fr 320px;gap:0;min-height:calc(100vh - 180px)}
+@media(max-width:900px){.menu-layout{grid-template-columns:1fr}}
+.menu-nacional-panel{padding:18px 20px;background:linear-gradient(180deg,rgba(0,30,35,.6) 0%,rgba(0,10,12,.9) 100%);border-right:1px solid rgba(255,255,255,.06)}
+.menu-nacional-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.menu-nacional-title{color:#FFD900;font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px}
+.menu-nacional-fecha{color:rgba(255,255,255,.4);font-size:10px}
+.menu-nac-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+@media(min-width:700px){.menu-nac-grid{grid-template-columns:repeat(4,1fr)}}
+.menu-nac-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px}
+.menu-nac-lbl{color:rgba(255,255,255,.4);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.menu-nac-big{color:#fff;font-size:22px;font-weight:900;margin-top:4px;line-height:1.1}
+.menu-nac-sub{color:rgba(255,255,255,.35);font-size:9px;margin-top:4px}
+.menu-nac-meta .menu-nac-big{color:#FFD900}
+.menu-nac-ejec .menu-nac-big{color:#4ade80}
+.menu-nac-deber .menu-nac-big{color:#60a5fa}
+.menu-nac-brecha .menu-nac-big{color:#f87171}
+.menu-nac-bar-wrap{margin-bottom:14px;padding:12px 14px;background:rgba(0,0,0,.25);border-radius:12px;border:1px solid rgba(200,151,30,.15)}
+.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.35);margin-bottom:6px}
+.menu-nac-bar{position:relative;height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:visible}
+.menu-nac-bar>div:first-child{height:100%;border-radius:6px;background:linear-gradient(90deg,#C8971E,#FFD900);transition:width .8s ease}
+.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:16px;background:#60a5fa;border-radius:2px;box-shadow:0 0 8px rgba(96,165,250,.6)}
+.menu-nac-proy{color:rgba(255,255,255,.5);font-size:10px;margin-top:10px;text-align:center}
+.menu-kpi-compact{padding:0;background:transparent;border:none;gap:6px}
+.menu-kpi-compact .menu-kpi{min-width:90px;padding:8px 10px}
+.menu-actions-panel{padding:18px 16px;background:rgba(0,0,0,.2)}
+.menu-grid-compact{grid-template-columns:repeat(2,1fr);gap:8px}
+.menu-grid-compact .menu-card{padding:14px 10px;min-height:auto}
+.menu-grid-compact .menu-card-icon{font-size:22px;margin-bottom:6px}
+.menu-grid-compact .menu-card-title{font-size:11px}
+.menu-grid-compact .menu-card-desc{display:none}
 .menu-body{padding:18px 20px 24px}
 .menu-section-title{color:rgba(255,255,255,.35);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
 .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
@@ -1106,6 +1132,9 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-footer{text-align:center;margin-top:22px;color:rgba(255,255,255,.15);font-size:9px}
 .herr-tab{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
 .herr-tab:hover,.herr-tab.active{background:#003D45;color:#FFD900;border-color:#003D45}
+.herr-launch-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;font-family:Ubuntu,sans-serif;font-size:11px;font-weight:700;color:#003D45;transition:.15s}
+.herr-launch-btn span{font-size:26px;line-height:1}
+.herr-launch-btn:hover{border-color:#003D45;background:#f0fdfa;transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,61,69,.12)}
 .menu-btn{padding:18px 14px;border:none;border-radius:12px;cursor:pointer;text-align:center;font-family:Ubuntu,sans-serif;transition:all .2s;width:100%}
 .menu-btn:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 6px 20px rgba(0,0,0,.4)}
 </style>
@@ -2984,7 +3013,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.7.0';
+var APP_VERSION = 'SCIC-4.8.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3772,29 +3801,156 @@ function abrirHubSpotActividad() {
 }
 window.abrirHubSpotActividad = abrirHubSpotActividad;
 
+function _normMallaTxt(s){ return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+
+function _turnoDiaDesdeCols(o, diaMes) {
+  var ci = 7 + (diaMes - 1) * 2;
+  var hi = (o[ci]||'').toString().trim();
+  var hf = (o[ci+1]||'').toString().trim();
+  if(!hi && !hf) return '';
+  var up = (hi+' '+hf).toUpperCase();
+  if(up.indexOf('DESCANSO')>=0 || hi==='D' || hi==='-' || hf==='-') return 'DESCANSO';
+  if(hi && hf && hi.indexOf(':')>=0 && hf.indexOf(':')>=0) return hi + ' – ' + hf;
+  return hi || hf || '';
+}
+
+function _empMatchNombre(nombre) {
+  var nn = _normMallaTxt(nombre);
+  if(!nn) return null;
+  var exact = null, partial = null;
+  Object.values(EMPLEADOS_BD||{}).forEach(function(e){
+    if(!e || !e.nombre) return;
+    var en = _normMallaTxt(e.nombre);
+    if(en === nn) exact = e;
+    else if(!partial && (en.indexOf(nn)>=0 || nn.indexOf(en)>=0)) partial = e;
+  });
+  return exact || partial;
+}
+
+function _procesarMallaTurnosDesdeFilas(filas) {
+  var hoy = new Date();
+  var diaMes = hoy.getDate();
+  var dow = hoy.getDay();
+  var idx = [], turnosHoy = [];
+  (filas||[]).forEach(function(row){
+    var o = row._c || row;
+    if(!Array.isArray(o)) return;
+    var sede = (o[4]||'').toString().trim();
+    var nombre = (o[2]||'').toString().trim();
+    var cargo = (o[3]||'').toString().trim();
+    if(!sede || sede.length<2 || sede.indexOf('Sede')===0 || sede.indexOf('año')>=0) return;
+    if(!nombre || nombre.length<3) return;
+    var jornada = (o[5]||'').toString().trim();
+    var tipo = (o[6]||'').toString().trim();
+    var dias = [];
+    for(var d=1; d<=31; d++) dias.push(_turnoDiaDesdeCols(o, d));
+    var turnoHoy = dias[diaMes-1] || '';
+    if(dow===0) turnoHoy = 'DESCANSO';
+    else if(dow===6 && jornada.toLowerCase().indexOf('extendida')<0 && !turnoHoy) turnoHoy = 'DESCANSO';
+    var emp = _empMatchNombre(nombre);
+    var correo = emp ? (emp.correo||'').toLowerCase() : '';
+    var cedula = emp ? (emp.cedula||'') : '';
+    var raw = {};
+    raw[String(diaMes)] = turnoHoy;
+    raw[(diaMes<10?'0':'')+diaMes] = turnoHoy;
+    var item = { nombre:nombre, cargo:cargo, sede:sede, jornada:jornada, tipo:tipo, correo:correo, cedula:cedula, turnoHoy:turnoHoy, dias:dias, raw:raw };
+    idx.push(item);
+    var esLibre = !turnoHoy || turnoHoy==='—' || turnoHoy.toUpperCase()==='DESCANSO';
+    if(!esLibre) turnosHoy.push(item);
+  });
+  window._mallaTurnosIndex = idx;
+  window._mallaTurnosHoy = turnosHoy;
+  var arr = idx.filter(function(it){ return it.correo; }).map(function(it){
+    return { correo:it.correo, nombre:it.nombre, jornada:it.jornada, tipo:it.tipo, dias:it.dias, raw:it.raw };
+  });
+  try {
+    if(typeof _mallaTurnos !== 'undefined' && Array.isArray(_mallaTurnos)) {
+      _mallaTurnos.length = 0;
+      arr.forEach(function(x){ _mallaTurnos.push(x); });
+    } else { window._mallaTurnos = arr; }
+  } catch(e) { window._mallaTurnos = arr; }
+  return { idx:idx, turnosHoy:turnosHoy };
+}
+
+function _renderTablaMallaHoy(filtro) {
+  var el = document.getElementById('malla-detalle');
+  if(!el) return;
+  var hoy = new Date();
+  var q = (filtro||'').trim();
+  var qn = _normMallaTxt(q);
+  var qced = q.replace(/\D/g,'');
+  var lista;
+  if(qn || qced.length>=5) {
+    lista = (window._mallaTurnosIndex||[]).filter(function(it){
+      if(qced.length>=5) {
+        var ced = (it.cedula||'').toString().replace(/\D/g,'');
+        if(ced && ced.indexOf(qced)>=0) return true;
+      }
+      var nom = _normMallaTxt(it.nombre);
+      return nom.indexOf(qn)>=0 || qn.indexOf(nom)>=0;
+    });
+  } else {
+    lista = (window._mallaTurnosHoy||[]).slice();
+  }
+  var kf = document.getElementById('malla-kpi-filas');
+  var kh = document.getElementById('malla-kpi-hoy');
+  if(kf) kf.textContent = (window._mallaTurnosIndex||[]).length;
+  if(kh) kh.textContent = (window._mallaTurnosHoy||[]).length;
+  if(!lista.length) {
+    el.innerHTML = q
+      ? '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:12px">Sin resultados para «'+q.replace(/</g,'&lt;')+'»</div>'
+      : '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:12px"><i class="ti ti-calendar-off" style="font-size:28px;opacity:.5;display:block;margin-bottom:8px"></i>Nadie con turno programado hoy</div>';
+    return;
+  }
+  var fecha = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
+  var html = '<div style="color:rgba(255,255,255,.45);font-size:10px;margin-bottom:10px">'+fecha+' · '+lista.length+' resultado'+(lista.length!==1?'s':'')+(q?'':' con turno hoy')+'</div>';
+  html += '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:rgba(147,197,253,.15)">';
+  ['Nombre','Cédula','Sede','Cargo','Jornada','Turno hoy'].forEach(function(h){
+    html += '<th style="padding:8px;text-align:left;color:#93c5fd;font-size:9px;text-transform:uppercase;letter-spacing:.3px">'+h+'</th>';
+  });
+  html += '</tr></thead><tbody>';
+  lista.sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||'','es'); });
+  lista.forEach(function(it){
+    var th = it.turnoHoy || (it.dias&&it.dias[hoy.getDate()-1]) || '—';
+    var col = th.toUpperCase().indexOf('DESCANSO')>=0 ? '#94a3b8' : '#4ade80';
+    html += '<tr style="border-bottom:1px solid rgba(255,255,255,.06)">';
+    html += '<td style="padding:7px 8px;color:#e2e8f0;font-weight:600">'+(it.nombre||'—')+'</td>';
+    html += '<td style="padding:7px 8px;color:rgba(255,255,255,.5)">'+(it.cedula||'—')+'</td>';
+    html += '<td style="padding:7px 8px;color:#cbd5e1;font-size:10px">'+(it.sede||'—')+'</td>';
+    html += '<td style="padding:7px 8px;color:rgba(255,255,255,.55);font-size:10px">'+(it.cargo||'—')+'</td>';
+    html += '<td style="padding:7px 8px;color:rgba(255,255,255,.45);font-size:10px">'+(it.jornada||'—')+'</td>';
+    html += '<td style="padding:7px 8px;color:'+col+';font-weight:700;white-space:nowrap">'+th+'</td>';
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  el.innerHTML = html;
+}
+window.filtrarMallaHoy = function(v){ _renderTablaMallaHoy(v); };
+
 function abrirMallaTurnos() {
-  var malla = window._malla_data || [];
-  var nAses = Object.keys(EMPLEADOS_BD||{}).filter(function(k){ return (EMPLEADOS_BD[k].estado||'').toLowerCase()==='activo'; }).length;
-  var nFilas = Array.isArray(malla) ? malla.length : (malla.rows ? malla.rows.length : 0);
-  var nRect = Object.keys(RECTORIAS||{}).length;
+  var hoy = new Date();
+  var nHoy = (window._mallaTurnosHoy||[]).length;
+  var nIdx = (window._mallaTurnosIndex||[]).length;
+  var fechaLbl = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
   var contenido = '<div style="font-family:Ubuntu,sans-serif">'
-    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px">'
-    + '<div style="background:rgba(147,197,253,.08);border:1px solid rgba(147,197,253,.2);border-radius:10px;padding:14px;text-align:center">'
-    + '<div style="color:#93c5fd;font-size:26px;font-weight:900" id="malla-kpi-ases">' + nAses + '</div>'
-    + '<div style="color:rgba(255,255,255,.4);font-size:9px;margin-top:3px">Asesores activos</div></div>'
-    + '<div style="background:rgba(147,197,253,.08);border:1px solid rgba(147,197,253,.2);border-radius:10px;padding:14px;text-align:center">'
-    + '<div style="color:#93c5fd;font-size:26px;font-weight:900" id="malla-kpi-filas">' + nFilas + '</div>'
-    + '<div style="color:rgba(255,255,255,.4);font-size:9px;margin-top:3px">Registros de turno</div></div>'
-    + '<div style="background:rgba(147,197,253,.08);border:1px solid rgba(147,197,253,.2);border-radius:10px;padding:14px;text-align:center">'
-    + '<div style="color:#4ade80;font-size:26px;font-weight:900">' + nRect + '</div>'
-    + '<div style="color:rgba(255,255,255,.4);font-size:9px;margin-top:3px">Rectorías</div></div></div>'
-    + '<div id="malla-detalle" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;max-height:50vh;overflow-y:auto">'
+    + '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">'
+    + '<div style="color:rgba(255,255,255,.5);font-size:11px"><i class="ti ti-calendar-event"></i> '+fechaLbl+'</div>'
+    + '<div style="display:flex;gap:8px">'
+    + '<span style="background:rgba(74,222,128,.12);color:#4ade80;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.25)"><span id="malla-kpi-hoy">'+nHoy+'</span> con turno hoy</span>'
+    + '<span style="background:rgba(147,197,253,.1);color:#93c5fd;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(147,197,253,.2)"><span id="malla-kpi-filas">'+nIdx+'</span> en malla</span>'
+    + '</div></div>'
+    + '<div style="margin-bottom:12px">'
+    + '<input type="text" id="malla-buscar" placeholder="Buscar por nombre o cédula…" oninput="filtrarMallaHoy(this.value)" '
+    + 'style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid rgba(147,197,253,.3);border-radius:10px;background:rgba(255,255,255,.06);color:#e2e8f0;font-size:12px;font-family:Ubuntu,sans-serif">'
+    + '<div style="color:rgba(255,255,255,.3);font-size:9px;margin-top:5px">Sin filtro: todos con turno hoy · Con búsqueda: cualquier colaborador en la malla</div>'
+    + '</div>'
+    + '<div id="malla-detalle" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;max-height:52vh;overflow-y:auto">'
     + '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px"><i class="ti ti-calendar-week" style="font-size:32px;opacity:.5"></i><div style="margin-top:10px">Cargando malla desde Sheet…</div></div>'
     + '</div>'
     + '<div style="text-align:center;margin-top:12px">'
     + '<button id="btn-cargar-malla" onclick="_cargarYMostrarMalla()" style="background:#93c5fd;color:#001f24;border:none;border-radius:8px;padding:8px 18px;font-size:11px;font-weight:700;cursor:pointer"><i class="ti ti-refresh"></i> Actualizar desde Sheet</button>'
     + '</div></div>';
-  abrirPanelMenu('Malla de Turnos', contenido, '#93c5fd');
+  abrirPanelMenu('Malla de Turnos · Hoy', contenido, '#93c5fd');
   _cargarYMostrarMalla();
 }
 window.abrirMallaTurnos = abrirMallaTurnos;
@@ -3814,36 +3970,31 @@ window.cerrarPanelMenu = cerrarPanelMenu;
 function _cargarYMostrarMalla() {
   var btn = document.getElementById('btn-cargar-malla');
   if(btn) btn.textContent = 'Cargando...';
-  if(typeof _cargarMallaTurnos === 'function') {
-    _cargarMallaTurnos().then(function() {
-      var malla = window._malla_data || [];
-      var filas = Array.isArray(malla) ? malla : (malla.rows || []);
-      var el = document.getElementById('malla-detalle');
-      var kf = document.getElementById('malla-kpi-filas');
-      if(kf) kf.textContent = filas.length;
-      if(el && filas.length) {
-        var html = '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:rgba(147,197,253,.15)">';
-        var cols = Object.keys(filas[0]||{}).slice(0,6);
-        cols.forEach(function(c){ html += '<th style="padding:6px 8px;text-align:left;color:#93c5fd">' + c + '</th>'; });
-        html += '</tr></thead><tbody>';
-        filas.slice(0,50).forEach(function(row,i){
-          html += '<tr style="border-bottom:1px solid rgba(255,255,255,.06)">';
-          cols.forEach(function(c){ html += '<td style="padding:5px 8px;color:#e2e8f0">' + (row[c]||'—') + '</td>'; });
-          html += '</tr>';
-        });
-        if(filas.length > 50) html += '<tr><td colspan="'+cols.length+'" style="padding:8px;color:#94a3b8;text-align:center">… y '+(filas.length-50)+' más</td></tr>';
-        html += '</tbody></table>';
-        el.innerHTML = html;
-      } else if(el) {
-        el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:20px">No hay datos de malla en el Sheet</div>';
-      }
-      if(typeof construirResumenGerencial==='function') construirResumenGerencial();
-      if(btn) btn.textContent = 'Actualizado ✓';
-      if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Malla actualizada desde Sheet');
-    }).catch(function() {
-      if(btn) btn.textContent = 'Error al cargar';
+  var prom;
+  if(typeof _leerHoja==='function' && typeof SHEETS_HOJAS!=='undefined' && SHEETS_HOJAS.mallaTurnos) {
+    prom = _leerHoja(SHEETS_HOJAS.mallaTurnos).then(function(filas){
+      _procesarMallaTurnosDesdeFilas(filas);
+      if(typeof _cargarMallaTurnos==='function') return _cargarMallaTurnos();
     });
+  } else if(typeof _cargarMallaTurnos==='function') {
+    prom = _cargarMallaTurnos();
+  } else {
+    prom = Promise.resolve();
   }
+  if(typeof _cargarEmpleados==='function' && !Object.keys(EMPLEADOS_BD||{}).length) {
+    prom = prom.then(function(){ return _cargarEmpleados(); });
+  }
+  prom.then(function() {
+    var busq = document.getElementById('malla-buscar');
+    _renderTablaMallaHoy(busq ? busq.value : '');
+    if(typeof construirResumenGerencial==='function') construirResumenGerencial();
+    if(btn) btn.innerHTML = '<i class="ti ti-refresh"></i> Actualizado ✓';
+    if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Malla actualizada · '+((window._mallaTurnosHoy||[]).length)+' turnos hoy');
+  }).catch(function() {
+    if(btn) btn.textContent = 'Error al cargar';
+    var el = document.getElementById('malla-detalle');
+    if(el) el.innerHTML = '<div style="text-align:center;color:#f87171;padding:20px;font-size:12px">No se pudo cargar la malla. Verifica conexión al Sheet.</div>';
+  });
 }
 window._cargarYMostrarMalla = _cargarYMostrarMalla;
 
@@ -4372,7 +4523,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <button onclick="cerrarHerramientas()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:Ubuntu,sans-serif">✕ Cerrar</button>
   </div>
 
-  <div id="herr-tabs" style="display:flex;flex-wrap:wrap;gap:5px;padding:10px 16px;background:#f1f5f9;border-bottom:1px solid #e2e8f0">
+  <div id="herr-tabs" style="display:none;flex-wrap:wrap;gap:5px;padding:10px 16px;background:#f1f5f9;border-bottom:1px solid #e2e8f0">
     <button type="button" class="herr-tab" data-tab="frag" onclick="abrirHerramientas('frag')">📋 Fragmentos</button>
     <button type="button" class="herr-tab" data-tab="sim" onclick="abrirHerramientas('sim')">🎓 Simulador Educativo</button>
     <button type="button" class="herr-tab" data-tab="crediplus" onclick="abrirHerramientas('crediplus')">💳 Crediplus</button>
@@ -4388,6 +4539,26 @@ document.addEventListener('DOMContentLoaded', function(){
     <button type="button" class="herr-tab" data-tab="sedes-sync" onclick="abrirHerramientas('sedes-sync')">🔄 Sedes Excel</button>
   </div>
 
+  <div id="herr-launcher" style="padding:20px;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;background:#f8fafc">
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('frag')"><span>📋</span>Fragmentos</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('sim')"><span>🎓</span>Simulador Educativo</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('crediplus')"><span>💳</span>Crediplus</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('pmad')"><span>🏘️</span>PMAD</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('cart')"><span>🧮</span>Calculadora Cartera</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('tip')"><span>🏷️</span>Tipificaciones</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('req')"><span>📄</span>Requisitos</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('req-edu')"><span>🎓</span>Req. Educativos</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('req-ren')"><span>🔄</span>Req. Renovación</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('beneficios')"><span>🎁</span>Beneficios</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('pyr')"><span>❓</span>Preguntas PYR</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('whatsapp')"><span>📱</span>WhatsApp Sedes</button>
+    <button type="button" class="herr-launch-btn" onclick="abrirHerramientas('sedes-sync')"><span>🔄</span>Comparar Sedes</button>
+  </div>
+
+  <div id="herr-content-wrap" style="display:none">
+    <div style="padding:8px 16px;background:#eef2f7;border-bottom:1px solid #e2e8f0">
+      <button type="button" onclick="volverHerramientasLauncher()" style="background:#003D45;color:#FFD900;border:none;border-radius:8px;padding:6px 14px;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">← Elegir otra herramienta</button>
+    </div>
   <div style="padding:16px 20px;max-height:68vh;overflow-y:auto">
 
     <!-- TIPIFICACIONES -->
@@ -5984,6 +6155,8 @@ function _parseCumpleMMDD(s){
       var col = window._coloc_data || (_DATA&&_DATA.coloc) || [];
       var metaN=0, acumN=0;
       col.forEach(function(r){ metaN+=r.meta_n||0; acumN+=r.acum_n||0; });
+      if(!metaN && window._mtsMetaN) metaN = window._mtsMetaN;
+      if(!acumN && window._mtsEjecN) acumN = window._mtsEjecN;
       var pct = metaN>0 ? Math.round(acumN/metaN*100) : 0;
       var sem = pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO';
       var colSem = pct>=90?'#4ade80':pct>=70?'#fbbf24':'#f87171';
@@ -5992,7 +6165,7 @@ function _parseCumpleMMDD(s){
       el=document.getElementById('menu-kpi-meta'); if(el) el.textContent='/ '+fmtN(metaN);
       el=document.getElementById('menu-kpi-bar'); if(el){ el.style.width=Math.min(100,pct)+'%'; el.style.background=colSem; }
       el=document.getElementById('menu-kpi-pct'); if(el){ el.textContent=pct+'% curva · '+sem; el.style.color=colSem; }
-      var deb = window._mtsDebemosHoy || (_DATA&&_DATA.debemos_hoy) || 0;
+      var deb = window._mtsDebemosHoy || window._mtsDebemos || (_DATA&&_DATA.debemos_hoy) || 0;
       el=document.getElementById('menu-kpi-deber'); if(el) el.textContent=fmtN(deb);
       var sig = (_DATA&&_DATA.sigec) || {};
       el=document.getElementById('menu-kpi-sigec'); if(el) el.textContent=fmtN(sig.facturadas||5761);
@@ -6009,6 +6182,31 @@ function _parseCumpleMMDD(s){
       el=document.getElementById('menu-kpi-cartera'); if(el) el.textContent=fmtM(cart.saldo||8e9);
       var mv=document.getElementById('menu-version'); if(mv&&typeof APP_VERSION!=='undefined') mv.textContent=APP_VERSION.replace('SCIC-','SCIC v');
       el=document.getElementById('menu-footer-version'); if(el&&typeof APP_VERSION!=='undefined') el.textContent=APP_VERSION.replace('SCIC-','SCIC v');
+
+      var diasTot = window._mtsDiasTotal || 0;
+      var diasTra = window._mtsDiasTrans || 0;
+      var pctIdeal = diasTot>0 ? Math.round(diasTra/diasTot*100) : 0;
+      var brecha = Math.round(acumN - deb);
+      var brechaTxt = brecha>=0 ? ('+'+fmtN(brecha)) : ('−'+fmtN(Math.abs(brecha)));
+      var brechaCol = brecha>=0 ? '#4ade80' : '#f87171';
+      var brechaLbl = brecha>=0 ? 'Por encima de la curva' : 'Por debajo de la curva';
+      var proy = diasTra>0 ? Math.round(acumN/diasTra*diasTot) : 0;
+      var proyPct = metaN>0 ? Math.round(proy/metaN*100) : 0;
+      var hoy = new Date();
+      el=document.getElementById('menu-nac-fecha'); if(el) el.textContent=hoy.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+      el=document.getElementById('menu-nac-meta'); if(el) el.textContent=metaN?fmtN(metaN):'—';
+      el=document.getElementById('menu-nac-acum'); if(el) el.textContent=acumN?fmtN(acumN):'—';
+      el=document.getElementById('menu-nac-pct-txt'); if(el) el.textContent=metaN?(pct+'% de la meta nacional'):'—';
+      el=document.getElementById('menu-nac-deber'); if(el) el.textContent=deb?fmtN(Math.round(deb)):'—';
+      el=document.getElementById('menu-nac-dh'); if(el) el.textContent=diasTot?(diasTra+' de '+diasTot+' días hábiles transcurridos'):'— días hábiles';
+      el=document.getElementById('menu-nac-brecha'); if(el){ el.textContent=metaN?brechaTxt:'—'; el.style.color=brechaCol; }
+      el=document.getElementById('menu-nac-semaforo'); if(el){ el.textContent=metaN?brechaLbl:'—'; el.style.color=brechaCol; }
+      el=document.getElementById('menu-nac-bar-pct'); if(el) el.textContent=pct+'%';
+      el=document.getElementById('menu-nac-bar-fill'); if(el){ el.style.width=Math.min(100,pct)+'%'; el.style.background=colSem; }
+      el=document.getElementById('menu-nac-bar-ideal'); if(el) el.style.left=Math.min(99,Math.max(0,pctIdeal))+'%';
+      el=document.getElementById('menu-nac-proy'); if(el) el.textContent=metaN&&diasTra>0
+        ? ('Proyección de cierre: '+fmtN(proy)+' créditos ('+proyPct+'% meta) · Ritmo actual: '+(diasTra>0?(acumN/diasTra).toFixed(1):'—')+'/dh · Necesario: '+(Math.max(0,diasTot-diasTra)>0?((metaN-acumN)/Math.max(1,diasTot-diasTra)).toFixed(1):'—')+'/dh')
+        : 'Proyección de cierre: —';
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
   window.actualizarMenuKPIs = actualizarMenuKPIs;
@@ -6078,19 +6276,54 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  window.abrirCentroHerramientasPYV = function(tab){
-    if(typeof abrirHerramientas==='function') abrirHerramientas(tab||'frag');
+  window.volverHerramientasLauncher = function(){
+    var launch = document.getElementById('herr-launcher');
+    var wrap = document.getElementById('herr-content-wrap');
+    var tabs = document.getElementById('herr-tabs');
+    var tit = document.getElementById('modal-herr-titulo');
+    if(launch) launch.style.display = 'grid';
+    if(wrap) wrap.style.display = 'none';
+    if(tabs) tabs.style.display = 'none';
+    if(tit) tit.textContent = 'Herramientas PYV';
+    document.querySelectorAll('.hpanel').forEach(function(p){ p.style.display='none'; });
+  };
+
+  window.abrirCentroHerramientasPYV = function(){
+    var m = document.getElementById('modal-herramientas');
+    if(!m){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Modal no encontrado.'); return; }
+    document.body.appendChild(m);
+    m.style.cssText = 'display:block;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:99997;overflow-y:auto;padding:16px';
+    volverHerramientasLauncher();
   };
 
   if(typeof abrirHerramientas==='function'){
     var _origHerr = abrirHerramientas;
     window.abrirHerramientas = function(tab){
+      var launch = document.getElementById('herr-launcher');
+      var wrap = document.getElementById('herr-content-wrap');
+      var tabs = document.getElementById('herr-tabs');
+      var m = document.getElementById('modal-herramientas');
+      if(m && m.style.display==='none'){
+        document.body.appendChild(m);
+        m.style.cssText = 'display:block;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.6);z-index:99997;overflow-y:auto;padding:16px';
+      }
+      if(launch) launch.style.display = 'none';
+      if(wrap) wrap.style.display = 'block';
+      if(tabs) tabs.style.display = 'none';
       _origHerr(tab||'frag');
       document.querySelectorAll('.herr-tab').forEach(function(btn){
         btn.classList.toggle('active', btn.getAttribute('data-tab')===(tab||'frag'));
       });
     };
     window.abrirHerramientasPYV = window.abrirCentroHerramientasPYV;
+  }
+
+  if(typeof cerrarHerramientas==='function'){
+    var _origCerrarHerr = cerrarHerramientas;
+    window.cerrarHerramientas = function(){
+      _origCerrarHerr();
+      volverHerramientasLauncher();
+    };
   }
 
   if(typeof window._mostrarMenuPrincipal==='function'){
@@ -6131,7 +6364,7 @@ function _parseCumpleMMDD(s){
   setTimeout(actualizarMenuKPIs, 500);
   setTimeout(actualizarMenuKPIs, 3000);
   setTimeout(construirResumenGerencial, 5000);
-  console.log('[SCIC v4.7] Mejoras menú, metas, semáforos y herramientas PYV activas');
+  console.log('[SCIC v4.8] Malla hoy, launcher PYV y panel nacional activos');
 })();
 </script>
 </body>
