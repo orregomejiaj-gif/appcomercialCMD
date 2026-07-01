@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.10.3   (APP_VERSION = 'SCIC-4.10.3')
+  Versión actual: 4.10.4   (APP_VERSION = 'SCIC-4.10.4')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,8 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.10.4 (2026-06-30)
+    - Menú: botón Directorio (base empleados, filtro por sede y conteo por sede).
   v4.10.3 (2026-06-30)
     - Historial seguimientos: lectura correcta repo seguimientos (Coordinación + Asesores).
     - Semáforo por sede: al día ≤15 días, atrasadas >15 días, sin seguimiento.
@@ -1082,6 +1084,11 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <div class="menu-card-title">Cumpleaños</div>
           <div class="menu-card-desc">Listado completo</div>
         </button>
+        <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan">
+          <div class="menu-card-icon"><i class="ti ti-address-book"></i></div>
+          <div class="menu-card-title">Directorio</div>
+          <div class="menu-card-desc">Empleados por sede</div>
+        </button>
         <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet">
           <div class="menu-card-icon"><i class="ti ti-calendar-plus"></i></div>
           <div class="menu-card-title">Agendar</div>
@@ -1204,6 +1211,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-card-lime{background:linear-gradient(145deg,rgba(15,26,15,.9),rgba(26,46,26,.75));border-color:rgba(134,239,172,.3)} .menu-card-lime .menu-card-icon{color:#86efac}
 .menu-card-violet{background:linear-gradient(145deg,rgba(26,15,26,.9),rgba(45,26,45,.75));border-color:rgba(216,180,254,.3)} .menu-card-violet .menu-card-icon{color:#d8b4fe}
 .menu-card-pink{background:linear-gradient(145deg,rgba(30,10,20,.9),rgba(50,15,30,.75));border-color:rgba(244,114,182,.35)} .menu-card-pink .menu-card-icon{color:#f472b6}
+.menu-card-cyan{background:linear-gradient(145deg,rgba(8,30,36,.92),rgba(12,50,58,.78));border-color:rgba(34,211,238,.32)} .menu-card-cyan .menu-card-icon{color:#22d3ee}
 .menu-footer{text-align:center;margin-top:22px;color:rgba(255,255,255,.15);font-size:9px}
 .herr-tab{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
 .herr-tab:hover,.herr-tab.active{background:#003D45;color:#FFD900;border-color:#003D45}
@@ -3088,7 +3096,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.10.3';
+var APP_VERSION = 'SCIC-4.10.4';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -5214,17 +5222,19 @@ document.addEventListener('DOMContentLoaded', function(){
   <div style="background:linear-gradient(135deg,#003D45,#005a66);padding:18px 22px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <div style="color:var(--yellow);font-size:14px;font-weight:700"><i class="ti ti-address-book"></i> Directorio del Equipo</div>
-      <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:2px">Proceso PYV · 94 colaboradores</div>
+      <div id="dir-subtitle" style="color:rgba(255,255,255,.6);font-size:11px;margin-top:2px">Proceso PYV · Base de empleados</div>
     </div>
     <button onclick="cerrarDirectorio()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:Ubuntu,sans-serif">✕</button>
   </div>
   <div style="padding:16px 20px">
-    <div style="margin-bottom:14px">
-      <select id="dir-sede" onchange="filtrarDirectorio()" style="width:100%;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:Ubuntu,sans-serif">
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px">
+      <select id="dir-sede" onchange="filtrarDirectorio()" style="flex:1;min-width:180px;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:Ubuntu,sans-serif">
         <option value="">Todas las sedes</option>
       </select>
+      <input id="dir-buscar" type="search" placeholder="Buscar nombre, cargo o correo…" oninput="filtrarDirectorio()" style="flex:1;min-width:180px;padding:10px 12px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-family:Ubuntu,sans-serif">
     </div>
-    <div id="dir-results" style="display:flex;flex-direction:column;gap:4px;max-height:62vh;overflow-y:auto"></div>
+    <div id="dir-resumen" style="font-size:11px;color:#64748b;margin-bottom:12px;padding:8px 10px;background:#f8fafc;border-radius:8px;border:1px solid #e5e7eb">Cargando directorio…</div>
+    <div id="dir-results" style="display:flex;flex-direction:column;gap:4px;max-height:58vh;overflow-y:auto"></div>
   </div>
 </div>
 </div>
@@ -6224,7 +6234,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.10.3';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.10.4';
     var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
     var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
     var badge = document.getElementById('app-version-badge');
@@ -7024,6 +7034,142 @@ function _parseCumpleMMDD(s){
   };
 
   console.log('[SCIC v4.10.3] Historial seguimientos + semáforo sedes (15 días)');
+
+  /* ── SCIC v4.10.4: Directorio empleados en menú + conteo por sede ── */
+  function _empleadosDirectorioActivos(){
+    return Object.values(EMPLEADOS_BD || {}).filter(function(e){
+      if(!e || !e.nombre) return false;
+      var st = String(e.estado || 'Activo').toLowerCase();
+      return st.indexOf('inactiv') < 0 && st.indexOf('retir') < 0;
+    });
+  }
+
+  function _conteoEmpleadosPorSede(){
+    var map = {};
+    _empleadosDirectorioActivos().forEach(function(e){
+      var s = (e.sede || 'Sin sede').trim() || 'Sin sede';
+      map[s] = (map[s] || 0) + 1;
+    });
+    return map;
+  }
+
+  function _poblarSedesDirectorio(){
+    var sel = document.getElementById('dir-sede');
+    if(!sel) return;
+    var prev = sel.value;
+    var conteo = _conteoEmpleadosPorSede();
+    var sedes = Object.keys(conteo).sort(function(a,b){ return a.localeCompare(b,'es'); });
+    var total = _empleadosDirectorioActivos().length;
+    sel.innerHTML = '<option value="">Todas las sedes ('+total+' colaboradores)</option>';
+    sedes.forEach(function(s){
+      var opt = document.createElement('option');
+      opt.value = s;
+      opt.textContent = s + ' (' + conteo[s] + ')';
+      sel.appendChild(opt);
+    });
+    if(prev) sel.value = prev;
+    var sub = document.getElementById('dir-subtitle');
+    if(sub) sub.textContent = 'Proceso PYV · '+total+' colaboradores activos · '+sedes.length+' sedes';
+  }
+
+  window.filtrarDirectorio = function(){
+    var sedeFiltro = (document.getElementById('dir-sede') || {}).value || '';
+    var buscar = ((document.getElementById('dir-buscar') || {}).value || '').trim().toLowerCase();
+    var lista = _empleadosDirectorioActivos().filter(function(e){
+      if(sedeFiltro && (e.sede || 'Sin sede') !== sedeFiltro) return false;
+      if(!buscar) return true;
+      var txt = [e.nombre, e.cargo, e.sede, e.correo, e.cedula].join(' ').toLowerCase();
+      return txt.indexOf(buscar) >= 0;
+    }).sort(function(a,b){
+      var sa = (a.sede || '').localeCompare(b.sede || '', 'es');
+      if(sa !== 0) return sa;
+      return (a.nombre || '').localeCompare(b.nombre || '', 'es');
+    });
+    var resumen = document.getElementById('dir-resumen');
+    var cont = document.getElementById('dir-results');
+    if(resumen){
+      if(sedeFiltro){
+        resumen.innerHTML = '<strong style="color:#003D45">'+lista.length+'</strong> colaborador'+(lista.length===1?'':'es')+' en <strong>'+sedeFiltro+'</strong>';
+      } else {
+        var porSede = {};
+        lista.forEach(function(e){ var s=e.sede||'Sin sede'; porSede[s]=(porSede[s]||0)+1; });
+        var nSedes = Object.keys(porSede).length;
+        resumen.innerHTML = '<strong style="color:#003D45">'+lista.length+'</strong> colaboradores en <strong>'+nSedes+'</strong> sedes';
+        if(!buscar && nSedes <= 12){
+          resumen.innerHTML += ' · ' + Object.keys(porSede).sort().map(function(s){ return s+' ('+porSede[s]+')'; }).join(' · ');
+        }
+      }
+    }
+    if(!cont) return;
+    cont.innerHTML = '';
+    if(!lista.length){
+      cont.innerHTML = '<div style="text-align:center;padding:28px;color:#94a3b8;font-size:12px">Sin colaboradores para el filtro seleccionado</div>';
+      return;
+    }
+    var sedeActual = '';
+    var grupoCount = 0;
+    lista.forEach(function(emp){
+      var sede = emp.sede || 'Sin sede';
+      if(sede !== sedeActual){
+        sedeActual = sede;
+        grupoCount = lista.filter(function(x){ return (x.sede||'Sin sede')===sede; }).length;
+        var hdr = document.createElement('div');
+        hdr.style.cssText = 'font-size:10px;font-weight:700;color:#003D45;text-transform:uppercase;padding:8px 0 4px;border-bottom:1px solid #e5e7eb;margin-top:8px;display:flex;justify-content:space-between;align-items:center';
+        hdr.innerHTML = '<span>📍 '+sede+'</span><span style="background:#e0f2fe;color:#0369a1;padding:2px 8px;border-radius:10px;font-size:9px">'+grupoCount+'</span>';
+        cont.appendChild(hdr);
+      }
+      var row = document.createElement('div');
+      row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:8px;background:#f8fafc;border:1px solid #e5e7eb;margin-bottom:3px';
+      var ini = (emp.nombre || '').split(' ').filter(function(p){ return p.length > 2; }).slice(0,2).map(function(p){ return p[0].toUpperCase(); }).join('');
+      var av = document.createElement('div');
+      av.style.cssText = 'width:30px;height:30px;background:#003D45;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;color:#FFD900;flex-shrink:0';
+      av.textContent = ini || '?';
+      var info = document.createElement('div');
+      info.style.cssText = 'flex:1;min-width:0';
+      info.innerHTML = '<div style="font-size:11px;font-weight:700;color:#1e293b">'+(emp.nombre||'')+'</div><div style="font-size:10px;color:#64748b">'+(emp.cargo||'—')+' · '+(emp.correo||'')+'</div>';
+      var btn = document.createElement('div');
+      btn.style.cssText = 'font-size:9px;color:#0369a1;cursor:pointer;padding:3px 6px;background:#e0f2fe;border-radius:5px;white-space:nowrap;flex-shrink:0';
+      btn.textContent = 'Copiar';
+      (function(correo){
+        btn.onclick = function(){
+          if(navigator.clipboard && correo){
+            navigator.clipboard.writeText(correo).then(function(){
+              if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Correo copiado: '+correo);
+            });
+          }
+        };
+      })(emp.correo || '');
+      row.appendChild(av);
+      row.appendChild(info);
+      row.appendChild(btn);
+      cont.appendChild(row);
+    });
+  };
+
+  window.abrirDirectorio = function(){
+    var abrirModal = function(){
+      if(typeof _openModal === 'function' && !_openModal('modal-directorio', 99995, 'block')) return;
+      var modal = document.getElementById('modal-directorio');
+      if(modal) modal.style.display = 'block';
+      _poblarSedesDirectorio();
+      window.filtrarDirectorio();
+    };
+    var cargar = function(){
+      _poblarSedesDirectorio();
+      abrirModal();
+    };
+    if(!Object.keys(EMPLEADOS_BD || {}).length && typeof _cargarEmpleados === 'function'){
+      var cont = document.getElementById('dir-results');
+      if(cont) cont.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;font-size:12px">Cargando empleados desde Sheets…</div>';
+      if(typeof _openModal === 'function') _openModal('modal-directorio', 99995, 'block');
+      _cargarEmpleados().then(cargar);
+      return;
+    }
+    if(typeof _cargarEmpleados === 'function') _cargarEmpleados();
+    cargar();
+  };
+
+  console.log('[SCIC v4.10.4] Menú Directorio + conteo empleados por sede');
 })();
 </script>
 </body>
