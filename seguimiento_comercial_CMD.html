@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.10.2   (APP_VERSION = 'SCIC-4.10.2')
+  Versión actual: 4.10.3   (APP_VERSION = 'SCIC-4.10.3')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,9 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.10.3 (2026-06-30)
+    - Historial seguimientos: lectura correcta repo seguimientos (Coordinación + Asesores).
+    - Semáforo por sede: al día ≤15 días, atrasadas >15 días, sin seguimiento.
   v4.10.2 (2026-06-30)
     - Semáforo SIGEC: lectura directa hoja COLOCACION SIGEC (repo colocación), columna Estado índice 15.
   v4.10.1 (2026-06-30)
@@ -640,7 +643,7 @@ window._cargarTop5 = window._cargarTop5 || function(){
         <div>
           <div style="color:#FFD900;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Proceso PYV · Cooperativa Minuto de Dios</div>
           <div style="color:#fff;font-size:17px;font-weight:800">📋 Historial de Seguimientos Comerciales</div>
-          <div style="color:rgba(255,255,255,.6);font-size:10px;margin-top:2px">Para auditoría · Filtros por período, mes, sede, ejecutor</div>
+          <div style="color:rgba(255,255,255,.6);font-size:10px;margin-top:2px">Repo seguimientos · Semáforo por sede (máx. 15 días) · Filtros por período, sede y ejecutor</div>
         </div>
         <div style="display:flex;gap:8px">
           <button onclick="abrirHistorialSeguimientos()" title="Actualizar" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:8px;padding:7px 12px;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif">↺ Recargar</button>
@@ -3085,7 +3088,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.10.2';
+var APP_VERSION = 'SCIC-4.10.3';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6714,7 +6717,313 @@ function _parseCumpleMMDD(s){
   setTimeout(actualizarMenuKPIs, 3000);
   setTimeout(construirResumenGerencial, 5000);
   setTimeout(function(){ try{ cargarSigecContadoresMenu(); }catch(e){} }, 1200);
-  console.log('[SCIC v4.10.2] SIGEC menú desde COLOCACION SIGEC (repo colocación)');
+
+  /* ── SCIC v4.10.3: Historial seguimientos + semáforo sedes (15 días) ── */
+  var HIST_SEG_MAX_DIAS = 15;
+
+  function _celHistSeg(v){
+    if(v == null || v === undefined) return '';
+    if(typeof v === 'object' && v.v != null) return String(v.v).trim();
+    return String(v).trim();
+  }
+
+  function _parseFechaHistSeg(v){
+    if(!v && v !== 0) return '';
+    if(v instanceof Date && !isNaN(v.getTime())) return v.toISOString().slice(0, 10);
+    var s = String(v).trim();
+    var m = s.match(/^Date\((\d+),(\d+),(\d+)\)$/);
+    if(m){
+      var d = new Date(parseInt(m[1],10), parseInt(m[2],10), parseInt(m[3],10));
+      if(!isNaN(d.getTime())) return d.toISOString().slice(0, 10);
+    }
+    if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    var dm = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+    if(dm){
+      var dd = new Date(parseInt(dm[3],10), parseInt(dm[2],10)-1, parseInt(dm[1],10));
+      if(!isNaN(dd.getTime())) return dd.toISOString().slice(0, 10);
+    }
+    var tryD = new Date(s);
+    if(!isNaN(tryD.getTime())) return tryD.toISOString().slice(0, 10);
+    return s;
+  }
+
+  function _numHistSeg(v){
+    var n = parseFloat(String(v == null ? '' : v).replace(/[^0-9.\-]/g, ''));
+    return isNaN(n) ? 0 : n;
+  }
+
+  function _normalizarFilaHistorialSeg(row, tipo){
+    if(!row) return null;
+    var cols = row._cols || row._c || [];
+    function fld(){
+      for(var i=0;i<arguments.length;i++){
+        var k = arguments[i];
+        if(row[k] != null && row[k] !== '') return _celHistSeg(row[k]);
+        if(typeof k === 'number' && cols[k] != null && cols[k] !== '') return _celHistSeg(cols[k]);
+      }
+      return '';
+    }
+    var correo = fld('Correo Ejecutor', 'correoEjecutor', 'CORREO', 7);
+    if(!correo || correo.indexOf('@') < 0) return null;
+    var sedesRaw = fld('Sede(s)', 'Sede', 'SEDES', 'sedes', 5);
+    var fechaSeg = _parseFechaHistSeg(fld('Fecha Seguimiento', 'fechaSeg', 'FECHA', 1));
+    var periodo = fld('Período', 'Periodo', 'PERIODO', 'periodo', 2);
+    return {
+      tipo: tipo || fld('tipo', 'TIPO') || 'coord',
+      fecha: fechaSeg,
+      mes: periodo,
+      anio: fld('Año', 'Ano', 'ANIO', 'anio', 3),
+      periodo: periodo,
+      rectoria: fld('Rectoría', 'Rectoria', 'RECTORIA', 'rectoria', 4),
+      sedes: sedesRaw,
+      ejecutor: fld('Ejecutor', 'EJECUTOR', 'ejecutor', 6),
+      correoEjecutor: correo,
+      asesor_nombre: fld('Nombre Asesor', 'ASESOR', 'asesor_nombre', 8),
+      asesor_correo: fld('Correo Asesor', 'asesor_correo', 10),
+      coordinador: fld('Coordinador', 'Coordinador a Cargo', 'COORDINADOR', 'coordinador', 8),
+      real_creditos: _numHistSeg(fld('Créditos Reales', 'creditos_reales', 33)),
+      meta_n: _numHistSeg(fld('Meta Créditos Mes', 'meta_n', 11)),
+      leads_call: _numHistSeg(fld('Leads Llamadas', 'leads_call', 22)),
+      sol_rad: _numHistSeg(fld('Sol Radicadas', 'sol_rad', 39)),
+      csat: _numHistSeg(fld('CSAT (%)', 'CSAT', 'csat', 54)),
+      nps: _numHistSeg(fld('NPS (%)', 'NPS', 'nps', 56)),
+      calif_seguimiento: _numHistSeg(fld('Calificación General (/10)', 'calif_seguimiento', 45)),
+      observaciones: fld('Observaciones Generales', 'observaciones', 73),
+      pendientes: fld('Pendientes', 'pendientes', 74),
+      timestamp: fld('Fecha Registro', 'timestamp', 0)
+    };
+  }
+
+  function _catalogoSedesSeguimiento(){
+    var sedes = {};
+    function add(n){
+      var s = (typeof normalizarSedeColocacion === 'function') ? normalizarSedeColocacion(n) : String(n||'').trim();
+      if(s && s.length > 1) sedes[s] = true;
+    }
+    try{
+      Object.keys(window.PG_SEDE_RECTORIA || {}).forEach(add);
+    }catch(e){}
+    if(!Object.keys(sedes).length && window._DATA && window._DATA.coloc){
+      (window._DATA.coloc || []).forEach(function(r){ add(r.sede); });
+    }
+    (window._histSeguimientos || []).forEach(function(seg){
+      String(seg.sedes || '').split(',').forEach(function(s){ add(s.trim()); });
+    });
+    return Object.keys(sedes).sort();
+  }
+
+  function _resumenSemaforoSedesSeg(){
+    var hoy = new Date();
+    hoy.setHours(0,0,0,0);
+    var porSede = {};
+    (window._histSeguimientos || []).forEach(function(seg){
+      String(seg.sedes || '').split(',').forEach(function(raw){
+        var sede = (typeof normalizarSedeColocacion === 'function') ? normalizarSedeColocacion(raw.trim()) : raw.trim();
+        if(!sede) return;
+        if(!porSede[sede]) porSede[sede] = {sede:sede, fecha:'', ejecutor:'', tipo:'', total:0};
+        porSede[sede].total++;
+        var f = seg.fecha || '';
+        if(f && (!porSede[sede].fecha || f > porSede[sede].fecha)){
+          porSede[sede].fecha = f;
+          porSede[sede].ejecutor = seg.ejecutor || '';
+          porSede[sede].tipo = seg.tipo || '';
+        }
+      });
+    });
+    Object.keys(porSede).forEach(function(s){
+      var info = porSede[s];
+      var dias = 999;
+      if(info.fecha){
+        try{
+          var fd = new Date(info.fecha + 'T12:00:00');
+          if(!isNaN(fd.getTime())) dias = Math.max(0, Math.round((hoy - fd) / 86400000));
+        }catch(e){}
+      }
+      info.dias_sin = dias;
+      if(dias <= HIST_SEG_MAX_DIAS) info.alerta = 'VERDE';
+      else if(dias <= 22) info.alerta = 'AMARILLO';
+      else info.alerta = 'ROJO';
+    });
+    var catalogo = _catalogoSedesSeguimiento();
+    var sinSeg = catalogo.filter(function(s){ return !porSede[s]; }).map(function(s){
+      return {sede:s, fecha:'', ejecutor:'', tipo:'', total:0, dias_sin:999, alerta:'SIN_SEG'};
+    });
+    var conSeg = Object.values(porSede);
+    var todas = conSeg.concat(sinSeg).sort(function(a,b){
+      var ord = {SIN_SEG:0, ROJO:1, AMARILLO:2, VERDE:3};
+      var oa = ord[a.alerta] != null ? ord[a.alerta] : 9;
+      var ob = ord[b.alerta] != null ? ord[b.alerta] : 9;
+      if(oa !== ob) return oa - ob;
+      return (b.dias_sin||0) - (a.dias_sin||0);
+    });
+    return {
+      sedes: todas,
+      con_seguimiento: conSeg.length,
+      al_dia: conSeg.filter(function(s){ return s.alerta === 'VERDE'; }).length,
+      atrasadas: conSeg.filter(function(s){ return s.alerta === 'ROJO' || s.alerta === 'AMARILLO'; }).length,
+      sin_seguimiento: sinSeg.length,
+      total_catalogo: catalogo.length || todas.length
+    };
+  }
+
+  function _htmlSemaforoSedesHist(res){
+    var col = {VERDE:'#4ade80', AMARILLO:'#fbbf24', ROJO:'#f87171', SIN_SEG:'#94a3b8'};
+    var lbl = {VERDE:'Al día (≤15 días)', AMARILLO:'Atrasada (16-22 días)', ROJO:'Crítica (>15 días)', SIN_SEG:'Sin seguimiento'};
+    var html = '<div style="margin-bottom:16px">';
+    html += '<div style="font-size:12px;font-weight:800;color:#003D45;margin-bottom:8px">🚦 Semáforo de seguimiento por sede <span style="font-weight:600;color:#64748b">(frecuencia máxima: 15 días)</span></div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">';
+    html += _statCardHist('Con seguimiento', res.con_seguimiento, '✅', '#1D9E75');
+    html += _statCardHist('Al día ≤15d', res.al_dia, '🟢', '#15803d');
+    html += _statCardHist('Atrasadas', res.atrasadas, '🟡', '#b45309');
+    html += _statCardHist('Sin seguimiento', res.sin_seguimiento, '⚫', '#64748b');
+    html += '</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;max-height:160px;overflow-y:auto;padding:8px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px">';
+    res.sedes.forEach(function(s){
+      var c = col[s.alerta] || '#94a3b8';
+      var txt = s.alerta === 'SIN_SEG' ? 'Sin registro' : (s.dias_sin + ' d · ' + (s.fecha || '—'));
+      html += '<div title="'+lbl[s.alerta]+' · '+txt+'" style="display:flex;align-items:center;gap:5px;padding:4px 8px;border-radius:8px;background:#fff;border:1px solid '+c+'55;font-size:10px">';
+      html += '<span style="width:8px;height:8px;border-radius:50%;background:'+c+';flex-shrink:0"></span>';
+      html += '<span style="font-weight:700;color:#1e293b;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+s.sede+'</span>';
+      html += '<span style="color:#64748b">'+txt+'</span></div>';
+    });
+    html += '</div></div>';
+    return html;
+  }
+
+  window._cargarHistorialSeguimientos = function(){
+    var loading = document.getElementById('hist-seg-loading');
+    var contenido = document.getElementById('hist-seg-contenido');
+    if(loading) loading.style.display = 'block';
+    if(contenido) contenido.style.display = 'none';
+    var hojas = (typeof SHEETS_HOJAS !== 'undefined') ? SHEETS_HOJAS : {};
+    var leer = (typeof _leerHoja === 'function') ? _leerHoja : _leerHojaSeguimientos;
+    return Promise.all([
+      leer(hojas.segCoord || 'Coordinacion').catch(function(){ return []; }),
+      leer(hojas.segAsesores || 'Asesores').catch(function(){ return []; })
+    ]).then(function(arr){
+      var coord = (arr[0] || []).map(function(r){ return _normalizarFilaHistorialSeg(r, 'coord'); }).filter(Boolean);
+      var ases = (arr[1] || []).map(function(r){ return _normalizarFilaHistorialSeg(r, 'asesor'); }).filter(Boolean);
+      window._histSeguimientos = coord.concat(ases);
+      window._histCargado = true;
+      console.log('[SCIC] Historial seguimientos:', window._histSeguimientos.length, '(coord:', coord.length, 'asesor:', ases.length, ')');
+      if(loading) loading.style.display = 'none';
+      if(contenido) contenido.style.display = 'block';
+      return window._histSeguimientos;
+    }).catch(function(err){
+      console.warn('[SCIC] Error historial seguimientos:', err && err.message);
+      if(loading) loading.innerHTML = '<div style="color:#dc2626">Error cargando seguimientos. Verifique conexión al repositorio.</div>';
+      return [];
+    });
+  };
+
+  window._poblarFiltrosHistSeg = function(){
+    function fill(id, vals, label){
+      var el = document.getElementById(id);
+      if(!el) return;
+      var prev = el.value;
+      el.innerHTML = '<option value="">'+label+'</option>';
+      vals.sort().forEach(function(v){ if(v) el.innerHTML += '<option value="'+v+'">'+v+'</option>'; });
+      if(prev) el.value = prev;
+    }
+    var periodos=[], meses=[], tipos=[], ejecutores=[], sedes=[];
+    (window._histSeguimientos || []).forEach(function(s){
+      if(s.periodo && periodos.indexOf(s.periodo)<0) periodos.push(s.periodo);
+      if(s.mes && meses.indexOf(s.mes)<0) meses.push(s.mes);
+      if(s.tipo && tipos.indexOf(s.tipo)<0) tipos.push(s.tipo);
+      if(s.ejecutor && ejecutores.indexOf(s.ejecutor)<0) ejecutores.push(s.ejecutor);
+      String(s.sedes||'').split(',').forEach(function(x){
+        var v = x.trim(); if(v && sedes.indexOf(v)<0) sedes.push(v);
+      });
+    });
+    fill('hist-seg-filtro-tipo', tipos, 'Todos los tipos');
+    fill('hist-seg-filtro-periodo', periodos, 'Todos los períodos');
+    fill('hist-seg-filtro-mes', meses, 'Todos los meses');
+    fill('hist-seg-filtro-sede', sedes, 'Todas las sedes');
+    fill('hist-seg-filtro-ejecutor', ejecutores, 'Todos los ejecutores');
+  };
+
+  window.renderHistorialSeguimientos = function(){
+    var fTipo = (document.getElementById('hist-seg-filtro-tipo')||{}).value || '';
+    var fPer = (document.getElementById('hist-seg-filtro-periodo')||{}).value || '';
+    var fMes = (document.getElementById('hist-seg-filtro-mes')||{}).value || '';
+    var fSede = (document.getElementById('hist-seg-filtro-sede')||{}).value || '';
+    var fEj = (document.getElementById('hist-seg-filtro-ejecutor')||{}).value || '';
+    var lista = (window._histSeguimientos || []).filter(function(s){
+      return (!fTipo || s.tipo === fTipo)
+        && (!fPer || s.periodo === fPer)
+        && (!fMes || s.mes === fMes)
+        && (!fEj || s.ejecutor === fEj)
+        && (!fSede || String(s.sedes||'').indexOf(fSede) >= 0);
+    });
+    var el = document.getElementById('hist-seg-contenido');
+    if(!el) return;
+    var resumen = _resumenSemaforoSedesSeg();
+    var html = _htmlSemaforoSedesHist(resumen);
+    if(!lista.length){
+      el.innerHTML = html + '<div style="text-align:center;padding:30px;color:#94a3b8"><div style="font-size:28px;margin-bottom:8px">📭</div>Sin seguimientos para el filtro seleccionado</div>';
+      return;
+    }
+    var nCoord = lista.filter(function(s){ return s.tipo === 'coord'; }).length;
+    var nAses = lista.filter(function(s){ return s.tipo === 'asesor'; }).length;
+    var conCal = lista.filter(function(s){ return s.calif_seguimiento > 0; });
+    var promCal = conCal.length ? (conCal.reduce(function(a,s){ return a + s.calif_seguimiento; }, 0) / conCal.length).toFixed(1) : '—';
+    html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px">';
+    html += (typeof _statCardHist === 'function' ? _statCardHist('Total', lista.length, '📋', '#003D45') : '');
+    html += (typeof _statCardHist === 'function' ? _statCardHist('Coord.', nCoord, '👥', '#1D9E75') : '');
+    html += (typeof _statCardHist === 'function' ? _statCardHist('Asesor', nAses, '👤', '#BA7517') : '');
+    html += (typeof _statCardHist === 'function' ? _statCardHist('Cal.Prom.', promCal, '⭐', '#7c3aed') : '');
+    html += '</div>';
+    html += '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px">';
+    html += '<thead><tr style="background:#f1f5f9">';
+    ['Fecha','Tipo','Período','Sede(s)','Ejecutor','Asesor','Créd.','CSAT','Cal.','Observaciones'].forEach(function(h){
+      html += '<th style="padding:7px 8px;text-align:left;font-weight:700;color:#374151;white-space:nowrap;border-bottom:2px solid #e5e7eb">'+h+'</th>';
+    });
+    html += '</tr></thead><tbody>';
+    lista.slice().reverse().forEach(function(s, i){
+      var bg = i % 2 === 0 ? '#fff' : '#f9fafb';
+      var badge = s.tipo === 'coord'
+        ? '<span style="background:#dbeafe;color:#1d4ed8;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:700">COORD</span>'
+        : '<span style="background:#dcfce7;color:#15803d;padding:2px 6px;border-radius:10px;font-size:9px;font-weight:700">ASESOR</span>';
+      var colCal = s.calif_seguimiento >= 4.5 ? '#15803d' : s.calif_seguimiento >= 3 ? '#92400e' : '#dc2626';
+      html += '<tr style="background:'+bg+';border-bottom:1px solid #f1f5f9">';
+      html += '<td style="padding:6px 8px;white-space:nowrap">'+ (s.fecha||'—') +'</td>';
+      html += '<td style="padding:6px 8px">'+ badge +'</td>';
+      html += '<td style="padding:6px 8px;color:#64748b">'+ (s.periodo||'—') +'</td>';
+      html += '<td style="padding:6px 8px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="'+ (s.sedes||'') +'">'+ (s.sedes||'—') +'</td>';
+      html += '<td style="padding:6px 8px;font-weight:600">'+ (s.ejecutor||'—') +'</td>';
+      html += '<td style="padding:6px 8px;color:#64748b">'+ (s.asesor_nombre||'—') +'</td>';
+      html += '<td style="padding:6px 8px;text-align:center;font-weight:700;color:#003D45">'+ (s.real_creditos||'—') +'</td>';
+      html += '<td style="padding:6px 8px;text-align:center">'+ (s.csat||'—') +'</td>';
+      html += '<td style="padding:6px 8px;text-align:center;font-weight:700;color:'+colCal+'">'+ (s.calif_seguimiento||'—') +'</td>';
+      html += '<td style="padding:6px 8px;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#64748b" title="'+ (s.observaciones||'') +'">'+ (s.observaciones||'—') +'</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+    if(typeof exportarHistSeguimientosCSV === 'function'){
+      html += '<button onclick="exportarHistSeguimientosCSV()" style="margin-top:12px;padding:8px 16px;background:#003D45;color:#FFD900;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↓ Exportar CSV para auditoría</button>';
+    }
+    el.innerHTML = html;
+  };
+
+  window.abrirHistorialSeguimientos = function(){
+    if(!sesionActiva){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Debes iniciar sesión primero.'); return; }
+    var modal = document.getElementById('modal-historial-seguimientos');
+    if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Modal de historial no encontrado.'); return; }
+    modal.style.display = 'block';
+    document.body.style.overflow = 'hidden';
+    var cargar = function(){
+      window._poblarFiltrosHistSeg();
+      window.renderHistorialSeguimientos();
+    };
+    if(window._histCargado && (window._histSeguimientos||[]).length){
+      cargar();
+      window._cargarHistorialSeguimientos().then(cargar);
+    } else {
+      window._cargarHistorialSeguimientos().then(cargar);
+    }
+  };
+
+  console.log('[SCIC v4.10.3] Historial seguimientos + semáforo sedes (15 días)');
 })();
 </script>
 </body>
