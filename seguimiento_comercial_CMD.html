@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.12.0   (APP_VERSION = 'SCIC-4.12.0')
+  Versión actual: 4.12.1   (APP_VERSION = 'SCIC-4.12.1')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,10 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.12.1 (2026-06-30)
+    - Cartera: corrige % recuperación y % cartera rodada (fórmulas y cruce apertura→cierre).
+    - Recuperación = (1-30→vigente + salidas de mora inicial) / mora 1-30 apertura.
+    - Cartera rodada = % mora sobre cartera actual al cierre (no flujo 31-60 inexistente).
   v4.12.0 (2026-06-30)
     - Cartera: Cygnus y SAP como carteras independientes (apertura/cierre propios).
     - Metas por cartera: Cygnus recuperación >80% y rodada <20%; SAP >75% y <25%.
@@ -3109,7 +3113,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.12.0';
+var APP_VERSION = 'SCIC-4.12.1';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6297,7 +6301,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.12.0';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.12.1';
     var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
     var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
     var badge = document.getElementById('app-version-badge');
@@ -7471,6 +7475,91 @@ function _parseCumpleMMDD(s){
     mergePS(c1&&c1.porSede); mergePS(c2&&c2.porSede);
     return {f:f, porSede:ps};
   }
+
+  /* Cruce corregido: salidas de cartera NO se cuentan como recuperados */
+  function _cartCruzar(apIdx, ciIdx){
+    var f = {REC:0,N_MORA:0,RODADO:0,MEJORADO:0,PERSISTE:0,NUEVO:0,V_ESTABLE:0,SALIDA:0};
+    var porSede = {};
+    function sedeOf(r){ return (r&&r.sede)||'Sin sede'; }
+    function ini(s){
+      if(!porSede[s]) porSede[s]={sede:s,REC:0,N_MORA:0,RODADO:0,MEJORADO:0,PERSISTE:0,NUEVO:0,SALIDA:0,V_ESTABLE:0,cap_ap:0,cap_ci:0};
+      return porSede[s];
+    }
+    function esMora(e){ return e==='1-30'||e==='31-60'||e==='61-90'||e==='+90'; }
+    Object.keys(apIdx||{}).forEach(function(id){
+      var r = apIdx[id], s = ciIdx[id], sd = ini(sedeOf(r));
+      sd.cap_ap += r.saldo||r.capital||0;
+      var l = r.estado, p = s ? s.estado : null;
+      if(!p){ f.SALIDA++; sd.SALIDA++; return; }
+      sd.cap_ci += s.saldo||s.capital||0;
+      if(l==='Vigente'&&p==='Vigente'){ f.V_ESTABLE++; sd.V_ESTABLE++; }
+      else if(l==='Vigente'&&(p==='1-30'||p==='31-60')){ f.N_MORA++; sd.N_MORA++; }
+      else if(esMora(l)&&p==='Vigente'){ f.REC++; sd.REC++; }
+      else if(l==='1-30'&&(p==='31-60'||p==='61-90'||p==='+90')){ f.RODADO++; sd.RODADO++; }
+      else if(l==='31-60'&&(p==='1-30'||p==='Vigente')){ f.MEJORADO++; sd.MEJORADO++; }
+      else if(l==='1-30'&&p==='1-30'){ f.PERSISTE++; sd.PERSISTE++; }
+      else if(esMora(l)&&esMora(p)){ f.PERSISTE++; sd.PERSISTE++; }
+    });
+    Object.keys(ciIdx||{}).forEach(function(id){
+      if(apIdx[id]) return;
+      var s = ciIdx[id], sd = ini(sedeOf(s));
+      f.NUEVO++; sd.NUEVO++;
+      sd.cap_ci += s.saldo||s.capital||0;
+    });
+    return {f:f, porSede:porSede};
+  }
+
+  function _cartRecomputarCruces(d){
+    if(!d) return d;
+    if(d.apIdxCyg&&d.ciIdxCyg) d.cruzCyg = _cartCruzar(d.apIdxCyg, d.ciIdxCyg);
+    if(d.apIdxSAP&&d.ciIdxSAP) d.cruzSAP = _cartCruzar(d.apIdxSAP, d.ciIdxSAP);
+    return d;
+  }
+
+  /* Indicadores alineados a metas comerciales */
+  function _cartCalcIndicadores(apIdx, ciIdx, ciDist){
+    function esMora(e){ return e==='1-30'||e==='31-60'||e==='61-90'||e==='+90'; }
+    var cohorte = 0, aVigente = 0, salida = 0, persiste = 0, empeoro = 0;
+    Object.keys(apIdx||{}).forEach(function(id){
+      var r = apIdx[id];
+      if(r.estado!=='1-30') return;
+      cohorte++;
+      var s = ciIdx[id];
+      if(!s){ salida++; return; }
+      if(s.estado==='Vigente') aVigente++;
+      else if(s.estado==='1-30') persiste++;
+      else if(esMora(s.estado)) empeoro++;
+    });
+    var recuperados = aVigente + salida;
+    var recPct = cohorte>0 ? Math.round(recuperados/cohorte*100) : 0;
+    var ciTotal = ciDist.total||0;
+    var moraCi = (ciDist['1-30']||0)+(ciDist['31-60']||0)+(ciDist['61-90']||0)+(ciDist['+90']||0);
+    var rodPct = ciTotal>0 ? Math.round(moraCi/ciTotal*100) : 0;
+    return {recPct:recPct, rodPct:rodPct, cohorte:cohorte, aVigente:aVigente, salida:salida,
+      persiste:persiste, empeoro:empeoro, recuperados:recuperados, moraCi:moraCi, ciTotal:ciTotal};
+  }
+
+  function _cartIndicadoresPortafolio(d, port){
+    if(port==='cygnus') return _cartCalcIndicadores(d.apIdxCyg, d.ciIdxCyg, d.ciDistCyg||{});
+    if(port==='sap') return _cartCalcIndicadores(d.apIdxSAP, d.ciIdxSAP, d.ciDistSAP||{});
+    var cyg = _cartCalcIndicadores(d.apIdxCyg, d.ciIdxCyg, d.ciDistCyg||{});
+    var sap = _cartCalcIndicadores(d.apIdxSAP, d.ciIdxSAP, d.ciDistSAP||{});
+    var cohorte = cyg.cohorte + sap.cohorte;
+    var recuperados = cyg.recuperados + sap.recuperados;
+    var ci = _cartMergeDist(d.ciDistCyg, d.ciDistSAP);
+    var moraCi = (ci['1-30']||0)+(ci['31-60']||0)+(ci['61-90']||0)+(ci['+90']||0);
+    return {
+      recPct: cohorte>0 ? Math.round(recuperados/cohorte*100) : 0,
+      rodPct: ci.total>0 ? Math.round(moraCi/ci.total*100) : 0,
+      cohorte:cohorte, recuperados:recuperados, moraCi:moraCi, ciTotal:ci.total,
+      aVigente: cyg.aVigente + sap.aVigente,
+      salida: cyg.salida + sap.salida,
+      persiste: cyg.persiste + sap.persiste,
+      empeoro: cyg.empeoro + sap.empeoro,
+      cyg:cyg, sap:sap
+    };
+  }
+
   function _cartGetCtx(d, port){
     if(port==='cygnus') return {
       port:'cygnus', name:'Cygnus', meta:CARTERA_METAS.cygnus,
@@ -7517,30 +7606,26 @@ function _parseCumpleMMDD(s){
       +'<td style="padding:7px 10px;text-align:right;color:#dc2626">'+_cartFmtN(dist['31-60']||0)+'</td>'
       +'<td style="padding:7px 10px;text-align:right">'+sem+'</td></tr>';
   }
-  function _cartMetaBanner(ctx, recPct, rodPct){
+  function _cartMetaBanner(ctx, ind){
     var m = ctx.meta;
+    var recPct = ind.recPct||0, rodPct = ind.rodPct||0;
     if(ctx.port==='total'){
-      var cyg = _cartGetCtx(window._cartData,'cygnus');
-      var sap = _cartGetCtx(window._cartData,'sap');
-      var fCyg = cyg.cruz.f||{}, fSap = sap.cruz.f||{};
-      var apC = (cyg.apDist['1-30']||0), apS = (sap.apDist['1-30']||0);
-      var recC = apC>0?Math.round((fCyg.REC||0)/apC*100):0;
-      var recS = apS>0?Math.round((fSap.REC||0)/apS*100):0;
-      var rodC = apC>0?Math.round((fCyg.RODADO||0)/apC*100):0;
-      var rodS = apS>0?Math.round((fSap.RODADO||0)/apS*100):0;
+      var cyg = ind.cyg||{}, sap = ind.sap||{};
       return '<div style="padding:10px 14px;background:#f8fafc;border-bottom:1px solid #e2e8f0">'
         +'<div style="font-size:10px;font-weight:800;color:#003D45;margin-bottom:8px">METAS POR CARTERA (independientes)</div>'
         +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
         +'<div style="background:#eff6ff;border-radius:10px;padding:10px;border-left:4px solid #1d4ed8">'
         +'<div style="font-size:9px;font-weight:700;color:#1d4ed8">CYGNUS · Meta rec. &gt;80% · rodada &lt;20%</div>'
         +'<div style="display:flex;gap:12px;margin-top:6px;font-size:11px">'
-        +'<span>Recup. '+_cartSemBadge(recC,80,false)+'</span>'
-        +'<span>Rodada '+_cartSemBadge(rodC,20,true)+'</span></div></div>'
+        +'<span>Recup. '+_cartSemBadge(cyg.recPct||0,80,false)+'</span>'
+        +'<span>Rodada '+_cartSemBadge(cyg.rodPct||0,20,true)+'</span></div>'
+        +'<div style="font-size:9px;color:#94a3b8;margin-top:4px">'+_cartFmtN(cyg.recuperados||0)+' de '+_cartFmtN(cyg.cohorte||0)+' mora inicial</div></div>'
         +'<div style="background:#ecfdf5;border-radius:10px;padding:10px;border-left:4px solid #059669">'
         +'<div style="font-size:9px;font-weight:700;color:#059669">SAP · Meta rec. &gt;75% · rodada &lt;25%</div>'
         +'<div style="display:flex;gap:12px;margin-top:6px;font-size:11px">'
-        +'<span>Recup. '+_cartSemBadge(recS,75,false)+'</span>'
-        +'<span>Rodada '+_cartSemBadge(rodS,25,true)+'</span></div></div></div></div>';
+        +'<span>Recup. '+_cartSemBadge(sap.recPct||0,75,false)+'</span>'
+        +'<span>Rodada '+_cartSemBadge(sap.rodPct||0,25,true)+'</span></div>'
+        +'<div style="font-size:9px;color:#94a3b8;margin-top:4px">'+_cartFmtN(sap.recuperados||0)+' de '+_cartFmtN(sap.cohorte||0)+' mora inicial</div></div></div></div>';
     }
     var recOk = _cartSemColor(recPct, m.rec, false);
     var rodOk = _cartSemColor(rodPct, m.rodada, true);
@@ -7551,22 +7636,23 @@ function _parseCumpleMMDD(s){
       +'<div style="margin-left:auto;display:flex;gap:14px;flex-wrap:wrap">'
       +'<div style="text-align:center"><div style="font-size:8px;color:#64748b;font-weight:700">RECUPERACIÓN</div>'
       +'<div style="font-size:18px;font-weight:900;color:'+recOk+'">'+recPct+'%</div>'
-      +'<div style="font-size:8px;color:#94a3b8">Meta &gt;'+m.rec+'%</div></div>'
+      +'<div style="font-size:8px;color:#94a3b8">Meta &gt;'+m.rec+'% · '+_cartFmtN(ind.recuperados||0)+'/'+_cartFmtN(ind.cohorte||0)+'</div></div>'
       +'<div style="text-align:center"><div style="font-size:8px;color:#64748b;font-weight:700">CARTERA RODADA</div>'
       +'<div style="font-size:18px;font-weight:900;color:'+rodOk+'">'+rodPct+'%</div>'
-      +'<div style="font-size:8px;color:#94a3b8">Meta &lt;'+m.rodada+'%</div></div></div></div></div>';
+      +'<div style="font-size:8px;color:#94a3b8">Meta &lt;'+m.rodada+'% · '+_cartFmtN(ind.moraCi||0)+' mora / '+_cartFmtN(ind.ciTotal||0)+'</div></div></div></div></div>';
   }
 
   window._renderCartera = function(){
     var d = window._cartData;
     var el = document.getElementById('cart-contenido');
     if(!d||!el) return;
+    _cartRecomputarCruces(d);
     var port = window._cartPortafolio || 'cygnus';
+    var ind = _cartIndicadoresPortafolio(d, port);
     var ctx = _cartGetCtx(d, port);
     var ap = ctx.apDist||{}, ci = ctx.ciDist||{}, fl = ctx.cruz.f||{};
     var moraAp = ap['1-30']||0, moraCi = ci['1-30']||0;
-    var recPct = moraAp>0 ? Math.round((fl.REC||0)/moraAp*100) : 0;
-    var rodPct = moraAp>0 ? Math.round((fl.RODADO||0)/moraAp*100) : 0;
+    var recPct = ind.recPct||0, rodPct = ind.rodPct||0;
     var pctMoraAp = ap.total>0 ? Math.round(moraAp/ap.total*100) : 0;
     var pctMoraCi = ci.total>0 ? Math.round(moraCi/ci.total*100) : 0;
     var vigAp = ap.Vigente||0, vigCi = ci.Vigente||0;
@@ -7591,7 +7677,7 @@ function _parseCumpleMMDD(s){
     }).join('');
 
     var html = '<div style="padding:10px 14px;display:flex;gap:8px;flex-wrap:wrap;border-bottom:1px solid #e2e8f0;background:#fff">'+portBtns+'</div>';
-    html += _cartMetaBanner(ctx, recPct, rodPct);
+    html += _cartMetaBanner(ctx, ind);
     html += '<div style="padding:10px 14px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #f1f5f9">'+vistaBtns
       +'<span style="margin-left:auto;font-size:10px;color:#94a3b8;align-self:center">'+ctx.name+' · '+d.ts+'</span>'
       +'<button onclick="_cargarCartera()" style="padding:5px 10px;border-radius:6px;border:1px solid #e2e8f0;font-size:10px;cursor:pointer;background:#fff">↺</button>'
@@ -7627,12 +7713,12 @@ function _parseCumpleMMDD(s){
       html += '<div style="padding:0 14px 12px"><div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:8px">FLUJOS APERTURA → CIERRE · '+ctx.name+'</div>';
       html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
       [
-        {i:'✅',l:'Recuperados',v:fl.REC||0,s:recPct+'% de mora inicial',c:'#16a34a',bg:'#f0fdf4',meta:ctx.meta.rec,inv:false},
+        {i:'✅',l:'Recuperados a vigente',v:ind.aVigente||fl.REC||0,s:(ind.cohorte?Math.round((ind.aVigente||0)/ind.cohorte*100):0)+'% del cohorte mora',c:'#16a34a',bg:'#f0fdf4'},
+        {i:'📤',l:'Salidas de mora',v:ind.salida||fl.SALIDA||0,s:'Pago total / salida cartera',c:'#0d9488',bg:'#f0fdfa'},
         {i:'🚨',l:'Nuevos en mora',v:fl.N_MORA||0,s:(vigAp>0?Math.round((fl.N_MORA||0)/vigAp*100):0)+'% de vigentes',c:'#dc2626',bg:'#fef2f2'},
-        {i:'⬇️',l:'Rodados 31-60',v:fl.RODADO||0,s:rodPct+'% de mora inicial',c:'#b91c1c',bg:'#fee2e2',meta:ctx.meta.rodada,inv:true},
-        {i:'📈',l:'Mejoraron',v:fl.MEJORADO||0,s:'31-60 → 1-30',c:'#2563eb',bg:'#eff6ff'},
-        {i:'🔄',l:'Persisten',v:fl.PERSISTE||0,s:'Sin cambio',c:'#ca8a04',bg:'#fef9c3'},
-        {i:'🆕',l:'Nuevos',v:fl.NUEVO||0,s:'No en apertura',c:'#7c3aed',bg:'#f5f3ff'}
+        {i:'🔄',l:'Persisten en mora',v:ind.persiste||fl.PERSISTE||0,s:'Siguen en mora 1-30',c:'#ca8a04',bg:'#fef9c3'},
+        {i:'⬇️',l:'Empeoraron mora',v:ind.empeoro||fl.RODADO||0,s:'Pasaron a mora mayor',c:'#b91c1c',bg:'#fee2e2'},
+        {i:'🆕',l:'Nuevos créditos',v:fl.NUEVO||0,s:'No estaban en apertura',c:'#7c3aed',bg:'#f5f3ff'}
       ].forEach(function(x){
         html += '<div style="background:'+x.bg+';border-radius:10px;padding:12px;border-left:3px solid '+x.c+'">'
           +'<div style="font-size:18px">'+x.i+'</div>'
@@ -7724,17 +7810,17 @@ function _parseCumpleMMDD(s){
       html += '<div style="background:#fff;border-radius:10px;padding:14px;box-shadow:0 1px 4px rgba(0,0,0,.06)">'
         +'<div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:10px">📊 TASAS DE GESTIÓN · '+ctx.name+'</div>';
       [
-        {l:'Tasa recuperación (1-30→V)',v:recPct,meta:metaRec,inv:false},
-        {l:'Tasa rodamiento (1-30→31-60)',v:rodPct,meta:metaRod,inv:true},
-        {l:'Tasa nuevos en mora (V→1-30)',v:tNuevaMora,meta:5,inv:true},
-        {l:'Tasa mejora (31-60→1-30)',v:(fl.MEJORADO||0)+(fl.PERSISTE||0)>0?Math.round((fl.MEJORADO||0)/((fl.MEJORADO||0)+(fl.PERSISTE||0))*100):0,meta:20,inv:false}
+        {l:'Tasa recuperación',v:recPct,meta:metaRec,inv:false,sub:'(a vigente + salidas) / mora 1-30 apertura'},
+        {l:'Cartera rodada (stock)',v:rodPct,meta:metaRod,inv:true,sub:'% mora sobre cartera al cierre'},
+        {l:'Tasa nuevos en mora (V→1-30)',v:tNuevaMora,meta:5,inv:true,sub:'Sobre vigentes apertura'},
+        {l:'Persisten en mora 1-30',v:ind.cohorte?Math.round((ind.persiste||0)/ind.cohorte*100):0,meta:20,inv:true,sub:_cartFmtN(ind.persiste||0)+' asociados'}
       ].forEach(function(x){
         var col = _cartSemColor(x.v, x.meta, x.inv);
         html += '<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">'
           +'<span>'+x.l+'</span><span style="font-weight:700;color:'+col+'">'+x.v+'%</span></div>'
           +'<div style="height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden">'
           +'<div style="height:100%;background:'+col+';border-radius:4px;width:'+Math.min(100,x.v)+'%"></div></div>'
-          +'<div style="font-size:9px;color:#94a3b8;margin-top:1px">Meta: '+(x.inv?'<':'>')+x.meta+'%</div></div>';
+          +'<div style="font-size:9px;color:#94a3b8;margin-top:1px">Meta: '+(x.inv?'<':'>')+x.meta+'% · '+x.sub+'</div></div>';
       });
       html += '</div>';
       var cumpleRec = port==='cygnus' ? recPct>=80 : port==='sap' ? recPct>=75 : (recPct>=75);
@@ -7750,9 +7836,9 @@ function _parseCumpleMMDD(s){
           +(cumpleRod
             ? 'Cartera rodada al '+rodPct+'% — dentro de meta &lt;'+metaRod+'%.'
             : 'Cartera rodada al '+rodPct+'% — supera meta &lt;'+metaRod+'%. Priorizar gestión de mora 1-30.'))
-        +'<br><br>'+((fl.N_MORA||0)>(fl.REC||0)
-          ? '🚨 Nuevos en mora ('+_cartFmtN(fl.N_MORA)+') superan recuperados ('+_cartFmtN(fl.REC)+'). Reforzar gestión preventiva.'
-          : '✅ Recuperados ('+_cartFmtN(fl.REC)+') superan nuevos en mora ('+_cartFmtN(fl.N_MORA)+').')
+        +'<br><br>'+((fl.N_MORA||0)>(ind.aVigente||0)
+          ? '🚨 Nuevos en mora ('+_cartFmtN(fl.N_MORA)+') superan recuperados a vigente ('+_cartFmtN(ind.aVigente||0)+'). Reforzar gestión preventiva.'
+          : '✅ Recuperados a vigente ('+_cartFmtN(ind.aVigente||0)+') superan nuevos en mora ('+_cartFmtN(fl.N_MORA)+').')
         +'</div></div></div>';
     }
 
@@ -7786,7 +7872,7 @@ function _parseCumpleMMDD(s){
     else if(typeof _cargarCartera==='function') _cargarCartera();
   };
 
-  console.log('[SCIC v4.12.0] Cartera Cygnus/SAP separadas + Total asignada');
+  console.log('[SCIC v4.12.1] Cartera: KPIs recuperación y rodada corregidos');
 })();
 </script>
 </body>
