@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.10.1   (APP_VERSION = 'SCIC-4.10.1')
+  Versión actual: 4.10.2   (APP_VERSION = 'SCIC-4.10.2')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,8 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.10.2 (2026-06-30)
+    - Semáforo SIGEC: lectura directa hoja COLOCACION SIGEC (repo colocación), columna Estado índice 15.
   v4.10.1 (2026-06-30)
     - Semáforo SIGEC: agregación robusta desde filas + _sigecData + respaldo _DATA.
   v4.10.0 (2026-06-30)
@@ -3083,7 +3085,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.10.1';
+var APP_VERSION = 'SCIC-4.10.2';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6219,7 +6221,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.10.1';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.10.2';
     var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
     var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
     var badge = document.getElementById('app-version-badge');
@@ -6231,30 +6233,84 @@ function _parseCumpleMMDD(s){
   }
   window.aplicarVersionApp = aplicarVersionApp;
 
+  var SIGEC_COL_ESTADO = 15;
+  var SIGEC_COL_SEDE = 30;
+
+  function _celGvizSigec(c){
+    if(!c) return '';
+    var v = c.v != null && c.v !== undefined ? c.v : (c.f != null ? c.f : '');
+    return String(v).trim();
+  }
+
+  /** Lee COLOCACION SIGEC del repo colocación sin remapeo erróneo de encabezados. */
+  function _leerHojaSigecColocacion(){
+    return new Promise(function(resolve, reject){
+      var sheetName = (typeof SHEETS_HOJAS !== 'undefined' && SHEETS_HOJAS.sigec) ? SHEETS_HOJAS.sigec : 'COLOCACION SIGEC';
+      var repoId = (typeof REPO_IDS !== 'undefined' && REPO_IDS.colocacion) ? REPO_IDS.colocacion : '1ZY-lhZ7LNlIG8GEKdRf7e-W1bz36te-DWtd-6_eu6Fg';
+      var cb = '_sigecmenu_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+      var sc = document.createElement('script');
+      var tm = setTimeout(function(){
+        try{ delete window[cb]; }catch(e){}
+        if(sc.parentNode) sc.parentNode.removeChild(sc);
+        reject(new Error('Timeout cargando COLOCACION SIGEC'));
+      }, 20000);
+      window[cb] = function(data){
+        clearTimeout(tm);
+        try{ delete window[cb]; }catch(e){}
+        if(sc.parentNode) sc.parentNode.removeChild(sc);
+        try{
+          if(!data || !data.table){ window._sigecRows = []; resolve([]); return; }
+          var filas = (data.table.rows || []).map(function(row){
+            var cols = (row.c || []).map(_celGvizSigec);
+            return {
+              _cols: cols,
+              _c: cols,
+              Estado: cols[SIGEC_COL_ESTADO] || '',
+              Sede: cols[SIGEC_COL_SEDE] || ''
+            };
+          }).filter(function(r){
+            var ticket = String(r._cols[0] || '').trim();
+            return ticket && ticket.toLowerCase() !== 'ticket';
+          });
+          window._sigecRows = filas;
+          console.log('[SCIC] COLOCACION SIGEC:', filas.length, 'tickets desde repo colocación');
+          resolve(filas);
+        }catch(e){ reject(e); }
+      };
+      sc.onerror = function(){ clearTimeout(tm); reject(new Error('Error de red COLOCACION SIGEC')); };
+      sc.src = 'https://docs.google.com/spreadsheets/d/' + repoId + '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&sheet=' + encodeURIComponent(sheetName) + '&_=' + Date.now();
+      document.head.appendChild(sc);
+    });
+  }
+  window._leerHojaSigecColocacion = _leerHojaSigecColocacion;
+
+  function cargarSigecContadoresMenu(){
+    return _leerHojaSigecColocacion().then(function(){
+      obtenerSigecNacional();
+      if(typeof actualizarMenuKPIs === 'function') actualizarMenuKPIs();
+    });
+  }
+  window.cargarSigecContadoresMenu = cargarSigecContadoresMenu;
+
   function leerEstadoSigec(row){
     if(!row) return '';
     var cols = row._cols || row._c || [];
-    var est = '';
-    if(row.Estado != null && row.Estado !== '') est = row.Estado;
-    else if(row.estado != null && row.estado !== '') est = row.estado;
-    else {
-      Object.keys(row).forEach(function(k){
-        if(!est && k && String(k).toLowerCase().trim() === 'estado') est = row[k];
-      });
+    if(cols.length > SIGEC_COL_ESTADO){
+      var v = cols[SIGEC_COL_ESTADO];
+      if(v != null && v !== '') return String(v).trim();
     }
-    if((!est || est === 'Estado') && cols.length > 15) est = cols[15];
-    if(est && typeof est === 'object' && est.v != null) est = est.v;
-    return String(est || '').trim();
+    if(row.Estado != null && row.Estado !== '') return String(row.Estado).trim();
+    if(row.estado != null && row.estado !== '') return String(row.estado).trim();
+    return '';
   }
 
   function clasificarEstadoSigec(est){
-    var l = String(est || '').trim();
-    var x = l.toLowerCase();
-    if(l === 'Facturada' || x === 'facturada') return 'facturada';
+    var x = String(est || '').trim().toLowerCase();
+    if(x === 'facturada') return 'facturada';
     if(x.indexOf('cerrada fac') >= 0) return 'cerrada_fac';
     if(x === 'cerrada') return 'cerrada';
-    if(x.indexOf('abierta') >= 0 || x.indexOf('proceso') >= 0 || x.indexOf('validaci') >= 0) return 'abierta';
-    if(x.indexOf('rechaz') >= 0 || x.indexOf('negad') >= 0 || x.indexOf('no viable') >= 0) return 'rechazada';
+    if(x === 'abierta') return 'abierta';
+    if(x.indexOf('rechazado') >= 0 || x.indexOf('rechaz') >= 0 || x.indexOf('negad') >= 0) return 'rechazada';
     if(x.indexOf('pendiente') >= 0 || x.indexOf('espera') >= 0) return 'pendiente';
     return 'otro';
   }
@@ -6263,7 +6319,7 @@ function _parseCumpleMMDD(s){
     var sig = {facturada:0, cerrada_fac:0, cerrada:0, abierta:0, rechazada:0, pendiente:0, otro:0, total:0, con_estado:0};
     (rows || []).forEach(function(row){
       var est = leerEstadoSigec(row);
-      if(est && est.toLowerCase() !== 'estado') sig.con_estado++;
+      if(est) sig.con_estado++;
       sig.total++;
       var cls = clasificarEstadoSigec(est);
       sig[cls] = (sig[cls] || 0) + 1;
@@ -6271,57 +6327,38 @@ function _parseCumpleMMDD(s){
     return sig;
   }
 
-  function sumarSigecDataAgregado(){
-    var sedes = window._sigecData || [];
-    var o = {facturada:0, abierta:0, negada:0, cerrada:0, total:0};
-    sedes.forEach(function(s){
-      o.facturada += Number(s.aprobadas) || 0;
-      o.abierta += Number(s.abiertas) || 0;
-      o.negada += Number(s.negadas) || 0;
-      o.total += Number(s.total) || 0;
-    });
-    return o;
-  }
-
   function obtenerSigecNacional(){
-    var fromRows = procesarSigecFilas(window._sigecRows || []);
-    var fromAgg = sumarSigecDataAgregado();
-    var parseOk = fromRows.con_estado > 0 && (fromRows.con_estado / Math.max(1, fromRows.total)) >= 0.3;
-    var sig = {
-      facturada: fromRows.facturada || 0,
-      cerrada_fac: fromRows.cerrada_fac || 0,
-      cerrada: fromRows.cerrada || 0,
-      abierta: fromRows.abierta || 0,
-      rechazada: fromRows.rechazada || 0,
-      pendiente: fromRows.pendiente || 0,
-      total: fromRows.total || 0
+    var rows = window._sigecRows || [];
+    var sig = procesarSigecFilas(rows);
+    if(rows.length){
+      sig._fuente = 'COLOCACION SIGEC';
+      window._sigecNacional = sig;
+      try{
+        if(typeof _DATA !== 'undefined'){
+          _DATA.sigec = _DATA.sigec || {};
+          _DATA.sigec.facturada = sig.facturada;
+          _DATA.sigec.cerrada_fac = sig.cerrada_fac;
+          _DATA.sigec.cerrada = sig.cerrada;
+          _DATA.sigec.abierta = sig.abierta;
+        }
+      }catch(e){}
+      return sig;
+    }
+    if(window._sigecNacional && window._sigecNacional.total) return window._sigecNacional;
+    var d = (_DATA && _DATA.sigec) || {};
+    sig = {
+      facturada: d.facturada || d.facturadas || 0,
+      cerrada_fac: d.cerrada_fac || 0,
+      cerrada: d.cerrada || d.cerradas || 0,
+      abierta: d.abierta || d.abiertas || 0,
+      rechazada: d.rechazado || 0,
+      pendiente: d.pend_doc || 0,
+      otro: 0,
+      total: 0,
+      _fuente: 'respaldo'
     };
-    if(fromAgg.total){
-      if(!sig.facturada && fromAgg.facturada) sig.facturada = fromAgg.facturada;
-      if(!sig.abierta && fromAgg.abierta) sig.abierta = fromAgg.abierta;
-      if(!sig.rechazada && fromAgg.negada) sig.rechazada = fromAgg.negada;
-      if(!sig.total) sig.total = fromAgg.total;
-    }
-    if(!(sig.facturada + sig.cerrada_fac + sig.cerrada + sig.abierta)){
-      var d = (_DATA && _DATA.sigec) || {};
-      sig.facturada = sig.facturada || d.facturada || d.facturadas || 0;
-      sig.cerrada_fac = sig.cerrada_fac || d.cerrada_fac || 0;
-      sig.cerrada = sig.cerrada || d.cerrada || d.cerradas || 0;
-      sig.abierta = sig.abierta || d.abierta || d.abiertas || 0;
-      sig.rechazada = sig.rechazada || d.rechazado || 0;
-      if(!sig.total) sig.total = sig.facturada + sig.cerrada_fac + sig.cerrada + sig.abierta + sig.rechazada;
-    }
-    sig._fuente = parseOk ? 'filas' : (fromAgg.total ? 'agregado' : 'respaldo');
+    sig.total = sig.facturada + sig.cerrada_fac + sig.cerrada + sig.abierta + sig.rechazada + sig.pendiente;
     window._sigecNacional = sig;
-    try{
-      if(typeof _DATA !== 'undefined'){
-        _DATA.sigec = _DATA.sigec || {};
-        _DATA.sigec.facturada = sig.facturada;
-        _DATA.sigec.cerrada_fac = sig.cerrada_fac;
-        _DATA.sigec.cerrada = sig.cerrada;
-        _DATA.sigec.abierta = sig.abierta;
-      }
-    }catch(e){}
     return sig;
   }
   window.obtenerSigecNacional = obtenerSigecNacional;
@@ -6369,7 +6406,7 @@ function _parseCumpleMMDD(s){
     var pctSig = meta > 0 ? Math.round(fact / meta * 100) : 0;
     var semSig = pctSig >= 90 ? 'VERDE' : pctSig >= 70 ? 'AMARILLO' : 'ROJO';
     var colSig = pctSig >= 90 ? '#4ade80' : pctSig >= 70 ? '#fbbf24' : '#f87171';
-    var hayDatos = fact + (sig.cerrada_fac||0) + (sig.cerrada||0) + (sig.abierta||0) > 0;
+    var hayDatos = (sig.total || 0) > 0;
     var el;
     el=document.getElementById('menu-sig-fact'); if(el) el.textContent = hayDatos ? fmtN(fact) : '—';
     el=document.getElementById('menu-sig-cfac'); if(el) el.textContent = hayDatos ? fmtN(sig.cerrada_fac||0) : '—';
@@ -6577,13 +6614,11 @@ function _parseCumpleMMDD(s){
       _origMenu();
       actualizarMenuKPIs();
       var recargar = function(){ try{ actualizarMenuKPIs(); }catch(e){} };
-      if(typeof _cargarSIGEC==='function'){
-        _cargarSIGEC().then(recargar).catch(recargar);
-      }
+      cargarSigecContadoresMenu().then(recargar).catch(recargar);
       if(typeof _cargarGLPI==='function'){
         _cargarGLPI().then(recargar).catch(recargar);
       }
-      [400, 1200, 3000, 6000].forEach(function(ms){ setTimeout(recargar, ms); });
+      [400, 1200, 3000].forEach(function(ms){ setTimeout(recargar, ms); });
     };
   }
 
@@ -6601,12 +6636,26 @@ function _parseCumpleMMDD(s){
     };
   }
 
+  if(typeof _leerHoja==='function'){
+    var _origLeerHoja = _leerHoja;
+    _leerHoja = window._leerHoja = function(sheetName, skip){
+      var sn = String(sheetName || '').trim();
+      var sigecName = (typeof SHEETS_HOJAS !== 'undefined' && SHEETS_HOJAS.sigec) ? String(SHEETS_HOJAS.sigec).trim() : 'COLOCACION SIGEC';
+      if(sn === sigecName || sn === 'COLOCACION SIGEC'){
+        return _leerHojaSigecColocacion();
+      }
+      return _origLeerHoja(sheetName, skip);
+    };
+  }
+
   if(typeof _cargarSIGEC==='function'){
     var _origCargarSigec = _cargarSIGEC;
     var _wrapCargarSigec = function(){
       return _origCargarSigec().then(function(){
-        try{ obtenerSigecNacional(); }catch(e){ console.warn('[SCIC] obtenerSigecNacional:', e&&e.message); }
-        try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+        return _leerHojaSigecColocacion().then(function(){
+          try{ obtenerSigecNacional(); }catch(e){ console.warn('[SCIC] obtenerSigecNacional:', e&&e.message); }
+          try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+        });
       });
     };
     window._cargarSIGEC = _cargarSIGEC = _wrapCargarSigec;
@@ -6664,7 +6713,8 @@ function _parseCumpleMMDD(s){
   setTimeout(actualizarMenuKPIs, 500);
   setTimeout(actualizarMenuKPIs, 3000);
   setTimeout(construirResumenGerencial, 5000);
-  console.log('[SCIC v4.10.1] Semáforo SIGEC con agregación robusta activo');
+  setTimeout(function(){ try{ cargarSigecContadoresMenu(); }catch(e){} }, 1200);
+  console.log('[SCIC v4.10.2] SIGEC menú desde COLOCACION SIGEC (repo colocación)');
 })();
 </script>
 </body>
