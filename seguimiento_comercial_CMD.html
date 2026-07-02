@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.1   (APP_VERSION = 'pyv-comercial-5.4.1')
+  Versión actual: pyv-comercial-5.4.5   (APP_VERSION = 'pyv-comercial-5.4.5')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,17 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.5 (2026-06-30)
+    - Extracción Cartera, H3 e Historial: botones PDF/Excel siempre visibles; export respeta filtros activos del historial.
+  pyv-comercial-5.4.4 (2026-06-30)
+    - Nuevo informe «Comparativo vs año anterior»: semáforo YoY con VAR # del Sheet.
+  pyv-comercial-5.4.3 (2026-06-30)
+    - Malla Hoy: horas del Sheet (inicio/fin), en turno ahora vs app (sin cierre / cerró).
+    - Etiquetas «Ejecutado» aclaradas → Colocado S2 (acumulado, corte día anterior).
+  pyv-comercial-5.4.2 (2026-06-30)
+    - Menú: eliminados botones «Exportar panel» PDF/Excel; informes con tarjetas y más espacio.
+    - Mapa Colombia rediseñado: semáforo S2 por defecto, leyenda visual y resumen por departamento.
+    - Sidebar compacto y bloques SIGEC/MCM/KPI reorganizados en panel principal.
   pyv-comercial-5.4.1 (2026-06-30)
     - Mapa Colombia: render al abrir menú (fix visibilidad ECharts), estilo departamentos con bordes.
     - Menú reorganizado: sidebar compacto + panel principal en 2 columnas con mapa destacado.
@@ -585,9 +596,9 @@ window._cargarTop5 = window._cargarTop5 || function(){
               <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">créditos</div>
             </div>
             <div style="text-align:center;background:rgba(255,255,255,.06);border-radius:10px;padding:10px 6px;border:1px solid rgba(255,255,255,.08)">
-              <div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Ejecutado</div>
+              <div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Colocado S2</div>
               <div id="mts-ejec-n" style="font-size:22px;font-weight:900;color:#4ade80;line-height:1">—</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">colocados</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">créditos acum. · corte día ant.</div>
             </div>
             <div style="text-align:center;background:rgba(255,255,255,.06);border-radius:10px;padding:10px 6px;border:1px solid rgba(255,255,255,.08)">
               <div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Cumplimiento</div>
@@ -1002,7 +1013,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.1</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.5</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -1067,14 +1078,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </aside>
     <div class="menu-main-panel">
     <div class="menu-nacional-panel">
-      <div class="menu-dashboard">
-      <div class="menu-dashboard-main">
-
-      <div class="menu-export-bar" id="menu-export-bar">
-        <span class="menu-export-lbl">Exportar panel</span>
-        <button onclick="exportarExcelMenuComercial()" class="menu-export-btn menu-export-btn-excel">📊 Excel</button>
-        <button onclick="exportarPDFMenuComercial()" class="menu-export-btn menu-export-btn-pdf">📄 PDF</button>
-      </div>
 
       <div class="menu-salud-panel" id="menu-salud-panel">
         <div class="menu-salud-hdr">
@@ -1095,6 +1098,25 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </div>
       </div>
 
+      <div class="menu-report-block menu-mapa-panel" id="menu-mapa-panel">
+        <div class="menu-report-hdr">
+          <div>
+            <div class="menu-mapa-title">Mapa de cumplimiento por departamento</div>
+            <div class="menu-mapa-sub" id="menu-mapa-sub">Semáforo S2: identifica dónde reforzar gestión comercial</div>
+          </div>
+        </div>
+        <div class="menu-mapa-tabs" id="menu-mapa-tabs">
+          <button type="button" class="menu-mapa-tab active" data-layer="cumplimiento" onclick="setMapaColombiaLayer('cumplimiento')">🚦 Cumplimiento S2</button>
+          <button type="button" class="menu-mapa-tab" data-layer="colocacion" onclick="setMapaColombiaLayer('colocacion')">📈 Colocación</button>
+          <button type="button" class="menu-mapa-tab" data-layer="meta" onclick="setMapaColombiaLayer('meta')">🎯 Meta</button>
+          <button type="button" class="menu-mapa-tab" data-layer="capacidad" onclick="setMapaColombiaLayer('capacidad')">🏢 Sedes PYV</button>
+        </div>
+        <div id="menu-mapa-chart" class="menu-mapa-chart"></div>
+        <div class="menu-mapa-resumen" id="menu-mapa-resumen"></div>
+        <div class="menu-mapa-leyenda" id="menu-mapa-leyenda"></div>
+      </div>
+
+      <div class="menu-report-block">
       <div class="menu-nacional-hdr">
         <div class="menu-nacional-title"><i class="ti ti-chart-dots"></i> Estado Nacional · Colocación S2</div>
         <div class="menu-nacional-fecha" id="menu-nac-fecha">—</div>
@@ -1103,10 +1125,10 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-nac-card menu-nac-meta">
           <div class="menu-nac-lbl">Meta nacional S2</div>
           <div class="menu-nac-big" id="menu-nac-meta">—</div>
-          <div class="menu-nac-sub">Créditos facturados período</div>
+          <div class="menu-nac-sub">Créditos facturados acumulados · corte día anterior</div>
         </div>
         <div class="menu-nac-card menu-nac-ejec">
-          <div class="menu-nac-lbl">Vamos (acumulado)</div>
+          <div class="menu-nac-lbl">Vamos (colocado S2)</div>
           <div class="menu-nac-big" id="menu-nac-acum">—</div>
           <div class="menu-nac-sub" id="menu-nac-pct-txt">—% de la meta</div>
         </div>
@@ -1126,7 +1148,58 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-nac-bar"><div id="menu-nac-bar-fill"></div><div id="menu-nac-bar-ideal" title="Curva ideal hoy"></div></div>
         <div class="menu-nac-proy" id="menu-nac-proy">Proyección de cierre: —</div>
       </div>
-      <div class="menu-sigec-panel">
+      </div>
+
+      <div class="menu-report-block menu-yoy-panel" id="menu-yoy-panel">
+        <div class="menu-yoy-hdr">
+          <div>
+            <div class="menu-yoy-title"><i class="ti ti-arrows-diff"></i> Comparativo vs año anterior</div>
+            <div class="menu-yoy-sub">Mismo período S2 · fuente INFORME COLOCACION P ACTUAL (ANT # CRED · VAR # · VAR% #)</div>
+          </div>
+          <div class="menu-yoy-sem-wrap">
+            <div class="menu-yoy-sem" id="menu-yoy-sem">—</div>
+            <div class="menu-yoy-sem-lbl" id="menu-yoy-sem-lbl">Semáforo YoY</div>
+          </div>
+        </div>
+        <div class="menu-yoy-grid">
+          <div class="menu-yoy-card">
+            <div class="menu-yoy-lbl">Colocado S2 ahora</div>
+            <div class="menu-yoy-big" id="menu-yoy-acum">—</div>
+            <div class="menu-yoy-foot">Acumulado período actual</div>
+          </div>
+          <div class="menu-yoy-card">
+            <div class="menu-yoy-lbl">Año anterior (mismo período)</div>
+            <div class="menu-yoy-big" id="menu-yoy-ant">—</div>
+            <div class="menu-yoy-foot">Columna ANT # CRED</div>
+          </div>
+          <div class="menu-yoy-card menu-yoy-var">
+            <div class="menu-yoy-lbl">VAR # (diferencia)</div>
+            <div class="menu-yoy-big" id="menu-yoy-varn">—</div>
+            <div class="menu-yoy-foot" id="menu-yoy-varn-foot">Columna VAR #</div>
+          </div>
+          <div class="menu-yoy-card menu-yoy-pct">
+            <div class="menu-yoy-lbl">Variación %</div>
+            <div class="menu-yoy-big" id="menu-yoy-pct">—</div>
+            <div class="menu-yoy-foot" id="menu-yoy-pct-foot">VAR% # o cálculo vs año ant.</div>
+          </div>
+        </div>
+        <div class="menu-yoy-bar-wrap">
+          <div class="menu-yoy-bar-labels"><span>Peor</span><span id="menu-yoy-bar-center">0% = igual al año anterior</span><span>Mejor</span></div>
+          <div class="menu-yoy-bar"><div id="menu-yoy-bar-fill"></div><div id="menu-yoy-bar-zero" title="Referencia año anterior"></div></div>
+        </div>
+        <div class="menu-yoy-tables">
+          <div class="menu-yoy-col">
+            <div class="menu-yoy-tbl-title">🟢 Mejor vs año anterior</div>
+            <div id="menu-yoy-top" class="menu-yoy-tbl-body"></div>
+          </div>
+          <div class="menu-yoy-col">
+            <div class="menu-yoy-tbl-title">🔴 Peor vs año anterior</div>
+            <div id="menu-yoy-low" class="menu-yoy-tbl-body"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-report-block menu-sigec-panel">
         <div class="menu-sigec-hdr">
           <div class="menu-sigec-title"><i class="ti ti-traffic-lights"></i> Cómo vamos según SIGEC</div>
           <div class="menu-sigec-sem" id="menu-sigec-sem-lbl">—</div>
@@ -1159,7 +1232,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <span id="menu-glpi-neg">—</span> negadas
         </div>
       </div>
-      <div class="menu-mcm-panel">
+
+      <div class="menu-report-block menu-mcm-panel">
         <div class="menu-mcm-hdr">
           <div class="menu-mcm-title">🎯 Radar Comercial MCM</div>
           <div class="menu-mcm-sub" id="menu-mcm-sub">Indicadores críticos · alto rendimiento PYV</div>
@@ -1169,35 +1243,20 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </div>
       </div>
 
-      </div><!-- menu-dashboard-main -->
-
-      <aside class="menu-dashboard-map">
-      <div class="menu-mapa-panel" id="menu-mapa-panel">
-        <div class="menu-mapa-hdr">
+      <div class="menu-report-block menu-kpi-block">
+        <div class="menu-report-hdr">
           <div>
-            <div class="menu-mapa-title">🗺️ Departamentos y Capitales · Colombia</div>
-            <div class="menu-mapa-sub" id="menu-mapa-sub">Mapa comercial PYV · 32 departamentos + sedes</div>
-          </div>
-          <div class="menu-mapa-tabs" id="menu-mapa-tabs">
-            <button type="button" class="menu-mapa-tab active" data-layer="capacidad" onclick="setMapaColombiaLayer('capacidad')" title="Sedes por departamento">🏢 Sedes</button>
-            <button type="button" class="menu-mapa-tab" data-layer="meta" onclick="setMapaColombiaLayer('meta')" title="Meta S2">🎯 Meta</button>
-            <button type="button" class="menu-mapa-tab" data-layer="colocacion" onclick="setMapaColombiaLayer('colocacion')" title="Colocación">📈 Coloc.</button>
-            <button type="button" class="menu-mapa-tab" data-layer="cumplimiento" onclick="setMapaColombiaLayer('cumplimiento')" title="Cumplimiento">🚦 %</button>
+            <div class="menu-kpi-block-title">Indicadores rápidos</div>
+            <div class="menu-kpi-block-sub">SIGEC · GLPI · Pipeline · HubSpot · Cartera (corte día anterior)</div>
           </div>
         </div>
-        <div id="menu-mapa-chart" class="menu-mapa-chart"></div>
-        <div class="menu-mapa-leyenda" id="menu-mapa-leyenda"></div>
-      </div>
-      </aside>
-
-      </div><!-- menu-dashboard -->
-
-      <div class="menu-kpi-strip menu-kpi-compact">
-        <div class="menu-kpi menu-kpi-blue"><div class="menu-kpi-lbl">SIGEC</div><div class="menu-kpi-val" id="menu-kpi-sigec">—</div></div>
-        <div class="menu-kpi menu-kpi-purple"><div class="menu-kpi-lbl">GLPI</div><div class="menu-kpi-val" id="menu-kpi-glpi">—</div></div>
-        <div class="menu-kpi menu-kpi-green"><div class="menu-kpi-lbl">Pipeline</div><div class="menu-kpi-val" id="menu-kpi-leads">—</div></div>
-        <div class="menu-kpi menu-kpi-orange"><div class="menu-kpi-lbl">HubSpot</div><div class="menu-kpi-val" id="menu-kpi-hub">—</div></div>
-        <div class="menu-kpi menu-kpi-red"><div class="menu-kpi-lbl">Cartera</div><div class="menu-kpi-val" id="menu-kpi-cartera">—</div></div>
+        <div class="menu-kpi-strip menu-kpi-compact">
+          <div class="menu-kpi menu-kpi-blue"><div class="menu-kpi-lbl">SIGEC</div><div class="menu-kpi-val" id="menu-kpi-sigec">—</div></div>
+          <div class="menu-kpi menu-kpi-purple"><div class="menu-kpi-lbl">GLPI</div><div class="menu-kpi-val" id="menu-kpi-glpi">—</div></div>
+          <div class="menu-kpi menu-kpi-green"><div class="menu-kpi-lbl">Pipeline</div><div class="menu-kpi-val" id="menu-kpi-leads">—</div></div>
+          <div class="menu-kpi menu-kpi-orange"><div class="menu-kpi-lbl">HubSpot</div><div class="menu-kpi-val" id="menu-kpi-hub">—</div></div>
+          <div class="menu-kpi menu-kpi-red"><div class="menu-kpi-lbl">Cartera</div><div class="menu-kpi-val" id="menu-kpi-cartera">—</div></div>
+        </div>
       </div>
 
       <div class="menu-footer">© 2024–2026 Cooperativa Minuto de Dios · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía</div>
@@ -1274,53 +1333,43 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-orange{border-color:rgba(0,176,185,.25)} .menu-kpi-orange .menu-kpi-val{color:var(--teal)}
 .menu-kpi-red{border-color:rgba(239,68,68,.25)} .menu-kpi-red .menu-kpi-val{color:var(--red)}
 .menu-layout{display:flex;gap:0;min-height:calc(100vh - 180px);align-items:stretch}
-.menu-sidebar{width:240px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:12px 10px 16px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
-.menu-sidebar-title{font-size:10px;font-weight:800;color:var(--dark);margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--teal-l);letter-spacing:.3px}
+.menu-sidebar{width:260px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:16px 14px 20px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
+.menu-sidebar-title{font-size:11px;font-weight:800;color:var(--dark);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--teal-l)}
 .menu-main-panel{flex:1;min-width:0;overflow-x:hidden}
-.menu-sidebar .menu-modules{margin-top:0;gap:8px}
-.menu-sidebar .menu-module{padding:8px 8px 6px;border-radius:10px}
-.menu-sidebar .menu-module-hdr{margin-bottom:6px;padding-bottom:6px}
-.menu-sidebar .menu-mod-badge{font-size:9px}
-.menu-sidebar .menu-mod-note{font-size:7px}
-.menu-sidebar .menu-grid-modules{grid-template-columns:1fr;gap:4px}
-.menu-sidebar .menu-card{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:auto;padding:7px 9px;text-align:left;border-radius:8px}
-.menu-sidebar .menu-card-icon{font-size:16px;margin-bottom:0;flex-shrink:0;width:22px;text-align:center}
-.menu-sidebar .menu-card-title{font-size:10px;line-height:1.2}
+.menu-sidebar .menu-modules{margin-top:0;gap:12px}
+.menu-sidebar .menu-module{padding:12px;border-radius:12px}
+.menu-sidebar .menu-module-hdr{margin-bottom:8px;padding-bottom:8px}
+.menu-sidebar .menu-grid-modules{grid-template-columns:1fr;gap:6px}
+.menu-sidebar .menu-card{display:flex;flex-direction:row;align-items:center;gap:10px;min-height:auto;padding:9px 11px;border-radius:10px}
+.menu-sidebar .menu-card-icon{font-size:17px;margin-bottom:0;flex-shrink:0;width:24px;text-align:center}
+.menu-sidebar .menu-card-title{font-size:11px;line-height:1.25}
 .menu-sidebar .menu-card-desc{display:none}
-.menu-dashboard{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
-.menu-dashboard-main{display:flex;flex-direction:column;gap:12px;min-width:0}
-.menu-dashboard-map{min-width:0}
-.menu-export-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0}
-.menu-export-lbl{font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-right:4px}
-.menu-export-btn{padding:6px 12px;border-radius:8px;border:none;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif}
-.menu-export-btn-excel{background:#003D45;color:#FFD900}
-.menu-export-btn-pdf{background:#b91c1c;color:#fff}
-.menu-mapa-panel{margin:0;padding:12px;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 8px rgba(0,61,69,.08)}
-.menu-mapa-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.menu-mapa-title{font-size:12px;font-weight:800;color:var(--dark);line-height:1.3}
-.menu-mapa-sub{font-size:8px;color:var(--gray);margin-top:2px}
-.menu-mapa-tabs{display:flex;flex-wrap:wrap;gap:4px}
-.menu-mapa-tab{border:1px solid var(--border);background:var(--bg);color:var(--dark);border-radius:6px;padding:4px 8px;font-size:8px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s;white-space:nowrap}
-.menu-mapa-tab:hover,.menu-mapa-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
-.menu-mapa-chart{width:100%;height:420px;min-height:320px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}
-.menu-mapa-leyenda{font-size:8px;color:var(--gray);margin-top:6px;text-align:center;line-height:1.4}
-.menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:280px;font-size:11px;color:#64748b;text-align:center;padding:16px}
+.menu-nacional-panel{padding:24px 28px 32px;background:var(--bg);max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:4px}
+.menu-report-block{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:26px;box-shadow:0 2px 12px rgba(0,61,69,.05)}
+.menu-kpi-block-title{font-size:14px;font-weight:800;color:var(--dark)}
+.menu-kpi-block-sub{font-size:10px;color:var(--gray);margin-top:4px}
+.menu-report-hdr{margin-bottom:14px}
+.menu-mapa-panel{margin-bottom:22px}
+.menu-mapa-title{font-size:15px;font-weight:800;color:var(--dark);line-height:1.3}
+.menu-mapa-sub{font-size:11px;color:var(--gray);margin-top:4px;line-height:1.45;max-width:640px}
+.menu-mapa-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.menu-mapa-tab{border:1px solid var(--border);background:var(--bg);color:var(--dark);border-radius:8px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
+.menu-mapa-tab:hover{border-color:var(--teal);background:var(--teal-l)}
+.menu-mapa-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
+.menu-mapa-chart{width:100%;height:400px;min-height:340px;background:#fafbfc;border:1px solid #e2e8f0;border-radius:12px}
+.menu-mapa-resumen{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+@media(max-width:700px){.menu-mapa-resumen{grid-template-columns:1fr}}
+.menu-mapa-resumen-col{background:var(--bg);border-radius:10px;padding:10px 12px;border:1px solid var(--border)}
+.menu-mapa-resumen-lbl{font-size:9px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.menu-mapa-resumen-item{font-size:11px;color:var(--dark);padding:3px 0;line-height:1.4}
+.menu-mapa-leyenda{font-size:10px;color:var(--gray);margin-top:12px;text-align:center;line-height:1.5;padding-top:10px;border-top:1px solid var(--border)}
+.menu-mapa-ley-swatches{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:14px 20px}
+.menu-mapa-ley-item{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--dark)}
+.menu-ley-sw{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,61,69,.2);flex-shrink:0}
+.menu-ley-verde{background:#86efac}.menu-ley-amarillo{background:#fde68a}.menu-ley-rojo{background:#fca5a5}.menu-ley-gris{background:#e2e8f0}
+.menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;font-size:12px;color:#64748b;text-align:center;padding:20px}
 .menu-mapa-error{color:#dc2626;flex-direction:column}
-@media(min-width:1024px){
-  .menu-dashboard{grid-template-columns:1fr minmax(340px,44%);gap:16px}
-  .menu-dashboard-map{position:sticky;top:12px}
-  .menu-mapa-chart{height:min(72vh,560px);min-height:440px}
-  .menu-sidebar{width:220px}
-}
-@media(min-width:1280px){
-  .menu-dashboard{grid-template-columns:1fr minmax(400px,48%)}
-  .menu-sidebar{width:248px}
-  .menu-sidebar .menu-grid-modules{grid-template-columns:1fr 1fr;gap:5px}
-  .menu-sidebar .menu-card{flex-direction:column;align-items:flex-start;gap:2px;padding:8px}
-  .menu-sidebar .menu-card-icon{width:auto}
-}
-@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-right:none;border-bottom:1px solid var(--border)}.menu-sidebar .menu-grid-modules{grid-template-columns:repeat(2,1fr);gap:6px}.menu-sidebar .menu-card{flex-direction:column;align-items:flex-start}}
-.menu-nacional-panel{padding:14px 16px 20px;background:var(--bg)}
+@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-right:none;border-bottom:1px solid var(--border)}.menu-sidebar .menu-grid-modules{grid-template-columns:repeat(2,1fr);gap:8px}.menu-sidebar .menu-card{flex-direction:column;align-items:flex-start}}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
 .menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
@@ -1339,79 +1388,84 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-grid-modules .menu-card-icon{font-size:22px;margin-bottom:6px}
 .menu-grid-modules .menu-card-title{font-size:11px}
 .menu-grid-modules .menu-card-desc{font-size:9px;display:block;margin-top:3px}
-.menu-nacional-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.menu-nacional-title{color:var(--dark);font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px}
-.menu-nacional-title i{color:var(--teal)}
-.menu-nacional-fecha{color:var(--gray);font-size:10px}
-.menu-nac-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.menu-nacional-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.menu-nacional-title{color:var(--dark);font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.menu-nacional-fecha{color:var(--gray);font-size:11px}
+.menu-nac-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px}
 @media(min-width:700px){.menu-nac-grid{grid-template-columns:repeat(4,1fr)}}
-.menu-nac-card{background:#111;border:1px solid #222;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-.menu-nac-lbl{color:rgba(255,255,255,.45);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.menu-nac-big{color:#fff;font-size:22px;font-weight:900;margin-top:4px;line-height:1.1}
-.menu-nac-sub{color:rgba(255,255,255,.4);font-size:9px;margin-top:4px}
-.menu-nac-meta .menu-nac-big{color:var(--yellow)}
-.menu-nac-meta{border-top:3px solid var(--yellow)}
-.menu-nac-ejec .menu-nac-big{color:var(--teal)}
-.menu-nac-ejec{border-top:3px solid var(--teal)}
-.menu-nac-deber .menu-nac-big{color:#60a5fa}
-.menu-nac-deber{border-top:3px solid #60a5fa}
-.menu-nac-brecha .menu-nac-big{color:#f87171}
-.menu-nac-brecha{border-top:3px solid var(--red)}
-.menu-nac-bar-wrap{margin-bottom:14px;padding:12px 14px;background:#111;border-radius:12px;border:1px solid #222;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);margin-bottom:6px}
-.menu-nac-bar{position:relative;height:10px;background:#222;border-radius:6px;overflow:visible}
+.menu-nac-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.menu-nac-lbl{color:var(--gray);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.menu-nac-big{color:var(--dark);font-size:24px;font-weight:900;margin-top:6px;line-height:1.1}
+.menu-nac-sub{color:var(--text2);font-size:10px;margin-top:6px}
+.menu-nac-meta .menu-nac-big{color:#b45309}
+.menu-nac-ejec .menu-nac-big{color:var(--teal-d)}
+.menu-nac-deber .menu-nac-big{color:#2563eb}
+.menu-nac-brecha .menu-nac-big{color:#dc2626}
+.menu-nac-bar-wrap{margin-bottom:0;padding:14px 16px;background:var(--bg);border-radius:12px;border:1px solid var(--border)}
+.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--gray);margin-bottom:8px}
+.menu-nac-bar{position:relative;height:12px;background:#e2e8f0;border-radius:6px;overflow:visible}
 .menu-nac-bar>div:first-child{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--yellow));transition:width .8s ease}
-.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:16px;background:var(--yellow);border-radius:2px;box-shadow:0 0 6px rgba(255,217,0,.5)}
-.menu-nac-proy{color:rgba(255,255,255,.5);font-size:10px;margin-top:10px;text-align:center}
-.menu-sigec-panel{margin-bottom:14px;padding:14px;background:#0d0d0d;border-radius:12px;border:1px solid #222;border-left:4px solid var(--teal);box-shadow:0 2px 10px rgba(0,0,0,.3)}
-.menu-sigec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.menu-sigec-title{color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px}
-.menu-sigec-title i{color:var(--teal)}
-.menu-sigec-sem{font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px;background:#1a1a1a;color:var(--teal);border:1px solid #333}
-.menu-sigec-main{display:flex;gap:14px;align-items:center;margin-bottom:12px}
-.menu-sigec-circle{width:78px;height:78px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:#1a1a1a;transition:border-color .4s,background .4s}
-.menu-sigec-pct{font-size:18px;font-weight:900;color:#fff;line-height:1}
-.menu-sigec-pct-sub{font-size:7px;color:rgba(255,255,255,.45);text-align:center;margin-top:2px;padding:0 4px}
-.menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.menu-sigec-stat{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px}
-.menu-sigec-stat .lbl{display:block;color:rgba(255,255,255,.4);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.menu-sigec-stat .val{display:block;color:#fff;font-size:16px;font-weight:900;margin-top:3px}
-.menu-sig-fact .val{color:var(--teal)}
-.menu-sig-cfac .val{color:#fff}
-.menu-sig-cerr .val{color:var(--amber)}
-.menu-sig-abi .val{color:#60a5fa}
-.menu-sig-rech .val{color:var(--red)}
-.menu-sig-pend .val{color:var(--yellow)}
-.menu-sigec-bar-wrap{padding:10px 12px;background:#1a1a1a;border-radius:10px;border:1px solid #2a2a2a}
-.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,.4);margin-bottom:5px}
-.menu-sigec-bar{height:8px;background:#333;border-radius:5px;overflow:hidden}
-.menu-sigec-bar>div{height:100%;border-radius:5px;background:var(--green);transition:width .8s ease,background .4s}
-.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);margin-top:8px;flex-wrap:wrap;gap:4px}
-.menu-sigec-glpi{margin-top:10px;font-size:9px;color:rgba(255,255,255,.5);text-align:center}
-.menu-sigec-glpi .glpi-lbl{color:var(--teal);font-weight:800;margin-right:4px}
-.menu-sigec-glpi .glpi-sep{margin:0 4px;color:#444}
-.menu-mcm-panel{margin-bottom:14px;padding:14px;background:#0a0a0a;border-radius:12px;border:1px solid #222;border-left:4px solid var(--yellow);box-shadow:0 2px 10px rgba(0,0,0,.3)}
-.menu-mcm-hdr{margin-bottom:12px}
-.menu-mcm-title{color:#fff;font-size:13px;font-weight:800}
-.menu-mcm-sub{color:rgba(255,255,255,.4);font-size:9px;margin-top:3px}
-.menu-mcm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
-.menu-mcm-card{background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:10px 12px;position:relative;overflow:hidden}
-.menu-mcm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mcm-accent,#333)}
-.menu-mcm-emoji{font-size:18px;margin-bottom:4px}
-.menu-mcm-lbl{color:rgba(255,255,255,.45);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.35px}
-.menu-mcm-val{color:#fff;font-size:17px;font-weight:900;margin:3px 0 2px;line-height:1.1}
-.menu-mcm-sub2{color:rgba(255,255,255,.35);font-size:8px;line-height:1.35}
-.menu-mcm-sem{position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;background:#1a1a1a;border:1px solid #333}
-.menu-mcm-loading{color:rgba(255,255,255,.35);font-size:10px;text-align:center;padding:16px;grid-column:1/-1}
-.menu-kpi-compact{padding:0;background:transparent;border:none;gap:6px}
-.menu-kpi-compact .menu-kpi{min-width:90px;padding:8px 10px;background:#111;border-color:#222}
-.menu-kpi-compact .menu-kpi-lbl{color:rgba(255,255,255,.4)}
-.menu-kpi-compact .menu-kpi-val{color:#fff}
-.menu-kpi-compact .menu-kpi-blue .menu-kpi-val{color:var(--teal)}
-.menu-kpi-compact .menu-kpi-purple .menu-kpi-val{color:#a78bfa}
-.menu-kpi-compact .menu-kpi-green .menu-kpi-val{color:var(--green)}
-.menu-kpi-compact .menu-kpi-orange .menu-kpi-val{color:var(--yellow)}
-.menu-kpi-compact .menu-kpi-red .menu-kpi-val{color:#f87171}
+.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:18px;background:var(--yellow);border-radius:2px}
+.menu-nac-proy{color:var(--text2);font-size:11px;margin-top:12px;text-align:center}
+.menu-yoy-panel{margin-bottom:26px}
+.menu-yoy-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.menu-yoy-title{font-size:14px;font-weight:800;color:var(--dark);display:flex;align-items:center;gap:8px}
+.menu-yoy-sub{font-size:10px;color:var(--gray);margin-top:4px;max-width:520px;line-height:1.45}
+.menu-yoy-sem-wrap{text-align:center}
+.menu-yoy-sem{font-size:11px;font-weight:800;padding:6px 14px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--dark)}
+.menu-yoy-sem-lbl{font-size:8px;color:var(--gray);margin-top:4px;font-weight:700;text-transform:uppercase}
+.menu-yoy-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+@media(min-width:800px){.menu-yoy-grid{grid-template-columns:repeat(4,1fr)}}
+.menu-yoy-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.menu-yoy-lbl{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.3px}
+.menu-yoy-big{font-size:22px;font-weight:900;color:var(--dark);margin-top:6px;line-height:1.1}
+.menu-yoy-foot{font-size:9px;color:var(--text2);margin-top:6px}
+.menu-yoy-bar-wrap{padding:12px 14px;background:var(--bg);border-radius:12px;border:1px solid var(--border);margin-bottom:14px}
+.menu-yoy-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--gray);margin-bottom:8px}
+.menu-yoy-bar{position:relative;height:12px;background:linear-gradient(90deg,#fca5a5,#fde68a,#86efac);border-radius:6px}
+.menu-yoy-bar>div:first-child{position:absolute;top:0;height:100%;width:3px;background:var(--dark);border-radius:2px;transition:left .6s ease}
+.menu-yoy-bar-zero{position:absolute;top:-3px;width:3px;height:18px;background:#64748b;border-radius:2px;left:50%;transform:translateX(-50%)}
+.menu-yoy-tables{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.menu-yoy-tables{grid-template-columns:1fr}}
+.menu-yoy-tbl-title{font-size:10px;font-weight:800;color:var(--dark);margin-bottom:8px}
+.menu-yoy-tbl-body{max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
+.menu-yoy-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);font-size:10px}
+.menu-yoy-row:last-child{border-bottom:none}
+.menu-yoy-row-nombre{font-weight:600;color:var(--dark);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu-yoy-row-val{font-weight:800;flex-shrink:0}
+.menu-sigec-panel .menu-sigec-hdr{margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.menu-sigec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.menu-sigec-title{color:var(--dark);font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.menu-sigec-sem{font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;background:var(--teal-l);color:var(--teal-d);border:1px solid rgba(0,176,185,.3)}
+.menu-sigec-main{display:flex;gap:18px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.menu-sigec-circle{width:84px;height:84px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:#fff}
+.menu-sigec-pct{font-size:20px;font-weight:900;color:var(--dark);line-height:1}
+.menu-sigec-pct-sub{font-size:8px;color:var(--gray);text-align:center;margin-top:2px;padding:0 4px}
+.menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;min-width:200px}
+.menu-sigec-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.menu-sigec-stat .lbl{display:block;color:var(--gray);font-size:8px;font-weight:700;text-transform:uppercase}
+.menu-sigec-stat .val{display:block;color:var(--dark);font-size:17px;font-weight:900;margin-top:4px}
+.menu-sigec-bar-wrap{padding:12px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)}
+.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--gray);margin-bottom:6px}
+.menu-sigec-bar{height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden}
+.menu-sigec-bar>div{height:100%;border-radius:5px;background:var(--green);transition:width .8s ease}
+.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:10px;flex-wrap:wrap;gap:6px}
+.menu-sigec-glpi{margin-top:12px;font-size:10px;color:var(--text2);text-align:center;padding-top:10px;border-top:1px solid var(--border)}
+.menu-mcm-panel .menu-mcm-hdr{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.menu-mcm-title{color:var(--dark);font-size:14px;font-weight:800}
+.menu-mcm-sub{color:var(--gray);font-size:10px;margin-top:4px}
+.menu-mcm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.menu-mcm-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative}
+.menu-mcm-lbl{color:var(--gray);font-size:8px;font-weight:700;text-transform:uppercase}
+.menu-mcm-val{color:var(--dark);font-size:18px;font-weight:900;margin:4px 0 3px}
+.menu-mcm-sub2{color:var(--text2);font-size:9px;line-height:1.4}
+.menu-mcm-sem{position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;padding:3px 7px;border-radius:6px;background:#fff;border:1px solid var(--border)}
+.menu-mcm-loading{color:var(--gray);font-size:11px;text-align:center;padding:20px;grid-column:1/-1}
+.menu-kpi-compact{padding:4px 0 0;gap:12px}
+.menu-kpi-block .menu-kpi-compact .menu-kpi{background:var(--bg)}
+.menu-kpi-compact .menu-kpi{flex:1;min-width:100px;padding:12px 14px;background:var(--white);border-color:var(--border)}
+.menu-kpi-compact .menu-kpi-lbl{color:var(--gray)}
+.menu-kpi-compact .menu-kpi-val{color:var(--dark)}
 .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
 .menu-card{position:relative;padding:14px 12px;border-radius:12px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .2s;background:var(--white);border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .menu-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,176,185,.14);border-color:var(--teal);background:var(--teal-l)}
@@ -1434,16 +1488,16 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-card-indigo{border-left:4px solid #818cf8}
 
 .menu-version-badge{font-size:9px;font-weight:700;color:var(--teal-d);margin-top:4px;padding:2px 8px;background:var(--teal-l);border-radius:6px;display:inline-block}
-.menu-salud-panel{margin-bottom:14px;padding:14px;background:linear-gradient(135deg,#f0fdf4,#fff);border:1px solid rgba(174,201,0,.35);border-radius:14px;border-left:4px solid var(--green)}
-.menu-salud-hdr{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
-.menu-salud-title{font-size:13px;font-weight:800;color:var(--dark)}
-.menu-salud-sub{font-size:9px;color:var(--gray);margin-top:3px;max-width:420px}
+.menu-salud-panel{margin-bottom:22px;padding:20px 22px;background:linear-gradient(135deg,#f0fdf4,#fff);border:1px solid rgba(174,201,0,.35);border-radius:16px;border-left:4px solid var(--green);box-shadow:0 2px 12px rgba(0,61,69,.05)}
+.menu-salud-hdr{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.menu-salud-title{font-size:14px;font-weight:800;color:var(--dark)}
+.menu-salud-sub{font-size:10px;color:var(--gray);margin-top:4px;max-width:520px}
 .menu-salud-score-wrap{display:flex;align-items:center;gap:10px}
-.menu-salud-circle{width:64px;height:64px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff}
-.menu-salud-pct{font-size:18px;font-weight:900;color:var(--dark);line-height:1}
-.menu-salud-pct-lbl{font-size:7px;color:var(--gray);font-weight:700}
-.menu-salud-sem{font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;background:#111;color:#fff}
-.menu-salud-dims{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.menu-salud-circle{width:68px;height:68px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff}
+.menu-salud-pct{font-size:20px;font-weight:900;color:var(--dark);line-height:1}
+.menu-salud-pct-lbl{font-size:8px;color:var(--gray);font-weight:700}
+.menu-salud-sem{font-size:10px;font-weight:800;padding:5px 12px;border-radius:8px;background:var(--dark);color:#fff}
+.menu-salud-dims{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .menu-salud-dim{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px}
 .menu-salud-dim-lbl{font-size:7px;font-weight:700;color:var(--gray);text-transform:uppercase}
 .menu-salud-dim-val{font-size:14px;font-weight:900;color:var(--dark);margin-top:2px}
@@ -3335,7 +3389,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.1';
+var APP_VERSION = 'pyv-comercial-5.4.5';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3870,14 +3924,143 @@ window.abrirHubSpotActividad = abrirHubSpotActividad;
 
 function _normMallaTxt(s){ return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
 
+function _parseHoraMalla(val){
+  if(val == null || val === '') return '';
+  if(val instanceof Date && !isNaN(val.getTime())){
+    return String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0');
+  }
+  var s = String(val).trim();
+  if(!s || s === '—' || s === '-') return '';
+  var dm = s.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+)/);
+  if(dm) return String(parseInt(dm[4],10)).padStart(2,'0')+':'+String(parseInt(dm[5],10)).padStart(2,'0');
+  var n = parseFloat(s.replace(',','.'));
+  if(!isNaN(n)){
+    var frac = n >= 1 ? (n - Math.floor(n)) : n;
+    if(frac >= 0 && frac < 1){
+      var mins = Math.round(frac * 24 * 60);
+      return String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
+    }
+  }
+  var rango = s.match(/(\d{1,2}:\d{2})\s*[–\-]\s*(\d{1,2}:\d{2})/);
+  if(rango) return _parseHoraMalla(rango[1]);
+  var tm = s.match(/(\d{1,2}):(\d{2})/);
+  if(tm){
+    var hh = parseInt(tm[1],10), mm = parseInt(tm[2],10);
+    var low = s.toLowerCase();
+    if((low.indexOf('p')>=0 || low.indexOf('pm')>=0) && hh < 12) hh += 12;
+    if((low.indexOf('a')>=0 || low.indexOf('am')>=0) && hh === 12) hh = 0;
+    return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+  }
+  return s;
+}
+function _minutosHoraMalla(hhmm){
+  if(!hhmm || hhmm === '—') return null;
+  var p = String(hhmm).match(/^(\d{1,2}):(\d{2})/);
+  if(!p) return null;
+  return parseInt(p[1],10)*60 + parseInt(p[2],10);
+}
+function _estaEnFranjaHoraria(ini, fin, now){
+  var a = _minutosHoraMalla(ini), b = _minutosHoraMalla(fin);
+  if(a == null || b == null) return false;
+  var cur = now.getHours()*60 + now.getMinutes();
+  if(b <= a) return cur >= a || cur < b;
+  return cur >= a && cur < b;
+}
+function _mallaEsFechaHoy(fechaVal, hoy){
+  if(!fechaVal) return false;
+  if(fechaVal instanceof Date && !isNaN(fechaVal.getTime())){
+    return fechaVal.getFullYear()===hoy.getFullYear() && fechaVal.getMonth()===hoy.getMonth() && fechaVal.getDate()===hoy.getDate();
+  }
+  var s = String(fechaVal).trim();
+  var dm = s.match(/Date\((\d+),(\d+),(\d+)/);
+  if(dm) return parseInt(dm[1],10)===hoy.getFullYear() && parseInt(dm[2],10)===hoy.getMonth() && parseInt(dm[3],10)===hoy.getDate();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)){
+    var p = s.slice(0,10).split('-');
+    return parseInt(p[0],10)===hoy.getFullYear() && parseInt(p[1],10)===(hoy.getMonth()+1) && parseInt(p[2],10)===hoy.getDate();
+  }
+  try{
+    var d = new Date(s);
+    if(!isNaN(d.getTime())) return d.getFullYear()===hoy.getFullYear() && d.getMonth()===hoy.getMonth() && d.getDate()===hoy.getDate();
+  }catch(e){}
+  return s.indexOf(String(hoy.getDate()))>=0 && s.toLowerCase().indexOf((hoy.toLocaleDateString('es-CO',{month:'long'})||'').toLowerCase())>=0;
+}
+function _mallaCargarEstadoApp(){
+  window._mallaEnTurnoApp = window._mallaEnTurnoApp || [];
+  window._mallaCerroApp = window._mallaCerroApp || [];
+  var promApp = Promise.resolve();
+  if(typeof SHEETS_URL !== 'undefined' && SHEETS_URL){
+    promApp = fetch(SHEETS_URL+'?accion=resumenGerencial&_='+Date.now()).then(function(r){ return r.json(); }).then(function(e){
+      if(!e || !e.ok) return;
+      window._mallaEnTurnoApp = (e.enTurnoCorreos||[]).map(function(c){ return String(c||'').toLowerCase(); });
+      window._resumenGerencial = window._resumenGerencial || {};
+      window._resumenGerencial.enTurnoCorreos = window._mallaEnTurnoApp.slice();
+      window._resumenGerencial.loginsHoyCorreos = (e.loginsHoyCorreos||[]).map(function(c){ return String(c||'').toLowerCase(); });
+    }).catch(function(){});
+  }
+  var promMarc = Promise.resolve();
+  if(typeof _leerHoja === 'function' && typeof SHEETS_HOJAS !== 'undefined' && SHEETS_HOJAS.segMarcaciones){
+    var hoy = new Date();
+    promMarc = _leerHoja(SHEETS_HOJAS.segMarcaciones).then(function(filas){
+      var cerro = {}, ingreso = {};
+      (filas||[]).forEach(function(row){
+        var cols = row._cols || row._c || [];
+        var correo = String(row.correo || row.CORREO || row.Correo || cols[2] || '').toLowerCase().trim();
+        var tipo = String(row.tipo || row.TIPO || row.Tipo || cols[0] || '').toUpperCase();
+        var fecha = row.fecha || row.FECHA || row.timestamp || cols[3] || cols[4] || '';
+        if(!correo || !_mallaEsFechaHoy(fecha, hoy)) return;
+        if(tipo.indexOf('INGRESO')>=0) ingreso[correo] = true;
+        if(tipo.indexOf('FIN')>=0 || tipo.indexOf('SALIDA')>=0 || tipo.indexOf('EGRESO')>=0) cerro[correo] = true;
+      });
+      window._mallaCerroApp = Object.keys(cerro);
+      window._mallaIngresoApp = Object.keys(ingreso);
+    }).catch(function(){ window._mallaCerroApp = []; });
+  }
+  return Promise.all([promApp, promMarc]);
+}
+function _mallaEstadoApp(correo){
+  var c = String(correo||'').toLowerCase();
+  if(!c) return {lbl:'Sin correo', col:'#94a3b8', code:'sin-correo'};
+  var enTurno = (window._mallaEnTurnoApp||[]).indexOf(c)>=0;
+  var cerro = (window._mallaCerroApp||[]).indexOf(c)>=0;
+  if(enTurno) return {lbl:'Turno abierto (sin cierre)', col:'#fbbf24', code:'sin-cierre'};
+  if(cerro) return {lbl:'Cerró turno en app', col:'#4ade80', code:'cerro'};
+  if((window._mallaIngresoApp||[]).indexOf(c)>=0) return {lbl:'Marcó ingreso hoy', col:'#93c5fd', code:'ingreso'};
+  return {lbl:'Sin marca en app', col:'#f87171', code:'sin-marca'};
+}
+function _mallaEnriquecerItem(it){
+  var now = new Date();
+  var ini = it.turnoInicio || '—', fin = it.turnoFin || '—';
+  it.enFranjaAhora = !it.sinTurno && _estaEnFranjaHoraria(ini, fin, now);
+  var app = _mallaEstadoApp(it.correo);
+  it.estadoApp = app.lbl;
+  it.estadoAppCode = app.code;
+  it.estadoAppCol = app.col;
+  return it;
+}
+function _mallaContarVivos(){
+  var lista = (window._mallaTurnosHoy||[]).map(_mallaEnriquecerItem);
+  var enFranja = lista.filter(function(it){ return it.enFranjaAhora; });
+  var sinCierre = enFranja.filter(function(it){ return it.estadoAppCode==='sin-cierre'; });
+  var cerro = lista.filter(function(it){ return it.estadoAppCode==='cerro'; });
+  var sinMarca = enFranja.filter(function(it){ return it.estadoAppCode==='sin-marca'; });
+  return {enFranja:enFranja.length, sinCierre:sinCierre.length, cerro:cerro.length, sinMarca:sinMarca.length, hora:nowHoraStr()};
+}
+function nowHoraStr(){ return new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); }
+
 function _turnoDiaDesdeCols(o, diaMes) {
   var ci = 7 + (diaMes - 1) * 2;
-  var hi = (o[ci]||'').toString().trim();
-  var hf = (o[ci+1]||'').toString().trim();
+  var rawHi = o[ci], rawHf = o[ci+1];
+  var hi = _parseHoraMalla(rawHi);
+  var hf = _parseHoraMalla(rawHf);
+  if(!hi && !hf){
+    var comb = _parseHoraMalla(rawHi) || _parseHoraMalla(rawHf) || String(rawHi||rawHf||'').trim();
+    var rg = String(comb).match(/(\d{1,2}:\d{2})\s*[–\-]\s*(\d{1,2}:\d{2})/);
+    if(rg){ hi = _parseHoraMalla(rg[1]); hf = _parseHoraMalla(rg[2]); }
+  }
   if(!hi && !hf) return {texto:'', inicio:'', fin:''};
-  var up = (hi+' '+hf).toUpperCase();
-  if(up.indexOf('DESCANSO')>=0 || hi==='D' || hi==='-' || hf==='-') return {texto:'DESCANSO', inicio:'—', fin:'—'};
-  if(hi && hf && hi.indexOf(':')>=0 && hf.indexOf(':')>=0) return {texto: hi + ' – ' + hf, inicio: hi, fin: hf};
+  var up = (String(rawHi||'')+' '+String(rawHf||'')).toUpperCase();
+  if(up.indexOf('DESCANSO')>=0 || rawHi==='D' || rawHi==='-' || rawHf==='-') return {texto:'DESCANSO', inicio:'—', fin:'—'};
+  if(hi && hf) return {texto: hi + ' – ' + hf, inicio: hi, fin: hf};
   var t = hi || hf || '';
   return {texto: t, inicio: hi || t, fin: hf || '—'};
 }
@@ -3973,16 +4156,31 @@ function _renderTablaMallaHoy(filtro) {
     lista = (window._mallaTurnosSinHoy||[]).slice();
   } else if(modo === 'malla') {
     lista = (window._mallaTurnosIndex||[]).slice();
+  } else if(modo === 'en-vivo') {
+    lista = (window._mallaTurnosHoy||[]).map(_mallaEnriquecerItem).filter(function(it){ return it.enFranjaAhora; });
+  } else if(modo === 'sin-cierre-app') {
+    lista = (window._mallaTurnosHoy||[]).map(_mallaEnriquecerItem).filter(function(it){ return it.enFranjaAhora && it.estadoAppCode==='sin-cierre'; });
+  } else if(modo === 'cerro-app') {
+    lista = (window._mallaTurnosHoy||[]).map(_mallaEnriquecerItem).filter(function(it){ return it.estadoAppCode==='cerro'; });
   } else {
     lista = (window._mallaTurnosHoy||[]).slice();
   }
   var kf = document.getElementById('malla-kpi-filas');
   var kh = document.getElementById('malla-kpi-hoy');
   var ks = document.getElementById('malla-kpi-sin');
+  var kv = document.getElementById('malla-kpi-vivo');
+  var ksc = document.getElementById('malla-kpi-sin-cierre');
+  var kca = document.getElementById('malla-kpi-cerro-app');
+  var live = _mallaContarVivos();
   if(kf) kf.textContent = (window._mallaTurnosIndex||[]).length;
   if(kh) kh.textContent = (window._mallaTurnosHoy||[]).length;
   if(ks) ks.textContent = (window._mallaTurnosSinHoy||[]).length;
-  ['con-turno','sin-turno','malla'].forEach(function(m){
+  if(kv) kv.textContent = live.enFranja;
+  if(ksc) ksc.textContent = live.sinCierre;
+  if(kca) kca.textContent = live.cerro;
+  var horaLbl = document.getElementById('malla-hora-actual');
+  if(horaLbl) horaLbl.textContent = live.hora;
+  ['con-turno','sin-turno','malla','en-vivo','sin-cierre-app','cerro-app'].forEach(function(m){
     var b = document.getElementById('malla-btn-'+m);
     if(b){
       var active = modo === m;
@@ -3993,26 +4191,42 @@ function _renderTablaMallaHoy(filtro) {
   });
   if(!lista.length) {
     var msg = q ? 'Sin resultados para «'+q.replace(/</g,'&lt;')+'»'
-      : (modo==='sin-turno' ? 'Nadie sin turno en la malla hoy' : (modo==='malla' ? 'Malla vacía' : 'Nadie con turno programado hoy'));
+      : (modo==='sin-turno' ? 'Nadie sin turno en la malla hoy'
+        : (modo==='malla' ? 'Malla vacía'
+          : (modo==='en-vivo' ? 'Nadie en franja horaria a esta hora ('+nowHoraStr()+')'
+            : (modo==='sin-cierre-app' ? 'Nadie con turno abierto sin cierre en app'
+              : (modo==='cerro-app' ? 'Nadie ha cerrado turno en la app hoy' : 'Nadie con turno programado hoy')))));
     el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:12px">'+msg+'</div>';
     return;
   }
   var fecha = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
-  var modoLbl = modo==='sin-turno' ? 'sin turno hoy' : (modo==='malla' ? 'en malla completa' : 'con turno hoy');
-  var html = '<div style="color:rgba(255,255,255,.45);font-size:10px;margin-bottom:10px">'+fecha+' · '+lista.length+' colaborador'+(lista.length!==1?'es':'')+' '+modoLbl+'</div>';
+  var modoLbl = modo==='sin-turno' ? 'sin turno hoy'
+    : (modo==='malla' ? 'en malla completa'
+      : (modo==='en-vivo' ? 'en franja horaria ahora ('+nowHoraStr()+')'
+        : (modo==='sin-cierre-app' ? 'con turno abierto sin cierre en app'
+          : (modo==='cerro-app' ? 'que cerraron turno en la app' : 'con turno programado hoy'))));
+  var html = '<div style="color:rgba(255,255,255,.45);font-size:10px;margin-bottom:10px">'+fecha+' · Hora actual: <b id="malla-hora-actual">'+nowHoraStr()+'</b> · '+lista.length+' colaborador'+(lista.length!==1?'es':'')+' '+modoLbl+'</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:rgba(147,197,253,.15)">';
-  ['Nombre','Cédula','Sede','Cargo','Inicio','Fin','Estado'].forEach(function(h){
+  ['Nombre','Cédula','Sede','Cargo','Inicio malla','Fin malla','Horario ahora','App turno'].forEach(function(h){
     html += '<th style="padding:8px;text-align:left;color:#93c5fd;font-size:9px;text-transform:uppercase;letter-spacing:.3px">'+h+'</th>';
   });
   html += '</tr></thead><tbody>';
   lista.sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||'','es'); });
   lista.forEach(function(it){
-    var th = it.turnoHoy || (it.dias&&it.dias[hoy.getDate()-1]) || '—';
+    it = _mallaEnriquecerItem(it);
     var ini = it.turnoInicio || '—';
     var fin = it.turnoFin || '—';
-    var esDesc = th.toUpperCase().indexOf('DESCANSO')>=0 || it.sinTurno;
-    var col = esDesc ? '#94a3b8' : '#4ade80';
-    var estado = esDesc ? (th.toUpperCase()==='DESCANSO'?'DESCANSO':'SIN TURNO') : 'EN TURNO';
+    var esDesc = it.sinTurno || String(it.turnoHoy||'').toUpperCase().indexOf('DESCANSO')>=0;
+    var horarioAhora, horarioCol;
+    if(esDesc){
+      horarioAhora = 'DESCANSO'; horarioCol = '#94a3b8';
+    } else if(it.enFranjaAhora){
+      horarioAhora = 'EN TURNO AHORA'; horarioCol = '#4ade80';
+    } else {
+      var a = _minutosHoraMalla(ini), cur = new Date().getHours()*60+new Date().getMinutes();
+      horarioAhora = (a != null && cur < a) ? 'Antes de turno' : 'Fuera de horario';
+      horarioCol = '#94a3b8';
+    }
     html += '<tr style="border-bottom:1px solid rgba(255,255,255,.06)">';
     html += '<td style="padding:7px 8px;color:#e2e8f0;font-weight:600">'+(it.nombre||'—')+'</td>';
     html += '<td style="padding:7px 8px;color:rgba(255,255,255,.5)">'+(it.cedula||'—')+'</td>';
@@ -4020,7 +4234,8 @@ function _renderTablaMallaHoy(filtro) {
     html += '<td style="padding:7px 8px;color:rgba(255,255,255,.55);font-size:10px">'+(it.cargo||'—')+'</td>';
     html += '<td style="padding:7px 8px;color:#93c5fd;font-weight:700;white-space:nowrap">'+ini+'</td>';
     html += '<td style="padding:7px 8px;color:#93c5fd;font-weight:700;white-space:nowrap">'+fin+'</td>';
-    html += '<td style="padding:7px 8px;color:'+col+';font-weight:700;white-space:nowrap;font-size:10px">'+estado+'</td>';
+    html += '<td style="padding:7px 8px;color:'+horarioCol+';font-weight:700;white-space:nowrap;font-size:10px">'+horarioAhora+'</td>';
+    html += '<td style="padding:7px 8px;color:'+it.estadoAppCol+';font-weight:700;white-space:nowrap;font-size:10px">'+it.estadoApp+'</td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -4034,30 +4249,36 @@ window._setMallaVista = function(modo){
 window.filtrarMallaHoy = function(v){ _renderTablaMallaHoy(v); };
 
 function abrirMallaTurnos() {
-  window._mallaVistaModo = 'con-turno';
+  window._mallaVistaModo = 'en-vivo';
   var hoy = new Date();
   var nHoy = (window._mallaTurnosHoy||[]).length;
   var nIdx = (window._mallaTurnosIndex||[]).length;
   var nSin = (window._mallaTurnosSinHoy||[]).length;
+  var live = _mallaContarVivos();
   var fechaLbl = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
   var btnStyle = 'cursor:pointer;border-radius:20px;padding:5px 12px;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-family:Ubuntu,sans-serif';
   var contenido = '<div style="font-family:Ubuntu,sans-serif">'
     + '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">'
-    + '<div style="color:rgba(255,255,255,.5);font-size:11px"><i class="ti ti-calendar-event"></i> '+fechaLbl+'</div>'
+    + '<div style="color:rgba(255,255,255,.5);font-size:11px"><i class="ti ti-calendar-event"></i> '+fechaLbl+' · <b id="malla-hora-actual">'+nowHoraStr()+'</b></div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-    + '<span style="background:rgba(74,222,128,.12);color:#4ade80;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.25)"><span id="malla-kpi-hoy">'+nHoy+'</span> con turno</span>'
+    + '<span style="background:rgba(74,222,128,.12);color:#4ade80;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.25)"><span id="malla-kpi-vivo">'+live.enFranja+'</span> en turno ahora</span>'
+    + '<span style="background:rgba(251,191,36,.12);color:#fbbf24;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(251,191,36,.25)"><span id="malla-kpi-sin-cierre">'+live.sinCierre+'</span> sin cierre app</span>'
+    + '<span style="background:rgba(74,222,128,.08);color:#86efac;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.2)"><span id="malla-kpi-cerro-app">'+live.cerro+'</span> cerraron app</span>'
+    + '<span style="background:rgba(147,197,253,.1);color:#93c5fd;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(147,197,253,.2)"><span id="malla-kpi-hoy">'+nHoy+'</span> prog. hoy</span>'
     + '<span style="background:rgba(248,113,113,.1);color:#f87171;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(248,113,113,.2)"><span id="malla-kpi-sin">'+nSin+'</span> sin turno</span>'
-    + '<span style="background:rgba(147,197,253,.1);color:#93c5fd;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(147,197,253,.2)"><span id="malla-kpi-filas">'+nIdx+'</span> en malla</span>'
     + '</div></div>'
+    + '<div style="color:rgba(255,255,255,.35);font-size:9px;margin-bottom:10px;line-height:1.5">Horas leídas del Sheet (columnas inicio/fin del día). <b>En turno ahora</b> = dentro de la franja horaria actual. <b>App turno</b> = marca ingreso/cierre en la aplicación.</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">'
-    + '<button type="button" id="malla-btn-con-turno" onclick="_setMallaVista(\'con-turno\')" style="'+btnStyle+'">✅ Con turno hoy</button>'
-    + '<button type="button" id="malla-btn-sin-turno" onclick="_setMallaVista(\'sin-turno\')" style="'+btnStyle+'">⛔ Sin turno hoy</button>'
+    + '<button type="button" id="malla-btn-en-vivo" onclick="_setMallaVista(\'en-vivo\')" style="'+btnStyle+'">🟢 En turno ahora</button>'
+    + '<button type="button" id="malla-btn-sin-cierre-app" onclick="_setMallaVista(\'sin-cierre-app\')" style="'+btnStyle+'">⏳ Sin cierre app</button>'
+    + '<button type="button" id="malla-btn-cerro-app" onclick="_setMallaVista(\'cerro-app\')" style="'+btnStyle+'">✅ Cerró en app</button>'
+    + '<button type="button" id="malla-btn-con-turno" onclick="_setMallaVista(\'con-turno\')" style="'+btnStyle+'">📅 Programados hoy</button>'
+    + '<button type="button" id="malla-btn-sin-turno" onclick="_setMallaVista(\'sin-turno\')" style="'+btnStyle+'">⛔ Sin turno</button>'
     + '<button type="button" id="malla-btn-malla" onclick="_setMallaVista(\'malla\')" style="'+btnStyle+'">📋 Toda la malla</button>'
     + '</div>'
     + '<div style="margin-bottom:12px">'
     + '<input type="text" id="malla-buscar" placeholder="Buscar por nombre o cédula…" oninput="filtrarMallaHoy(this.value)" '
     + 'style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid rgba(147,197,253,.3);border-radius:10px;background:rgba(255,255,255,.06);color:#e2e8f0;font-size:12px;font-family:Ubuntu,sans-serif">'
-    + '<div style="color:rgba(255,255,255,.3);font-size:9px;margin-top:5px">Use los botones para ver con turno, sin turno o malla completa · Columnas Inicio y Fin del turno de hoy</div>'
     + '</div>'
     + '<div id="malla-detalle" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;max-height:52vh;overflow-y:auto">'
     + '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px"><i class="ti ti-calendar-week" style="font-size:32px;opacity:.5"></i><div style="margin-top:10px">Cargando malla desde Sheet…</div></div>'
@@ -4099,12 +4320,13 @@ function _cargarYMostrarMalla() {
   if(typeof _cargarEmpleados==='function' && !Object.keys(EMPLEADOS_BD||{}).length) {
     prom = prom.then(function(){ return _cargarEmpleados(); });
   }
+  prom = prom.then(function(){ return _mallaCargarEstadoApp(); });
   prom.then(function() {
     var busq = document.getElementById('malla-buscar');
     _renderTablaMallaHoy(busq ? busq.value : '');
     if(typeof construirResumenGerencial==='function') construirResumenGerencial();
     if(btn) btn.innerHTML = '<i class="ti ti-refresh"></i> Actualizado ✓';
-    if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Malla actualizada · '+((window._mallaTurnosHoy||[]).length)+' turnos hoy');
+    if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Malla actualizada · '+_mallaContarVivos().enFranja+' en turno ahora');
   }).catch(function() {
     if(btn) btn.textContent = 'Error al cargar';
     var el = document.getElementById('malla-detalle');
@@ -6557,6 +6779,15 @@ function _parseCumpleMMDD(s){
     }catch(e){}
     try{
       var col=window._coloc_data||[];
+      var acumY=0, antY=0;
+      col.forEach(function(r){ acumY+=r.acum_n||0; antY+=r.ant_n||0; });
+      var varY = acumY - antY;
+      var pctY = antY>0 ? Math.round(varY/antY*100) : null;
+      var semY = _yoySem(pctY);
+      push('📊','vs Año anterior',pctY!=null?((pctY>=0?'+':'')+pctY+'%'):'—',_yoyFmtVar(varY)+' créd. · '+fmtN(acumY)+' vs '+fmtN(antY),semY.lbl,'#6366f1');
+    }catch(e){}
+    try{
+      var col=window._coloc_data||[];
       var verdes=col.filter(function(r){return (r.semaforo||'').toUpperCase().indexOf('VERDE')>=0;}).length;
       var rojos=col.filter(function(r){return (r.semaforo||'').toUpperCase().indexOf('ROJO')>=0;}).length;
       var pctV=col.length?Math.round(verdes/col.length*100):0;
@@ -6588,6 +6819,101 @@ function _parseCumpleMMDD(s){
     if(sub) sub.textContent=items.length+' indicadores MCM · actualizado '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   }
   window.renderMenuMcmRadar=renderMenuMcmRadar;
+
+  function _yoyNormPct(v){
+    if(v==null||v===''||isNaN(v)) return null;
+    var n = parseFloat(String(v).replace('%','').replace(',','.'));
+    if(isNaN(n)) return null;
+    if(n!==0 && Math.abs(n)<=1) return Math.round(n*100);
+    return Math.round(n);
+  }
+  function _yoyVarN(r){
+    if(r.var_n!=null && r.var_n!=='' && !isNaN(r.var_n)) return Math.round(r.var_n);
+    return Math.round((r.acum_n||0)-(r.ant_n||0));
+  }
+  function _yoyPctRow(r){
+    var p = _yoyNormPct(r.var_pn);
+    if(p!=null) return p;
+    var ant = r.ant_n||0;
+    if(ant>0){
+      var vn = _yoyVarN(r);
+      return Math.round(vn/ant*100);
+    }
+    return null;
+  }
+  function _yoySem(pct){
+    if(pct==null) return {lbl:'SIN DATO', col:'#94a3b8', emoji:'⚪'};
+    if(pct>=5) return {lbl:'VERDE', col:'#16a34a', emoji:'🟢'};
+    if(pct>=0) return {lbl:'AMARILLO', col:'#ca8a04', emoji:'🟡'};
+    if(pct>=-10) return {lbl:'NARANJA', col:'#ea580c', emoji:'🟠'};
+    return {lbl:'ROJO', col:'#dc2626', emoji:'🔴'};
+  }
+  function _yoyFmtVar(n){
+    if(n==null||isNaN(n)) return '—';
+    return (n>=0?'+':'')+fmtN(n);
+  }
+  function _yoyRowHtml(r){
+    var pct = _yoyPctRow(r);
+    var vn = _yoyVarN(r);
+    var sem = _yoySem(pct);
+    return '<div class="menu-yoy-row">'
+      +'<span class="menu-yoy-row-nombre" title="'+String(r.sede||'').replace(/"/g,'&quot;')+'">'+(r.sede||'—')+'</span>'
+      +'<span class="menu-yoy-row-val" style="color:'+sem.col+'">'+_yoyFmtVar(vn)+(pct!=null?' ('+(pct>=0?'+':'')+pct+'%)':'')+'</span>'
+      +'</div>';
+  }
+  function renderMenuVsAnterior(){
+    var col = (window._coloc_data||[]).filter(function(r){ return r&&r.sede&&(r.acum_n||r.ant_n); });
+    var acum=0, ant=0, varN=0;
+    col.forEach(function(r){
+      acum += r.acum_n||0;
+      ant += r.ant_n||0;
+      varN += _yoyVarN(r);
+    });
+    var pctNat = ant>0 ? Math.round(varN/ant*100) : (acum>0&&ant===0 ? 100 : null);
+    var sem = _yoySem(pctNat);
+    var setTxt = function(id, txt, col){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el.textContent = txt;
+      if(col) el.style.color = col;
+    };
+    setTxt('menu-yoy-acum', acum?fmtN(acum):'—');
+    setTxt('menu-yoy-ant', ant?fmtN(ant):'—');
+    setTxt('menu-yoy-varn', ant||acum? _yoyFmtVar(varN) : '—', varN>=0?'#16a34a':'#dc2626');
+    setTxt('menu-yoy-pct', pctNat!=null?((pctNat>=0?'+':'')+pctNat+'%'):'—', sem.col);
+    var semEl = document.getElementById('menu-yoy-sem');
+    if(semEl){
+      semEl.textContent = sem.emoji+' '+sem.lbl;
+      semEl.style.color = sem.col;
+      semEl.style.borderColor = sem.col;
+      semEl.style.background = sem.col+'18';
+    }
+    var bar = document.getElementById('menu-yoy-bar-fill');
+    if(bar && pctNat!=null){
+      var pos = Math.max(5, Math.min(95, 50 + pctNat/2));
+      bar.style.left = pos+'%';
+      bar.title = 'Variación nacional: '+(pctNat>=0?'+':'')+pctNat+'%';
+    }
+    var ranked = col.map(function(r){
+      return {sede:r.sede, acum:r.acum_n||0, ant:r.ant_n||0, var_n:_yoyVarN(r), pct:_yoyPctRow(r)};
+    }).filter(function(x){ return x.ant>0 || x.var_n!==0; });
+    ranked.sort(function(a,b){ return (b.pct!=null?b.pct:-999) - (a.pct!=null?a.pct:-999); });
+    var top = document.getElementById('menu-yoy-top');
+    var low = document.getElementById('menu-yoy-low');
+    if(top){
+      var best = ranked.filter(function(x){ return x.pct!=null && x.pct>=0; }).slice(0,6);
+      top.innerHTML = best.length ? best.map(function(x){
+        return _yoyRowHtml({sede:x.sede, acum_n:x.acum, ant_n:x.ant, var_n:x.var_n, var_pn:x.pct});
+      }).join('') : '<div style="padding:12px;text-align:center;color:var(--gray);font-size:10px">Ninguna sede por encima del año anterior</div>';
+    }
+    if(low){
+      var worst = ranked.filter(function(x){ return x.pct!=null && x.pct<0; }).slice(-6).reverse();
+      low.innerHTML = worst.length ? worst.map(function(x){
+        return _yoyRowHtml({sede:x.sede, acum_n:x.acum, ant_n:x.ant, var_n:x.var_n, var_pn:x.pct});
+      }).join('') : '<div style="padding:12px;text-align:center;color:var(--gray);font-size:10px">Ninguna sede por debajo del año anterior</div>';
+    }
+  }
+  window.renderMenuVsAnterior = renderMenuVsAnterior;
 
   function actualizarMenuKPIs(){
     try{
@@ -6652,6 +6978,7 @@ function _parseCumpleMMDD(s){
         : 'Proyección de cierre: —';
 
       renderMenuSigecSemaforo(metaN, sig, glpi);
+      renderMenuVsAnterior();
       renderMenuMcmRadar();
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
@@ -7108,25 +7435,40 @@ function _parseCumpleMMDD(s){
     fill('hist-seg-filtro-ejecutor', ejecutores, 'Todos los ejecutores');
   };
 
-  window.renderHistorialSeguimientos = function(){
+  window._histSeguimientosFiltrados = function(){
     var fTipo = (document.getElementById('hist-seg-filtro-tipo')||{}).value || '';
     var fPer = (document.getElementById('hist-seg-filtro-periodo')||{}).value || '';
     var fMes = (document.getElementById('hist-seg-filtro-mes')||{}).value || '';
     var fSede = (document.getElementById('hist-seg-filtro-sede')||{}).value || '';
     var fEj = (document.getElementById('hist-seg-filtro-ejecutor')||{}).value || '';
-    var lista = (window._histSeguimientos || []).filter(function(s){
+    return (window._histSeguimientos || []).filter(function(s){
       return (!fTipo || s.tipo === fTipo)
         && (!fPer || s.periodo === fPer)
         && (!fMes || s.mes === fMes)
         && (!fEj || s.ejecutor === fEj)
         && (!fSede || String(s.sedes||'').indexOf(fSede) >= 0);
     });
+  };
+
+  function _htmlBotonesExportHistorial(){
+    var html = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+    if(typeof exportarHistSeguimientosCSV === 'function'){
+      html += '<button onclick="exportarHistSeguimientosCSV()" style="padding:8px 16px;background:#003D45;color:#FFD900;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↓ CSV auditoría</button>';
+    }
+    html += '<button onclick="exportarHistorialSeguimientosCompleto()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📊 Excel completo</button>';
+    html += '<button onclick="exportarHistorialSeguimientosPDF()" style="padding:8px 16px;background:#b91c1c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📄 PDF historial</button>';
+    html += '</div>';
+    return html;
+  }
+
+  window.renderHistorialSeguimientos = function(){
+    var lista = window._histSeguimientosFiltrados();
     var el = document.getElementById('hist-seg-contenido');
     if(!el) return;
     var resumen = _resumenSemaforoSedesSeg();
     var html = _htmlSemaforoSedesHist(resumen);
     if(!lista.length){
-      el.innerHTML = html + '<div style="text-align:center;padding:30px;color:#94a3b8"><div style="font-size:28px;margin-bottom:8px">📭</div>Sin seguimientos para el filtro seleccionado</div>';
+      el.innerHTML = html + '<div style="text-align:center;padding:30px;color:#94a3b8"><div style="font-size:28px;margin-bottom:8px">📭</div>Sin seguimientos para el filtro seleccionado</div>' + _htmlBotonesExportHistorial();
       return;
     }
     var nCoord = lista.filter(function(s){ return s.tipo === 'coord'; }).length;
@@ -7165,13 +7507,7 @@ function _parseCumpleMMDD(s){
       html += '</tr>';
     });
     html += '</tbody></table></div>';
-    if(typeof exportarHistSeguimientosCSV === 'function'){
-      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
-      +'<button onclick="exportarHistSeguimientosCSV()" style="padding:8px 16px;background:#003D45;color:#FFD900;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↓ CSV auditoría</button>'
-      +'<button onclick="exportarHistorialSeguimientosCompleto()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📊 Excel completo</button>'
-      +'<button onclick="exportarHistorialSeguimientosPDF()" style="padding:8px 16px;background:#b91c1c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📄 PDF historial</button>'
-      +'</div>';
-    }
+    html += _htmlBotonesExportHistorial();
     el.innerHTML = html;
   };
 
@@ -7396,18 +7732,22 @@ function _parseCumpleMMDD(s){
     var meta=0, acum=0, ant=0;
     filas.forEach(function(r){ meta+=r.meta_n||0; acum+=r.acum_n||0; ant+=r.ant_n||0; });
     var pct = meta>0 ? Math.round(acum/meta*100) : 0;
-    var varAnt = ant>0 ? Math.round((acum-ant)/ant*100) : 0;
     var titulo = nivel==='nacional' ? 'Nacional' : (nivel==='rectoria' ? sel||'Todas las rectorías' : sel||'Todas las sedes');
     var sedeUnica = (nivel==='sede' && sel) ? sel : '';
     var sig = sedeUnica ? _cdSigecSede(sedeUnica) : (typeof obtenerSigecNacional==='function' ? obtenerSigecNacional() : {});
     var glpi = sedeUnica ? _cdGlpiSede(sedeUnica) : (typeof obtenerGlpiNacional==='function' ? obtenerGlpiNacional() : {});
     var html = '<div style="margin-bottom:10px"><div style="font-size:13px;font-weight:800;color:#003D45">'+titulo+'</div>'
-      +'<div style="font-size:10px;color:#64748b">'+filas.length+' sede'+(filas.length!==1?'s':'')+' · Datos en vivo desde repositorios</div></div>';
+      +'<div style="font-size:10px;color:#64748b">'+filas.length+' sede'+(filas.length!==1?'s':'')+' · Colocado S2 = créditos acumulados del período (informe oficial, corte día anterior)</div></div>';
     if(modulo==='resumen' || modulo==='colocacion'){
       html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:12px">';
       html += _cdKpiCard('Meta #', _cdFmtN(Math.round(meta)), '#003D45');
-      html += _cdKpiCard('Ejecutado', _cdFmtN(acum), pct>=90?'#16a34a':pct>=70?'#ca8a04':'#dc2626', pct+'% cumplimiento');
-      html += _cdKpiCard('Var. año ant.', (varAnt>=0?'+':'')+varAnt+'%', varAnt>=0?'#16a34a':'#dc2626');
+      html += _cdKpiCard('Colocado S2', _cdFmtN(acum), pct>=90?'#16a34a':pct>=70?'#ca8a04':'#dc2626', pct+'% · acum. corte día ant.');
+      var varN = acum - ant;
+      var varPct = ant>0 ? Math.round(varN/ant*100) : null;
+      if(varPct==null && filas.length===1 && filas[0].var_pn!=null) varPct = _yoyNormPct(filas[0].var_pn);
+      if(varPct==null && filas.length===1 && filas[0].var_n!=null && ant>0) varPct = Math.round(filas[0].var_n/ant*100);
+      var yoySem = _yoySem(varPct);
+      html += _cdKpiCard('vs Año ant.', varPct!=null?((varPct>=0?'+':'')+varPct+'%'):'—', yoySem.col, _cdFmtN(varN)+' créd. (VAR #)');
       html += _cdKpiCard('Sedes', filas.length, '#6366f1');
       html += '</div>';
     }
@@ -7432,15 +7772,21 @@ function _parseCumpleMMDD(s){
       html += '<div style="font-size:10px;font-weight:800;color:#003D45;margin:10px 0 6px">📊 Detalle por sede</div>';
       html += '<div style="overflow-x:auto;max-height:280px;border:1px solid #e5e7eb;border-radius:10px">';
       html += '<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9;position:sticky;top:0">';
-      html += '<th style="padding:6px 8px;text-align:left">Sede</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Ejec</th><th style="padding:6px 8px;text-align:right">%</th><th style="padding:6px 8px;text-align:center">Sem</th></tr></thead><tbody>';
+      html += '<th style="padding:6px 8px;text-align:left">Sede</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Colocado</th><th style="padding:6px 8px;text-align:right">Año ant.</th><th style="padding:6px 8px;text-align:right">VAR #</th><th style="padding:6px 8px;text-align:right">YoY %</th><th style="padding:6px 8px;text-align:right">%</th><th style="padding:6px 8px;text-align:center">Sem</th></tr></thead><tbody>';
       filas.sort(function(a,b){ return (b.acum_n||0)-(a.acum_n||0); }).slice(0,40).forEach(function(r){
         var p = r.meta_n>0 ? Math.round(r.acum_n/r.meta_n*100) : 0;
         var sem = r.semaforo || (p>=90?'VERDE':p>=70?'AMARILLO':'ROJO');
         var sc = sem==='VERDE'?'#16a34a':sem==='AMARILLO'?'#ca8a04':'#dc2626';
+        var yp = _yoyPctRow(r);
+        var yn = _yoyVarN(r);
+        var yc = yp!=null ? _yoySem(yp).col : '#94a3b8';
         html += '<tr style="border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="document.getElementById(\'cd-nivel\').value=\'sede\';cdCambiarNivel();document.getElementById(\'cd-rectoria\').value=\''+String(r.sede||'').replace(/'/g,"\\'")+'\';cdActualizar()">';
         html += '<td style="padding:5px 8px;font-weight:600">'+r.sede+'</td>';
         html += '<td style="padding:5px 8px;text-align:right;color:#64748b">'+_cdFmtN(Math.round(r.meta_n||0))+'</td>';
         html += '<td style="padding:5px 8px;text-align:right;font-weight:700">'+_cdFmtN(r.acum_n||0)+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;color:#64748b">'+_cdFmtN(r.ant_n||0)+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+yc+'">'+_cdFmtN(yn)+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+yc+'">'+(yp!=null?((yp>=0?'+':'')+yp+'%'):'—')+'</td>';
         html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+sc+'">'+p+'%</td>';
         html += '<td style="padding:5px 8px;text-align:center;font-size:9px;font-weight:800;color:'+sc+'">'+sem+'</td></tr>';
       });
@@ -8477,7 +8823,7 @@ function _parseCumpleMMDD(s){
 
 
   /* ── pyv-comercial-5.4.1: Mapa Colombia + auditoría dropdowns ── */
-  var _mapaColLayer = 'capacidad';
+  var _mapaColLayer = 'cumplimiento';
   var _mapaColChart = null;
   var _mapaColGeoLoaded = false;
   var _mapaColCentroids = {};
@@ -8668,14 +9014,77 @@ function _parseCumpleMMDD(s){
     if(layer==='capacidad') return v+' sede'+(v!==1?'s':'');
     return (v>=1000?(v/1000).toFixed(1)+'k':String(v))+' créd.';
   }
+  function _mapaColorDept(v, layer){
+    if(layer!=='cumplimiento') return null;
+    if(v>=90) return '#86efac';
+    if(v>=70) return '#fde68a';
+    if(v>0) return '#fca5a5';
+    return '#e2e8f0';
+  }
+  function _mapaActualizarResumen(agg, layer){
+    var el = document.getElementById('menu-mapa-resumen');
+    if(!el) return;
+    var items = Object.keys(agg.deptoData).map(function(k){
+      var o = agg.deptoData[k];
+      var v = layer==='capacidad'?o.capacidad:layer==='meta'?o.meta:layer==='colocacion'?o.colocacion:o.cumplimiento;
+      return {nombre:o.nombre, v:v, sedes:o.sedes.length};
+    }).filter(function(x){ return x.v>0 || layer==='capacidad'; });
+    if(layer==='cumplimiento'){
+      items.sort(function(a,b){ return b.v-a.v; });
+      var top = items.filter(function(x){ return x.v>=70; }).slice(0,4);
+      var low = items.filter(function(x){ return x.v>0 && x.v<70; }).slice(-4).reverse();
+      if(!top.length && !low.length){ el.innerHTML=''; return; }
+      el.innerHTML = '<div class="menu-mapa-resumen-col"><div class="menu-mapa-resumen-lbl">🟢 Mejor cumplimiento</div>'
+        +(top.length?top.map(function(x){ return '<div class="menu-mapa-resumen-item"><b>'+x.nombre+'</b> · '+x.v+'% · '+x.sedes+' sede(s)</div>'; }).join(''):'<div class="menu-mapa-resumen-item">Sin departamentos en verde aún</div>')
+        +'</div><div class="menu-mapa-resumen-col"><div class="menu-mapa-resumen-lbl">🔴 Requieren refuerzo</div>'
+        +(low.length?low.map(function(x){ return '<div class="menu-mapa-resumen-item"><b>'+x.nombre+'</b> · '+x.v+'% · '+x.sedes+' sede(s)</div>'; }).join(''):'<div class="menu-mapa-resumen-item">Ningún departamento en rojo</div>')
+        +'</div>';
+      return;
+    }
+    items.sort(function(a,b){ return b.v-a.v; });
+    var top3 = items.slice(0,3), bot3 = items.slice(-3).reverse();
+    el.innerHTML = '<div class="menu-mapa-resumen-col"><div class="menu-mapa-resumen-lbl">▲ Mayor valor</div>'
+      +top3.map(function(x){ return '<div class="menu-mapa-resumen-item"><b>'+x.nombre+'</b> · '+_mapaFmtVal(x.v,layer)+'</div>'; }).join('')
+      +'</div><div class="menu-mapa-resumen-col"><div class="menu-mapa-resumen-lbl">▼ Menor valor</div>'
+      +bot3.map(function(x){ return '<div class="menu-mapa-resumen-item"><b>'+x.nombre+'</b> · '+_mapaFmtVal(x.v,layer)+'</div>'; }).join('')
+      +'</div>';
+  }
   function setMapaColombiaLayer(layer){
-    _mapaColLayer = layer || 'capacidad';
+    _mapaColLayer = layer || 'cumplimiento';
     document.querySelectorAll('.menu-mapa-tab').forEach(function(btn){
       btn.classList.toggle('active', btn.getAttribute('data-layer')===_mapaColLayer);
     });
-    var labels = {capacidad:'Capacidad instalada (# sedes)', meta:'Meta S2 (créditos)', colocacion:'Colocación acumulada', cumplimiento:'% cumplimiento meta'};
+    var subs = {
+      cumplimiento:'Verde ≥90% · Amarillo 70-89% · Rojo <70% — ¿Dónde cerrar brecha de meta S2?',
+      colocacion:'Créditos acumulados S2 por departamento — volumen ejecutado',
+      meta:'Meta de colocación S2 asignada por departamento',
+      capacidad:'Número de sedes PYV por departamento — cobertura territorial'
+    };
+    var leys = {
+      cumplimiento:'Pase el cursor sobre un departamento para ver % cumplimiento, meta y acumulado',
+      colocacion:'Tonos teal: mayor colocación = color más intenso',
+      meta:'Tonos teal: mayor meta asignada = color más intenso',
+      capacidad:'Tonos teal: más sedes = color más intenso'
+    };
+    var leyHtml = {
+      cumplimiento:'<div class="menu-mapa-ley-swatches">'
+        +'<span class="menu-mapa-ley-item"><span class="menu-ley-sw menu-ley-verde"></span>≥90% en meta</span>'
+        +'<span class="menu-mapa-ley-item"><span class="menu-ley-sw menu-ley-amarillo"></span>70–89%</span>'
+        +'<span class="menu-mapa-ley-item"><span class="menu-ley-sw menu-ley-rojo"></span>&lt;70%</span>'
+        +'<span class="menu-mapa-ley-item"><span class="menu-ley-sw menu-ley-gris"></span>Sin datos</span>'
+        +'</div><div style="margin-top:6px;font-size:9px;color:#64748b">Pase el cursor sobre un departamento para ver meta, acumulado y %</div>',
+      colocacion:'Tonos teal: mayor colocación = color más intenso · Pase el cursor para detalle por departamento',
+      meta:'Tonos teal: mayor meta asignada = color más intenso · Pase el cursor para detalle por departamento',
+      capacidad:'Tonos teal: más sedes PYV = color más intenso · Pase el cursor para listado de sedes'
+    };
+    var sub = document.getElementById('menu-mapa-sub');
+    if(sub) sub.textContent = subs[_mapaColLayer]||'';
     var ley = document.getElementById('menu-mapa-leyenda');
-    if(ley) ley.textContent = (labels[_mapaColLayer]||'')+' · Clic en departamento o sede para detalle · Fuente: RECTORIAS + colocación S2';
+    if(ley){
+      var lh = leyHtml[_mapaColLayer];
+      if(lh) ley.innerHTML = lh;
+      else ley.textContent = leys[_mapaColLayer]||'';
+    }
     if(_mapaColGeoLoaded) _mapaColombiaPintar();
     else renderMapaColombia();
   }
@@ -8691,59 +9100,67 @@ function _parseCumpleMMDD(s){
   }
   function _mapaGeoStyle(){
     return {
-      map:'colombia', roam:true, zoom:1.12, aspectScale:0.92,
-      layoutCenter:['50%','52%'], layoutSize:'92%',
-      label:{show:true, fontSize:7, color:'#003D45', fontWeight:500},
-      itemStyle:{areaColor:'#f1f5f9', borderColor:'#003D45', borderWidth:1},
-      emphasis:{itemStyle:{areaColor:'#FFD900', borderColor:'#003D45', borderWidth:1.5}, label:{show:true, fontSize:8, fontWeight:700, color:'#003D45'}}
+      map:'colombia', roam:true, zoom:1.08, aspectScale:0.9,
+      layoutCenter:['50%','50%'], layoutSize:'88%',
+      label:{show:false},
+      itemStyle:{areaColor:'#e2e8f0', borderColor:'#003D45', borderWidth:1.2},
+      emphasis:{itemStyle:{areaColor:'#FFD900', borderColor:'#003D45', borderWidth:2}, label:{show:true, fontSize:9, fontWeight:700, color:'#003D45'}}
     };
+  }
+  function _mapaTooltipDept(name, o, layer){
+    if(!o) return '<b>'+name+'</b><br>Sin sedes PYV registradas';
+    var lines = ['<b>'+name+'</b>', o.sedes.length+' sede(s) PYV'];
+    if(layer==='cumplimiento' || layer==='meta' || layer==='colocacion'){
+      lines.push('Meta: '+_cmdFmtN(o.meta)+' créd.');
+      lines.push('Acumulado: '+_cmdFmtN(o.colocacion)+' créd.');
+      lines.push('Cumplimiento: <b>'+o.cumplimiento+'%</b>');
+    } else {
+      lines.push('Sedes: <b>'+o.capacidad+'</b>');
+    }
+    return lines.join('<br>');
   }
   function _mapaColombiaPintar(){
     if(!_mapaColChart || typeof echarts==='undefined') return;
     var agg = _mapaAgregarPorDepto(_mapaColLayer);
+    var layer = _mapaColLayer;
     var values = agg.values.map(function(v){
       var nk = _mapaNormDeptoAlias(v.name);
       var geo = _mapaMatchGeoName(nk);
-      return geo ? {name:geo, value:v.value} : v;
+      var nm = geo || v.name;
+      var color = _mapaColorDept(v.value, layer);
+      var item = {name:nm, value:v.value};
+      if(color) item.itemStyle = {areaColor:color};
+      item.deptoData = agg.deptoData[nk];
+      return item;
     });
     var maxV = Math.max.apply(null, values.map(function(x){return x.value;}).concat([1]));
-    var scatter = [];
-    Object.keys(agg.deptoData).forEach(function(k){
-      var o = agg.deptoData[k];
-      var cen = _mapaColCentroids[k] || _mapaColCentroids[_mapaNormDeptoAlias(k)];
-      if(!cen) return;
-      o.sedes.forEach(function(sede, idx){
-        var jitter = (idx - o.sedes.length/2) * 0.12;
-        scatter.push({
-          name: sede, value: [cen[0]+jitter, cen[1]+jitter*0.35, 1],
-          depto: o.nombre,
-          tooltip: sede+' · '+o.nombre
-        });
-      });
-    });
-    var layer = _mapaColLayer;
+    var vmOpt = layer==='cumplimiento' ? {show:false} : {
+      show:true, min:0, max:maxV, right:12, bottom:20, orient:'vertical',
+      text:['Alto','Bajo'], calculable:false,
+      inRange:{color:['#e0f7fa','#00B0B9','#003D45']},
+      textStyle:{fontSize:9, color:'#334155'}
+    };
     _mapaColChart.setOption({
-      visualMap: {
-        show:true, min:0, max:maxV, left:8, bottom:12, orient:'vertical',
-        text:['Alto','Bajo'], calculable:false,
-        inRange:{color:_mapaColorScale(layer)},
-        textStyle:{fontSize:8, color:'#334155'},
-        formatter:function(v){ return _mapaFmtVal(Math.round(v), layer); }
-      },
-      geo: _mapaGeoStyle(),
-      series: [
-        { type:'map', geoIndex:0, map:'colombia', data:values, name:layer,
-          label:{show:false},
-          emphasis:{label:{show:true, fontSize:9, color:'#003D45'}},
-          itemStyle:{borderColor:'#003D45', borderWidth:0.8}
-        },
-        { type:'effectScatter', coordinateSystem:'geo', geoIndex:0, data:scatter,
-          symbolSize:6, itemStyle:{color:'#FFD900', borderColor:'#003D45', borderWidth:1},
-          rippleEffect:{brushType:'stroke', scale:2},
-          tooltip:{formatter:function(p){ return p.data.tooltip||p.name; }}
+      tooltip: {
+        trigger:'item', backgroundColor:'#fff', borderColor:'#003D45', borderWidth:1,
+        textStyle:{color:'#1e293b', fontSize:11},
+        formatter:function(p){
+          if(!p.name) return '';
+          var nk = _mapaNormDeptoAlias(p.name);
+          var o = agg.deptoData[nk] || (p.data&&p.data.deptoData);
+          return _mapaTooltipDept(p.name, o, layer);
         }
-      ]
+      },
+      visualMap: vmOpt,
+      geo: _mapaGeoStyle(),
+      series: [{
+        type:'map', geoIndex:0, map:'colombia', data:values, name:layer,
+        label:{show:false},
+        emphasis:{label:{show:true, fontSize:10, fontWeight:700, color:'#003D45'}},
+        itemStyle:{borderColor:'#003D45', borderWidth:1}
+      }]
     }, true);
+    _mapaActualizarResumen(agg, layer);
     setTimeout(_mapaColombiaResize, 80);
   }
 
@@ -8905,7 +9322,7 @@ function _parseCumpleMMDD(s){
     var html = '<b>📍 Informe: '+sede+'</b><br>'
       +'Rectoría: <b>'+rect+'</b> · Departamento: <b>'+depto+'</b><br>'
       +'<span style="color:'+_cmdIASemColor(sem)+';font-weight:800">Semáforo: '+sem+'</span> · Cumplimiento: <b>'+pct+'%</b><br>'
-      +'Meta S2: <b>'+(typeof fmtN==='function'?fmtN(meta):meta)+'</b> créd. · Ejecutado: <b>'+(typeof fmtN==='function'?fmtN(acum):acum)+'</b><br>';
+      +'Meta S2: <b>'+(typeof fmtN==='function'?fmtN(meta):meta)+'</b> créd. · Colocado S2: <b>'+(typeof fmtN==='function'?fmtN(acum):acum)+'</b> (acum. corte día ant.)<br>';
     if(sig && sig.total) html += 'SIGEC: '+sig.total+' tickets · Facturadas: '+(sig.facturada||0)+'<br>';
     if(riesgos.length){
       html += '<br><b>⚠️ Riesgos detectados:</b><ul style="margin:6px 0 0 16px;padding:0">';
@@ -9334,11 +9751,12 @@ function _parseCumpleMMDD(s){
   };
 
   window.exportarHistorialSeguimientosCompleto = function(){
-    if(typeof XLSX==='undefined') return;
-    var lista = window._histSeguimientos||[];
-    var rows = [['Fecha','Tipo','Período','Sedes','Ejecutor','Créditos','CSAT','Calificación','Observaciones']];
+    if(typeof XLSX==='undefined'){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('XLSX no disponible'); return; }
+    var lista = typeof window._histSeguimientosFiltrados==='function' ? window._histSeguimientosFiltrados() : (window._histSeguimientos||[]);
+    if(!lista.length){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Sin registros para exportar con el filtro actual'); return; }
+    var rows = [['Fecha','Tipo','Período','Sedes','Ejecutor','Asesor','Créditos','CSAT','Calificación','Observaciones']];
     lista.forEach(function(s){
-      rows.push([s.fecha||'', s.tipo||'', s.periodo||'', s.sedes||'', s.ejecutor||'', s.real_creditos||'', s.csat||'', s.calif_seguimiento||'', s.observaciones||'']);
+      rows.push([s.fecha||'', s.tipo||'', s.periodo||'', s.sedes||'', s.ejecutor||'', s.asesor_nombre||'', s.real_creditos||'', s.csat||'', s.calif_seguimiento||'', s.observaciones||'']);
     });
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Historial');
@@ -9346,12 +9764,13 @@ function _parseCumpleMMDD(s){
   };
 
   window.exportarHistorialSeguimientosPDF = function(){
-    if(typeof window.jspdf==='undefined') return;
-    var lista = (window._histSeguimientos||[]).slice(-40);
+    if(typeof window.jspdf==='undefined'){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('jsPDF no disponible'); return; }
+    var lista = typeof window._histSeguimientosFiltrados==='function' ? window._histSeguimientosFiltrados() : (window._histSeguimientos||[]);
+    if(!lista.length){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Sin registros para exportar con el filtro actual'); return; }
     var doc = new window.jspdf.jsPDF({orientation:'landscape'});
-    var y = _cmdPdfHeader(doc, 'Historial de Seguimientos', lista.length+' registros');
+    var y = _cmdPdfHeader(doc, 'Historial de Seguimientos', lista.length+' registros (filtro activo)');
     doc.setFontSize(7);
-    lista.forEach(function(s){
+    lista.slice().reverse().forEach(function(s){
       y = _cmdPdfCheckPage(doc, y, 6);
       doc.text((s.fecha||'')+' | '+s.tipo+' | '+String(s.sedes||'').slice(0,25)+' | '+String(s.ejecutor||'').slice(0,20)+' | Cr:'+(s.real_creditos||'—'), 14, y);
       y += 4;
@@ -9567,7 +9986,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[pyv-comercial 5.4.1] Mapa Colombia visible · Menú reorganizado');
+  console.log('[pyv-comercial 5.4.2] Menú rediseñado · Mapa semáforo S2 · Sin export panel');
 
 })();
 </script>
