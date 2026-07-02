@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.4   (APP_VERSION = 'pyv-comercial-5.4.4')
+  Versión actual: pyv-comercial-5.4.5   (APP_VERSION = 'pyv-comercial-5.4.5')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.5 (2026-06-30)
+    - Extracción Cartera, H3 e Historial: botones PDF/Excel siempre visibles; export respeta filtros activos del historial.
   pyv-comercial-5.4.4 (2026-06-30)
     - Nuevo informe «Comparativo vs año anterior»: semáforo YoY con VAR # del Sheet.
   pyv-comercial-5.4.3 (2026-06-30)
@@ -1011,7 +1013,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.4</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.5</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -3387,7 +3389,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.4';
+var APP_VERSION = 'pyv-comercial-5.4.5';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7433,25 +7435,40 @@ function _parseCumpleMMDD(s){
     fill('hist-seg-filtro-ejecutor', ejecutores, 'Todos los ejecutores');
   };
 
-  window.renderHistorialSeguimientos = function(){
+  window._histSeguimientosFiltrados = function(){
     var fTipo = (document.getElementById('hist-seg-filtro-tipo')||{}).value || '';
     var fPer = (document.getElementById('hist-seg-filtro-periodo')||{}).value || '';
     var fMes = (document.getElementById('hist-seg-filtro-mes')||{}).value || '';
     var fSede = (document.getElementById('hist-seg-filtro-sede')||{}).value || '';
     var fEj = (document.getElementById('hist-seg-filtro-ejecutor')||{}).value || '';
-    var lista = (window._histSeguimientos || []).filter(function(s){
+    return (window._histSeguimientos || []).filter(function(s){
       return (!fTipo || s.tipo === fTipo)
         && (!fPer || s.periodo === fPer)
         && (!fMes || s.mes === fMes)
         && (!fEj || s.ejecutor === fEj)
         && (!fSede || String(s.sedes||'').indexOf(fSede) >= 0);
     });
+  };
+
+  function _htmlBotonesExportHistorial(){
+    var html = '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">';
+    if(typeof exportarHistSeguimientosCSV === 'function'){
+      html += '<button onclick="exportarHistSeguimientosCSV()" style="padding:8px 16px;background:#003D45;color:#FFD900;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↓ CSV auditoría</button>';
+    }
+    html += '<button onclick="exportarHistorialSeguimientosCompleto()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📊 Excel completo</button>';
+    html += '<button onclick="exportarHistorialSeguimientosPDF()" style="padding:8px 16px;background:#b91c1c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📄 PDF historial</button>';
+    html += '</div>';
+    return html;
+  }
+
+  window.renderHistorialSeguimientos = function(){
+    var lista = window._histSeguimientosFiltrados();
     var el = document.getElementById('hist-seg-contenido');
     if(!el) return;
     var resumen = _resumenSemaforoSedesSeg();
     var html = _htmlSemaforoSedesHist(resumen);
     if(!lista.length){
-      el.innerHTML = html + '<div style="text-align:center;padding:30px;color:#94a3b8"><div style="font-size:28px;margin-bottom:8px">📭</div>Sin seguimientos para el filtro seleccionado</div>';
+      el.innerHTML = html + '<div style="text-align:center;padding:30px;color:#94a3b8"><div style="font-size:28px;margin-bottom:8px">📭</div>Sin seguimientos para el filtro seleccionado</div>' + _htmlBotonesExportHistorial();
       return;
     }
     var nCoord = lista.filter(function(s){ return s.tipo === 'coord'; }).length;
@@ -7490,13 +7507,7 @@ function _parseCumpleMMDD(s){
       html += '</tr>';
     });
     html += '</tbody></table></div>';
-    if(typeof exportarHistSeguimientosCSV === 'function'){
-      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
-      +'<button onclick="exportarHistSeguimientosCSV()" style="padding:8px 16px;background:#003D45;color:#FFD900;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↓ CSV auditoría</button>'
-      +'<button onclick="exportarHistorialSeguimientosCompleto()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📊 Excel completo</button>'
-      +'<button onclick="exportarHistorialSeguimientosPDF()" style="padding:8px 16px;background:#b91c1c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📄 PDF historial</button>'
-      +'</div>';
-    }
+    html += _htmlBotonesExportHistorial();
     el.innerHTML = html;
   };
 
@@ -9740,11 +9751,12 @@ function _parseCumpleMMDD(s){
   };
 
   window.exportarHistorialSeguimientosCompleto = function(){
-    if(typeof XLSX==='undefined') return;
-    var lista = window._histSeguimientos||[];
-    var rows = [['Fecha','Tipo','Período','Sedes','Ejecutor','Créditos','CSAT','Calificación','Observaciones']];
+    if(typeof XLSX==='undefined'){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('XLSX no disponible'); return; }
+    var lista = typeof window._histSeguimientosFiltrados==='function' ? window._histSeguimientosFiltrados() : (window._histSeguimientos||[]);
+    if(!lista.length){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Sin registros para exportar con el filtro actual'); return; }
+    var rows = [['Fecha','Tipo','Período','Sedes','Ejecutor','Asesor','Créditos','CSAT','Calificación','Observaciones']];
     lista.forEach(function(s){
-      rows.push([s.fecha||'', s.tipo||'', s.periodo||'', s.sedes||'', s.ejecutor||'', s.real_creditos||'', s.csat||'', s.calif_seguimiento||'', s.observaciones||'']);
+      rows.push([s.fecha||'', s.tipo||'', s.periodo||'', s.sedes||'', s.ejecutor||'', s.asesor_nombre||'', s.real_creditos||'', s.csat||'', s.calif_seguimiento||'', s.observaciones||'']);
     });
     var wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Historial');
@@ -9752,12 +9764,13 @@ function _parseCumpleMMDD(s){
   };
 
   window.exportarHistorialSeguimientosPDF = function(){
-    if(typeof window.jspdf==='undefined') return;
-    var lista = (window._histSeguimientos||[]).slice(-40);
+    if(typeof window.jspdf==='undefined'){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('jsPDF no disponible'); return; }
+    var lista = typeof window._histSeguimientosFiltrados==='function' ? window._histSeguimientosFiltrados() : (window._histSeguimientos||[]);
+    if(!lista.length){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Sin registros para exportar con el filtro actual'); return; }
     var doc = new window.jspdf.jsPDF({orientation:'landscape'});
-    var y = _cmdPdfHeader(doc, 'Historial de Seguimientos', lista.length+' registros');
+    var y = _cmdPdfHeader(doc, 'Historial de Seguimientos', lista.length+' registros (filtro activo)');
     doc.setFontSize(7);
-    lista.forEach(function(s){
+    lista.slice().reverse().forEach(function(s){
       y = _cmdPdfCheckPage(doc, y, 6);
       doc.text((s.fecha||'')+' | '+s.tipo+' | '+String(s.sedes||'').slice(0,25)+' | '+String(s.ejecutor||'').slice(0,20)+' | Cr:'+(s.real_creditos||'—'), 14, y);
       y += 4;
