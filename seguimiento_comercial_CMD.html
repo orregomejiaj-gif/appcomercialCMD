@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.1.0   (APP_VERSION = 'pyv-comercial-5.1.0')
+  Versión actual: pyv-comercial-5.2.0   (APP_VERSION = 'pyv-comercial-5.2.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,7 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
-  pyv-comercial-5.1.0 (2026-06-30)
+  pyv-comercial-5.2.0 (2026-06-30)
+    - Menú lateral: botones fondo claro; semáforos y mapa Colombia en panel principal.
+    - Mapa ECharts nivel país: capacidad, meta, colocación y cumplimiento por departamento + sedes.
+    - Auditoría dropdowns: rectorías y sedes sincronizadas desde RECTORIAS / PG_SEDE_RECTORIA.
     - Menú: fondo blanco con botones y semáforos oscuros (negro + indicadores de color + emojis).
     - Login: nombre visible solo con coincidencia exacta en repositorio de empleados.
     - Radar Comercial MCM: 8 semáforos críticos (cobertura, cumplimiento, conversión, GLPI, embudo, seguimientos, cartera, ritmo).
@@ -107,6 +110,7 @@
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
@@ -1011,6 +1015,46 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
   <div class="menu-hero-accent"><span></span><span></span><span></span></div>
 
   <div class="menu-layout">
+    <aside class="menu-sidebar">
+      <div class="menu-sidebar-title">🧭 Módulos SCIC</div>
+      <div class="menu-modules">
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-live">🟢 Operación en Vivo</span><span class="menu-mod-note">Tiempo real</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon">📋</div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Coord · Asesor</div></button>
+            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon">📜</div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Seguimientos</div></button>
+            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon">📅</div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Turnos del día</div></button>
+            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon">📊</div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Por sede</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📊 Gestión Comercial</span><span class="menu-mod-note">Día vencido</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon">📈</div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot</div></button>
+            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon">🎯</div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline gerencial</div></button>
+            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon">🏆</div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias</div></button>
+            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon">💰</div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Cygnus · SAP</div></button>
+            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon">🧭</div><div class="menu-card-title">Brújula Académica</div><div class="menu-card-desc">Ritmo UNIMINUTO</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">📈 Inteligencia Comercial</span><span class="menu-mod-note">Análisis</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple"><div class="menu-card-icon">🧠</div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Inteligencia IA</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-tools">🛠 Herramientas del Colaborador</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon">🛠️</div><div class="menu-card-title">Herramientas PYV</div></button>
+            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon">📇</div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Empleados</div></button>
+            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon">🎂</div><div class="menu-card-title">Cumpleaños</div></button>
+            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon">📆</div><div class="menu-card-title">Agendar</div></button>
+          </div>
+        </div>
+      </div>
+    </aside>
+    <div class="menu-main-panel">
     <div class="menu-nacional-panel">
       <div class="menu-nacional-hdr">
         <div class="menu-nacional-title"><i class="ti ti-chart-dots"></i> Estado Nacional · Colocación S2</div>
@@ -1085,6 +1129,24 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <div class="menu-mcm-card menu-mcm-loading">Calculando indicadores MCM…</div>
         </div>
       </div>
+
+      <div class="menu-mapa-panel" id="menu-mapa-panel">
+        <div class="menu-mapa-hdr">
+          <div>
+            <div class="menu-mapa-title">🗺️ Mapa Comercial Colombia</div>
+            <div class="menu-mapa-sub" id="menu-mapa-sub">Nivel país · departamentos y sedes PYV</div>
+          </div>
+          <div class="menu-mapa-tabs" id="menu-mapa-tabs">
+            <button type="button" class="menu-mapa-tab active" data-layer="capacidad" onclick="setMapaColombiaLayer('capacidad')">🏢 Capacidad</button>
+            <button type="button" class="menu-mapa-tab" data-layer="meta" onclick="setMapaColombiaLayer('meta')">🎯 Meta</button>
+            <button type="button" class="menu-mapa-tab" data-layer="colocacion" onclick="setMapaColombiaLayer('colocacion')">📈 Colocación</button>
+            <button type="button" class="menu-mapa-tab" data-layer="cumplimiento" onclick="setMapaColombiaLayer('cumplimiento')">🚦 Cumplimiento</button>
+          </div>
+        </div>
+        <div id="menu-mapa-chart" class="menu-mapa-chart"></div>
+        <div class="menu-mapa-leyenda" id="menu-mapa-leyenda"></div>
+      </div>
+
       <div class="menu-kpi-strip menu-kpi-compact">
         <div class="menu-kpi menu-kpi-blue"><div class="menu-kpi-lbl">SIGEC</div><div class="menu-kpi-val" id="menu-kpi-sigec">—</div></div>
         <div class="menu-kpi menu-kpi-purple"><div class="menu-kpi-lbl">GLPI</div><div class="menu-kpi-val" id="menu-kpi-glpi">—</div></div>
@@ -1093,43 +1155,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-kpi menu-kpi-red"><div class="menu-kpi-lbl">Cartera</div><div class="menu-kpi-val" id="menu-kpi-cartera">—</div></div>
       </div>
 
-      <div class="menu-modules">
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-live">🟢 Operación en Vivo</span><span class="menu-mod-note">Tiempo real</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon">📋</div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Coord · Asesor</div></button>
-            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon">📜</div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Seguimientos</div></button>
-            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon">📅</div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Turnos del día</div></button>
-            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon">📊</div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Por sede</div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📊 Gestión Comercial</span><span class="menu-mod-note">Día vencido</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon">📈</div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot</div></button>
-            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon">🎯</div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline gerencial</div></button>
-            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon">🏆</div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias</div></button>
-            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon">💰</div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Cygnus · SAP</div></button>
-            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon">🧭</div><div class="menu-card-title">Brújula Académica</div><div class="menu-card-desc">Ritmo UNIMINUTO</div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">📈 Inteligencia Comercial</span><span class="menu-mod-note">Análisis</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple"><div class="menu-card-icon">🧠</div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Inteligencia IA</div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-tools">🛠 Herramientas del Colaborador</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon">🛠️</div><div class="menu-card-title">Herramientas PYV</div></button>
-            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon">📇</div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Empleados</div></button>
-            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon">🎂</div><div class="menu-card-title">Cumpleaños</div></button>
-            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon">📆</div><div class="menu-card-title">Agendar</div></button>
-          </div>
-        </div>
-      </div>
       <div class="menu-footer">© 2024–2026 Cooperativa Minuto de Dios · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía</div>
+    </div>
     </div>
   </div>
 </div>
@@ -1173,7 +1200,24 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-green{border-color:rgba(174,201,0,.4)} .menu-kpi-green .menu-kpi-val{color:#6b7f00}
 .menu-kpi-orange{border-color:rgba(0,176,185,.25)} .menu-kpi-orange .menu-kpi-val{color:var(--teal)}
 .menu-kpi-red{border-color:rgba(239,68,68,.25)} .menu-kpi-red .menu-kpi-val{color:var(--red)}
-.menu-layout{display:block;min-height:calc(100vh - 180px)}
+.menu-layout{display:flex;gap:0;min-height:calc(100vh - 180px);align-items:stretch}
+.menu-sidebar{width:280px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:14px 12px 20px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
+.menu-sidebar-title{font-size:11px;font-weight:800;color:var(--dark);margin-bottom:10px;padding-bottom:8px;border-bottom:2px solid var(--teal-l)}
+.menu-main-panel{flex:1;min-width:0;overflow-x:hidden}
+.menu-sidebar .menu-modules{margin-top:0;gap:10px}
+.menu-sidebar .menu-module{padding:10px 10px 8px}
+.menu-sidebar .menu-grid-modules{grid-template-columns:1fr 1fr;gap:6px}
+.menu-sidebar .menu-grid-modules .menu-card{min-height:72px;padding:10px 8px}
+.menu-mapa-panel{margin:14px 0;padding:14px;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.menu-mapa-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;margin-bottom:10px;flex-wrap:wrap}
+.menu-mapa-title{font-size:13px;font-weight:800;color:var(--dark)}
+.menu-mapa-sub{font-size:9px;color:var(--gray);margin-top:3px}
+.menu-mapa-tabs{display:flex;flex-wrap:wrap;gap:5px}
+.menu-mapa-tab{border:1px solid var(--border);background:var(--bg);color:var(--dark);border-radius:8px;padding:5px 9px;font-size:9px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
+.menu-mapa-tab:hover,.menu-mapa-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
+.menu-mapa-chart{width:100%;height:380px;min-height:300px}
+.menu-mapa-leyenda{font-size:9px;color:var(--gray);margin-top:8px;text-align:center;line-height:1.5}
+@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-right:none;border-bottom:1px solid var(--border)}.menu-sidebar .menu-grid-modules{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
 .menu-nacional-panel{padding:18px 20px 24px;background:var(--bg)}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
@@ -1267,11 +1311,11 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-compact .menu-kpi-orange .menu-kpi-val{color:var(--yellow)}
 .menu-kpi-compact .menu-kpi-red .menu-kpi-val{color:#f87171}
 .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
-.menu-card{position:relative;padding:14px 12px;border-radius:12px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .2s;background:linear-gradient(145deg,#161616,#0a0a0a);border:1px solid #2a2a2a;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-.menu-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,176,185,.18);border-color:var(--teal)}
+.menu-card{position:relative;padding:14px 12px;border-radius:12px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .2s;background:var(--white);border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.menu-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,176,185,.14);border-color:var(--teal);background:var(--teal-l)}
 .menu-card-icon{font-size:24px;margin-bottom:8px;display:block;line-height:1}
-.menu-card-title{color:#fff;font-size:12px;font-weight:800;line-height:1.2}
-.menu-card-desc{color:rgba(255,255,255,.42);font-size:9px;margin-top:4px;line-height:1.35}
+.menu-card-title{color:var(--dark);font-size:12px;font-weight:800;line-height:1.2}
+.menu-card-desc{color:var(--gray);font-size:9px;margin-top:4px;line-height:1.35}
 .menu-card-teal{border-left:4px solid var(--teal)}
 .menu-card-purple{border-left:4px solid #a78bfa}
 .menu-card-blue{border-left:4px solid #60a5fa}
@@ -1326,25 +1370,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     <div class="grid2" style="margin-bottom:12px">
       <div class="field"><label>Rectoría</label><select id="rectoria" multiple size="5" onchange="filtrarSedes()" style="width:100%;padding:6px 8px;border:1px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif;min-height:90px" title="Ctrl+clic para seleccionar varias">
 <option value="">— Seleccionar Rectoría (Ctrl+clic = varias) —</option>
-<option value="Corporación Universitaria Autónoma de Nariño">Corporación Universitaria Autónoma de Nariño</option>
-<option value="Corporación Universitaria Rafael Núñez">Corporación Universitaria Rafael Núñez</option>
-<option value="Fundación Universitaria Catolica Lumen Gentium">Fundación Universitaria Catolica Lumen Gentium</option>
-<option value="Fundación Universitaria Comfacauca">Fundación Universitaria Comfacauca</option>
-<option value="Fundación Universitaria Empresarial de la Camara de Comercio de Bogotá">Fundación Universitaria Empresarial de la Camara de Comercio de Bogotá</option>
-<option value="Fundación Universitaria Monserrate">Fundación Universitaria Monserrate</option>
-<option value="Fundación Universitaria Tecnológico Comfenalco">Fundación Universitaria Tecnológico Comfenalco</option>
-<option value="Fundación Universitaria de Popayan">Fundación Universitaria de Popayan</option>
-<option value="Rectoría Antioquia y Chocó">Rectoría Antioquia y Chocó</option>
-<option value="Rectoría Bogotá">Rectoría Bogotá</option>
-<option value="Rectoría Caribe">Rectoría Caribe</option>
-<option value="Rectoría Centro Occidente">Rectoría Centro Occidente</option>
-<option value="Rectoría Centro Sur">Rectoría Centro Sur</option>
-<option value="Rectoría Cundinamarca y Boyacá">Rectoría Cundinamarca y Boyacá</option>
-<option value="Rectoría Oriente">Rectoría Oriente</option>
-<option value="Tec. Minuto de Dios">Tec. Minuto de Dios</option>
-<option value="Universidad Tecnologica de Bolivar">Universidad Tecnologica de Bolivar</option>
-<option value="Universidad de los Andes">Universidad de los Andes</option>
-<option value="Virtual y Distancia">Virtual y Distancia</option>
 </select></div>
       <div class="field" id="campo-sede-coord" style="display:none">
         <label>Sede(s) <span style="font-size:10px;color:var(--teal)">(Ctrl+clic para múltiples)</span></label>
@@ -3169,7 +3194,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.1.0';
+var APP_VERSION = 'pyv-comercial-5.2.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3301,6 +3326,10 @@ window.normalizarSedeColocacion = normalizarSedeColocacion;
 // Mapa sede → rectoría (se llena desde el Sheet RECTORIAS SEDES)
 var PG_SEDE_RECTORIA = {};
 window.PG_SEDE_RECTORIA = PG_SEDE_RECTORIA;
+// Mapa sede → departamento (Colombia · nivel país para mapa ECharts)
+var PG_SEDE_DEPARTAMENTO = {"COA Engativa Pres":"BOGOTÁ, D.C.","COA Usaquen":"BOGOTÁ, D.C.","COA Ciudad Bolivar - Cofraternidad":"BOGOTÁ, D.C.","COA Santafe":"BOGOTÁ, D.C.","COA Bosa":"BOGOTÁ, D.C.","CO Kennedy":"BOGOTÁ, D.C.","CO Tunal - San Camilo":"BOGOTÁ, D.C.","COA Girardot":"CUNDINAMARCA","CT Apulo":"CUNDINAMARCA","Fusagasuga":"CUNDINAMARCA","CT La Mesa":"CUNDINAMARCA","CT Silvania":"CUNDINAMARCA","CR Madrid":"CUNDINAMARCA","CP Gualiva - Villeta":"CUNDINAMARCA","CT Facatativa":"CUNDINAMARCA","CT Funza":"CUNDINAMARCA","CT La Vega":"CUNDINAMARCA","Duitama":"BOYACÁ","Chiquinquira":"BOYACÁ","CR Soacha":"CUNDINAMARCA","CT Choachi":"CUNDINAMARCA","CR Zipaquirá":"CUNDINAMARCA","CP Guavio - Guasca":"CUNDINAMARCA","CT Ubate":"CUNDINAMARCA","Virtual y Distancia":"BOGOTÁ, D.C.","COA Bello":"ANTIOQUIA","Urabá":"ANTIOQUIA","Itagüi":"ANTIOQUIA","CT El Bagre":"ANTIOQUIA","CT Istmina":"CHOCÓ","Quibdó":"CHOCÓ","COA Caucasia":"ANTIOQUIA","Zaragoza":"ANTIOQUIA","Rionegro":"ANTIOQUIA","CR Barranquilla":"ATLÁNTICO","CR Cartagena":"BOLÍVAR","CR Santa Marta":"MAGDALENA","Magangue":"BOLÍVAR","COA Chinchina":"CALDAS","CR Pereira":"RISARALDA","CU Armenia":"QUINDÍO","CT Cartago":"VALLE DEL CAUCA","CR Cali":"VALLE DEL CAUCA","CR Buga":"VALLE DEL CAUCA","CT Buenaventura":"VALLE DEL CAUCA","CT Florida":"VALLE DEL CAUCA","CR Pasto":"NARIÑO","Ipiales":"NARIÑO","CR Bucaramanga":"SANTANDER","CS Floridablanca":"SANTANDER","CS Piedecuesta":"SANTANDER","CS Giron":"SANTANDER","CT Barrancabermeja":"SANTANDER","CR Cucuta":"NORTE DE SANTANDER","CT Tibu":"NORTE DE SANTANDER","CU Aguachica":"CESAR","CU El Tarra":"NORTE DE SANTANDER","CT Ocaña":"NORTE DE SANTANDER","COA Villavicencio":"META","COA Orocue":"CASANARE","COA Mitu":"VAUPÉS","COA Puerto Carreño":"VICHADA","CT Inirida":"GUAINÍA","Yopal":"CASANARE","CR Neiva":"HUILA","COA Garzon":"HUILA","CT Pitalito":"HUILA","CT Florencia":"CAQUETÁ","CU Planadas":"TOLIMA","CT Mocoa":"PUTUMAYO","CR Ibague":"TOLIMA","CT Lerida":"TOLIMA","CT Fresno":"TOLIMA","CT Mariquita":"TOLIMA","CT La Dorada":"CALDAS","COA Puerto Boyacá":"BOYACÁ","Pance":"VALLE DEL CAUCA","Yumbo":"VALLE DEL CAUCA","Alfonso Lopez":"VALLE DEL CAUCA","Melendez":"VALLE DEL CAUCA","Jamundi":"VALLE DEL CAUCA","Compatir":"VALLE DEL CAUCA","Unicatolica Centro":"VALLE DEL CAUCA","Popayan centro":"CAUCA","Santander de Quilichao":"CAUCA","Unicomfacauca - Popayan":"CAUCA","Unicomfacauca - Santander de Quilichao":"CAUCA","Tecnológico Comfenalco - Cartagena":"BOLÍVAR","CURN Cartagena":"BOLÍVAR","CURN Barranquilla":"ATLÁNTICO","Ternera":"BOLÍVAR","Manga":"BOLÍVAR","UniAndes-Bogotá":"BOGOTÁ, D.C.","UniMonserrate - Bogotá":"BOGOTÁ, D.C.","Mosquera":"CUNDINAMARCA","AUNAR Cartagena":"BOLÍVAR","AUNAR Pasto":"NARIÑO","AUNAR Villavicencio":"META","AUNAR Bogotá":"BOGOTÁ, D.C.","Uniempresarial":"BOGOTÁ, D.C.","Tec. Minuto de Dios":"CUNDINAMARCA"};
+window.PG_SEDE_DEPARTAMENTO = PG_SEDE_DEPARTAMENTO;
+
 
 // RECTORIAS: sede → [sedes] (se llena desde el Sheet)
 var RECTORIAS = {};
@@ -5472,28 +5501,8 @@ https://minutodediosportal.com/login/
         <option value="S1">S1 — Cerrado</option>
       </select>
       <select id="pg-filtro-rectoria" onchange="pgAplicarFiltros()" style="flex:1;min-width:160px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif">
-        <option value="">Todas las rectorías</option>
-      <option value="">🌎 Todas las rectorías (Nacional)</option>
-<option value="Corporación Universitaria Autónoma de Nariño">Corporación Universitaria Autónoma de Nariño</option>
-<option value="Corporación Universitaria Rafael Núñez">Corporación Universitaria Rafael Núñez</option>
-<option value="Fundación Universitaria Catolica Lumen Gentium">Fundación Universitaria Catolica Lumen Gentium</option>
-<option value="Fundación Universitaria Comfacauca">Fundación Universitaria Comfacauca</option>
-<option value="Fundación Universitaria Empresarial de la Camara de Comercio de Bogotá">Fundación Universitaria Empresarial de la Camara de Comercio de Bogotá</option>
-<option value="Fundación Universitaria Monserrate">Fundación Universitaria Monserrate</option>
-<option value="Fundación Universitaria Tecnológico Comfenalco">Fundación Universitaria Tecnológico Comfenalco</option>
-<option value="Fundación Universitaria de Popayan">Fundación Universitaria de Popayan</option>
-<option value="Rectoría Antioquia y Chocó">Rectoría Antioquia y Chocó</option>
-<option value="Rectoría Bogotá">Rectoría Bogotá</option>
-<option value="Rectoría Caribe">Rectoría Caribe</option>
-<option value="Rectoría Centro Occidente">Rectoría Centro Occidente</option>
-<option value="Rectoría Centro Sur">Rectoría Centro Sur</option>
-<option value="Rectoría Cundinamarca y Boyacá">Rectoría Cundinamarca y Boyacá</option>
-<option value="Rectoría Oriente">Rectoría Oriente</option>
-<option value="Tec. Minuto de Dios">Tec. Minuto de Dios</option>
-<option value="Universidad Tecnologica de Bolivar">Universidad Tecnologica de Bolivar</option>
-<option value="Universidad de los Andes">Universidad de los Andes</option>
-<option value="Virtual y Distancia">Virtual y Distancia</option>
-</select>
+        <option value="">🌎 Todas las rectorías (Nacional)</option>
+      </select>
       <select id="pg-filtro-sede" onchange="pgAplicarFiltros()" style="flex:1;min-width:160px;padding:8px 10px;border:1.5px solid var(--border);border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif">
         <option value="">Todas las sedes</option>
       </select>
@@ -5625,28 +5634,8 @@ https://minutodediosportal.com/login/
         <div>
           <div id="cd-label-rectoria" style="font-size:10px;font-weight:700;color:#64748b;margin-bottom:4px">RECTORÍA</div>
           <select id="cd-rectoria" onchange="cdActualizar()" style="width:100%;padding:7px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px">
-            <option value="">Todas</option>
-          <option value="">Todas</option>
-<option value="Corporación Universitaria Autónoma de Nariño">Corporación Universitaria Autónoma de Nariño</option>
-<option value="Corporación Universitaria Rafael Núñez">Corporación Universitaria Rafael Núñez</option>
-<option value="Fundación Universitaria Catolica Lumen Gentium">Fundación Universitaria Catolica Lumen Gentium</option>
-<option value="Fundación Universitaria Comfacauca">Fundación Universitaria Comfacauca</option>
-<option value="Fundación Universitaria Empresarial de la Camara de Comercio de Bogotá">Fundación Universitaria Empresarial de la Camara de Comercio de Bogotá</option>
-<option value="Fundación Universitaria Monserrate">Fundación Universitaria Monserrate</option>
-<option value="Fundación Universitaria Tecnológico Comfenalco">Fundación Universitaria Tecnológico Comfenalco</option>
-<option value="Fundación Universitaria de Popayan">Fundación Universitaria de Popayan</option>
-<option value="Rectoría Antioquia y Chocó">Rectoría Antioquia y Chocó</option>
-<option value="Rectoría Bogotá">Rectoría Bogotá</option>
-<option value="Rectoría Caribe">Rectoría Caribe</option>
-<option value="Rectoría Centro Occidente">Rectoría Centro Occidente</option>
-<option value="Rectoría Centro Sur">Rectoría Centro Sur</option>
-<option value="Rectoría Cundinamarca y Boyacá">Rectoría Cundinamarca y Boyacá</option>
-<option value="Rectoría Oriente">Rectoría Oriente</option>
-<option value="Tec. Minuto de Dios">Tec. Minuto de Dios</option>
-<option value="Universidad Tecnologica de Bolivar">Universidad Tecnologica de Bolivar</option>
-<option value="Universidad de los Andes">Universidad de los Andes</option>
-<option value="Virtual y Distancia">Virtual y Distancia</option>
-</select>
+        <option value="">Todas</option>
+      </select>
         </div>
         <div>
           <div style="font-size:10px;font-weight:700;color:#64748b;margin-bottom:4px">MÓDULO</div>
@@ -6158,7 +6147,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.1.0';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.2.0';
     var s = String(raw);
     var mProc = s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
     var txt = mProc ? (mProc[1]+' '+mProc[2]) : (function(){
@@ -8336,7 +8325,280 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[pyv-comercial 5.1.0] Menú oscuro · Login estricto · Radar MCM');
+
+  /* ── pyv-comercial-5.2.0: Mapa Colombia + auditoría dropdowns ── */
+  var _mapaColLayer = 'capacidad';
+  var _mapaColChart = null;
+  var _mapaColGeoLoaded = false;
+  var _mapaColCentroids = {};
+  var _mapaColGeoNames = {};
+  var MAPA_COLOMBIA_GEOJSON = 'https://raw.githubusercontent.com/caticoa3/colombia_mapa/master/co_2018_MGN_DPTO_POLITICO.geojson';
+
+  function _mapaNormDepto(n){
+    return String(n||'').toUpperCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/\s+/g,' ').trim();
+  }
+  function _mapaResolverDepto(sede){
+    var map = window.PG_SEDE_DEPARTAMENTO || {};
+    if(map[sede]) return map[sede];
+    var su = String(sede||'').toUpperCase();
+    var keys = Object.keys(map);
+    for(var i=0;i<keys.length;i++){
+      if(keys[i].toUpperCase()===su) return map[keys[i]];
+    }
+    return 'SIN DEPARTAMENTO';
+  }
+  function _mapaNombreGeoDepto(nd){
+    return _mapaColGeoNames[nd] || nd;
+  }
+  function _mapaListaRectorias(){
+    var r = (typeof RECTORIAS!=='undefined'&&RECTORIAS) ? RECTORIAS : (window.RECTORIAS||{});
+    if(!Object.keys(r).length && typeof _RECTORIAS_FALLBACK!=='undefined') r = _RECTORIAS_FALLBACK;
+    return Object.keys(r).sort(function(a,b){ return a.localeCompare(b,'es'); });
+  }
+  function _mapaListaSedes(rectoria){
+    var r = (typeof RECTORIAS!=='undefined'&&RECTORIAS) ? RECTORIAS : (window.RECTORIAS||{});
+    if(!Object.keys(r).length && typeof _RECTORIAS_FALLBACK!=='undefined') r = _RECTORIAS_FALLBACK;
+    if(!rectoria) {
+      var all = [];
+      Object.keys(r).forEach(function(rect){ all = all.concat(r[rect]||[]); });
+      return all.filter(Boolean).sort(function(a,b){ return a.localeCompare(b,'es'); });
+    }
+    return (r[rectoria]||[]).slice().sort(function(a,b){ return a.localeCompare(b,'es'); });
+  }
+  function _mapaSetSelectOptions(sel, items, placeholder, multi){
+    if(!sel) return;
+    var prev = multi ? Array.from(sel.selectedOptions||[]).map(function(o){return o.value;}) : [sel.value];
+    sel.innerHTML = '';
+    if(placeholder!==null){
+      var o0 = document.createElement('option');
+      o0.value = '';
+      o0.textContent = placeholder;
+      sel.appendChild(o0);
+    }
+    items.forEach(function(v){
+      var o = document.createElement('option');
+      o.value = v; o.textContent = v;
+      sel.appendChild(o);
+    });
+    if(!multi && prev[0]){
+      for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value===prev[0]){ sel.value=prev[0]; break; } }
+    }
+  }
+  function poblarSelectRectoriasUnificado(selectId, placeholder){
+    var sel = typeof selectId==='string' ? document.getElementById(selectId) : selectId;
+    if(!sel) return;
+    _mapaSetSelectOptions(sel, _mapaListaRectorias(), placeholder || '— Seleccionar rectoría —', !!sel.multiple);
+  }
+  function poblarSelectSedesUnificado(selectId, rectoria, placeholder){
+    var sel = typeof selectId==='string' ? document.getElementById(selectId) : selectId;
+    if(!sel) return;
+    _mapaSetSelectOptions(sel, _mapaListaSedes(rectoria||''), placeholder || '— Seleccionar sede —', !!sel.multiple);
+  }
+  function auditarYSincronizarDropdowns(){
+    try{
+      _cartAsegurarMapaRectorias();
+      var rects = _mapaListaRectorias();
+      var sedes = _mapaListaSedes('');
+      console.log('[SCIC audit] Rectorías: '+rects.length+' · Sedes: '+sedes.length);
+      poblarSelectRectoriasUnificado('rectoria', '— Seleccionar Rectoría (Ctrl+clic = varias) —');
+      poblarSelectRectoriasUnificado('pg-filtro-rectoria', '🌎 Todas las rectorías (Nacional)');
+      poblarSelectRectoriasUnificado('comp-rectoria-sel', '— Seleccionar —');
+      poblarSelectRectoriasUnificado('carta-rectoria', '— Seleccionar —');
+      poblarSelectRectoriasUnificado('carta-asesor-rectoria', '— Seleccionar —');
+      poblarSelectRectoriasUnificado('rc-filtro-rectoria', 'Todas las rectorías');
+      var cdNivel = (document.getElementById('cd-nivel')||{}).value || 'nacional';
+      if(cdNivel==='rectoria') poblarSelectRectoriasUnificado('cd-rectoria', 'Todas');
+      else if(cdNivel==='sede') poblarSelectSedesUnificado('cd-rectoria', '', 'Todas las sedes');
+      var srRect = document.getElementById('sr-rectoria');
+      if(srRect){
+        var prevR = Array.from(srRect.selectedOptions||[]).map(function(o){return o.value;});
+        _mapaSetSelectOptions(srRect, rects, null, true);
+        prevR.forEach(function(v){ for(var i=0;i<srRect.options.length;i++){ if(srRect.options[i].value===v) srRect.options[i].selected=true; } });
+      }
+      poblarSelectSedesUnificado('pg-filtro-sede', (document.getElementById('pg-filtro-rectoria')||{}).value||'', 'Todas las sedes');
+      poblarSelectSedesUnificado('hist-filtro-sede', '', 'Todas las sedes');
+      poblarSelectSedesUnificado('hist-seg-filtro-sede', '', 'Todas las sedes');
+      poblarSelectSedesUnificado('md-sede', '', '— Seleccionar sede —');
+      var dirSede = document.getElementById('dir-sede');
+      if(dirSede){
+        var empSedes = [...new Set(Object.values(EMPLEADOS_BD||{}).map(function(e){return e.sede||'';}).filter(Boolean))].sort(function(a,b){return a.localeCompare(b,'es');});
+        var dirList = empSedes.length ? empSedes : sedes;
+        _mapaSetSelectOptions(dirSede, dirList, 'Todas las sedes', false);
+      }
+      if(typeof filtrarSedes==='function') filtrarSedes();
+    }catch(e){ console.warn('[SCIC audit] auditarYSincronizarDropdowns:', e&&e.message); }
+  }
+  window.poblarSelectRectoriasUnificado = poblarSelectRectoriasUnificado;
+  window.poblarSelectSedesUnificado = poblarSelectSedesUnificado;
+  window.auditarYSincronizarDropdowns = auditarYSincronizarDropdowns;
+
+  var _origPoblarRectorias = window.poblarSelectRectorias;
+  window.poblarSelectRectorias = function(){
+    if(typeof auditarYSincronizarDropdowns==='function') auditarYSincronizarDropdowns();
+    else if(typeof _origPoblarRectorias==='function') _origPoblarRectorias();
+  };
+
+  function _mapaAgregarPorDepto(layer){
+    var deptoData = {};
+    var sedesMap = window.PG_SEDE_RECTORIA || {};
+    var coloc = window._coloc_data || [];
+    var colocBySede = {};
+    coloc.forEach(function(r){ if(r.sede) colocBySede[r.sede] = r; });
+    Object.keys(sedesMap).forEach(function(sede){
+      var d = _mapaResolverDepto(sede);
+      var nd = _mapaNormDepto(d);
+      if(!deptoData[nd]) deptoData[nd] = {nombre:d, capacidad:0, meta:0, colocacion:0, sedes:[]};
+      deptoData[nd].capacidad += 1;
+      deptoData[nd].sedes.push(sede);
+      var row = colocBySede[sede];
+      if(row){
+        deptoData[nd].meta += row.meta_n||0;
+        deptoData[nd].colocacion += row.acum_n||0;
+      }
+    });
+    Object.keys(deptoData).forEach(function(k){
+      var o = deptoData[k];
+      o.cumplimiento = o.meta>0 ? Math.round(o.colocacion/o.meta*100) : 0;
+    });
+    var values = Object.keys(deptoData).map(function(k){
+      var o = deptoData[k];
+      var geoName = _mapaNombreGeoDepto(k);
+      if(layer==='capacidad') return {name:geoName, value:o.capacidad};
+      if(layer==='meta') return {name:geoName, value:o.meta};
+      if(layer==='colocacion') return {name:geoName, value:o.colocacion};
+      return {name:geoName, value:o.cumplimiento};
+    });
+    return {deptoData:deptoData, values:values};
+  }
+  function _mapaColorScale(layer){
+    if(layer==='cumplimiento') return ['#dc2626','#fbbf24','#4ade80'];
+    return ['#e0f7fa','#00B0B9','#003D45'];
+  }
+  function _mapaFmtVal(v, layer){
+    if(layer==='cumplimiento') return v+'%';
+    if(layer==='capacidad') return v+' sede'+(v!==1?'s':'');
+    return (v>=1000?(v/1000).toFixed(1)+'k':String(v))+' créd.';
+  }
+  function setMapaColombiaLayer(layer){
+    _mapaColLayer = layer || 'capacidad';
+    document.querySelectorAll('.menu-mapa-tab').forEach(function(btn){
+      btn.classList.toggle('active', btn.getAttribute('data-layer')===_mapaColLayer);
+    });
+    var labels = {capacidad:'Capacidad instalada (# sedes)', meta:'Meta S2 (créditos)', colocacion:'Colocación acumulada', cumplimiento:'% cumplimiento meta'};
+    var ley = document.getElementById('menu-mapa-leyenda');
+    if(ley) ley.textContent = (labels[_mapaColLayer]||'')+' · Clic en departamento o sede para detalle · Fuente: RECTORIAS + colocación S2';
+    if(_mapaColGeoLoaded) _mapaColombiaPintar();
+    else renderMapaColombia();
+  }
+  window.setMapaColombiaLayer = setMapaColombiaLayer;
+
+  function _mapaColombiaPintar(){
+    if(!_mapaColChart || typeof echarts==='undefined') return;
+    var agg = _mapaAgregarPorDepto(_mapaColLayer);
+    var values = agg.values;
+    var maxV = Math.max.apply(null, values.map(function(x){return x.value;}).concat([1]));
+    var scatter = [];
+    Object.keys(agg.deptoData).forEach(function(k){
+      var o = agg.deptoData[k];
+      var cen = _mapaColCentroids[_mapaNormDepto(o.nombre)];
+      if(!cen) return;
+      o.sedes.forEach(function(sede, idx){
+        var jitter = (idx - o.sedes.length/2) * 0.12;
+        scatter.push({
+          name: sede, value: [cen[0]+jitter, cen[1]+jitter*0.5, 1],
+          depto: o.nombre,
+          tooltip: sede+' · '+o.nombre
+        });
+      });
+    });
+    var layer = _mapaColLayer;
+    _mapaColChart.setOption({
+      visualMap: {
+        min: 0, max: maxV, left: 10, bottom: 20, text: ['Alto','Bajo'],
+        inRange: {color: _mapaColorScale(layer)},
+        textStyle: {fontSize: 9},
+        formatter: function(v){ return _mapaFmtVal(Math.round(v), layer); }
+      },
+      series: [
+        { type:'map', map:'colombia', roam:true, data: values,
+          emphasis:{label:{show:true,fontSize:9}},
+          label:{show:false},
+          name: layer
+        },
+        { type:'scatter', coordinateSystem:'geo', geoIndex:0, data: scatter,
+          symbolSize: 6, itemStyle:{color:'#FFD900',borderColor:'#003D45',borderWidth:1},
+          tooltip:{formatter:function(p){ return p.data.tooltip||p.name; }}
+        }
+      ]
+    }, true);
+  }
+
+  function renderMapaColombia(){
+    var el = document.getElementById('menu-mapa-chart');
+    if(!el || typeof echarts==='undefined') return;
+    if(!_mapaColChart) _mapaColChart = echarts.init(el);
+    if(_mapaColGeoLoaded){ _mapaColombiaPintar(); return; }
+    el.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100%;color:#94a3b8;font-size:12px">Cargando mapa Colombia…</div>';
+    fetch(MAPA_COLOMBIA_GEOJSON).then(function(r){ return r.json(); }).then(function(geo){
+      geo.features.forEach(function(f){
+        var nm = f.properties && (f.properties.DPTO_CNMBR || f.properties.NOMBRE_DPT || f.properties.name);
+        if(!nm || !f.geometry) return;
+        var coords = [];
+        function walk(g){
+          if(g.type==='Polygon') g.coordinates[0].forEach(function(c){coords.push(c);});
+          else if(g.type==='MultiPolygon') g.coordinates.forEach(function(p){p[0].forEach(function(c){coords.push(c);});});
+        }
+        walk(f.geometry);
+        if(!coords.length) return;
+        var lng=0, lat=0;
+        coords.forEach(function(c){ lng+=c[0]; lat+=c[1]; });
+        var nk = _mapaNormDepto(nm);
+        _mapaColCentroids[nk] = [lng/coords.length, lat/coords.length];
+        _mapaColGeoNames[nk] = nm;
+      });
+      echarts.registerMap('colombia', geo);
+      _mapaColGeoLoaded = true;
+      el.innerHTML = '';
+      _mapaColChart = echarts.init(el);
+      _mapaColChart.setOption({
+        tooltip: {
+          trigger: 'item',
+          formatter: function(p){
+            if(!p.data) return p.name||'';
+            var v = p.data.value;
+            if(Array.isArray(v)) return p.data.tooltip||p.name;
+            return (p.name||'')+': '+_mapaFmtVal(typeof v==='number'?v:0, _mapaColLayer);
+          }
+        },
+        geo: { map:'colombia', roam:true, label:{show:false}, itemStyle:{borderColor:'#fff',borderWidth:0.6}, emphasis:{itemStyle:{areaColor:'#FFD900'}} }
+      });
+      setMapaColombiaLayer(_mapaColLayer);
+      window.addEventListener('resize', function(){ if(_mapaColChart) _mapaColChart.resize(); });
+    }).catch(function(e){
+      if(el) el.innerHTML = '<div style="padding:20px;color:#dc2626;font-size:11px">No se pudo cargar el mapa: '+(e&&e.message||e)+'</div>';
+    });
+  }
+  window.renderMapaColombia = renderMapaColombia;
+
+  var _origActualizarMenuKPIs = window.actualizarMenuKPIs;
+  if(typeof _origActualizarMenuKPIs==='function'){
+    window.actualizarMenuKPIs = function(){
+      _origActualizarMenuKPIs();
+      if(typeof renderMapaColombia==='function') setTimeout(renderMapaColombia, 300);
+    };
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', function(){
+      setTimeout(function(){ auditarYSincronizarDropdowns(); renderMapaColombia(); }, 800);
+    });
+  } else {
+    setTimeout(function(){ auditarYSincronizarDropdowns(); renderMapaColombia(); }, 800);
+  }
+
+  console.log('[pyv-comercial 5.2.0] Menú lateral · Mapa Colombia · Auditoría dropdowns');
 })();
 </script>
 <footer class="app-footer" id="app-footer-global">
