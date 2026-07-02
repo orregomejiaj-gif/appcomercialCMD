@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.3.0   (APP_VERSION = 'pyv-comercial-5.3.0')
+  Versión actual: pyv-comercial-5.4.0   (APP_VERSION = 'pyv-comercial-5.4.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,17 +10,20 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
-  pyv-comercial-5.3.0 (2026-06-30)
+  pyv-comercial-5.4.0 (2026-06-30)
+    - Cartera, menú y Hoja 3: exportación PDF completa + Excel multi-hoja integrado.
+    - Seguimientos autollenados al ingresar: colocación, metas y datos de repos por sede.
+    - Hoja 3: pipeline gerencial corregido (matching sedes) + panel valor agregado accionable.
+    - Sincronización H3 → state.seguimiento para persistencia en Sheet al guardar/finalizar.
     - Asistente IA flotante en menú: consultas por sede (ej. «¿cómo está Bello?») con informe y riesgos.
     - Indicador general de Salud Comercial (ISCIC) con dimensiones en panel principal.
     - Descripciones en botones del menú y tabs SCIC; corrección versión visible y datos SCIC.
-    - Mapa Colombia: matching departamentos GeoJSON mejorado.
+    - Mapa Colombia: matching departamentos GeoJSON mejorado (capacidad, meta, colocación, cumplimiento).
+  pyv-comercial-5.2.0 (2026-06-30)
     - Menú lateral: botones fondo claro; semáforos y mapa Colombia en panel principal.
-    - Mapa ECharts nivel país: capacidad, meta, colocación y cumplimiento por departamento + sedes.
-    - Auditoría dropdowns: rectorías y sedes sincronizadas desde RECTORIAS / PG_SEDE_RECTORIA.
-    - Menú: fondo blanco con botones y semáforos oscuros (negro + indicadores de color + emojis).
-    - Login: nombre visible solo con coincidencia exacta en repositorio de empleados.
-    - Radar Comercial MCM: 8 semáforos críticos (cobertura, cumplimiento, conversión, GLPI, embudo, seguimientos, cartera, ritmo).
+    - Mapa ECharts nivel país por departamento + sedes; auditoría dropdowns RECTORIAS.
+  pyv-comercial-5.1.0 (2026-06-30)
+    - Menú: semáforos oscuros; login estricto; radar MCM.
   pyv-comercial-5.0.0 (2026-06-30)
     - Nuevo esquema de versionado por proceso dentro de SCIC.
     - Identidad visual alineada a manual de línea gráfica CMD (teal, amarillo, verde, gris).
@@ -1061,6 +1064,12 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </aside>
     <div class="menu-main-panel">
     <div class="menu-nacional-panel">
+
+      <div class="menu-export-bar" id="menu-export-bar" style="display:flex;gap:8px;flex-wrap:wrap;padding:0 0 14px;align-items:center">
+        <span style="font-size:10px;font-weight:700;color:#64748b;text-transform:uppercase">Exportar panel</span>
+        <button onclick="exportarExcelMenuComercial()" style="padding:7px 14px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:#003D45;color:#FFD900">📊 Excel panel</button>
+        <button onclick="exportarPDFMenuComercial()" style="padding:7px 14px;border-radius:8px;border:none;font-size:11px;font-weight:700;cursor:pointer;background:#b91c1c;color:#fff">📄 PDF panel</button>
+      </div>
 
       <div class="menu-salud-panel" id="menu-salud-panel">
         <div class="menu-salud-hdr">
@@ -2835,6 +2844,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Calculando indicadores...</div>
     </div>
     <div id="analisis-5sem-narrativa" style="margin-top:12px"></div>
+    <div id="h3-valor-agregado" style="margin-top:14px"></div>
   </div>
   <div class="card" id="card-chart">
     <div class="card-hdr"><div class="cico"><i class="ti ti-chart-donut"></i></div><h2>Peso de la sede vs total global</h2></div>
@@ -2853,7 +2863,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn btn-primary" onclick="abrirActaPrevia()"><i class="ti ti-file-certificate"></i> Generar Acta SG-FR-04</button>
       <button class="btn" onclick="finalizarSeguimiento()" style="background:#1e40af;color:#fff;border-color:#1e40af"><i class="ti ti-file-analytics"></i> Finalizar Seguimiento</button>
       
-      <button class="btn" onclick="exportarExcel()" style="background:#166534;color:#fff;border-color:#166534"><i class="ti ti-file-spreadsheet"></i> Exportar Excel</button>
+      <button class="btn" onclick="exportarExcelSeguimientoCompleto()" style="background:#166534;color:#fff;border-color:#166534"><i class="ti ti-file-spreadsheet"></i> Excel completo</button>
+      <button class="btn" onclick="exportarPDFSeguimientoH3()" style="background:#b91c1c;color:#fff;border-color:#b91c1c"><i class="ti ti-file-type-pdf"></i> PDF informe H3</button>
       <button class="btn btn-teal" onclick="verPreviewActa()"><i class="ti ti-eye"></i> Vista previa</button>
       <button onclick="mostrarCorreo()" class="btn" style="background:#0078d4;color:#fff;border-color:#0078d4"><i class="ti ti-mail"></i> Enviar por correo</button>
       <button onclick="copiarResumen()" class="btn btn-yellow"><i class="ti ti-clipboard-copy"></i> Copiar resumen</button>
@@ -3284,7 +3295,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.3.0';
+var APP_VERSION = 'pyv-comercial-5.4.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6238,7 +6249,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.3.0';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.4.0';
     var s = String(raw);
     var mProc = s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
     var txt = mProc ? (mProc[1]+' '+mProc[2]) : (function(){
@@ -7112,7 +7123,11 @@ function _parseCumpleMMDD(s){
     });
     html += '</tbody></table></div>';
     if(typeof exportarHistSeguimientosCSV === 'function'){
-      html += '<button onclick="exportarHistSeguimientosCSV()" style="margin-top:12px;padding:8px 16px;background:#003D45;color:#FFD900;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↓ Exportar CSV para auditoría</button>';
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">'
+      +'<button onclick="exportarHistSeguimientosCSV()" style="padding:8px 16px;background:#003D45;color:#FFD900;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↓ CSV auditoría</button>'
+      +'<button onclick="exportarHistorialSeguimientosCompleto()" style="padding:8px 16px;background:#166534;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📊 Excel completo</button>'
+      +'<button onclick="exportarHistorialSeguimientosPDF()" style="padding:8px 16px;background:#b91c1c;color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📄 PDF historial</button>'
+      +'</div>';
     }
     el.innerHTML = html;
   };
@@ -7690,7 +7705,8 @@ function _parseCumpleMMDD(s){
       +'<span style="margin-left:auto;font-size:10px;color:#94a3b8;align-self:center">'+ctx.name+' · '+d.ts+'</span>'
       +'<button onclick="abrirGuiaCobranzaPYV()" style="padding:5px 12px;border-radius:6px;border:1px solid #00B0B9;font-size:10px;font-weight:700;cursor:pointer;background:#e0f7f8;color:#007a80">📋 Guía Cobranza PYV</button>'
       +'<button onclick="_cargarCartera()" style="padding:5px 10px;border-radius:6px;border:1px solid #e2e8f0;font-size:10px;cursor:pointer;background:#fff">↺</button>'
-      +'<button onclick="exportarExcelCartera()" style="padding:5px 10px;border-radius:6px;border:none;font-size:10px;cursor:pointer;background:#003D45;color:#fff">⬇️ Excel</button></div>';
+      +'<button onclick="exportarExcelCarteraCompleto()" style="padding:5px 10px;border-radius:6px;border:none;font-size:10px;cursor:pointer;background:#003D45;color:#fff">📊 Excel completo</button>'
+      +'<button onclick="exportarPDFCartera()" style="padding:5px 10px;border-radius:6px;border:none;font-size:10px;cursor:pointer;background:#b91c1c;color:#fff">📄 PDF</button></div>';
 
     if(tab==='nacional'){
       html += '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:12px 14px;background:#f8fafc">';
@@ -8417,7 +8433,7 @@ function _parseCumpleMMDD(s){
   }
 
 
-  /* ── pyv-comercial-5.3.0: Mapa Colombia + auditoría dropdowns ── */
+  /* ── pyv-comercial-5.4.0: Mapa Colombia + auditoría dropdowns ── */
   var _mapaColLayer = 'capacidad';
   var _mapaColChart = null;
   var _mapaColGeoLoaded = false;
@@ -8704,7 +8720,7 @@ function _parseCumpleMMDD(s){
   }
 
 
-  /* ── pyv-comercial-5.3.0: IA flotante · Salud Comercial · fixes SCIC ── */
+  /* ── pyv-comercial-5.4.0: IA flotante · Salud Comercial · fixes SCIC ── */
   var SCIC_TAB_DESCRIPCIONES = {
     pulso:'Pulso nacional: panorama ISCIC, sedes críticas y ritmo de colocación S2.',
     sede:'Radar por sede: indicadores MCM, semáforos y brecha vs meta de la sede seleccionada.',
@@ -9004,7 +9020,444 @@ function _parseCumpleMMDD(s){
 
   if(typeof renderSaludComercialCMD==='function') setTimeout(renderSaludComercialCMD, 900);
 
-  console.log('[pyv-comercial 5.3.0] IA flotante · Salud Comercial · fixes SCIC/mapa');
+  /* ── pyv-comercial-5.4.0: Export PDF/Excel · Autollenado · H3 pipeline ── */
+  function _cmdFmtN(n){ return (Number(n)||0).toLocaleString('es-CO'); }
+  function _cmdFmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+_cmdFmtN(Math.round(v)); }
+  function _cmdPdfHeader(doc, title, sub){
+    var w = doc.internal.pageSize.width, y = 14;
+    doc.setFillColor(0,61,69); doc.rect(0,0,w,28,'F');
+    doc.setTextColor(255,217,0); doc.setFontSize(14); doc.setFont(undefined,'bold');
+    doc.text('CMD · Cooperativa Minuto de Dios', 14, 12);
+    doc.setTextColor(255,255,255); doc.setFontSize(10); doc.setFont(undefined,'normal');
+    doc.text(title, 14, 20);
+    if(sub){ doc.setFontSize(8); doc.setTextColor(200,220,220); doc.text(sub, 14, 25); }
+    doc.setTextColor(30,41,59); return 34;
+  }
+  function _cmdPdfCheckPage(doc, y, need){
+    if(y + (need||20) > doc.internal.pageSize.height - 16){
+      doc.addPage(); return _cmdPdfHeader(doc, 'Continuación', '');
+    }
+    return y;
+  }
+  function _cmdXlsxDownload(wb, name){
+    if(typeof XLSX==='undefined'){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('XLSX no disponible'); return; }
+    XLSX.writeFile(wb, name);
+  }
+
+  function _cartRowsResumen(d){
+    return [
+      ['Portafolio','Apertura Total','Cierre Total','Vigentes Ci','Mora 1-30 Ci','Capital Ap','Capital Ci'],
+      ['Cygnus', d.apDistCyg&&d.apDistCyg.total||0, d.ciDistCyg&&d.ciDistCyg.total||0, d.ciDistCyg&&d.ciDistCyg.Vigente||0, d.ciDistCyg&&d.ciDistCyg['1-30']||0, d.apDistCyg&&d.apDistCyg.cap||0, d.ciDistCyg&&d.ciDistCyg.cap||0],
+      ['SAP', d.apDistSAP&&d.apDistSAP.total||0, d.ciDistSAP&&d.ciDistSAP.total||0, d.ciDistSAP&&d.ciDistSAP.Vigente||0, d.ciDistSAP&&d.ciDistSAP['1-30']||0, d.apDistSAP&&d.apDistSAP.cap||0, d.ciDistSAP&&d.ciDistSAP.cap||0],
+      ['Total', (d.apDistCyg&&d.apDistCyg.total||0)+(d.apDistSAP&&d.apDistSAP.total||0), (d.ciDistCyg&&d.ciDistCyg.total||0)+(d.ciDistSAP&&d.ciDistSAP.total||0), (d.ciDistCyg&&d.ciDistCyg.Vigente||0)+(d.ciDistSAP&&d.ciDistSAP.Vigente||0), (d.ciDistCyg&&d.ciDistCyg['1-30']||0)+(d.ciDistSAP&&d.ciDistSAP['1-30']||0), (d.apDistCyg&&d.apDistCyg.cap||0)+(d.apDistSAP&&d.apDistSAP.cap||0), (d.ciDistCyg&&d.ciDistCyg.cap||0)+(d.ciDistSAP&&d.ciDistSAP.cap||0)]
+    ];
+  }
+  function _cartRowsFlujos(ctx){
+    var fl = (ctx.cruz&&ctx.cruz.f)||{};
+    return [['Flujo','Unidades'],['Recuperados a vigente',fl.REC||0],['Salidas',fl.SALIDA||0],['Nuevos en mora',fl.N_MORA||0],['Persisten mora',fl.PERSISTE||0],['Rodados',fl.RODADO||0],['Nuevos créditos',fl.NUEVO||0]];
+  }
+  function _cartRowsSedes(ctx){
+    var rows = [['Sede','Recup','Nuevo Mora','Rodado','Mejoró','Persiste','Nuevo']];
+    Object.values(ctx.cruz&&ctx.cruz.porSede||{}).sort(function(a,b){return b.N_MORA-a.N_MORA;}).forEach(function(s){
+      rows.push([s.sede, s.REC||0, s.N_MORA||0, s.RODADO||0, s.MEJORADO||0, s.PERSISTE||0, s.NUEVO||0]);
+    });
+    return rows;
+  }
+  function _cartRowsRectorias(ctx, d){
+    var rows = [['Rectoría','Ap Total','Ap 1-30','Ap 31-60','Ci Total','Ci 1-30','Ci 31-60']];
+    (_cartRectRows(ctx,d)||[]).forEach(function(r){
+      rows.push([r.nombre, r.ap.total||0, r.ap['1-30']||0, r.ap['31-60']||0, r.ci.total||0, r.ci['1-30']||0, r.ci['31-60']||0]);
+    });
+    return rows;
+  }
+
+  window.exportarExcelCarteraCompleto = function(){
+    var d = window._cartData;
+    if(!d){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Cargue cartera primero'); return; }
+    if(typeof _cartRecomputarCruces==='function') _cartRecomputarCruces(d);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(_cartRowsResumen(d)), 'Resumen');
+    ['cygnus','sap','total'].forEach(function(p){
+      var ctx = _cartGetCtx(d,p), ind = _cartIndicadoresPortafolio(d,p);
+      var info = [['Informe','Estado Cartera CMD'],['Portafolio',ctx.name],['Fecha corte',d.ts||''],['Recuperada %',ind.recPct||0],['Rodada %',ind.rodPct||0]];
+      var sh = XLSX.utils.aoa_to_sheet(info.concat([[]], _cartRowsFlujos(ctx), [[]], _cartRowsRectorias(ctx,d), [[]], _cartRowsSedes(ctx)));
+      XLSX.utils.book_append_sheet(wb, sh, p.charAt(0).toUpperCase()+p.slice(1));
+    });
+    _cmdXlsxDownload(wb, 'Cartera_CMD_Completo_'+((d.ts||'').replace(/\//g,'-')||new Date().toISOString().slice(0,10))+'.xlsx');
+  };
+  window.exportarExcelCartera = window.exportarExcelCarteraCompleto;
+
+  window.exportarPDFCartera = function(){
+    if(typeof window.jspdf==='undefined'){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('jsPDF no disponible'); return; }
+    var d = window._cartData;
+    if(!d){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Cargue cartera primero'); return; }
+    if(typeof _cartRecomputarCruces==='function') _cartRecomputarCruces(d);
+    var doc = new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var y = _cmdPdfHeader(doc, 'Informe Estado de Cartera', 'Corte: '+(d.ts||'')+' · Cygnus + SAP');
+    ['cygnus','sap','total'].forEach(function(p){
+      var ctx = _cartGetCtx(d,p), ind = _cartIndicadoresPortafolio(d,p);
+      y = _cmdPdfCheckPage(doc, y, 40);
+      doc.setFontSize(11); doc.setFont(undefined,'bold'); doc.setTextColor(0,61,69);
+      doc.text(ctx.name+' — Recup. '+(ind.recPct||0)+'% · Rodada '+(ind.rodPct||0)+'%', 14, y); y += 7;
+      doc.setFontSize(9); doc.setFont(undefined,'normal'); doc.setTextColor(60,60,60);
+      var fl = (ctx.cruz&&ctx.cruz.f)||{};
+      [['Recuperados',fl.REC||0],['Nuevos mora',fl.N_MORA||0],['Rodados',fl.RODADO||0],['Nuevos créd.',fl.NUEVO||0]].forEach(function(row){
+        doc.text('  · '+row[0]+': '+_cmdFmtN(row[1]), 14, y); y += 5;
+      });
+      y += 4;
+    });
+    doc.save('Cartera_CMD_'+new Date().toISOString().slice(0,10)+'.pdf');
+  };
+
+  function _cmdDatosSeguimientoH3(){
+    var seg = state.seguimiento||{}, met = state.metas||{};
+    var sedes = (state.sedes||[]).join(', ')||'—';
+    var filas = typeof buscarFilasColoc==='function' ? buscarFilasColoc(state.sedes||[]) : [];
+    var metaN = filas.reduce(function(s,r){return s+(r.meta_n||0);},0);
+    var acumN = filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
+    var brecha = Math.max(0, metaN-acumN);
+    var cumpl = metaN>0 ? Math.round(acumN/metaN*100) : 0;
+    return {seg:seg, met:met, sedes:sedes, filas:filas, metaN:metaN, acumN:acumN, brecha:brecha, cumpl:cumpl,
+      modo: (mode||'coord')==='coord'?'Coordinación':'Asesor',
+      ejecutor: navState.nombreEjecutor||state.ejecutor||'—',
+      mes: state.mes||'—', anio: state.anio||'', fecha: state.fechaSeg||(new Date().toISOString().slice(0,10))};
+  }
+
+  window.exportarExcelSeguimientoCompleto = function(){
+    if(typeof XLSX==='undefined'){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('XLSX no disponible'); return; }
+    _syncH3ToState();
+    var h = _cmdDatosSeguimientoH3(), seg=h.seg, met=h.met;
+    var wb = XLSX.utils.book_new();
+    var resumen = [
+      ['INFORME SEGUIMIENTO H3 — CMD SCIC'],['Modo',h.modo],['Sede(s)',h.sedes],['Ejecutor',h.ejecutor],['Mes/Año',h.mes+' '+h.anio],['Fecha',h.fecha],
+      ['Meta colocación',h.metaN],['Acumulado',h.acumN],['Brecha',h.brecha],['Cumplimiento %',h.cumpl],
+      ['Real créditos form',seg.real_creditos||0],['CSAT',seg.csat||''],['Calificación',seg.calif_seguimiento||'']
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(resumen), 'Resumen H3');
+    var indRows = [['Indicador','Valor']];
+    Object.keys(seg).forEach(function(k){ if(typeof seg[k]!=='object') indRows.push([k, seg[k]]); });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(indRows), 'Seguimiento');
+    var metaRows = [['Campo','Valor']];
+    Object.keys(met).forEach(function(k){ metaRows.push([k, met[k]]); });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(metaRows), 'Metas');
+    if(h.filas.length){
+      var colRows = [['Sede','Meta','Acumulado','%','Semáforo','Fecha']];
+      h.filas.forEach(function(r){
+        var pct = r.meta_n>0 ? Math.round((r.acum_n||0)/r.meta_n*100) : 0;
+        colRows.push([r.sede, r.meta_n||0, r.acum_n||0, pct, r.semaforo||'', r.fecha||'']);
+      });
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(colRows), 'Colocación sedes');
+    }
+    var acciones = [['Prioridad','Acción sugerida','Impacto']];
+    if(h.brecha>0) acciones.push(['ALTA','Cerrar brecha de '+h.brecha+' créditos antes del cierre de mes','Colocación']);
+    if((seg.sol_abiertas||0)>(seg.sol_cerr||0)) acciones.push(['MEDIA','Acelerar cierre GLPI: '+((seg.sol_abiertas||0)-(seg.sol_cerr||0))+' solicitudes pendientes','Conversión']);
+    if(h.cumpl<70) acciones.push(['ALTA','Revisar pipeline y cobertura asesores en sede','Operación']);
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(acciones), 'Acciones valor');
+    _cmdXlsxDownload(wb, 'Seguimiento_H3_'+h.sedes.replace(/[,\s]+/g,'_').slice(0,30)+'_'+h.fecha+'.xlsx');
+  };
+
+  window.exportarPDFSeguimientoH3 = function(){
+    if(typeof window.jspdf==='undefined'){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('jsPDF no disponible'); return; }
+    _syncH3ToState();
+    var h = _cmdDatosSeguimientoH3(), seg=h.seg;
+    var doc = new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var y = _cmdPdfHeader(doc, 'Informe Seguimiento — Hoja 3', h.modo+' · '+h.sedes+' · '+h.fecha);
+    doc.setFontSize(10); doc.setTextColor(30,41,59);
+    [['Ejecutor',h.ejecutor],['Período',h.mes+' '+h.anio],['Meta colocación',_cmdFmtN(h.metaN)],['Acumulado',_cmdFmtN(h.acumN)],['Brecha',_cmdFmtN(h.brecha)],['Cumplimiento',h.cumpl+'%'],['Créditos reportados',seg.real_creditos||'—'],['CSAT',seg.csat||'—']].forEach(function(row){
+      y = _cmdPdfCheckPage(doc, y, 8);
+      doc.setFont(undefined,'bold'); doc.text(row[0]+':', 14, y);
+      doc.setFont(undefined,'normal'); doc.text(String(row[1]), 70, y); y += 6;
+    });
+    y = _cmdPdfCheckPage(doc, y, 20);
+    doc.setFont(undefined,'bold'); doc.text('Acciones de alto valor', 14, y); y += 7;
+    doc.setFont(undefined,'normal'); doc.setFontSize(9);
+    if(h.brecha>0){ doc.text('• Cerrar brecha de '+_cmdFmtN(h.brecha)+' créditos — prioridad colocación.', 14, y); y += 5; }
+    if(h.cumpl>=90){ doc.text('• Mantener ritmo: sede en zona verde de cumplimiento.', 14, y); y += 5; }
+    else if(h.cumpl<70){ doc.text('• Activar plan de choque: pipeline, cobertura y seguimiento diario.', 14, y); y += 5; }
+    if(seg.observaciones){ y = _cmdPdfCheckPage(doc, y, 15); doc.text('Observaciones: '+String(seg.observaciones).slice(0,200), 14, y, {maxWidth:180}); }
+    doc.save('Seguimiento_H3_'+new Date().toISOString().slice(0,10)+'.pdf');
+  };
+
+  window.exportarExcelMenuComercial = function(){
+    if(typeof XLSX==='undefined') return;
+    var wb = XLSX.utils.book_new();
+    var salud = typeof calcularSaludComercialCMD==='function' ? calcularSaludComercialCMD() : {iscic:0,sem:'—',dims:[]};
+    var rows = [['Salud Comercial ISCIC', salud.iscic, salud.sem]];
+    (salud.dims||[]).forEach(function(d){ rows.push([d.lbl, d.val, d.sem, d.sub||'']); });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Salud ISCIC');
+    var col = window._coloc_data||[];
+    var colRows = [['Sede','Rectoría','Meta','Acumulado','%','Semáforo']];
+    col.forEach(function(r){
+      var pct = r.meta_n>0 ? Math.round((r.acum_n||0)/r.meta_n*100) : 0;
+      var rect = (PG_SEDE_RECTORIA&&PG_SEDE_RECTORIA[r.sede])||'';
+      colRows.push([r.sede, rect, r.meta_n||0, r.acum_n||0, pct, r.semaforo||'']);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(colRows), 'Colocación 101 sedes');
+    if(window._cartData) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(_cartRowsResumen(window._cartData)), 'Cartera resumen');
+    _cmdXlsxDownload(wb, 'Panel_Menu_CMD_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  };
+
+  window.exportarPDFMenuComercial = function(){
+    if(typeof window.jspdf==='undefined') return;
+    var salud = typeof calcularSaludComercialCMD==='function' ? calcularSaludComercialCMD() : {iscic:0,dims:[]};
+    var doc = new window.jspdf.jsPDF();
+    var y = _cmdPdfHeader(doc, 'Panel Comercial Nacional', 'Salud ISCIC: '+salud.iscic);
+    doc.setFontSize(9);
+    (salud.dims||[]).forEach(function(d){
+      y = _cmdPdfCheckPage(doc, y, 6);
+      doc.text(d.lbl+': '+d.val+' ('+d.sem+')', 14, y); y += 5;
+    });
+    var col = window._coloc_data||[];
+    var criticas = col.filter(function(r){ return r.meta_n>0 && (r.acum_n||0)/r.meta_n<0.7; }).slice(0,8);
+    if(criticas.length){
+      y = _cmdPdfCheckPage(doc, y, 20);
+      doc.setFont(undefined,'bold'); doc.text('Sedes críticas (<70% cumplimiento)', 14, y); y += 7;
+      doc.setFont(undefined,'normal');
+      criticas.forEach(function(r){
+        y = _cmdPdfCheckPage(doc, y, 6);
+        var pct = Math.round((r.acum_n||0)/r.meta_n*100);
+        doc.text('• '+r.sede+': '+pct+'% ('+_cmdFmtN(r.acum_n)+' / '+_cmdFmtN(r.meta_n)+')', 14, y); y += 5;
+      });
+    }
+    doc.save('Panel_Menu_CMD_'+new Date().toISOString().slice(0,10)+'.pdf');
+  };
+
+  window.exportarHistorialSeguimientosCompleto = function(){
+    if(typeof XLSX==='undefined') return;
+    var lista = window._histSeguimientos||[];
+    var rows = [['Fecha','Tipo','Período','Sedes','Ejecutor','Créditos','CSAT','Calificación','Observaciones']];
+    lista.forEach(function(s){
+      rows.push([s.fecha||'', s.tipo||'', s.periodo||'', s.sedes||'', s.ejecutor||'', s.real_creditos||'', s.csat||'', s.calif_seguimiento||'', s.observaciones||'']);
+    });
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Historial');
+    _cmdXlsxDownload(wb, 'Historial_Seguimientos_CMD_'+new Date().toISOString().slice(0,10)+'.xlsx');
+  };
+
+  window.exportarHistorialSeguimientosPDF = function(){
+    if(typeof window.jspdf==='undefined') return;
+    var lista = (window._histSeguimientos||[]).slice(-40);
+    var doc = new window.jspdf.jsPDF({orientation:'landscape'});
+    var y = _cmdPdfHeader(doc, 'Historial de Seguimientos', lista.length+' registros');
+    doc.setFontSize(7);
+    lista.forEach(function(s){
+      y = _cmdPdfCheckPage(doc, y, 6);
+      doc.text((s.fecha||'')+' | '+s.tipo+' | '+String(s.sedes||'').slice(0,25)+' | '+String(s.ejecutor||'').slice(0,20)+' | Cr:'+(s.real_creditos||'—'), 14, y);
+      y += 4;
+    });
+    doc.save('Historial_Seguimientos_'+new Date().toISOString().slice(0,10)+'.pdf');
+  };
+
+  function _mostrarBannerAutollenado(sedes, filas){
+    var el = document.getElementById('h1-autollenado-banner');
+    if(!el){
+      var h1 = document.getElementById('h1');
+      if(!h1) return;
+      el = document.createElement('div');
+      el.id = 'h1-autollenado-banner';
+      el.style.cssText = 'margin:0 16px 12px;padding:10px 14px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;font-size:11px;color:#065f46';
+      var card = h1.querySelector('.card');
+      if(card) h1.insertBefore(el, card); else h1.prepend(el);
+    }
+    var metaN = filas.reduce(function(s,r){return s+(r.meta_n||0);},0);
+    var acumN = filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
+    el.innerHTML = '<strong>✅ Autollenado desde repositorios</strong> · Sedes: <b>'+sedes.join(', ')+'</b> · Meta: <b>'+_cmdFmtN(metaN)+'</b> · Acumulado: <b>'+_cmdFmtN(acumN)+'</b> · Datos de colocación SIGEC/Sheet.';
+    el.style.display = 'block';
+  }
+
+  function _preseleccionarSedeEjecutor(){
+    var sede = (navState&&navState.sedeEjecutor)||(sesionActiva&&sesionActiva.sede)||'';
+    if(!sede) return false;
+    var rect = (PG_SEDE_RECTORIA&&PG_SEDE_RECTORIA[sede])||'';
+    var rectSel = document.getElementById('rectoria');
+    var sedeSel = document.getElementById('sede-multi');
+    if(!rectSel||!sedeSel) return false;
+    var foundRect = false;
+    for(var i=0;i<rectSel.options.length;i++){
+      var rv = rectSel.options[i].value || rectSel.options[i].text;
+      if(rv===rect || rectSel.options[i].text===rect){ rectSel.options[i].selected = true; foundRect = true; }
+    }
+    if(!foundRect && rect){
+      var opt = document.createElement('option');
+      opt.value = rect; opt.text = rect; opt.selected = true;
+      rectSel.appendChild(opt);
+    }
+    if(typeof filtrarSedes==='function') filtrarSedes();
+    var norm = typeof normalizarSedeColocacion==='function' ? normalizarSedeColocacion(sede) : sede;
+    for(var j=0;j<sedeSel.options.length;j++){
+      var sv = sedeSel.options[j].value || sedeSel.options[j].text;
+      var sn = typeof normalizarSedeColocacion==='function' ? normalizarSedeColocacion(sv) : sv;
+      if(sv===sede || sn===norm || String(sv).toLowerCase().indexOf(String(sede).toLowerCase())>=0)
+        sedeSel.options[j].selected = true;
+    }
+    if(typeof onSedesChange==='function') onSedesChange();
+    return true;
+  }
+
+  window.autollenarSeguimientoDesdeRepos = function(opts){
+    opts = opts || {};
+    var sedes = (state&&state.sedes)||[];
+    if(!sedes.length && !opts.skipPreselect) _preseleccionarSedeEjecutor();
+    sedes = (state&&state.sedes)||[];
+    if(!sedes.length) return;
+    if((!window._coloc_data||!window._coloc_data.length) && typeof _cargarSIGEC==='function'){
+      _cargarSIGEC().then(function(){ autollenarSeguimientoDesdeRepos(Object.assign({},opts,{skipPreselect:true})); });
+      return;
+    }
+    var filas = typeof buscarFilasColoc==='function' ? buscarFilasColoc(sedes) : [];
+    if(filas.length){
+      var metaN = filas.reduce(function(s,r){return s+(r.meta_n||0);},0);
+      var acumN = filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
+      var rc = document.getElementById('real_creditos');
+      if(rc && (!rc.value || opts.force)) rc.value = acumN;
+      if(typeof state!=='undefined'){
+        state.metas = state.metas || {};
+        state.metas.meta_mes_n = metaN;
+        var dias = typeof getDiasHabilesInfo==='function' ? getDiasHabilesInfo() : {total:22};
+        state.metas.meta_dia_n = Math.round(metaN/(dias.total||22));
+      }
+      if(typeof actualizarSemaforoProyeccion==='function') actualizarSemaforoProyeccion();
+      if(typeof calcSemaforoColoc==='function') calcSemaforoColoc();
+    }
+    _mostrarBannerAutollenado(sedes, filas);
+    if(typeof refreshH1Metas==='function') refreshH1Metas();
+    if(typeof refreshH2Semaforos==='function') refreshH2Semaforos();
+    if(typeof renderH3ValorAgregado==='function' && filas.length) renderH3ValorAgregado(filas);
+  };
+
+  window.renderH3ValorAgregado = function(filas){
+    filas = filas || (typeof buscarFilasColoc==='function' ? buscarFilasColoc(state.sedes||[]) : []);
+    var el = document.getElementById('h3-valor-agregado');
+    if(!el) return;
+    if(!filas.length){ el.innerHTML = ''; return; }
+    var metaN = filas.reduce(function(s,r){return s+(r.meta_n||0);},0);
+    var acumN = filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
+    var brecha = Math.max(0, metaN-acumN);
+    var cumpl = metaN>0 ? Math.round(acumN/metaN*100) : 0;
+    var seg = state.seguimiento||{};
+    var dias = typeof getDiasHabilesInfo==='function' ? getDiasHabilesInfo() : {transcurridos:1,total:22,restantes:21};
+    var ritmo = dias.transcurridos>0 ? Math.round(acumN/dias.transcurridos) : 0;
+    var proj = ritmo * (dias.total||22);
+    var color = cumpl>=90?'#16a34a':cumpl>=70?'#ca8a04':'#dc2626';
+    var html = '<div style="background:linear-gradient(135deg,#f0f9ff,#ecfdf5);border:1px solid #bae6fd;border-radius:12px;padding:14px">'
+      +'<div style="font-size:12px;font-weight:800;color:#003D45;margin-bottom:10px">🎯 Inteligencia de acción — alto valor para mejorar números</div>'
+      +'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px">'
+      +'<div style="background:#fff;border-radius:8px;padding:10px;text-align:center;border-top:3px solid '+color+'"><div style="font-size:9px;color:#64748b">CUMPLIMIENTO</div><div style="font-size:20px;font-weight:900;color:'+color+'">'+cumpl+'%</div></div>'
+      +'<div style="background:#fff;border-radius:8px;padding:10px;text-align:center;border-top:3px solid #dc2626"><div style="font-size:9px;color:#64748b">BRECHA</div><div style="font-size:20px;font-weight:900;color:#dc2626">'+_cmdFmtN(brecha)+'</div></div>'
+      +'<div style="background:#fff;border-radius:8px;padding:10px;text-align:center;border-top:3px solid #2563eb"><div style="font-size:9px;color:#64748b">RITMO/DÍA</div><div style="font-size:20px;font-weight:900;color:#2563eb">'+_cmdFmtN(ritmo)+'</div></div>'
+      +'<div style="background:#fff;border-radius:8px;padding:10px;text-align:center;border-top:3px solid #7c3aed"><div style="font-size:9px;color:#64748b">PROY. CIERRE</div><div style="font-size:20px;font-weight:900;color:#7c3aed">'+_cmdFmtN(proj)+'</div></div>'
+      +'</div><ul style="margin:0;padding-left:18px;font-size:11px;color:#334155;line-height:1.7">';
+    if(brecha>0) html += '<li><b>Prioridad 1:</b> Cerrar brecha de <b>'+_cmdFmtN(brecha)+'</b> créditos — requieren <b>'+_cmdFmtN(Math.ceil(brecha/(dias.restantes||1)))+'</b>/día los próximos '+dias.restantes+' días hábiles.</li>';
+    if(proj<metaN) html += '<li><b>Alerta proyección:</b> Al ritmo actual se cerraría en <b>'+_cmdFmtN(proj)+'</b> vs meta <b>'+_cmdFmtN(metaN)+'</b>. Intensificar pipeline y cobertura.</li>';
+    else if(cumpl>=90) html += '<li><b>Oportunidad:</b> Sede en zona verde — buscar sobre-cumplimiento y replicar buenas prácticas.</li>';
+    if((seg.sol_abiertas||0)>(seg.sol_cerr||0)) html += '<li><b>GLPI:</b> '+((seg.sol_abiertas||0)-(seg.sol_cerr||0))+' solicitudes abiertas sin cerrar — impacto directo en conversión.</li>';
+    var leads = (seg.leads_call||0)+(seg.leads_mercadeo||0)+(seg.leads_actividad||0);
+    if(leads<10) html += '<li><b>Pipeline:</b> Solo '+leads+' leads reportados — incrementar gestión comercial diaria.</li>';
+    html += '</ul></div>';
+    el.innerHTML = html;
+    if(typeof state!=='undefined'){
+      state.h3_valor = {cumpl:cumpl, brecha:brecha, ritmo:ritmo, proyeccion:proj, metaN:metaN, acumN:acumN};
+    }
+  };
+
+  function _syncH3ToState(){
+    if(typeof state==='undefined') return;
+    var seg = state.seguimiento || {};
+    var h = _cmdDatosSeguimientoH3();
+    seg.h3_pipeline_sedes = h.sedes;
+    seg.h3_meta_coloc = h.metaN;
+    seg.h3_acum_coloc = h.acumN;
+    seg.h3_brecha_coloc = h.brecha;
+    seg.h3_cumplimiento_pct = h.cumpl;
+    if(state.h3_valor) seg.h3_proyeccion = state.h3_valor.proyeccion;
+    if(typeof calcularSaludComercialCMD==='function'){
+      try{ seg.h3_iscic_nacional = calcularSaludComercialCMD().iscic; }catch(e){}
+    }
+    state.seguimiento = seg;
+  }
+  window._syncH3ToState = _syncH3ToState;
+
+  if(typeof analisisRenderar5SemaforosYNarrativa==='function'){
+    var _origAnalisis5sem = analisisRenderar5SemaforosYNarrativa;
+    window.analisisRenderar5SemaforosYNarrativa = function(){
+      var sedes = (state&&state.sedes)||[];
+      var filas = typeof buscarFilasColoc==='function' ? buscarFilasColoc(sedes) : [];
+      if(!filas.length) return _origAnalisis5sem();
+      var saved = state.sedes;
+      state.sedes = filas.map(function(r){return r.sede;});
+      try{ _origAnalisis5sem(); }finally{ state.sedes = saved; }
+      if(typeof renderH3ValorAgregado==='function') renderH3ValorAgregado(filas);
+    };
+  }
+
+  if(typeof guardarSeguimiento==='function'){
+    var _origGuardarSeg = guardarSeguimiento;
+    window.guardarSeguimiento = function(){
+      _syncH3ToState();
+      return _origGuardarSeg.apply(this, arguments);
+    };
+  }
+  if(typeof finalizarSeguimiento==='function'){
+    var _origFinSeg = finalizarSeguimiento;
+    window.finalizarSeguimiento = function(){
+      _syncH3ToState();
+      return _origFinSeg.apply(this, arguments);
+    };
+  }
+
+  function _postIniciarSeguimiento(){
+    setTimeout(function(){
+      var cargarHist = function(){
+        if(typeof autollenarSeguimientoDesdeRepos==='function') autollenarSeguimientoDesdeRepos();
+      };
+      if(typeof _cargarHistorialSeguimientos==='function' && !window._histCargado){
+        _cargarHistorialSeguimientos().then(cargarHist).catch(cargarHist);
+      } else cargarHist();
+      if(typeof _cargarSIGEC==='function' && (!window._coloc_data||!window._coloc_data.length)){
+        _cargarSIGEC().then(cargarHist).catch(function(){});
+      }
+    }, 450);
+  }
+
+  if(typeof iniciarSeguimientoCoord==='function'){
+    var _origIniCoord = iniciarSeguimientoCoord;
+    window.iniciarSeguimientoCoord = function(){
+      var r = _origIniCoord.apply(this, arguments);
+      _postIniciarSeguimiento();
+      return r;
+    };
+  }
+  if(typeof iniciarSeguimientoAsesor==='function'){
+    var _origIniAses = iniciarSeguimientoAsesor;
+    window.iniciarSeguimientoAsesor = function(){
+      var r = _origIniAses.apply(this, arguments);
+      _postIniciarSeguimiento();
+      return r;
+    };
+  }
+
+  var _origOnSedes54 = window.onSedesChange;
+  window.onSedesChange = function(){
+    if(_origOnSedes54) _origOnSedes54();
+    setTimeout(function(){
+      if((state.sedes||[]).length && typeof autollenarSeguimientoDesdeRepos==='function')
+        autollenarSeguimientoDesdeRepos({skipPreselect:true, force:false});
+    }, 200);
+  };
+
+  if(typeof activateSheet==='function'){
+    var _as54 = window.activateSheet;
+    window.activateSheet = function(id, tabEl){
+      var r = _as54(id, tabEl);
+      if(id==='h3') setTimeout(function(){
+        if(typeof renderH3ValorAgregado==='function') renderH3ValorAgregado();
+      }, 300);
+      return r;
+    };
+  }
+
+  console.log('[pyv-comercial 5.4.0] Export PDF/Excel · Autollenado · H3 pipeline · Salud Comercial');
+
 })();
 </script>
 <footer class="app-footer" id="app-footer-global">
