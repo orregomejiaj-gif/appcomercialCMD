@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.2.0   (APP_VERSION = 'pyv-comercial-5.2.0')
+  Versión actual: pyv-comercial-5.3.0   (APP_VERSION = 'pyv-comercial-5.3.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,7 +10,11 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
-  pyv-comercial-5.2.0 (2026-06-30)
+  pyv-comercial-5.3.0 (2026-06-30)
+    - Asistente IA flotante en menú: consultas por sede (ej. «¿cómo está Bello?») con informe y riesgos.
+    - Indicador general de Salud Comercial (ISCIC) con dimensiones en panel principal.
+    - Descripciones en botones del menú y tabs SCIC; corrección versión visible y datos SCIC.
+    - Mapa Colombia: matching departamentos GeoJSON mejorado.
     - Menú lateral: botones fondo claro; semáforos y mapa Colombia en panel principal.
     - Mapa ECharts nivel país: capacidad, meta, colocación y cumplimiento por departamento + sedes.
     - Auditoría dropdowns: rectorías y sedes sincronizadas desde RECTORIAS / PG_SEDE_RECTORIA.
@@ -992,6 +996,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.3.0</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -1021,41 +1026,61 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-live">🟢 Operación en Vivo</span><span class="menu-mod-note">Tiempo real</span></div>
           <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon">📋</div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Coord · Asesor</div></button>
-            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon">📜</div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Seguimientos</div></button>
-            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon">📅</div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Turnos del día</div></button>
-            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon">📊</div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Por sede</div></button>
+            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon">📋</div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Registrar y evaluar seguimientos de coordinador o asesor por sede.</div></button>
+            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon">📜</div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Consultar seguimientos anteriores filtrados por sede y período.</div></button>
+            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon">📅</div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Ver turnos y cobertura operativa del día en cada sede.</div></button>
+            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon">📊</div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Consulta dinámica SIGEC, GLPI y colocación por sede o rectoría.</div></button>
           </div>
         </div>
         <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📊 Gestión Comercial</span><span class="menu-mod-note">Día vencido</span></div>
           <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon">📈</div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot</div></button>
-            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon">🎯</div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline gerencial</div></button>
-            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon">🏆</div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias</div></button>
-            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon">💰</div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Cygnus · SAP</div></button>
-            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon">🧭</div><div class="menu-card-title">Brújula Académica</div><div class="menu-card-desc">Ritmo UNIMINUTO</div></button>
+            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon">📈</div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot: llamadas, reuniones y tareas por asesor.</div></button>
+            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon">🎯</div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline de leads y embudo comercial por rectoría (día vencido).</div></button>
+            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon">🏆</div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias: SIGEC facturadas + GLPI aprobadas vs meta por sede.</div></button>
+            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon">💰</div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Estado de cartera Cygnus y SAP: recaudo, mora y rodada por sede.</div></button>
+            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon">🧭</div><div class="menu-card-title">Brújula Académica</div><div class="menu-card-desc">Calendario académico UNIMINUTO y ritmo esperado de colocación S1/S2.</div></button>
           </div>
         </div>
         <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">📈 Inteligencia Comercial</span><span class="menu-mod-note">Análisis</span></div>
           <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple"><div class="menu-card-icon">🧠</div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Inteligencia IA</div></button>
+            <button onclick="abrirSCIC('pulso')" title="Pulso nacional: ISCIC y sedes críticas" title="Pulso nacional: ISCIC y sedes críticas" class="menu-card menu-card-purple"><div class="menu-card-icon">🧠</div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Pulso nacional: ISCIC, sedes críticas y narrativa ejecutiva IA.</div></button>
           </div>
         </div>
         <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-tools">🛠 Herramientas del Colaborador</span></div>
           <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon">🛠️</div><div class="menu-card-title">Herramientas PYV</div></button>
-            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon">📇</div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Empleados</div></button>
-            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon">🎂</div><div class="menu-card-title">Cumpleaños</div></button>
-            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon">📆</div><div class="menu-card-title">Agendar</div></button>
+            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon">🛠️</div><div class="menu-card-title">Herramientas PYV</div><div class="menu-card-desc">Simuladores, fragmentos, Crediplus y utilidades del asesor.</div></button>
+            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon">📇</div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Buscar colaboradores por nombre, cargo o sede en el repositorio.</div></button>
+            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon">🎂</div><div class="menu-card-title">Cumpleaños</div><div class="menu-card-desc">Cumpleaños del mes del equipo comercial CMD.</div></button>
+            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon">📆</div><div class="menu-card-title">Agendar</div><div class="menu-card-desc">Abrir calendario HubSpot para agendar reuniones comerciales.</div></button>
           </div>
         </div>
       </div>
     </aside>
     <div class="menu-main-panel">
     <div class="menu-nacional-panel">
+
+      <div class="menu-salud-panel" id="menu-salud-panel">
+        <div class="menu-salud-hdr">
+          <div>
+            <div class="menu-salud-title">💚 Salud Comercial Nacional</div>
+            <div class="menu-salud-sub">Indicador integrado ISCIC · colocación · SIGEC · cartera · seguimientos</div>
+          </div>
+          <div class="menu-salud-score-wrap">
+            <div class="menu-salud-circle" id="menu-salud-circle">
+              <div class="menu-salud-pct" id="menu-salud-pct">—</div>
+              <div class="menu-salud-pct-lbl">ISCIC</div>
+            </div>
+            <div class="menu-salud-sem" id="menu-salud-sem">—</div>
+          </div>
+        </div>
+        <div class="menu-salud-dims" id="menu-salud-dims">
+          <div class="menu-salud-loading">Calculando salud comercial…</div>
+        </div>
+      </div>
+
       <div class="menu-nacional-hdr">
         <div class="menu-nacional-title"><i class="ti ti-chart-dots"></i> Estado Nacional · Colocación S2</div>
         <div class="menu-nacional-fecha" id="menu-nac-fecha">—</div>
@@ -1137,10 +1162,10 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
             <div class="menu-mapa-sub" id="menu-mapa-sub">Nivel país · departamentos y sedes PYV</div>
           </div>
           <div class="menu-mapa-tabs" id="menu-mapa-tabs">
-            <button type="button" class="menu-mapa-tab active" data-layer="capacidad" onclick="setMapaColombiaLayer('capacidad')">🏢 Capacidad</button>
-            <button type="button" class="menu-mapa-tab" data-layer="meta" onclick="setMapaColombiaLayer('meta')">🎯 Meta</button>
-            <button type="button" class="menu-mapa-tab" data-layer="colocacion" onclick="setMapaColombiaLayer('colocacion')">📈 Colocación</button>
-            <button type="button" class="menu-mapa-tab" data-layer="cumplimiento" onclick="setMapaColombiaLayer('cumplimiento')">🚦 Cumplimiento</button>
+            <button type="button" class="menu-mapa-tab active" data-layer="capacidad" onclick="setMapaColombiaLayer('capacidad')" title="Número de sedes PYV por departamento">🏢 Capacidad</button>
+            <button type="button" class="menu-mapa-tab" data-layer="meta" onclick="setMapaColombiaLayer('meta')" title="Meta S2 en créditos por departamento">🎯 Meta</button>
+            <button type="button" class="menu-mapa-tab" data-layer="colocacion" onclick="setMapaColombiaLayer('colocacion')" title="Colocación acumulada S2 por departamento">📈 Colocación</button>
+            <button type="button" class="menu-mapa-tab" data-layer="cumplimiento" onclick="setMapaColombiaLayer('cumplimiento')" title="Porcentaje de cumplimiento meta vs ejecutado">🚦 Cumplimiento</button>
           </div>
         </div>
         <div id="menu-mapa-chart" class="menu-mapa-chart"></div>
@@ -1159,6 +1184,34 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </div>
     </div>
   </div>
+
+  <button type="button" class="cmd-ia-fab" id="cmd-ia-fab" onclick="toggleCmdIAPanel()" title="Asistente comercial CMD">
+    <span class="cmd-ia-fab-icon">🤖</span>
+    <span class="cmd-ia-fab-lbl">CMD IA</span>
+  </button>
+  <div class="cmd-ia-panel" id="cmd-ia-panel" style="display:none">
+    <div class="cmd-ia-panel-hdr">
+      <div>
+        <div class="cmd-ia-panel-title">🧠 Asistente Comercial CMD</div>
+        <div class="cmd-ia-panel-sub">Pregunta por sede, rectoría o estado nacional</div>
+      </div>
+      <button type="button" class="cmd-ia-close" onclick="toggleCmdIAPanel(false)">✕</button>
+    </div>
+    <div class="cmd-ia-chips">
+      <button type="button" onclick="cmdIAPreguntaRapida('¿Cómo está Bello?')">Bello</button>
+      <button type="button" onclick="cmdIAPreguntaRapida('¿Cómo está Engativá?')">Engativá</button>
+      <button type="button" onclick="cmdIAPreguntaRapida('Estado nacional S2')">Nacional</button>
+      <button type="button" onclick="cmdIAPreguntaRapida('¿Cuáles son los riesgos en cartera?')">Riesgos</button>
+    </div>
+    <div class="cmd-ia-messages" id="cmd-ia-messages">
+      <div class="cmd-ia-msg cmd-ia-bot">Hola. Puedes preguntarme, por ejemplo: <b>«¿Cómo está Bello?»</b> y te daré colocación, meta, semáforo, SIGEC y riesgos detectados.</div>
+    </div>
+    <div class="cmd-ia-input-row">
+      <input type="text" id="cmd-ia-input" placeholder="Ej: ¿Cómo está Bello?" onkeydown="if(event.key==='Enter')cmdIAEnviar()">
+      <button type="button" onclick="cmdIAEnviar()">Enviar</button>
+    </div>
+  </div>
+
 </div>
 
 <style>
@@ -1330,6 +1383,43 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-card-cyan{border-left:4px solid var(--teal)}
 .menu-card-gold{border-left:4px solid var(--yellow)}
 .menu-card-indigo{border-left:4px solid #818cf8}
+
+.menu-version-badge{font-size:9px;font-weight:700;color:var(--teal-d);margin-top:4px;padding:2px 8px;background:var(--teal-l);border-radius:6px;display:inline-block}
+.menu-salud-panel{margin-bottom:14px;padding:14px;background:linear-gradient(135deg,#f0fdf4,#fff);border:1px solid rgba(174,201,0,.35);border-radius:14px;border-left:4px solid var(--green)}
+.menu-salud-hdr{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
+.menu-salud-title{font-size:13px;font-weight:800;color:var(--dark)}
+.menu-salud-sub{font-size:9px;color:var(--gray);margin-top:3px;max-width:420px}
+.menu-salud-score-wrap{display:flex;align-items:center;gap:10px}
+.menu-salud-circle{width:64px;height:64px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff}
+.menu-salud-pct{font-size:18px;font-weight:900;color:var(--dark);line-height:1}
+.menu-salud-pct-lbl{font-size:7px;color:var(--gray);font-weight:700}
+.menu-salud-sem{font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;background:#111;color:#fff}
+.menu-salud-dims{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.menu-salud-dim{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.menu-salud-dim-lbl{font-size:7px;font-weight:700;color:var(--gray);text-transform:uppercase}
+.menu-salud-dim-val{font-size:14px;font-weight:900;color:var(--dark);margin-top:2px}
+.menu-salud-dim-sub{font-size:8px;color:var(--text2);margin-top:2px}
+.menu-salud-loading{font-size:10px;color:var(--gray);grid-column:1/-1;text-align:center;padding:8px}
+.cmd-ia-fab{position:fixed;bottom:22px;right:22px;z-index:12000;display:flex;align-items:center;gap:8px;padding:12px 16px;border:none;border-radius:999px;background:linear-gradient(135deg,var(--dark),#005a66);color:#fff;font-family:Ubuntu,sans-serif;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 8px 28px rgba(0,61,69,.35);transition:transform .2s,box-shadow .2s}
+.cmd-ia-fab:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,176,185,.35)}
+.cmd-ia-fab-icon{font-size:20px;line-height:1}
+.cmd-ia-panel{position:fixed;bottom:88px;right:22px;width:min(400px,calc(100vw - 32px));max-height:min(520px,70vh);z-index:12001;background:#fff;border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.25);border:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.cmd-ia-panel-hdr{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;background:linear-gradient(135deg,var(--dark),#004d58);color:#fff}
+.cmd-ia-panel-title{font-size:13px;font-weight:800}
+.cmd-ia-panel-sub{font-size:9px;opacity:.7;margin-top:3px}
+.cmd-ia-close{background:rgba(255,255,255,.15);border:none;color:#fff;width:28px;height:28px;border-radius:8px;cursor:pointer;font-size:14px}
+.cmd-ia-chips{display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;background:var(--bg);border-bottom:1px solid var(--border)}
+.cmd-ia-chips button{border:1px solid var(--teal);background:var(--teal-l);color:var(--teal-d);border-radius:999px;padding:4px 10px;font-size:9px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif}
+.cmd-ia-messages{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;min-height:180px;max-height:320px}
+.cmd-ia-msg{padding:10px 12px;border-radius:12px;font-size:11px;line-height:1.55;max-width:95%}
+.cmd-ia-bot{background:var(--bg);color:var(--dark);border:1px solid var(--border);align-self:flex-start}
+.cmd-ia-user{background:var(--dark);color:#fff;align-self:flex-end}
+.cmd-ia-input-row{display:flex;gap:6px;padding:10px 12px;border-top:1px solid var(--border);background:#fff}
+.cmd-ia-input-row input{flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:12px;font-family:Ubuntu,sans-serif}
+.cmd-ia-input-row button{padding:9px 14px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-weight:700;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif}
+.scic-tab-desc{transition:background .2s}
+@media(max-width:600px){.cmd-ia-fab{bottom:14px;right:14px;padding:10px 14px}.cmd-ia-panel{bottom:72px;right:14px}}
+
 .menu-footer{text-align:center;margin-top:18px;padding-top:12px;border-top:1px solid var(--border);color:var(--gray);font-size:9px;line-height:1.5}
 .herr-tab{border:1px solid var(--border);background:var(--white);color:var(--text);border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
 .herr-tab:hover,.herr-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
@@ -3194,7 +3284,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.2.0';
+var APP_VERSION = 'pyv-comercial-5.3.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -5766,14 +5856,14 @@ https://minutodediosportal.com/login/
   </div>
   <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
     <button onclick="abrirSCIC('pulso')" id="scic-tab-pulso" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Pulso Nacional</button>
-    <button onclick="abrirSCIC('sede')" id="scic-tab-sede" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Radar de Sede</button>
-    <button onclick="abrirSCIC('cartera')" id="scic-tab-cartera" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Cartera</button>
-    <button onclick="abrirSCIC('seguimiento')" id="scic-tab-seguimiento" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Seguimiento</button>
-    <button onclick="abrirSCIC('prediccion')" id="scic-tab-prediccion" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Prediccion</button>
+    <button onclick="abrirSCIC('sede')" title="Indicadores por sede seleccionada" title="Indicadores por sede seleccionada" id="scic-tab-sede" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Radar de Sede</button>
+    <button onclick="abrirSCIC('cartera')" title="Mora, recaudo y rodada" title="Mora, recaudo y rodada" id="scic-tab-cartera" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Cartera</button>
+    <button onclick="abrirSCIC('seguimiento')" title="Cobertura de seguimientos comerciales" title="Cobertura de seguimientos comerciales" id="scic-tab-seguimiento" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Seguimiento</button>
+    <button onclick="abrirSCIC('prediccion')" title="Proyección al cierre S2" title="Proyección al cierre S2" id="scic-tab-prediccion" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Prediccion</button>
     <button onclick="abrirSCIC('decisiones')" id="scic-tab-decisiones" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Decisiones</button>
     <button onclick="abrirSCIC('narrativa')" id="scic-tab-narrativa" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Narrativa IA</button>
-    <button onclick="abrirSCIC('mcm')" id="scic-tab-mcm" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">MCM</button>
-    <button onclick="abrirSCIC('ia')" id="scic-tab-ia" class="scic-tab" style="border:2px solid rgba(200,151,30,.6);background:rgba(200,151,30,.1);color:#C8971E;border-radius:8px;padding:6px 14px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s;font-weight:700">⚡ IA Ejecutiva</button>
+    <button onclick="abrirSCIC('mcm')" title="Indicadores MCM completos" title="Indicadores MCM completos" id="scic-tab-mcm" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">MCM</button>
+    <button onclick="abrirSCIC('ia')" title="Preguntas al motor cognitivo" title="Preguntas al motor cognitivo" id="scic-tab-ia" class="scic-tab" style="border:2px solid rgba(200,151,30,.6);background:rgba(200,151,30,.1);color:#C8971E;border-radius:8px;padding:6px 14px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s;font-weight:700">⚡ IA Ejecutiva</button>
     <button onclick="abrirSCIC('tendencias')" id="scic-tab-tendencias" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Tendencias</button>
     <button onclick="abrirSCIC('ies')" id="scic-tab-ies" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">IES</button>
     <button onclick="abrirSCIC('capacidad')" id="scic-tab-capacidad" class="scic-tab" style="border:2px solid rgba(255,255,255,.2);background:rgba(255,255,255,.05);color:#fff;border-radius:8px;padding:6px 12px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s">Capacidad</button>
@@ -5782,6 +5872,7 @@ https://minutodediosportal.com/login/
     <button onclick="abrirSCIC('aicenter')" id="scic-tab-aicenter" class="scic-tab" style="border:2px solid rgba(200,151,30,.7);background:linear-gradient(135deg,rgba(200,151,30,.15),rgba(0,61,69,.3));color:#C8971E;border-radius:8px;padding:6px 14px;font-size:10px;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s;font-weight:700">🤖 AI CENTER</button>
   </div>
 </div>
+<div id="scic-tab-desc" class="scic-tab-desc" style="padding:10px 20px;background:#f0fdfa;border-bottom:1px solid #99f6e4;font-size:11px;color:#003D45;line-height:1.5">Selecciona un panel SCIC para ver el informe correspondiente.</div>
 <div id="scic-contenido" style="padding:20px;min-height:80vh;background:#f5f7fa">
   <div style="text-align:center;padding:60px 20px;color:#64748b">
     <i class="ti ti-brain" style="font-size:48px;color:#003D45;opacity:.3"></i>
@@ -6147,7 +6238,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.2.0';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.3.0';
     var s = String(raw);
     var mProc = s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
     var txt = mProc ? (mProc[1]+' '+mProc[2]) : (function(){
@@ -8326,7 +8417,7 @@ function _parseCumpleMMDD(s){
   }
 
 
-  /* ── pyv-comercial-5.2.0: Mapa Colombia + auditoría dropdowns ── */
+  /* ── pyv-comercial-5.3.0: Mapa Colombia + auditoría dropdowns ── */
   var _mapaColLayer = 'capacidad';
   var _mapaColChart = null;
   var _mapaColGeoLoaded = false;
@@ -8494,20 +8585,32 @@ function _parseCumpleMMDD(s){
   }
   window.setMapaColombiaLayer = setMapaColombiaLayer;
 
+  function _mapaMatchGeoName(nd){
+    if(_mapaColGeoNames[nd]) return _mapaColGeoNames[nd];
+    var keys = Object.keys(_mapaColGeoNames||{});
+    for(var i=0;i<keys.length;i++){
+      if(keys[i]===nd || keys[i].indexOf(nd)>=0 || nd.indexOf(keys[i])>=0) return _mapaColGeoNames[keys[i]];
+    }
+    return null;
+  }
   function _mapaColombiaPintar(){
     if(!_mapaColChart || typeof echarts==='undefined') return;
     var agg = _mapaAgregarPorDepto(_mapaColLayer);
-    var values = agg.values;
+    var values = agg.values.map(function(v){
+      var nk = _mapaNormDepto(v.name);
+      var geo = _mapaMatchGeoName(nk);
+      return geo ? {name:geo, value:v.value} : v;
+    });
     var maxV = Math.max.apply(null, values.map(function(x){return x.value;}).concat([1]));
     var scatter = [];
     Object.keys(agg.deptoData).forEach(function(k){
       var o = agg.deptoData[k];
-      var cen = _mapaColCentroids[_mapaNormDepto(o.nombre)];
+      var cen = _mapaColCentroids[k];
       if(!cen) return;
       o.sedes.forEach(function(sede, idx){
-        var jitter = (idx - o.sedes.length/2) * 0.12;
+        var jitter = (idx - o.sedes.length/2) * 0.15;
         scatter.push({
-          name: sede, value: [cen[0]+jitter, cen[1]+jitter*0.5, 1],
+          name: sede, value: [cen[0]+jitter, cen[1]+jitter*0.4, 1],
           depto: o.nombre,
           tooltip: sede+' · '+o.nombre
         });
@@ -8521,14 +8624,16 @@ function _parseCumpleMMDD(s){
         textStyle: {fontSize: 9},
         formatter: function(v){ return _mapaFmtVal(Math.round(v), layer); }
       },
+      geo: { map:'colombia', roam:true, label:{show:false}, itemStyle:{borderColor:'#fff',borderWidth:0.6}, emphasis:{itemStyle:{areaColor:'#FFD900'}} },
       series: [
-        { type:'map', map:'colombia', roam:true, data: values,
+        { type:'map', geoIndex:0, map:'colombia', data: values,
           emphasis:{label:{show:true,fontSize:9}},
           label:{show:false},
           name: layer
         },
-        { type:'scatter', coordinateSystem:'geo', geoIndex:0, data: scatter,
-          symbolSize: 6, itemStyle:{color:'#FFD900',borderColor:'#003D45',borderWidth:1},
+        { type:'effectScatter', coordinateSystem:'geo', geoIndex:0, data: scatter,
+          symbolSize: 7, itemStyle:{color:'#FFD900',borderColor:'#003D45',borderWidth:1},
+          rippleEffect:{brushType:'stroke',scale:2.5},
           tooltip:{formatter:function(p){ return p.data.tooltip||p.name; }}
         }
       ]
@@ -8598,7 +8703,308 @@ function _parseCumpleMMDD(s){
     setTimeout(function(){ auditarYSincronizarDropdowns(); renderMapaColombia(); }, 800);
   }
 
-  console.log('[pyv-comercial 5.2.0] Menú lateral · Mapa Colombia · Auditoría dropdowns');
+
+  /* ── pyv-comercial-5.3.0: IA flotante · Salud Comercial · fixes SCIC ── */
+  var SCIC_TAB_DESCRIPCIONES = {
+    pulso:'Pulso nacional: panorama ISCIC, sedes críticas y ritmo de colocación S2.',
+    sede:'Radar por sede: indicadores MCM, semáforos y brecha vs meta de la sede seleccionada.',
+    cartera:'Cartera inteligente: mora, recaudo y rodada Cygnus/SAP por región.',
+    seguimiento:'Seguimiento cognitivo: cobertura de visitas y días sin registro por sede.',
+    prediccion:'Proyección al cierre S2 según ritmo actual y curva ideal.',
+    decisiones:'Catálogo de decisiones sugeridas según semáforos y brechas.',
+    narrativa:'Narrativa IA: resumen ejecutivo en lenguaje natural por sede.',
+    mcm:'MCM completo: cobertura, cumplimiento, conversión SIGEC y GLPI.',
+    ia:'IA Ejecutiva: haz preguntas al motor cognitivo con datos en vivo.',
+    tendencias:'Tendencias: variación interperiodo y momentum por indicador.',
+    ies:'Dimensión IES: colocación académica, ciclo de vida y cobertura.',
+    capacidad:'Capacidad operativa: malla de turnos y productividad por sede.',
+    gemelo:'Gemelo digital nacional: simulación de escenarios de cierre.',
+    prescriptivo:'Motor prescriptivo: plan de acciones priorizadas por impacto.',
+    aicenter:'AI Center: hub de inteligencia artificial ejecutiva CMD.'
+  };
+
+  function _cmdIASemColor(sem){
+    var s=String(sem||'').toUpperCase();
+    if(s.indexOf('VERDE')>=0) return '#16a34a';
+    if(s.indexOf('AMAR')>=0) return '#ca8a04';
+    return '#dc2626';
+  }
+  function _cmdIANorm(s){ return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
+  function _cmdIAResolverSede(pregunta){
+    var q = _cmdIANorm(pregunta);
+    var sedes = (typeof _mapaListaSedes==='function') ? _mapaListaSedes('') : Object.keys(window.PG_SEDE_RECTORIA||{});
+    var alias = {
+      bello:'COA Bello', engativa:'COA Engativa Pres', usaquen:'COA Usaquen', bosa:'COA Bosa',
+      cali:'CR Cali', barranquilla:'CR Barranquilla', bucaramanga:'CR Bucaramanga', pereira:'CR Pereira',
+      neiva:'CR Neiva', pasto:'CR Pasto', cartagena:'CR Cartagena', ibague:'CR Ibague',
+      villavicencio:'COA Villavicencio', soacha:'CR Soacha', tunal:'CO Tunal - San Camilo'
+    };
+    var keys = Object.keys(alias);
+    for(var i=0;i<keys.length;i++){ if(q.indexOf(keys[i])>=0) return alias[keys[i]]; }
+    var best = '', bestScore = 0;
+    sedes.forEach(function(sede){
+      var ns = _cmdIANorm(sede);
+      if(q.indexOf(ns)>=0 || ns.indexOf(q)>=0){ best=sede; bestScore=100; return; }
+      var parts = ns.split(/\s+/);
+      parts.forEach(function(p){ if(p.length>3 && q.indexOf(p)>=0 && p.length>bestScore){ best=sede; bestScore=p.length; } });
+    });
+    return best || null;
+  }
+  function _cmdIAFilaColoc(sede){
+    if(typeof buscarFilasColoc==='function'){
+      var f = buscarFilasColoc([sede]);
+      if(f&&f.length) return f[0];
+    }
+    return (window._coloc_data||[]).find(function(r){ return r.sede===sede; }) || null;
+  }
+  function _cmdIAGenerarInformeSede(sede){
+    var fila = _cmdIAFilaColoc(sede);
+    var rect = (window.PG_SEDE_RECTORIA||{})[sede] || (fila&&fila.rectoria) || '—';
+    var depto = (typeof _mapaResolverDepto==='function') ? _mapaResolverDepto(sede) : '—';
+    if(!fila){
+      return '<b>'+sede+'</b><br>Rectoría: '+rect+' · Depto: '+depto
+        +'<br><span style="color:#dc2626">Sin datos de colocación S2 en repositorio para esta sede.</span>'
+        +'<br><small>Verifica el nombre en RECTORIAS SEDES o espera la carga desde Sheets.</small>';
+    }
+    var meta = fila.meta_n||0, acum = fila.acum_n||0;
+    var pct = meta>0 ? Math.round(acum/meta*100) : 0;
+    var sem = fila.semaforo || (pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO');
+    var riesgos = [];
+    if(pct<70) riesgos.push('Bajo cumplimiento de meta S2 ('+pct+'%)');
+    if((fila.var_n||0)<0) riesgos.push('Variación negativa vs día anterior ('+(fila.var_n)+' créditos)');
+    if(meta>0 && acum<meta*0.5) riesgos.push('Menos de la mitad de la meta ejecutada');
+    var sig = null;
+    try{ if(typeof _cdSigecSede==='function') sig = _cdSigecSede(sede); }catch(e){}
+    var html = '<b>📍 Informe: '+sede+'</b><br>'
+      +'Rectoría: <b>'+rect+'</b> · Departamento: <b>'+depto+'</b><br>'
+      +'<span style="color:'+_cmdIASemColor(sem)+';font-weight:800">Semáforo: '+sem+'</span> · Cumplimiento: <b>'+pct+'%</b><br>'
+      +'Meta S2: <b>'+(typeof fmtN==='function'?fmtN(meta):meta)+'</b> créd. · Ejecutado: <b>'+(typeof fmtN==='function'?fmtN(acum):acum)+'</b><br>';
+    if(sig && sig.total) html += 'SIGEC: '+sig.total+' tickets · Facturadas: '+(sig.facturada||0)+'<br>';
+    if(riesgos.length){
+      html += '<br><b>⚠️ Riesgos detectados:</b><ul style="margin:6px 0 0 16px;padding:0">';
+      riesgos.forEach(function(r){ html += '<li>'+r+'</li>'; });
+      html += '</ul>';
+    } else {
+      html += '<br>✅ Sin riesgos críticos detectados con los datos actuales.';
+    }
+    var seg = (window._seguimientosPorSede||{})[sede];
+    if(seg) html += '<br><small>Seguimientos: '+seg.total+' reg. · Último: '+(seg.ultima_fecha||'—')+'</small>';
+    return html;
+  }
+  function _cmdIAGenerarInformeNacional(){
+    var salud = calcularSaludComercialCMD();
+    var col = window._coloc_data||[];
+    var meta=0, acum=0, rojos=0, verdes=0;
+    col.forEach(function(r){
+      meta+=r.meta_n||0; acum+=r.acum_n||0;
+      var s=String(r.semaforo||'').toUpperCase();
+      if(s.indexOf('VERDE')>=0) verdes++; else if(s.indexOf('ROJO')>=0) rojos++;
+    });
+    var pct = meta>0 ? Math.round(acum/meta*100) : 0;
+    return '<b>🇨🇴 Estado Nacional S2</b><br>'
+      +'Salud Comercial ISCIC: <b style="color:'+_cmdIASemColor(salud.sem)+'">'+salud.iscic+'/100 ('+salud.sem+')</b><br>'
+      +'Colocación: <b>'+pct+'%</b> de meta · '+verdes+' sedes en verde · '+rojos+' en rojo<br>'
+      +'Meta nacional: '+(typeof fmtN==='function'?fmtN(meta):meta)+' · Ejecutado: '+(typeof fmtN==='function'?fmtN(acum):acum)+' créditos<br>'
+      +'<small>Usa el mapa Colombia o SCIC Pulso para detalle por departamento.</small>';
+  }
+  function _cmdIARiesgosCartera(){
+    var cart = window._cartData;
+    if(!cart) return 'Sin datos de cartera cargados. Abre el módulo Cartera para sincronizar Cygnus/SAP.';
+    var txt = '<b>💰 Riesgos de cartera (resumen)</b><br>';
+    try{
+      if(typeof _cartIndicadoresPortafolio==='function'){
+        var ind = _cartIndicadoresPortafolio(cart,'total');
+        var cyg=ind.cyg||{}, sap=ind.sap||{};
+        txt += 'Rodada Cygnus: <b>'+(cyg.rodPct||0)+'%</b> (meta &lt;20%) · SAP: <b>'+(sap.rodPct||0)+'%</b> (meta &lt;25%)<br>';
+        if((cyg.rodPct||0)>=20) txt += '⚠️ Cygnus por encima de meta de rodada.<br>';
+        if((sap.rodPct||0)>=25) txt += '⚠️ SAP por encima de meta de rodada.<br>';
+      }
+    }catch(e){ txt += 'No fue posible calcular indicadores de cartera.'; }
+    return txt;
+  }
+  function procesarConsultaCmdIA(pregunta){
+    var q = String(pregunta||'').trim();
+    if(!q) return 'Escribe una pregunta, por ejemplo: <b>¿Cómo está Bello?</b>';
+    var ql = q.toLowerCase();
+    if(ql.indexOf('riesg')>=0 && ql.indexOf('cartera')>=0) return _cmdIARiesgosCartera();
+    if(ql.indexOf('nacional')>=0 || ql.indexOf('país')>=0 || ql.indexOf('pais')>=0 || ql.indexOf('s2')>=0 && ql.indexOf('estado')>=0)
+      return _cmdIAGenerarInformeNacional();
+    var sede = _cmdIAResolverSede(q);
+    if(sede) return _cmdIAGenerarInformeSede(sede);
+    if(ql.indexOf('hola')>=0 || ql.indexOf('ayuda')>=0)
+      return 'Puedo responder sobre <b>sedes</b> (ej. Bello, Cali, Engativá), <b>estado nacional</b> o <b>riesgos de cartera</b>.';
+    return 'No identifiqué la sede en tu pregunta. Prueba: <b>¿Cómo está Bello?</b> o <b>Estado nacional S2</b>.';
+  }
+  function cmdIAAppendMsg(html, tipo){
+    var box = document.getElementById('cmd-ia-messages');
+    if(!box) return;
+    var d = document.createElement('div');
+    d.className = 'cmd-ia-msg '+(tipo==='user'?'cmd-ia-user':'cmd-ia-bot');
+    d.innerHTML = html;
+    box.appendChild(d);
+    box.scrollTop = box.scrollHeight;
+  }
+  function cmdIAEnviar(){
+    var inp = document.getElementById('cmd-ia-input');
+    if(!inp) return;
+    var q = inp.value.trim();
+    if(!q) return;
+    cmdIAAppendMsg(q.replace(/</g,'&lt;'), 'user');
+    inp.value = '';
+    setTimeout(function(){
+      cmdIAAppendMsg(procesarConsultaCmdIA(q), 'bot');
+    }, 120);
+  }
+  function cmdIAPreguntaRapida(q){
+    var inp = document.getElementById('cmd-ia-input');
+    if(inp) inp.value = q;
+    cmdIAEnviar();
+  }
+  function toggleCmdIAPanel(force){
+    var panel = document.getElementById('cmd-ia-panel');
+    if(!panel) return;
+    var show = (force===true) ? true : (force===false) ? false : (panel.style.display==='none');
+    panel.style.display = show ? 'flex' : 'none';
+    if(show){ var inp=document.getElementById('cmd-ia-input'); if(inp) setTimeout(function(){inp.focus();},100); }
+  }
+  window.toggleCmdIAPanel = toggleCmdIAPanel;
+  window.cmdIAEnviar = cmdIAEnviar;
+  window.cmdIAPreguntaRapida = cmdIAPreguntaRapida;
+  window.procesarConsultaCmdIA = procesarConsultaCmdIA;
+
+  function calcularSaludComercialCMD(){
+    var dims = [], score = 0, w = 0;
+    function add(lbl, val, sc, sem, peso, sub){
+      dims.push({lbl:lbl, val:val, score:sc, sem:sem, sub:sub||''});
+      score += sc * peso; w += peso;
+    }
+    var col = window._coloc_data || [];
+    var meta=0, acum=0, verdes=0, total=col.length||1;
+    col.forEach(function(r){
+      meta+=r.meta_n||0; acum+=r.acum_n||0;
+      if(String(r.semaforo||'').toUpperCase().indexOf('VERDE')>=0) verdes++;
+    });
+    var pctCol = meta>0 ? Math.round(acum/meta*100) : 0;
+    var scCol = Math.min(100, pctCol);
+    add('Colocación S2', pctCol+'%', scCol, pctCol>=90?'VERDE':pctCol>=70?'AMARILLO':'ROJO', 0.28, acum+' / '+meta+' créd.');
+
+    var pctSig = 0;
+    try{
+      var sig = typeof obtenerSigecNacional==='function' ? obtenerSigecNacional() : {};
+      var m = sig.meta||meta, f = sig.facturada||0;
+      pctSig = m>0 ? Math.round(f/m*100) : 0;
+      add('SIGEC fact.', pctSig+'%', Math.min(100,pctSig), pctSig>=85?'VERDE':pctSig>=65?'AMARILLO':'ROJO', 0.22, (f||0)+' facturadas');
+    }catch(e){ add('SIGEC fact.', '—', 50, 'AMARILLO', 0.22, ''); }
+
+    var pctVerdes = Math.round(verdes/total*100);
+    add('Sedes en verde', pctVerdes+'%', pctVerdes, pctVerdes>=60?'VERDE':pctVerdes>=40?'AMARILLO':'ROJO', 0.18, verdes+' de '+total);
+
+    try{
+      var g = typeof obtenerGlpiNacional==='function' ? obtenerGlpiNacional() : {};
+      var pg = g.total>0 ? Math.round((g.aprobada||0)/g.total*100) : 0;
+      add('GLPI aprob.', pg+'%', Math.min(100,pg), pg>=54?'VERDE':pg>=40?'AMARILLO':'ROJO', 0.12, (g.aprobada||0)+' aprobadas');
+    }catch(e){ add('GLPI aprob.', '—', 50, 'AMARILLO', 0.12, ''); }
+
+    var scCart = 70;
+    try{
+      if(window._cartData && typeof _cartIndicadoresPortafolio==='function'){
+        var ind = _cartIndicadoresPortafolio(window._cartData,'total');
+        var rod = Math.max(ind.cyg&&ind.cyg.rodPct||0, ind.sap&&ind.sap.rodPct||0);
+        scCart = rod<15 ? 95 : rod<20 ? 75 : rod<25 ? 55 : 35;
+        add('Cartera rodada', rod+'%', scCart, scCart>=75?'VERDE':scCart>=55?'AMARILLO':'ROJO', 0.12, 'Cygnus/SAP');
+      } else { add('Cartera rodada', '—', 60, 'AMARILLO', 0.12, ''); }
+    }catch(e){ add('Cartera rodada', '—', 60, 'AMARILLO', 0.12, ''); }
+
+    try{
+      if(typeof _resumenSemaforoSedesSeg==='function'){
+        var seg = _resumenSemaforoSedesSeg();
+        var scSeg = (seg.sin_seguimiento||0)>15 ? 40 : (seg.atrasadas||0)>8 ? 60 : 85;
+        add('Seguimientos', (seg.al_dia||0)+' al día', scSeg, scSeg>=75?'VERDE':scSeg>=55?'AMARILLO':'ROJO', 0.08, (seg.atrasadas||0)+' atrasados');
+      }
+    }catch(e){}
+
+    var iscic = w>0 ? Math.round(score/w) : 0;
+    var sem = iscic>=75?'VERDE':iscic>=55?'AMARILLO':'ROJO';
+    return { iscic:iscic, sem:sem, dims:dims };
+  }
+  function renderSaludComercialCMD(){
+    var s = calcularSaludComercialCMD();
+    var pctEl = document.getElementById('menu-salud-pct');
+    var semEl = document.getElementById('menu-salud-sem');
+    var circle = document.getElementById('menu-salud-circle');
+    var dimsEl = document.getElementById('menu-salud-dims');
+    if(pctEl) pctEl.textContent = s.iscic;
+    if(semEl){ semEl.textContent = s.sem; semEl.style.color = _cmdIASemColor(s.sem); }
+    if(circle) circle.style.borderColor = _cmdIASemColor(s.sem);
+    if(dimsEl){
+      dimsEl.innerHTML = s.dims.map(function(d){
+        return '<div class="menu-salud-dim"><div class="menu-salud-dim-lbl">'+d.lbl+'</div>'
+          +'<div class="menu-salud-dim-val" style="color:'+_cmdIASemColor(d.sem)+'">'+d.val+'</div>'
+          +(d.sub?'<div class="menu-salud-dim-sub">'+d.sub+'</div>':'')+'</div>';
+      }).join('');
+    }
+  }
+  window.calcularSaludComercialCMD = calcularSaludComercialCMD;
+  window.renderSaludComercialCMD = renderSaludComercialCMD;
+
+  var _aplicarVersionOrig = window.aplicarVersionApp;
+  window.aplicarVersionApp = function(){
+    if(typeof _aplicarVersionOrig==='function') _aplicarVersionOrig();
+    var badge = document.getElementById('menu-version-badge');
+    var hdr = document.getElementById('app-version-badge');
+    if(badge && hdr && hdr.textContent) badge.textContent = hdr.textContent;
+    else if(badge && typeof APP_VERSION!=='undefined') badge.textContent = String(APP_VERSION).replace(/-(\d)/,' $1').replace('pyv-comercial-','pyv-comercial ');
+  };
+
+  var _origAbrirSCIC = window.abrirSCIC;
+  if(typeof _origAbrirSCIC==='function'){
+    window.abrirSCIC = function(panel){
+      try{
+        if(typeof _cartAsegurarMapaRectorias==='function') _cartAsegurarMapaRectorias();
+        if(typeof SCIC_sincronizar==='function') SCIC_sincronizar();
+        if((!window._coloc_data||!window._coloc_data.length) && typeof _COLOC_FALLBACK!=='undefined')
+          window._coloc_data = _COLOC_FALLBACK;
+        var desc = document.getElementById('scic-tab-desc');
+        if(desc) desc.textContent = SCIC_TAB_DESCRIPCIONES[panel] || 'Panel de inteligencia comercial SCIC.';
+      }catch(e){ console.warn('[SCIC] pre-abrir:', e&&e.message); }
+      return _origAbrirSCIC(panel);
+    };
+  }
+
+  var _origPoblarRectoriasFix = window.poblarSelectRectorias;
+  window.poblarSelectRectorias = function(){
+    if(typeof poblarSelectRectoriasUnificado==='function'){
+      poblarSelectRectoriasUnificado('rectoria', '— Seleccionar Rectoría (Ctrl+clic = varias) —');
+      poblarSelectRectoriasUnificado('pg-filtro-rectoria', '🌎 Todas las rectorías (Nacional)');
+      poblarSelectRectoriasUnificado('comp-rectoria-sel', '— Seleccionar —');
+      poblarSelectRectoriasUnificado('carta-rectoria', '— Seleccionar —');
+      poblarSelectRectoriasUnificado('carta-asesor-rectoria', '— Seleccionar —');
+      return;
+    }
+    if(typeof _origPoblarRectoriasFix==='function') _origPoblarRectoriasFix();
+  };
+
+  var _origAuditar = window.auditarYSincronizarDropdowns;
+  if(typeof _origAuditar==='function'){
+    window.auditarYSincronizarDropdowns = function(){
+      _origAuditar();
+      var rectoriaSel = document.getElementById('rectoria');
+      if(rectoriaSel && rectoriaSel.selectedOptions && rectoriaSel.selectedOptions.length && typeof filtrarSedes==='function')
+        filtrarSedes();
+    };
+  }
+
+  var _origMenuKPIs53 = window.actualizarMenuKPIs;
+  if(typeof _origMenuKPIs53==='function'){
+    window.actualizarMenuKPIs = function(){
+      _origMenuKPIs53();
+      if(typeof renderSaludComercialCMD==='function') renderSaludComercialCMD();
+    };
+  }
+
+  if(typeof renderSaludComercialCMD==='function') setTimeout(renderSaludComercialCMD, 900);
+
+  console.log('[pyv-comercial 5.3.0] IA flotante · Salud Comercial · fixes SCIC/mapa');
 })();
 </script>
 <footer class="app-footer" id="app-footer-global">
