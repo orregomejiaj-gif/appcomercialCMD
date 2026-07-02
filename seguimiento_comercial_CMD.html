@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.13.1   (APP_VERSION = 'SCIC-4.13.1')
+  Versión actual: 4.14.0   (APP_VERSION = 'SCIC-4.14.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,10 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.14.0 (2026-06-30)
+    - Cartera Cygnus: rectorías alineadas a hoja RECTORIAS SEDES (no sedes como rectorías).
+    - Menú: botones bajo semáforos; arquitectura Operación en Vivo / Gestión Comercial / Inteligencia / Herramientas.
+    - Pie de página global con créditos. Nuevo módulo «Brújula Académica CMD» (distribución esfuerzo + calendario UNIMINUTO).
   v4.13.1 (2026-06-30)
     - Metas diarias: colocado = SIGEC facturadas + GLPI aprobadas (cumplimiento vs meta).
   v4.13.0 (2026-06-30)
@@ -963,8 +967,12 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div class="menu-brand">
         <div class="menu-logo">CMD</div>
         <div>
-          <div class="menu-brand-title">Inteligencia Comercial</div>
+          <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
+          <div class="menu-horizon-badges">
+            <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
+            <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
+          </div>
         </div>
       </div>
       <div class="menu-user">
@@ -977,8 +985,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       </div>
     </div>
     <div class="menu-welcome">
-      <div class="menu-welcome-label">Centro de comando comercial</div>
-      <div class="menu-welcome-title">Gestiona producción, seguimiento e inteligencia en un solo lugar</div>
+      <div class="menu-welcome-label">Centro integral de gestión comercial y operativa</div>
+      <div class="menu-welcome-title">AHORA: seguimientos, turnos y operación · AYER: colocación, cartera y resultados oficiales</div>
     </div>
   </div>
 
@@ -1055,71 +1063,44 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-kpi menu-kpi-orange"><div class="menu-kpi-lbl">HubSpot</div><div class="menu-kpi-val" id="menu-kpi-hub">—</div></div>
         <div class="menu-kpi menu-kpi-red"><div class="menu-kpi-lbl">Cartera</div><div class="menu-kpi-val" id="menu-kpi-cartera">—</div></div>
       </div>
-    </div>
 
-    <div class="menu-actions-panel">
-      <div class="menu-section-title">Acciones</div>
-      <div class="menu-grid menu-grid-compact">
-        <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal">
-          <div class="menu-card-icon"><i class="ti ti-clipboard-check"></i></div>
-          <div class="menu-card-title">Seguimiento</div>
-          <div class="menu-card-desc">Coord · Asesor</div>
-        </button>
-        <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple">
-          <div class="menu-card-icon"><i class="ti ti-brain"></i></div>
-          <div class="menu-card-title">SCIC Pulso</div>
-          <div class="menu-card-desc">Inteligencia IA</div>
-        </button>
-        <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue">
-          <div class="menu-card-icon"><i class="ti ti-chart-bar"></i></div>
-          <div class="menu-card-title">Pipeline</div>
-        </button>
-        <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red">
-          <div class="menu-card-icon"><i class="ti ti-traffic-cone"></i></div>
-          <div class="menu-card-title">Cartera</div>
-        </button>
-        <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green">
-          <div class="menu-card-icon"><i class="ti ti-chart-dots-3"></i></div>
-          <div class="menu-card-title">Consulta</div>
-          <div class="menu-card-desc">Estado por sede</div>
-        </button>
-        <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold">
-          <div class="menu-card-icon"><i class="ti ti-target-arrow"></i></div>
-          <div class="menu-card-title">Metas diarias</div>
-          <div class="menu-card-desc">Radicación SIGEC</div>
-        </button>
-        <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber">
-          <div class="menu-card-icon"><i class="ti ti-history"></i></div>
-          <div class="menu-card-title">Historial</div>
-        </button>
-        <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange">
-          <div class="menu-card-icon"><i class="ti ti-brand-hubspot"></i></div>
-          <div class="menu-card-title">HubSpot</div>
-        </button>
-        <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky">
-          <div class="menu-card-icon"><i class="ti ti-calendar-week"></i></div>
-          <div class="menu-card-title">Malla Hoy</div>
-        </button>
-        <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime">
-          <div class="menu-card-icon"><i class="ti ti-tools"></i></div>
-          <div class="menu-card-title">Herramientas PYV</div>
-        </button>
-        <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink">
-          <div class="menu-card-icon"><i class="ti ti-cake"></i></div>
-          <div class="menu-card-title">Cumpleaños</div>
-          <div class="menu-card-desc">Listado completo</div>
-        </button>
-        <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan">
-          <div class="menu-card-icon"><i class="ti ti-address-book"></i></div>
-          <div class="menu-card-title">Directorio</div>
-          <div class="menu-card-desc">Empleados por sede</div>
-        </button>
-        <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet">
-          <div class="menu-card-icon"><i class="ti ti-calendar-plus"></i></div>
-          <div class="menu-card-title">Agendar</div>
-        </button>
+      <div class="menu-modules">
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-live">🟢 Operación en Vivo</span><span class="menu-mod-note">Tiempo real</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon"><i class="ti ti-clipboard-check"></i></div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Coord · Asesor</div></button>
+            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon"><i class="ti ti-history"></i></div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Seguimientos</div></button>
+            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon"><i class="ti ti-calendar-week"></i></div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Turnos del día</div></button>
+            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon"><i class="ti ti-chart-dots-3"></i></div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Por sede</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📊 Gestión Comercial</span><span class="menu-mod-note">Día vencido</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon"><i class="ti ti-chart-line"></i></div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot</div></button>
+            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon"><i class="ti ti-users"></i></div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline gerencial</div></button>
+            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon"><i class="ti ti-target-arrow"></i></div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias</div></button>
+            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon"><i class="ti ti-traffic-cone"></i></div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Cygnus · SAP</div></button>
+            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon"><i class="ti ti-compass"></i></div><div class="menu-card-title">Brújula Académica CMD</div><div class="menu-card-desc">Ritmo UNIMINUTO</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">📈 Inteligencia Comercial</span><span class="menu-mod-note">Análisis</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple"><div class="menu-card-icon"><i class="ti ti-brain"></i></div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Inteligencia IA</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-tools">🛠 Herramientas del Colaborador</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon"><i class="ti ti-tools"></i></div><div class="menu-card-title">Herramientas PYV</div></button>
+            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon"><i class="ti ti-address-book"></i></div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Empleados</div></button>
+            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon"><i class="ti ti-cake"></i></div><div class="menu-card-title">Cumpleaños</div></button>
+            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon"><i class="ti ti-calendar-plus"></i></div><div class="menu-card-title">Agendar</div></button>
+          </div>
+        </div>
       </div>
-      <div class="menu-footer">CMD · Proceso PYV</div>
+      <div class="menu-footer">© 2024–2026 Cooperativa Minuto de Dios · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía</div>
     </div>
   </div>
 </div>
@@ -1158,9 +1139,27 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-green{border-color:rgba(52,211,153,.25)} .menu-kpi-green .menu-kpi-val{color:#34d399}
 .menu-kpi-orange{border-color:rgba(251,146,60,.25)} .menu-kpi-orange .menu-kpi-val{color:#fb923c}
 .menu-kpi-red{border-color:rgba(248,113,113,.25)} .menu-kpi-red .menu-kpi-val{color:#f87171}
-.menu-layout{display:grid;grid-template-columns:1fr 320px;gap:0;min-height:calc(100vh - 180px)}
-@media(max-width:900px){.menu-layout{grid-template-columns:1fr}}
-.menu-nacional-panel{padding:18px 20px;background:linear-gradient(180deg,rgba(0,30,35,.6) 0%,rgba(0,10,12,.9) 100%);border-right:1px solid rgba(255,255,255,.06)}
+.menu-layout{display:block;min-height:calc(100vh - 180px)}
+.menu-nacional-panel{padding:18px 20px 24px;background:linear-gradient(180deg,rgba(0,30,35,.6) 0%,rgba(0,10,12,.9) 100%)}
+.menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
+.menu-hz-live{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
+.menu-hz-dv{background:rgba(96,165,250,.1);color:#93c5fd;border:1px solid rgba(96,165,250,.22)}
+.menu-modules{margin-top:16px;display:flex;flex-direction:column;gap:14px}
+.menu-module{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 12px 10px}
+.menu-module-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.menu-mod-badge{font-size:11px;font-weight:800;color:#fff}
+.menu-mod-note{font-size:8px;color:rgba(255,255,255,.35);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-left:auto}
+.menu-mod-live{color:#4ade80}
+.menu-mod-gestion{color:#93c5fd}
+.menu-mod-intel{color:#c4b5fd}
+.menu-mod-tools{color:#86efac}
+.menu-grid-modules{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+.menu-grid-modules .menu-card{padding:12px 10px;min-height:88px}
+.menu-grid-modules .menu-card-icon{font-size:22px;margin-bottom:6px}
+.menu-grid-modules .menu-card-title{font-size:11px}
+.menu-grid-modules .menu-card-desc{font-size:9px;display:block;margin-top:3px}
+.menu-card-indigo{background:linear-gradient(145deg,rgba(30,27,75,.95),rgba(49,46,129,.8));border-color:rgba(129,140,248,.35)} .menu-card-indigo .menu-card-icon{color:#a5b4fc}
 .menu-nacional-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
 .menu-nacional-title{color:#FFD900;font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px}
 .menu-nacional-fecha{color:rgba(255,255,255,.4);font-size:10px}
@@ -1240,7 +1239,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-card-pink{background:linear-gradient(145deg,rgba(30,10,20,.9),rgba(50,15,30,.75));border-color:rgba(244,114,182,.35)} .menu-card-pink .menu-card-icon{color:#f472b6}
 .menu-card-cyan{background:linear-gradient(145deg,rgba(8,30,36,.92),rgba(12,50,58,.78));border-color:rgba(34,211,238,.32)} .menu-card-cyan .menu-card-icon{color:#22d3ee}
 .menu-card-gold{background:linear-gradient(145deg,rgba(30,24,8,.92),rgba(50,40,12,.78));border-color:rgba(255,217,0,.35)} .menu-card-gold .menu-card-icon{color:#FFD900}
-.menu-footer{text-align:center;margin-top:22px;color:rgba(255,255,255,.15);font-size:9px}
+.menu-footer{text-align:center;margin-top:18px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.25);font-size:9px;line-height:1.5}
 .herr-tab{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
 .herr-tab:hover,.herr-tab.active{background:#003D45;color:#FFD900;border-color:#003D45}
 .herr-launch-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;font-family:Ubuntu,sans-serif;font-size:11px;font-weight:700;color:#003D45;transition:.15s}
@@ -3124,7 +3123,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.13.1';
+var APP_VERSION = 'SCIC-4.14.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -5906,6 +5905,21 @@ https://minutodediosportal.com/login/
   </div>
 </div>
 
+<!-- MODAL BRÚJULA ACADÉMICA CMD -->
+<div id="modal-brujula-academica" style="display:none;position:fixed;inset:0;background:#00000088;z-index:3000;overflow-y:auto;padding:12px">
+  <div style="max-width:960px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:linear-gradient(135deg,#312e81,#4338ca);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #a5b4fc">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:#e0e7ff">🧭 Brújula Académica CMD</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:2px">Distribución del esfuerzo comercial + Calendario nacional de activación UNIMINUTO</div>
+      </div>
+      <button onclick="document.getElementById('modal-brujula-academica').style.display='none'"
+        style="background:#ffffff22;border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px">✕</button>
+    </div>
+    <div id="brujula-contenido" style="max-height:82vh;overflow-y:auto;padding:16px 18px"></div>
+  </div>
+</div>
+
 <!-- MODAL METAS DIARIA Y CUMPLIMIENTO -->
 <div id="modal-metas-diarias" style="display:none;position:fixed;inset:0;background:#00000088;z-index:3000;overflow-y:auto;padding:12px">
   <div style="max-width:980px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
@@ -6342,7 +6356,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.13.1';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.14.0';
     var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
     var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
     var badge = document.getElementById('app-version-badge');
@@ -7599,11 +7613,10 @@ function _parseCumpleMMDD(s){
   }
   function _cartRectRows(ctx, d){
     if(ctx.port==='sap' || ctx.port==='total') return d.rectData||[];
-    var map = (typeof PG_SEDE_RECTORIA!=='undefined') ? PG_SEDE_RECTORIA : {};
     var rows = {};
     function add(idx, tipo){
       Object.values(idx||{}).forEach(function(r){
-        var rect = map[r.sede] || r.sede || 'Sin rectoría';
+        var rect = (typeof _cartResolverRectoria==='function') ? _cartResolverRectoria(r.sede) : (r.sede||'Sin rectoría');
         if(!rows[rect]) rows[rect]={nombre:rect,ap:{Vigente:0,'1-30':0,'31-60':0,total:0,cap:0},ci:{Vigente:0,'1-30':0,'31-60':0,total:0,cap:0}};
         var b = rows[rect][tipo];
         b.total++; b.cap+=r.saldo||r.capital||0;
@@ -7774,7 +7787,8 @@ function _parseCumpleMMDD(s){
       }
     } else if(tab==='rectorias'){
       var rects = _cartRectRows(ctx, d);
-      html += '<div style="padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:10px">DETALLE POR RECTORÍA · '+ctx.name+'</div>';
+      html += '<div style="padding:12px 14px"><div style="font-size:11px;font-weight:800;color:#003D45;margin-bottom:4px">DETALLE POR RECTORÍA · '+ctx.name+'</div>';
+      html += '<div style="font-size:9px;color:#94a3b8;margin-bottom:10px">Agrupado según hoja RECTORIAS SEDES (19 rectorías · 101 sedes)</div>';
       html += '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#003D45;color:#fff">'
         +'<th style="padding:8px 10px;text-align:left">Rectoría</th>'
         +'<th style="padding:8px 10px;text-align:right" colspan="3">APERTURA</th>'
@@ -8197,7 +8211,139 @@ function _parseCumpleMMDD(s){
   };
 
   console.log('[SCIC v4.13.1] Metas diarias: colocado = SIGEC facturadas + GLPI aprobadas');
+
+  /* ── SCIC v4.14.0: Cartera rectorías + Brújula Académica + menú híbrido ── */
+  function _cartAsegurarMapaRectorias(){
+    if(typeof PG_SEDE_RECTORIA==='undefined'||!PG_SEDE_RECTORIA) window.PG_SEDE_RECTORIA=PG_SEDE_RECTORIA={};
+    if(Object.keys(PG_SEDE_RECTORIA).length) return;
+    var rects = (typeof RECTORIAS!=='undefined'&&RECTORIAS) ? RECTORIAS : (typeof _RECTORIAS_FALLBACK!=='undefined'?_RECTORIAS_FALLBACK:{});
+    Object.keys(rects).forEach(function(rect){
+      (rects[rect]||[]).forEach(function(sede){ if(sede) PG_SEDE_RECTORIA[sede]=rect; });
+    });
+    if(!Object.keys(PG_SEDE_RECTORIA).length && typeof _PG_SEDE_RECTORIA_FALLBACK!=='undefined'){
+      Object.assign(PG_SEDE_RECTORIA, _PG_SEDE_RECTORIA_FALLBACK);
+    }
+  }
+  function _cartNormSede(s){
+    return (typeof normalizarSedeColocacion==='function') ? normalizarSedeColocacion(s) : String(s||'').trim();
+  }
+  function _cartResolverRectoria(sedeRaw){
+    _cartAsegurarMapaRectorias();
+    var sede = _cartNormSede(sedeRaw);
+    if(!sede) return 'Sin rectoría';
+    var map = window.PG_SEDE_RECTORIA || {};
+    if(map[sede]) return map[sede];
+    var su = sede.toUpperCase(), keys = Object.keys(map), i;
+    for(i=0;i<keys.length;i++){
+      if(_cartNormSede(keys[i]).toUpperCase()===su) return map[keys[i]];
+    }
+    var sl = sede.toLowerCase();
+    for(i=0;i<keys.length;i++){
+      var kl = _cartNormSede(keys[i]).toLowerCase();
+      if(kl===sl||kl.indexOf(sl)>=0||sl.indexOf(kl)>=0) return map[keys[i]];
+    }
+    var rects = window.RECTORIAS || {};
+    for(var rect in rects){
+      (rects[rect]||[]).forEach(function(sk){
+        var nk = _cartNormSede(sk).toLowerCase();
+        if(nk===sl||nk.indexOf(sl)>=0||sl.indexOf(nk)>=0){ map[sk]=rect; PG_SEDE_RECTORIA[sk]=rect; }
+      });
+    }
+    return map[sede] || 'Otras / Sin mapear';
+  }
+
+  var BRUJULA_DISTRIBUCION = [
+    {mes:'Noviembre',pct:10,desc:'Construcción del semestre S1 y generación de pipeline.'},
+    {mes:'Diciembre',pct:26,desc:'Renovaciones, pronto pago y matrículas anticipadas.'},
+    {mes:'Enero',pct:26,desc:'Pico de colocación S1.'},
+    {mes:'Febrero',pct:22,desc:'Recuperación y matrículas extraordinarias.'},
+    {mes:'Marzo',pct:6,desc:'Permanencia, desertores y educación continua.'},
+    {mes:'Abril',pct:10,desc:'Construcción del semestre S2.'},
+    {mes:'Mayo',pct:11,desc:'Preparación de temporada alta.'},
+    {mes:'Junio',pct:24,desc:'Inicio de temporada alta.'},
+    {mes:'Julio',pct:24,desc:'Máxima producción nacional.'},
+    {mes:'Agosto',pct:23,desc:'Cierre de temporada alta.'},
+    {mes:'Septiembre',pct:13,desc:'Derechos de grado y educación continua.'},
+    {mes:'Octubre',pct:5,desc:'Preparación del siguiente ciclo.'}
+  ];
+  var BRUJULA_CALENDARIO = [
+    {segmento:'Nuevos',s1:'1 Nov',s2:'1 May'},
+    {segmento:'Renovaciones',s1:'15 Nov',s2:'15 May'},
+    {segmento:'Continuos sin crédito',s1:'1 Dic',s2:'1 Jun'},
+    {segmento:'Ausentes',s1:'15 Sep',s2:'15 Mar'},
+    {segmento:'Desertores',s1:'1 Sep',s2:'1 Mar'},
+    {segmento:'Morosos',s1:'15 Oct',s2:'15 Abr'},
+    {segmento:'Derechos de grado',s1:'1 Mar y 1 Sep',s2:'1 Mar y 1 Sep'},
+    {segmento:'Educación continua',s1:'Gestión permanente durante todo el año',s2:'Gestión permanente durante todo el año'}
+  ];
+
+  window.renderBrujulaAcademica = function(){
+    var el = document.getElementById('brujula-contenido');
+    if(!el) return;
+    var maxPct = 26;
+    var html = '<div style="margin-bottom:16px;padding:12px 14px;background:#eef2ff;border-radius:12px;border-left:4px solid #4338ca">'
+      +'<div style="font-size:12px;font-weight:800;color:#312e81;margin-bottom:4px">Objetivo estratégico</div>'
+      +'<div style="font-size:11px;color:#4338ca;line-height:1.6">Anticipar la necesidad financiera del estudiante y alinear la gestión comercial con los calendarios académicos de UNIMINUTO. '
+      +'Mayo construye junio; junio asegura julio; julio define agosto.</div></div>';
+
+    html += '<div style="font-size:12px;font-weight:800;color:#003D45;margin-bottom:10px">📊 Distribución Estratégica del Esfuerzo Comercial</div>';
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:18px">';
+    BRUJULA_DISTRIBUCION.forEach(function(m){
+      var w = Math.round(m.pct/maxPct*100);
+      var hot = m.pct>=20;
+      html += '<div style="background:'+(hot?'#fff7ed':'#f8fafc')+';border:1px solid '+(hot?'#fed7aa':'#e2e8f0')+';border-radius:10px;padding:10px 12px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;font-weight:800;color:#003D45">'+m.mes+'</span>'
+        +'<span style="font-size:18px;font-weight:900;color:'+(hot?'#ea580c':'#4338ca')+'">'+m.pct+'%</span></div>'
+        +'<div style="height:6px;background:#e2e8f0;border-radius:4px;margin:6px 0;overflow:hidden"><div style="height:100%;width:'+w+'%;background:'+(hot?'#f97316':'#6366f1')+';border-radius:4px"></div></div>'
+        +'<div style="font-size:9px;color:#64748b;line-height:1.4">'+m.desc+'</div></div>';
+    });
+    html += '</div>';
+
+    html += '<div style="font-size:12px;font-weight:800;color:#003D45;margin-bottom:10px">📅 Calendario Nacional de Activación Comercial</div>';
+    html += '<div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:12px">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#312e81;color:#fff">'
+      +'<th style="padding:10px 12px;text-align:left">Segmento</th>'
+      +'<th style="padding:10px 12px;text-align:center">Inicio S1</th>'
+      +'<th style="padding:10px 12px;text-align:center">Inicio S2</th></tr></thead><tbody>';
+    BRUJULA_CALENDARIO.forEach(function(r,i){
+      html += '<tr style="background:'+(i%2?'#fff':'#f8fafc')+';border-bottom:1px solid #f1f5f9">'
+        +'<td style="padding:8px 12px;font-weight:700;color:#003D45">'+r.segmento+'</td>'
+        +'<td style="padding:8px 12px;text-align:center;color:#4338ca;font-weight:600">'+r.s1+'</td>'
+        +'<td style="padding:8px 12px;text-align:center;color:#059669;font-weight:600">'+r.s2+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div style="font-size:9px;color:#94a3b8;text-align:center">Fuente: Dirección Comercial CMD · Cooperativa Minuto de Dios · UNIMINUTO</div>';
+    el.innerHTML = html;
+  };
+
+  window.abrirBrujulaAcademica = function(){
+    var modal = document.getElementById('modal-brujula-academica');
+    if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Módulo no disponible'); return; }
+    modal.style.display = 'block';
+    if(typeof renderBrujulaAcademica==='function') renderBrujulaAcademica();
+  };
+
+  var _renderCarteraOrig = window._renderCartera;
+  if(typeof _renderCarteraOrig==='function'){
+    window._renderCartera = function(){
+      _cartAsegurarMapaRectorias();
+      return _renderCarteraOrig.apply(this, arguments);
+    };
+  }
+
+  console.log('[SCIC v4.14.0] Menú híbrido · Cartera rectorías · Brújula Académica CMD');
 })();
 </script>
+<footer class="app-footer" id="app-footer-global">
+  <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:#94a3b8;font-size:10px;padding:14px 16px 20px">
+    <span>© 2024–2026 Cooperativa Minuto de Dios</span>
+    <span style="width:1px;height:10px;background:#cbd5e1;display:inline-block"></span>
+    <span>Proceso PYV · SCIC</span>
+    <span style="width:1px;height:10px;background:#cbd5e1;display:inline-block"></span>
+    <span>Desarrollado por Juan Bernardo Orrego Mejía</span>
+    <span style="width:1px;height:10px;background:#cbd5e1;display:inline-block"></span>
+    <span>Todos los derechos reservados</span>
+  </div>
+</footer>
 </body>
 </html>
