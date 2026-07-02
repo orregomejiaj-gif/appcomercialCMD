@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.5   (APP_VERSION = 'pyv-comercial-5.4.5')
+  Versión actual: pyv-comercial-5.4.6   (APP_VERSION = 'pyv-comercial-5.4.6')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.6 (2026-06-30)
+    - Menú: eliminado informe mapa Colombia; módulos SCIC movidos al panel derecho.
   pyv-comercial-5.4.5 (2026-06-30)
     - Extracción Cartera, H3 e Historial: botones PDF/Excel siempre visibles; export respeta filtros activos del historial.
   pyv-comercial-5.4.4 (2026-06-30)
@@ -1013,7 +1015,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.5</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.6</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -1037,45 +1039,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
   <div class="menu-hero-accent"><span></span><span></span><span></span></div>
 
   <div class="menu-layout">
-    <aside class="menu-sidebar">
-      <div class="menu-sidebar-title">🧭 Módulos SCIC</div>
-      <div class="menu-modules">
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-live">🟢 Operación en Vivo</span><span class="menu-mod-note">Tiempo real</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon">📋</div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Registrar y evaluar seguimientos de coordinador o asesor por sede.</div></button>
-            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon">📜</div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Consultar seguimientos anteriores filtrados por sede y período.</div></button>
-            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon">📅</div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Ver turnos y cobertura operativa del día en cada sede.</div></button>
-            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon">📊</div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Consulta dinámica SIGEC, GLPI y colocación por sede o rectoría.</div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📊 Gestión Comercial</span><span class="menu-mod-note">Día vencido</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon">📈</div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot: llamadas, reuniones y tareas por asesor.</div></button>
-            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon">🎯</div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline de leads y embudo comercial por rectoría (día vencido).</div></button>
-            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon">🏆</div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias: SIGEC facturadas + GLPI aprobadas vs meta por sede.</div></button>
-            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon">💰</div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Estado de cartera Cygnus y SAP: recaudo, mora y rodada por sede.</div></button>
-            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon">🧭</div><div class="menu-card-title">Brújula Académica</div><div class="menu-card-desc">Calendario académico UNIMINUTO y ritmo esperado de colocación S1/S2.</div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">📈 Inteligencia Comercial</span><span class="menu-mod-note">Análisis</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirSCIC('pulso')" title="Pulso nacional: ISCIC y sedes críticas" title="Pulso nacional: ISCIC y sedes críticas" class="menu-card menu-card-purple"><div class="menu-card-icon">🧠</div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Pulso nacional: ISCIC, sedes críticas y narrativa ejecutiva IA.</div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-tools">🛠 Herramientas del Colaborador</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon">🛠️</div><div class="menu-card-title">Herramientas PYV</div><div class="menu-card-desc">Simuladores, fragmentos, Crediplus y utilidades del asesor.</div></button>
-            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon">📇</div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Buscar colaboradores por nombre, cargo o sede en el repositorio.</div></button>
-            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon">🎂</div><div class="menu-card-title">Cumpleaños</div><div class="menu-card-desc">Cumpleaños del mes del equipo comercial CMD.</div></button>
-            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon">📆</div><div class="menu-card-title">Agendar</div><div class="menu-card-desc">Abrir calendario HubSpot para agendar reuniones comerciales.</div></button>
-          </div>
-        </div>
-      </div>
-    </aside>
     <div class="menu-main-panel">
     <div class="menu-nacional-panel">
 
@@ -1096,24 +1059,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-salud-dims" id="menu-salud-dims">
           <div class="menu-salud-loading">Calculando salud comercial…</div>
         </div>
-      </div>
-
-      <div class="menu-report-block menu-mapa-panel" id="menu-mapa-panel">
-        <div class="menu-report-hdr">
-          <div>
-            <div class="menu-mapa-title">Mapa de cumplimiento por departamento</div>
-            <div class="menu-mapa-sub" id="menu-mapa-sub">Semáforo S2: identifica dónde reforzar gestión comercial</div>
-          </div>
-        </div>
-        <div class="menu-mapa-tabs" id="menu-mapa-tabs">
-          <button type="button" class="menu-mapa-tab active" data-layer="cumplimiento" onclick="setMapaColombiaLayer('cumplimiento')">🚦 Cumplimiento S2</button>
-          <button type="button" class="menu-mapa-tab" data-layer="colocacion" onclick="setMapaColombiaLayer('colocacion')">📈 Colocación</button>
-          <button type="button" class="menu-mapa-tab" data-layer="meta" onclick="setMapaColombiaLayer('meta')">🎯 Meta</button>
-          <button type="button" class="menu-mapa-tab" data-layer="capacidad" onclick="setMapaColombiaLayer('capacidad')">🏢 Sedes PYV</button>
-        </div>
-        <div id="menu-mapa-chart" class="menu-mapa-chart"></div>
-        <div class="menu-mapa-resumen" id="menu-mapa-resumen"></div>
-        <div class="menu-mapa-leyenda" id="menu-mapa-leyenda"></div>
       </div>
 
       <div class="menu-report-block">
@@ -1262,6 +1207,45 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div class="menu-footer">© 2024–2026 Cooperativa Minuto de Dios · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía</div>
     </div>
     </div>
+    <aside class="menu-sidebar">
+      <div class="menu-sidebar-title">🧭 Módulos SCIC</div>
+      <div class="menu-modules">
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-live">🟢 Operación en Vivo</span><span class="menu-mod-note">Tiempo real</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon">📋</div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Registrar y evaluar seguimientos de coordinador o asesor por sede.</div></button>
+            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon">📜</div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Consultar seguimientos anteriores filtrados por sede y período.</div></button>
+            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon">📅</div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Ver turnos y cobertura operativa del día en cada sede.</div></button>
+            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon">📊</div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Consulta dinámica SIGEC, GLPI y colocación por sede o rectoría.</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📊 Gestión Comercial</span><span class="menu-mod-note">Día vencido</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon">📈</div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot: llamadas, reuniones y tareas por asesor.</div></button>
+            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon">🎯</div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline de leads y embudo comercial por rectoría (día vencido).</div></button>
+            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon">🏆</div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias: SIGEC facturadas + GLPI aprobadas vs meta por sede.</div></button>
+            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon">💰</div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Estado de cartera Cygnus y SAP: recaudo, mora y rodada por sede.</div></button>
+            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon">🧭</div><div class="menu-card-title">Brújula Académica</div><div class="menu-card-desc">Calendario académico UNIMINUTO y ritmo esperado de colocación S1/S2.</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">📈 Inteligencia Comercial</span><span class="menu-mod-note">Análisis</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirSCIC('pulso')" title="Pulso nacional: ISCIC y sedes críticas" class="menu-card menu-card-purple"><div class="menu-card-icon">🧠</div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Pulso nacional: ISCIC, sedes críticas y narrativa ejecutiva IA.</div></button>
+          </div>
+        </div>
+        <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-tools">🛠 Herramientas del Colaborador</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon">🛠️</div><div class="menu-card-title">Herramientas PYV</div><div class="menu-card-desc">Simuladores, fragmentos, Crediplus y utilidades del asesor.</div></button>
+            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon">📇</div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Buscar colaboradores por nombre, cargo o sede en el repositorio.</div></button>
+            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon">🎂</div><div class="menu-card-title">Cumpleaños</div><div class="menu-card-desc">Cumpleaños del mes del equipo comercial CMD.</div></button>
+            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon">📆</div><div class="menu-card-title">Agendar</div><div class="menu-card-desc">Abrir calendario HubSpot para agendar reuniones comerciales.</div></button>
+          </div>
+        </div>
+      </div>
+    </aside>
   </div>
 
   <button type="button" class="cmd-ia-fab" id="cmd-ia-fab" onclick="toggleCmdIAPanel()" title="Asistente comercial CMD">
@@ -1333,7 +1317,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-orange{border-color:rgba(0,176,185,.25)} .menu-kpi-orange .menu-kpi-val{color:var(--teal)}
 .menu-kpi-red{border-color:rgba(239,68,68,.25)} .menu-kpi-red .menu-kpi-val{color:var(--red)}
 .menu-layout{display:flex;gap:0;min-height:calc(100vh - 180px);align-items:stretch}
-.menu-sidebar{width:260px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:16px 14px 20px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
+.menu-sidebar{width:260px;flex-shrink:0;background:var(--white);border-left:1px solid var(--border);padding:16px 14px 20px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
 .menu-sidebar-title{font-size:11px;font-weight:800;color:var(--dark);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--teal-l)}
 .menu-main-panel{flex:1;min-width:0;overflow-x:hidden}
 .menu-sidebar .menu-modules{margin-top:0;gap:12px}
@@ -1369,7 +1353,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-ley-verde{background:#86efac}.menu-ley-amarillo{background:#fde68a}.menu-ley-rojo{background:#fca5a5}.menu-ley-gris{background:#e2e8f0}
 .menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;font-size:12px;color:#64748b;text-align:center;padding:20px}
 .menu-mapa-error{color:#dc2626;flex-direction:column}
-@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-right:none;border-bottom:1px solid var(--border)}.menu-sidebar .menu-grid-modules{grid-template-columns:repeat(2,1fr);gap:8px}.menu-sidebar .menu-card{flex-direction:column;align-items:flex-start}}
+@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-left:none;border-top:1px solid var(--border)}.menu-sidebar .menu-grid-modules{grid-template-columns:repeat(2,1fr);gap:8px}.menu-sidebar .menu-card{flex-direction:column;align-items:flex-start}}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
 .menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
@@ -3389,7 +3373,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.5';
+var APP_VERSION = 'pyv-comercial-5.4.6';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7112,9 +7096,6 @@ function _parseCumpleMMDD(s){
         _cargarGLPI().then(recargar).catch(recargar);
       }
       [400, 1200, 3000].forEach(function(ms){ setTimeout(recargar, ms); });
-      setTimeout(function(){
-        if(typeof renderMapaColombia==='function') renderMapaColombia(true);
-      }, 250);
     };
   }
 
@@ -9231,20 +9212,12 @@ function _parseCumpleMMDD(s){
   }
   window.renderMapaColombia = renderMapaColombia;
 
-  var _origActualizarMenuKPIs = window.actualizarMenuKPIs;
-  if(typeof _origActualizarMenuKPIs==='function'){
-    window.actualizarMenuKPIs = function(){
-      _origActualizarMenuKPIs();
-      if(typeof renderMapaColombia==='function') setTimeout(renderMapaColombia, 300);
-    };
-  }
-
   if(document.readyState==='loading'){
     document.addEventListener('DOMContentLoaded', function(){
-      setTimeout(function(){ auditarYSincronizarDropdowns(); renderMapaColombia(); }, 800);
+      setTimeout(function(){ auditarYSincronizarDropdowns(); }, 800);
     });
   } else {
-    setTimeout(function(){ auditarYSincronizarDropdowns(); renderMapaColombia(); }, 800);
+    setTimeout(function(){ auditarYSincronizarDropdowns(); }, 800);
   }
 
 
