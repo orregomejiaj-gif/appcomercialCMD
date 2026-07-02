@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.2   (APP_VERSION = 'pyv-comercial-5.4.2')
+  Versión actual: pyv-comercial-5.4.3   (APP_VERSION = 'pyv-comercial-5.4.3')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.3 (2026-06-30)
+    - Malla Hoy: horas del Sheet (inicio/fin), en turno ahora vs app (sin cierre / cerró).
+    - Etiquetas «Ejecutado» aclaradas → Colocado S2 (acumulado, corte día anterior).
   pyv-comercial-5.4.2 (2026-06-30)
     - Menú: eliminados botones «Exportar panel» PDF/Excel; informes con tarjetas y más espacio.
     - Mapa Colombia rediseñado: semáforo S2 por defecto, leyenda visual y resumen por departamento.
@@ -589,9 +592,9 @@ window._cargarTop5 = window._cargarTop5 || function(){
               <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">créditos</div>
             </div>
             <div style="text-align:center;background:rgba(255,255,255,.06);border-radius:10px;padding:10px 6px;border:1px solid rgba(255,255,255,.08)">
-              <div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Ejecutado</div>
+              <div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Colocado S2</div>
               <div id="mts-ejec-n" style="font-size:22px;font-weight:900;color:#4ade80;line-height:1">—</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">colocados</div>
+              <div style="font-size:9px;color:rgba(255,255,255,.4);margin-top:2px">créditos acum. · corte día ant.</div>
             </div>
             <div style="text-align:center;background:rgba(255,255,255,.06);border-radius:10px;padding:10px 6px;border:1px solid rgba(255,255,255,.08)">
               <div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Cumplimiento</div>
@@ -1006,7 +1009,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.2</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.3</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -1118,10 +1121,10 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-nac-card menu-nac-meta">
           <div class="menu-nac-lbl">Meta nacional S2</div>
           <div class="menu-nac-big" id="menu-nac-meta">—</div>
-          <div class="menu-nac-sub">Créditos facturados período</div>
+          <div class="menu-nac-sub">Créditos facturados acumulados · corte día anterior</div>
         </div>
         <div class="menu-nac-card menu-nac-ejec">
-          <div class="menu-nac-lbl">Vamos (acumulado)</div>
+          <div class="menu-nac-lbl">Vamos (colocado S2)</div>
           <div class="menu-nac-big" id="menu-nac-acum">—</div>
           <div class="menu-nac-sub" id="menu-nac-pct-txt">—% de la meta</div>
         </div>
@@ -3307,7 +3310,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.2';
+var APP_VERSION = 'pyv-comercial-5.4.3';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3842,14 +3845,143 @@ window.abrirHubSpotActividad = abrirHubSpotActividad;
 
 function _normMallaTxt(s){ return (s||'').toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim(); }
 
+function _parseHoraMalla(val){
+  if(val == null || val === '') return '';
+  if(val instanceof Date && !isNaN(val.getTime())){
+    return String(val.getHours()).padStart(2,'0')+':'+String(val.getMinutes()).padStart(2,'0');
+  }
+  var s = String(val).trim();
+  if(!s || s === '—' || s === '-') return '';
+  var dm = s.match(/Date\((\d+),(\d+),(\d+),(\d+),(\d+)/);
+  if(dm) return String(parseInt(dm[4],10)).padStart(2,'0')+':'+String(parseInt(dm[5],10)).padStart(2,'0');
+  var n = parseFloat(s.replace(',','.'));
+  if(!isNaN(n)){
+    var frac = n >= 1 ? (n - Math.floor(n)) : n;
+    if(frac >= 0 && frac < 1){
+      var mins = Math.round(frac * 24 * 60);
+      return String(Math.floor(mins/60)).padStart(2,'0')+':'+String(mins%60).padStart(2,'0');
+    }
+  }
+  var rango = s.match(/(\d{1,2}:\d{2})\s*[–\-]\s*(\d{1,2}:\d{2})/);
+  if(rango) return _parseHoraMalla(rango[1]);
+  var tm = s.match(/(\d{1,2}):(\d{2})/);
+  if(tm){
+    var hh = parseInt(tm[1],10), mm = parseInt(tm[2],10);
+    var low = s.toLowerCase();
+    if((low.indexOf('p')>=0 || low.indexOf('pm')>=0) && hh < 12) hh += 12;
+    if((low.indexOf('a')>=0 || low.indexOf('am')>=0) && hh === 12) hh = 0;
+    return String(hh).padStart(2,'0')+':'+String(mm).padStart(2,'0');
+  }
+  return s;
+}
+function _minutosHoraMalla(hhmm){
+  if(!hhmm || hhmm === '—') return null;
+  var p = String(hhmm).match(/^(\d{1,2}):(\d{2})/);
+  if(!p) return null;
+  return parseInt(p[1],10)*60 + parseInt(p[2],10);
+}
+function _estaEnFranjaHoraria(ini, fin, now){
+  var a = _minutosHoraMalla(ini), b = _minutosHoraMalla(fin);
+  if(a == null || b == null) return false;
+  var cur = now.getHours()*60 + now.getMinutes();
+  if(b <= a) return cur >= a || cur < b;
+  return cur >= a && cur < b;
+}
+function _mallaEsFechaHoy(fechaVal, hoy){
+  if(!fechaVal) return false;
+  if(fechaVal instanceof Date && !isNaN(fechaVal.getTime())){
+    return fechaVal.getFullYear()===hoy.getFullYear() && fechaVal.getMonth()===hoy.getMonth() && fechaVal.getDate()===hoy.getDate();
+  }
+  var s = String(fechaVal).trim();
+  var dm = s.match(/Date\((\d+),(\d+),(\d+)/);
+  if(dm) return parseInt(dm[1],10)===hoy.getFullYear() && parseInt(dm[2],10)===hoy.getMonth() && parseInt(dm[3],10)===hoy.getDate();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)){
+    var p = s.slice(0,10).split('-');
+    return parseInt(p[0],10)===hoy.getFullYear() && parseInt(p[1],10)===(hoy.getMonth()+1) && parseInt(p[2],10)===hoy.getDate();
+  }
+  try{
+    var d = new Date(s);
+    if(!isNaN(d.getTime())) return d.getFullYear()===hoy.getFullYear() && d.getMonth()===hoy.getMonth() && d.getDate()===hoy.getDate();
+  }catch(e){}
+  return s.indexOf(String(hoy.getDate()))>=0 && s.toLowerCase().indexOf((hoy.toLocaleDateString('es-CO',{month:'long'})||'').toLowerCase())>=0;
+}
+function _mallaCargarEstadoApp(){
+  window._mallaEnTurnoApp = window._mallaEnTurnoApp || [];
+  window._mallaCerroApp = window._mallaCerroApp || [];
+  var promApp = Promise.resolve();
+  if(typeof SHEETS_URL !== 'undefined' && SHEETS_URL){
+    promApp = fetch(SHEETS_URL+'?accion=resumenGerencial&_='+Date.now()).then(function(r){ return r.json(); }).then(function(e){
+      if(!e || !e.ok) return;
+      window._mallaEnTurnoApp = (e.enTurnoCorreos||[]).map(function(c){ return String(c||'').toLowerCase(); });
+      window._resumenGerencial = window._resumenGerencial || {};
+      window._resumenGerencial.enTurnoCorreos = window._mallaEnTurnoApp.slice();
+      window._resumenGerencial.loginsHoyCorreos = (e.loginsHoyCorreos||[]).map(function(c){ return String(c||'').toLowerCase(); });
+    }).catch(function(){});
+  }
+  var promMarc = Promise.resolve();
+  if(typeof _leerHoja === 'function' && typeof SHEETS_HOJAS !== 'undefined' && SHEETS_HOJAS.segMarcaciones){
+    var hoy = new Date();
+    promMarc = _leerHoja(SHEETS_HOJAS.segMarcaciones).then(function(filas){
+      var cerro = {}, ingreso = {};
+      (filas||[]).forEach(function(row){
+        var cols = row._cols || row._c || [];
+        var correo = String(row.correo || row.CORREO || row.Correo || cols[2] || '').toLowerCase().trim();
+        var tipo = String(row.tipo || row.TIPO || row.Tipo || cols[0] || '').toUpperCase();
+        var fecha = row.fecha || row.FECHA || row.timestamp || cols[3] || cols[4] || '';
+        if(!correo || !_mallaEsFechaHoy(fecha, hoy)) return;
+        if(tipo.indexOf('INGRESO')>=0) ingreso[correo] = true;
+        if(tipo.indexOf('FIN')>=0 || tipo.indexOf('SALIDA')>=0 || tipo.indexOf('EGRESO')>=0) cerro[correo] = true;
+      });
+      window._mallaCerroApp = Object.keys(cerro);
+      window._mallaIngresoApp = Object.keys(ingreso);
+    }).catch(function(){ window._mallaCerroApp = []; });
+  }
+  return Promise.all([promApp, promMarc]);
+}
+function _mallaEstadoApp(correo){
+  var c = String(correo||'').toLowerCase();
+  if(!c) return {lbl:'Sin correo', col:'#94a3b8', code:'sin-correo'};
+  var enTurno = (window._mallaEnTurnoApp||[]).indexOf(c)>=0;
+  var cerro = (window._mallaCerroApp||[]).indexOf(c)>=0;
+  if(enTurno) return {lbl:'Turno abierto (sin cierre)', col:'#fbbf24', code:'sin-cierre'};
+  if(cerro) return {lbl:'Cerró turno en app', col:'#4ade80', code:'cerro'};
+  if((window._mallaIngresoApp||[]).indexOf(c)>=0) return {lbl:'Marcó ingreso hoy', col:'#93c5fd', code:'ingreso'};
+  return {lbl:'Sin marca en app', col:'#f87171', code:'sin-marca'};
+}
+function _mallaEnriquecerItem(it){
+  var now = new Date();
+  var ini = it.turnoInicio || '—', fin = it.turnoFin || '—';
+  it.enFranjaAhora = !it.sinTurno && _estaEnFranjaHoraria(ini, fin, now);
+  var app = _mallaEstadoApp(it.correo);
+  it.estadoApp = app.lbl;
+  it.estadoAppCode = app.code;
+  it.estadoAppCol = app.col;
+  return it;
+}
+function _mallaContarVivos(){
+  var lista = (window._mallaTurnosHoy||[]).map(_mallaEnriquecerItem);
+  var enFranja = lista.filter(function(it){ return it.enFranjaAhora; });
+  var sinCierre = enFranja.filter(function(it){ return it.estadoAppCode==='sin-cierre'; });
+  var cerro = lista.filter(function(it){ return it.estadoAppCode==='cerro'; });
+  var sinMarca = enFranja.filter(function(it){ return it.estadoAppCode==='sin-marca'; });
+  return {enFranja:enFranja.length, sinCierre:sinCierre.length, cerro:cerro.length, sinMarca:sinMarca.length, hora:nowHoraStr()};
+}
+function nowHoraStr(){ return new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}); }
+
 function _turnoDiaDesdeCols(o, diaMes) {
   var ci = 7 + (diaMes - 1) * 2;
-  var hi = (o[ci]||'').toString().trim();
-  var hf = (o[ci+1]||'').toString().trim();
+  var rawHi = o[ci], rawHf = o[ci+1];
+  var hi = _parseHoraMalla(rawHi);
+  var hf = _parseHoraMalla(rawHf);
+  if(!hi && !hf){
+    var comb = _parseHoraMalla(rawHi) || _parseHoraMalla(rawHf) || String(rawHi||rawHf||'').trim();
+    var rg = String(comb).match(/(\d{1,2}:\d{2})\s*[–\-]\s*(\d{1,2}:\d{2})/);
+    if(rg){ hi = _parseHoraMalla(rg[1]); hf = _parseHoraMalla(rg[2]); }
+  }
   if(!hi && !hf) return {texto:'', inicio:'', fin:''};
-  var up = (hi+' '+hf).toUpperCase();
-  if(up.indexOf('DESCANSO')>=0 || hi==='D' || hi==='-' || hf==='-') return {texto:'DESCANSO', inicio:'—', fin:'—'};
-  if(hi && hf && hi.indexOf(':')>=0 && hf.indexOf(':')>=0) return {texto: hi + ' – ' + hf, inicio: hi, fin: hf};
+  var up = (String(rawHi||'')+' '+String(rawHf||'')).toUpperCase();
+  if(up.indexOf('DESCANSO')>=0 || rawHi==='D' || rawHi==='-' || rawHf==='-') return {texto:'DESCANSO', inicio:'—', fin:'—'};
+  if(hi && hf) return {texto: hi + ' – ' + hf, inicio: hi, fin: hf};
   var t = hi || hf || '';
   return {texto: t, inicio: hi || t, fin: hf || '—'};
 }
@@ -3945,16 +4077,31 @@ function _renderTablaMallaHoy(filtro) {
     lista = (window._mallaTurnosSinHoy||[]).slice();
   } else if(modo === 'malla') {
     lista = (window._mallaTurnosIndex||[]).slice();
+  } else if(modo === 'en-vivo') {
+    lista = (window._mallaTurnosHoy||[]).map(_mallaEnriquecerItem).filter(function(it){ return it.enFranjaAhora; });
+  } else if(modo === 'sin-cierre-app') {
+    lista = (window._mallaTurnosHoy||[]).map(_mallaEnriquecerItem).filter(function(it){ return it.enFranjaAhora && it.estadoAppCode==='sin-cierre'; });
+  } else if(modo === 'cerro-app') {
+    lista = (window._mallaTurnosHoy||[]).map(_mallaEnriquecerItem).filter(function(it){ return it.estadoAppCode==='cerro'; });
   } else {
     lista = (window._mallaTurnosHoy||[]).slice();
   }
   var kf = document.getElementById('malla-kpi-filas');
   var kh = document.getElementById('malla-kpi-hoy');
   var ks = document.getElementById('malla-kpi-sin');
+  var kv = document.getElementById('malla-kpi-vivo');
+  var ksc = document.getElementById('malla-kpi-sin-cierre');
+  var kca = document.getElementById('malla-kpi-cerro-app');
+  var live = _mallaContarVivos();
   if(kf) kf.textContent = (window._mallaTurnosIndex||[]).length;
   if(kh) kh.textContent = (window._mallaTurnosHoy||[]).length;
   if(ks) ks.textContent = (window._mallaTurnosSinHoy||[]).length;
-  ['con-turno','sin-turno','malla'].forEach(function(m){
+  if(kv) kv.textContent = live.enFranja;
+  if(ksc) ksc.textContent = live.sinCierre;
+  if(kca) kca.textContent = live.cerro;
+  var horaLbl = document.getElementById('malla-hora-actual');
+  if(horaLbl) horaLbl.textContent = live.hora;
+  ['con-turno','sin-turno','malla','en-vivo','sin-cierre-app','cerro-app'].forEach(function(m){
     var b = document.getElementById('malla-btn-'+m);
     if(b){
       var active = modo === m;
@@ -3965,26 +4112,42 @@ function _renderTablaMallaHoy(filtro) {
   });
   if(!lista.length) {
     var msg = q ? 'Sin resultados para «'+q.replace(/</g,'&lt;')+'»'
-      : (modo==='sin-turno' ? 'Nadie sin turno en la malla hoy' : (modo==='malla' ? 'Malla vacía' : 'Nadie con turno programado hoy'));
+      : (modo==='sin-turno' ? 'Nadie sin turno en la malla hoy'
+        : (modo==='malla' ? 'Malla vacía'
+          : (modo==='en-vivo' ? 'Nadie en franja horaria a esta hora ('+nowHoraStr()+')'
+            : (modo==='sin-cierre-app' ? 'Nadie con turno abierto sin cierre en app'
+              : (modo==='cerro-app' ? 'Nadie ha cerrado turno en la app hoy' : 'Nadie con turno programado hoy')))));
     el.innerHTML = '<div style="text-align:center;color:#94a3b8;padding:24px;font-size:12px">'+msg+'</div>';
     return;
   }
   var fecha = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
-  var modoLbl = modo==='sin-turno' ? 'sin turno hoy' : (modo==='malla' ? 'en malla completa' : 'con turno hoy');
-  var html = '<div style="color:rgba(255,255,255,.45);font-size:10px;margin-bottom:10px">'+fecha+' · '+lista.length+' colaborador'+(lista.length!==1?'es':'')+' '+modoLbl+'</div>';
+  var modoLbl = modo==='sin-turno' ? 'sin turno hoy'
+    : (modo==='malla' ? 'en malla completa'
+      : (modo==='en-vivo' ? 'en franja horaria ahora ('+nowHoraStr()+')'
+        : (modo==='sin-cierre-app' ? 'con turno abierto sin cierre en app'
+          : (modo==='cerro-app' ? 'que cerraron turno en la app' : 'con turno programado hoy'))));
+  var html = '<div style="color:rgba(255,255,255,.45);font-size:10px;margin-bottom:10px">'+fecha+' · Hora actual: <b id="malla-hora-actual">'+nowHoraStr()+'</b> · '+lista.length+' colaborador'+(lista.length!==1?'es':'')+' '+modoLbl+'</div>';
   html += '<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:rgba(147,197,253,.15)">';
-  ['Nombre','Cédula','Sede','Cargo','Inicio','Fin','Estado'].forEach(function(h){
+  ['Nombre','Cédula','Sede','Cargo','Inicio malla','Fin malla','Horario ahora','App turno'].forEach(function(h){
     html += '<th style="padding:8px;text-align:left;color:#93c5fd;font-size:9px;text-transform:uppercase;letter-spacing:.3px">'+h+'</th>';
   });
   html += '</tr></thead><tbody>';
   lista.sort(function(a,b){ return (a.nombre||'').localeCompare(b.nombre||'','es'); });
   lista.forEach(function(it){
-    var th = it.turnoHoy || (it.dias&&it.dias[hoy.getDate()-1]) || '—';
+    it = _mallaEnriquecerItem(it);
     var ini = it.turnoInicio || '—';
     var fin = it.turnoFin || '—';
-    var esDesc = th.toUpperCase().indexOf('DESCANSO')>=0 || it.sinTurno;
-    var col = esDesc ? '#94a3b8' : '#4ade80';
-    var estado = esDesc ? (th.toUpperCase()==='DESCANSO'?'DESCANSO':'SIN TURNO') : 'EN TURNO';
+    var esDesc = it.sinTurno || String(it.turnoHoy||'').toUpperCase().indexOf('DESCANSO')>=0;
+    var horarioAhora, horarioCol;
+    if(esDesc){
+      horarioAhora = 'DESCANSO'; horarioCol = '#94a3b8';
+    } else if(it.enFranjaAhora){
+      horarioAhora = 'EN TURNO AHORA'; horarioCol = '#4ade80';
+    } else {
+      var a = _minutosHoraMalla(ini), cur = new Date().getHours()*60+new Date().getMinutes();
+      horarioAhora = (a != null && cur < a) ? 'Antes de turno' : 'Fuera de horario';
+      horarioCol = '#94a3b8';
+    }
     html += '<tr style="border-bottom:1px solid rgba(255,255,255,.06)">';
     html += '<td style="padding:7px 8px;color:#e2e8f0;font-weight:600">'+(it.nombre||'—')+'</td>';
     html += '<td style="padding:7px 8px;color:rgba(255,255,255,.5)">'+(it.cedula||'—')+'</td>';
@@ -3992,7 +4155,8 @@ function _renderTablaMallaHoy(filtro) {
     html += '<td style="padding:7px 8px;color:rgba(255,255,255,.55);font-size:10px">'+(it.cargo||'—')+'</td>';
     html += '<td style="padding:7px 8px;color:#93c5fd;font-weight:700;white-space:nowrap">'+ini+'</td>';
     html += '<td style="padding:7px 8px;color:#93c5fd;font-weight:700;white-space:nowrap">'+fin+'</td>';
-    html += '<td style="padding:7px 8px;color:'+col+';font-weight:700;white-space:nowrap;font-size:10px">'+estado+'</td>';
+    html += '<td style="padding:7px 8px;color:'+horarioCol+';font-weight:700;white-space:nowrap;font-size:10px">'+horarioAhora+'</td>';
+    html += '<td style="padding:7px 8px;color:'+it.estadoAppCol+';font-weight:700;white-space:nowrap;font-size:10px">'+it.estadoApp+'</td>';
     html += '</tr>';
   });
   html += '</tbody></table>';
@@ -4006,30 +4170,36 @@ window._setMallaVista = function(modo){
 window.filtrarMallaHoy = function(v){ _renderTablaMallaHoy(v); };
 
 function abrirMallaTurnos() {
-  window._mallaVistaModo = 'con-turno';
+  window._mallaVistaModo = 'en-vivo';
   var hoy = new Date();
   var nHoy = (window._mallaTurnosHoy||[]).length;
   var nIdx = (window._mallaTurnosIndex||[]).length;
   var nSin = (window._mallaTurnosSinHoy||[]).length;
+  var live = _mallaContarVivos();
   var fechaLbl = hoy.toLocaleDateString('es-CO',{weekday:'long',day:'numeric',month:'long'});
   var btnStyle = 'cursor:pointer;border-radius:20px;padding:5px 12px;font-size:10px;font-weight:700;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06);color:rgba(255,255,255,.7);font-family:Ubuntu,sans-serif';
   var contenido = '<div style="font-family:Ubuntu,sans-serif">'
     + '<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">'
-    + '<div style="color:rgba(255,255,255,.5);font-size:11px"><i class="ti ti-calendar-event"></i> '+fechaLbl+'</div>'
+    + '<div style="color:rgba(255,255,255,.5);font-size:11px"><i class="ti ti-calendar-event"></i> '+fechaLbl+' · <b id="malla-hora-actual">'+nowHoraStr()+'</b></div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:6px">'
-    + '<span style="background:rgba(74,222,128,.12);color:#4ade80;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.25)"><span id="malla-kpi-hoy">'+nHoy+'</span> con turno</span>'
+    + '<span style="background:rgba(74,222,128,.12);color:#4ade80;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.25)"><span id="malla-kpi-vivo">'+live.enFranja+'</span> en turno ahora</span>'
+    + '<span style="background:rgba(251,191,36,.12);color:#fbbf24;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(251,191,36,.25)"><span id="malla-kpi-sin-cierre">'+live.sinCierre+'</span> sin cierre app</span>'
+    + '<span style="background:rgba(74,222,128,.08);color:#86efac;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(74,222,128,.2)"><span id="malla-kpi-cerro-app">'+live.cerro+'</span> cerraron app</span>'
+    + '<span style="background:rgba(147,197,253,.1);color:#93c5fd;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(147,197,253,.2)"><span id="malla-kpi-hoy">'+nHoy+'</span> prog. hoy</span>'
     + '<span style="background:rgba(248,113,113,.1);color:#f87171;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(248,113,113,.2)"><span id="malla-kpi-sin">'+nSin+'</span> sin turno</span>'
-    + '<span style="background:rgba(147,197,253,.1);color:#93c5fd;font-size:10px;font-weight:700;padding:4px 10px;border-radius:20px;border:1px solid rgba(147,197,253,.2)"><span id="malla-kpi-filas">'+nIdx+'</span> en malla</span>'
     + '</div></div>'
+    + '<div style="color:rgba(255,255,255,.35);font-size:9px;margin-bottom:10px;line-height:1.5">Horas leídas del Sheet (columnas inicio/fin del día). <b>En turno ahora</b> = dentro de la franja horaria actual. <b>App turno</b> = marca ingreso/cierre en la aplicación.</div>'
     + '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">'
-    + '<button type="button" id="malla-btn-con-turno" onclick="_setMallaVista(\'con-turno\')" style="'+btnStyle+'">✅ Con turno hoy</button>'
-    + '<button type="button" id="malla-btn-sin-turno" onclick="_setMallaVista(\'sin-turno\')" style="'+btnStyle+'">⛔ Sin turno hoy</button>'
+    + '<button type="button" id="malla-btn-en-vivo" onclick="_setMallaVista(\'en-vivo\')" style="'+btnStyle+'">🟢 En turno ahora</button>'
+    + '<button type="button" id="malla-btn-sin-cierre-app" onclick="_setMallaVista(\'sin-cierre-app\')" style="'+btnStyle+'">⏳ Sin cierre app</button>'
+    + '<button type="button" id="malla-btn-cerro-app" onclick="_setMallaVista(\'cerro-app\')" style="'+btnStyle+'">✅ Cerró en app</button>'
+    + '<button type="button" id="malla-btn-con-turno" onclick="_setMallaVista(\'con-turno\')" style="'+btnStyle+'">📅 Programados hoy</button>'
+    + '<button type="button" id="malla-btn-sin-turno" onclick="_setMallaVista(\'sin-turno\')" style="'+btnStyle+'">⛔ Sin turno</button>'
     + '<button type="button" id="malla-btn-malla" onclick="_setMallaVista(\'malla\')" style="'+btnStyle+'">📋 Toda la malla</button>'
     + '</div>'
     + '<div style="margin-bottom:12px">'
     + '<input type="text" id="malla-buscar" placeholder="Buscar por nombre o cédula…" oninput="filtrarMallaHoy(this.value)" '
     + 'style="width:100%;box-sizing:border-box;padding:10px 14px;border:1.5px solid rgba(147,197,253,.3);border-radius:10px;background:rgba(255,255,255,.06);color:#e2e8f0;font-size:12px;font-family:Ubuntu,sans-serif">'
-    + '<div style="color:rgba(255,255,255,.3);font-size:9px;margin-top:5px">Use los botones para ver con turno, sin turno o malla completa · Columnas Inicio y Fin del turno de hoy</div>'
     + '</div>'
     + '<div id="malla-detalle" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;max-height:52vh;overflow-y:auto">'
     + '<div style="text-align:center;color:#94a3b8;font-size:12px;padding:20px"><i class="ti ti-calendar-week" style="font-size:32px;opacity:.5"></i><div style="margin-top:10px">Cargando malla desde Sheet…</div></div>'
@@ -4071,12 +4241,13 @@ function _cargarYMostrarMalla() {
   if(typeof _cargarEmpleados==='function' && !Object.keys(EMPLEADOS_BD||{}).length) {
     prom = prom.then(function(){ return _cargarEmpleados(); });
   }
+  prom = prom.then(function(){ return _mallaCargarEstadoApp(); });
   prom.then(function() {
     var busq = document.getElementById('malla-buscar');
     _renderTablaMallaHoy(busq ? busq.value : '');
     if(typeof construirResumenGerencial==='function') construirResumenGerencial();
     if(btn) btn.innerHTML = '<i class="ti ti-refresh"></i> Actualizado ✓';
-    if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Malla actualizada · '+((window._mallaTurnosHoy||[]).length)+' turnos hoy');
+    if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Malla actualizada · '+_mallaContarVivos().enFranja+' en turno ahora');
   }).catch(function() {
     if(btn) btn.textContent = 'Error al cargar';
     var el = document.getElementById('malla-detalle');
@@ -7374,11 +7545,11 @@ function _parseCumpleMMDD(s){
     var sig = sedeUnica ? _cdSigecSede(sedeUnica) : (typeof obtenerSigecNacional==='function' ? obtenerSigecNacional() : {});
     var glpi = sedeUnica ? _cdGlpiSede(sedeUnica) : (typeof obtenerGlpiNacional==='function' ? obtenerGlpiNacional() : {});
     var html = '<div style="margin-bottom:10px"><div style="font-size:13px;font-weight:800;color:#003D45">'+titulo+'</div>'
-      +'<div style="font-size:10px;color:#64748b">'+filas.length+' sede'+(filas.length!==1?'s':'')+' · Datos en vivo desde repositorios</div></div>';
+      +'<div style="font-size:10px;color:#64748b">'+filas.length+' sede'+(filas.length!==1?'s':'')+' · Colocado S2 = créditos acumulados del período (informe oficial, corte día anterior)</div></div>';
     if(modulo==='resumen' || modulo==='colocacion'){
       html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:12px">';
       html += _cdKpiCard('Meta #', _cdFmtN(Math.round(meta)), '#003D45');
-      html += _cdKpiCard('Ejecutado', _cdFmtN(acum), pct>=90?'#16a34a':pct>=70?'#ca8a04':'#dc2626', pct+'% cumplimiento');
+      html += _cdKpiCard('Colocado S2', _cdFmtN(acum), pct>=90?'#16a34a':pct>=70?'#ca8a04':'#dc2626', pct+'% · acum. corte día ant.');
       html += _cdKpiCard('Var. año ant.', (varAnt>=0?'+':'')+varAnt+'%', varAnt>=0?'#16a34a':'#dc2626');
       html += _cdKpiCard('Sedes', filas.length, '#6366f1');
       html += '</div>';
@@ -7404,7 +7575,7 @@ function _parseCumpleMMDD(s){
       html += '<div style="font-size:10px;font-weight:800;color:#003D45;margin:10px 0 6px">📊 Detalle por sede</div>';
       html += '<div style="overflow-x:auto;max-height:280px;border:1px solid #e5e7eb;border-radius:10px">';
       html += '<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9;position:sticky;top:0">';
-      html += '<th style="padding:6px 8px;text-align:left">Sede</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Ejec</th><th style="padding:6px 8px;text-align:right">%</th><th style="padding:6px 8px;text-align:center">Sem</th></tr></thead><tbody>';
+      html += '<th style="padding:6px 8px;text-align:left">Sede</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Colocado</th><th style="padding:6px 8px;text-align:right">%</th><th style="padding:6px 8px;text-align:center">Sem</th></tr></thead><tbody>';
       filas.sort(function(a,b){ return (b.acum_n||0)-(a.acum_n||0); }).slice(0,40).forEach(function(r){
         var p = r.meta_n>0 ? Math.round(r.acum_n/r.meta_n*100) : 0;
         var sem = r.semaforo || (p>=90?'VERDE':p>=70?'AMARILLO':'ROJO');
@@ -8948,7 +9119,7 @@ function _parseCumpleMMDD(s){
     var html = '<b>📍 Informe: '+sede+'</b><br>'
       +'Rectoría: <b>'+rect+'</b> · Departamento: <b>'+depto+'</b><br>'
       +'<span style="color:'+_cmdIASemColor(sem)+';font-weight:800">Semáforo: '+sem+'</span> · Cumplimiento: <b>'+pct+'%</b><br>'
-      +'Meta S2: <b>'+(typeof fmtN==='function'?fmtN(meta):meta)+'</b> créd. · Ejecutado: <b>'+(typeof fmtN==='function'?fmtN(acum):acum)+'</b><br>';
+      +'Meta S2: <b>'+(typeof fmtN==='function'?fmtN(meta):meta)+'</b> créd. · Colocado S2: <b>'+(typeof fmtN==='function'?fmtN(acum):acum)+'</b> (acum. corte día ant.)<br>';
     if(sig && sig.total) html += 'SIGEC: '+sig.total+' tickets · Facturadas: '+(sig.facturada||0)+'<br>';
     if(riesgos.length){
       html += '<br><b>⚠️ Riesgos detectados:</b><ul style="margin:6px 0 0 16px;padding:0">';
