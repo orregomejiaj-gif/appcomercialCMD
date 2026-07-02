@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.14.0   (APP_VERSION = 'SCIC-4.14.0')
+  Versión actual: 4.15.0   (APP_VERSION = 'SCIC-4.15.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
@@ -8,6 +8,10 @@
   sea visible por versión.
 
   CHANGELOG
+  v4.15.0 (2026-06-30)
+    - Identidad visual alineada a manual de línea gráfica CMD (teal, amarillo, verde, gris).
+    - Menú en fondo claro institucional (deja de usar negro puro).
+    - Cartera: botón «Guía Cobranza PYV» con instructivo PV-IN-05 integrado.
   v4.14.0 (2026-06-30)
     - Cartera Cygnus: rectorías alineadas a hoja RECTORIAS SEDES (no sedes como rectorías).
     - Menú: botones bajo semáforos; arquitectura Operación en Vivo / Gestión Comercial / Inteligencia / Herramientas.
@@ -98,7 +102,14 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--teal:#00B0B9;--teal-l:#e0f7f8;--teal-d:#007a80;--yellow:#FFD900;--yellow-l:#fffbe0;--green:#AEC900;--dark:#003d45;--gray:#707372;--bg:#f4f5f7;--white:#fff;--text:#1a1a1a;--text2:#6b7280;--border:#e5e7eb;--red:#ef4444;--amber:#f59e0b}
+:root{
+  /* Manual de línea gráfica CMD — Cooperativa Minuto de Dios */
+  --teal:#00B0B9;--teal-l:#e0f7f8;--teal-d:#007a80;
+  --yellow:#FFD900;--yellow-l:#fffbe0;
+  --green:#AEC900;--green-l:#f4f9e0;
+  --dark:#003d45;--gray:#707372;
+  --bg:#f4f5f7;--white:#fff;--text:#1a1a1a;--text2:#6b7280;--border:#e5e7eb;--red:#ef4444;--amber:#f59e0b
+}
 body{font-family:'Ubuntu',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
 .app{max-width:1140px;margin:0 auto;padding:16px 20px 60px}
 
@@ -989,6 +1000,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div class="menu-welcome-title">AHORA: seguimientos, turnos y operación · AYER: colocación, cartera y resultados oficiales</div>
     </div>
   </div>
+  <div class="menu-hero-accent"><span></span><span></span><span></span></div>
 
   <div class="menu-layout">
     <div class="menu-nacional-panel">
@@ -1106,147 +1118,143 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 </div>
 
 <style>
-.menu-shell{min-height:100vh;background:#000a0c;font-family:Ubuntu,sans-serif}
-.menu-hero{position:relative;padding:18px 22px 14px;background:linear-gradient(135deg,#001f24 0%,#003D45 45%,#002a30 100%);border-bottom:1px solid rgba(200,151,30,.2);overflow:hidden}
-.menu-hero-glow{position:absolute;top:-40%;right:-10%;width:50%;height:140%;background:radial-gradient(circle,rgba(255,217,0,.12) 0%,transparent 65%);pointer-events:none}
+/* Menú SCIC — línea gráfica CMD: teal #00B0B9 · amarillo #FFD900 · verde #AEC900 · dark #003D45 */
+.menu-shell{min-height:100vh;background:var(--bg);font-family:Ubuntu,sans-serif;color:var(--text)}
+.menu-hero{position:relative;padding:18px 22px 14px;background:var(--dark);overflow:hidden}
+.menu-hero-glow{position:absolute;top:-40%;right:-10%;width:50%;height:140%;background:radial-gradient(circle,rgba(0,176,185,.18) 0%,transparent 65%);pointer-events:none}
+.menu-hero-accent{display:flex;height:4px}
+.menu-hero-accent span:nth-child(1){flex:3;background:var(--teal)}
+.menu-hero-accent span:nth-child(2){flex:1;background:var(--yellow)}
+.menu-hero-accent span:nth-child(3){flex:1;background:var(--green)}
 .menu-topbar{display:flex;align-items:center;justify-content:space-between;position:relative;z-index:1}
 .menu-brand{display:flex;align-items:center;gap:12px}
-.menu-logo{width:40px;height:40px;background:linear-gradient(135deg,#C8971E,#FFD900);border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:#003D45;box-shadow:0 4px 16px rgba(255,217,0,.25)}
+.menu-logo{width:40px;height:40px;background:linear-gradient(135deg,var(--yellow),#ffe566);border-radius:11px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px;color:var(--dark);box-shadow:0 4px 14px rgba(255,217,0,.3)}
 .menu-brand-title{color:#fff;font-size:15px;font-weight:800;letter-spacing:-.3px}
-.menu-brand-sub{color:rgba(255,255,255,.4);font-size:10px;margin-top:2px}
+.menu-brand-sub{color:rgba(255,255,255,.65);font-size:10px;margin-top:2px}
 .menu-user{display:flex;align-items:center;gap:12px}
 .menu-user-text{text-align:right}
 #menu-nombre{color:#fff;font-size:13px;font-weight:700}
-#menu-cargo-sede{color:rgba(255,255,255,.45);font-size:10px;margin-top:2px}
-.menu-avatar{width:38px;height:38px;background:linear-gradient(135deg,#C8971E,#FFD900);border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#003D45}
-.menu-logout{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);border-radius:9px;padding:7px 11px;cursor:pointer;font-size:14px}
+#menu-cargo-sede{color:rgba(255,255,255,.55);font-size:10px;margin-top:2px}
+.menu-avatar{width:38px;height:38px;background:linear-gradient(135deg,var(--teal),var(--teal-d));border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#fff}
+.menu-logout{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:9px;padding:7px 11px;cursor:pointer;font-size:14px}
 .menu-welcome{position:relative;z-index:1;margin-top:14px}
-.menu-welcome-label{color:#C8971E;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
-.menu-welcome-title{color:#fff;font-size:17px;font-weight:800;margin-top:4px;max-width:520px;line-height:1.25}
-.menu-kpi-strip{display:flex;gap:8px;overflow-x:auto;padding:12px 18px;background:rgba(0,0,0,.35);border-bottom:1px solid rgba(255,255,255,.06);scrollbar-width:thin}
-.menu-kpi{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 14px;flex-shrink:0;min-width:128px;transition:transform .2s,box-shadow .2s}
-.menu-kpi:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
-.menu-kpi-lbl{color:rgba(255,255,255,.4);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.menu-kpi-val{color:#fff;font-size:18px;font-weight:900;margin-top:3px;line-height:1.1}
-.menu-kpi-sub{color:rgba(255,255,255,.35);font-size:10px;font-weight:600}
-.menu-kpi-bar{background:rgba(255,255,255,.08);border-radius:4px;height:4px;margin-top:6px;overflow:hidden}
-.menu-kpi-bar>div{height:100%;border-radius:4px;background:linear-gradient(90deg,#C8971E,#FFD900);transition:width .6s ease}
-.menu-kpi-foot{color:rgba(255,255,255,.35);font-size:9px;margin-top:4px;font-weight:600}
-.menu-kpi-gold{border-color:rgba(200,151,30,.3);background:rgba(200,151,30,.08)}
-.menu-kpi-gold .menu-kpi-val{color:#FFD900}
-.menu-kpi-blue{border-color:rgba(96,165,250,.25)} .menu-kpi-blue .menu-kpi-val{color:#60a5fa}
-.menu-kpi-purple{border-color:rgba(167,139,250,.25)} .menu-kpi-purple .menu-kpi-val{color:#a78bfa}
-.menu-kpi-green{border-color:rgba(52,211,153,.25)} .menu-kpi-green .menu-kpi-val{color:#34d399}
-.menu-kpi-orange{border-color:rgba(251,146,60,.25)} .menu-kpi-orange .menu-kpi-val{color:#fb923c}
-.menu-kpi-red{border-color:rgba(248,113,113,.25)} .menu-kpi-red .menu-kpi-val{color:#f87171}
+.menu-welcome-label{color:var(--yellow);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.6px}
+.menu-welcome-title{color:#fff;font-size:16px;font-weight:800;margin-top:4px;max-width:640px;line-height:1.3}
+.menu-kpi-strip{display:flex;gap:8px;overflow-x:auto;padding:0 0 12px;scrollbar-width:thin}
+.menu-kpi{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:10px 14px;flex-shrink:0;min-width:128px;box-shadow:0 1px 3px rgba(0,0,0,.04);transition:transform .2s,box-shadow .2s}
+.menu-kpi:hover{transform:translateY(-2px);box-shadow:0 6px 18px rgba(0,61,69,.1)}
+.menu-kpi-lbl{color:var(--gray);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.menu-kpi-val{color:var(--dark);font-size:18px;font-weight:900;margin-top:3px;line-height:1.1}
+.menu-kpi-sub{color:var(--text2);font-size:10px;font-weight:600}
+.menu-kpi-bar{background:var(--border);border-radius:4px;height:4px;margin-top:6px;overflow:hidden}
+.menu-kpi-bar>div{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--teal),var(--yellow));transition:width .6s ease}
+.menu-kpi-foot{color:var(--text2);font-size:9px;margin-top:4px;font-weight:600}
+.menu-kpi-gold{border-color:rgba(255,217,0,.45);background:var(--yellow-l)}
+.menu-kpi-gold .menu-kpi-val{color:var(--dark)}
+.menu-kpi-blue{border-color:rgba(0,176,185,.35)} .menu-kpi-blue .menu-kpi-val{color:var(--teal-d)}
+.menu-kpi-purple{border-color:rgba(0,61,69,.2)} .menu-kpi-purple .menu-kpi-val{color:var(--dark)}
+.menu-kpi-green{border-color:rgba(174,201,0,.4)} .menu-kpi-green .menu-kpi-val{color:#6b7f00}
+.menu-kpi-orange{border-color:rgba(0,176,185,.25)} .menu-kpi-orange .menu-kpi-val{color:var(--teal)}
+.menu-kpi-red{border-color:rgba(239,68,68,.25)} .menu-kpi-red .menu-kpi-val{color:var(--red)}
 .menu-layout{display:block;min-height:calc(100vh - 180px)}
-.menu-nacional-panel{padding:18px 20px 24px;background:linear-gradient(180deg,rgba(0,30,35,.6) 0%,rgba(0,10,12,.9) 100%)}
+.menu-nacional-panel{padding:18px 20px 24px;background:var(--bg)}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
-.menu-hz-live{background:rgba(74,222,128,.12);color:#4ade80;border:1px solid rgba(74,222,128,.25)}
-.menu-hz-dv{background:rgba(96,165,250,.1);color:#93c5fd;border:1px solid rgba(96,165,250,.22)}
+.menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
+.menu-hz-dv{background:var(--teal-l);color:var(--teal-d);border:1px solid rgba(0,176,185,.3)}
 .menu-modules{margin-top:16px;display:flex;flex-direction:column;gap:14px}
-.menu-module{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.06);border-radius:14px;padding:12px 12px 10px}
-.menu-module-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap}
-.menu-mod-badge{font-size:11px;font-weight:800;color:#fff}
-.menu-mod-note{font-size:8px;color:rgba(255,255,255,.35);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-left:auto}
-.menu-mod-live{color:#4ade80}
-.menu-mod-gestion{color:#93c5fd}
-.menu-mod-intel{color:#c4b5fd}
-.menu-mod-tools{color:#86efac}
+.menu-module{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:12px 12px 10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.menu-module-hdr{display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap;padding-bottom:8px;border-bottom:2px solid var(--teal-l)}
+.menu-mod-badge{font-size:11px;font-weight:800;color:var(--dark)}
+.menu-mod-note{font-size:8px;color:var(--gray);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-left:auto}
+.menu-mod-live{color:#5a6a00}
+.menu-mod-gestion{color:var(--teal-d)}
+.menu-mod-intel{color:var(--dark)}
+.menu-mod-tools{color:var(--teal)}
 .menu-grid-modules{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
 .menu-grid-modules .menu-card{padding:12px 10px;min-height:88px}
 .menu-grid-modules .menu-card-icon{font-size:22px;margin-bottom:6px}
 .menu-grid-modules .menu-card-title{font-size:11px}
 .menu-grid-modules .menu-card-desc{font-size:9px;display:block;margin-top:3px}
-.menu-card-indigo{background:linear-gradient(145deg,rgba(30,27,75,.95),rgba(49,46,129,.8));border-color:rgba(129,140,248,.35)} .menu-card-indigo .menu-card-icon{color:#a5b4fc}
 .menu-nacional-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.menu-nacional-title{color:#FFD900;font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px}
-.menu-nacional-fecha{color:rgba(255,255,255,.4);font-size:10px}
+.menu-nacional-title{color:var(--dark);font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px}
+.menu-nacional-title i{color:var(--teal)}
+.menu-nacional-fecha{color:var(--gray);font-size:10px}
 .menu-nac-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
 @media(min-width:700px){.menu-nac-grid{grid-template-columns:repeat(4,1fr)}}
-.menu-nac-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px}
-.menu-nac-lbl{color:rgba(255,255,255,.4);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.menu-nac-big{color:#fff;font-size:22px;font-weight:900;margin-top:4px;line-height:1.1}
-.menu-nac-sub{color:rgba(255,255,255,.35);font-size:9px;margin-top:4px}
-.menu-nac-meta .menu-nac-big{color:#FFD900}
-.menu-nac-ejec .menu-nac-big{color:#4ade80}
-.menu-nac-deber .menu-nac-big{color:#60a5fa}
-.menu-nac-brecha .menu-nac-big{color:#f87171}
-.menu-nac-bar-wrap{margin-bottom:14px;padding:12px 14px;background:rgba(0,0,0,.25);border-radius:12px;border:1px solid rgba(200,151,30,.15)}
-.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.35);margin-bottom:6px}
-.menu-nac-bar{position:relative;height:10px;background:rgba(255,255,255,.08);border-radius:6px;overflow:visible}
-.menu-nac-bar>div:first-child{height:100%;border-radius:6px;background:linear-gradient(90deg,#C8971E,#FFD900);transition:width .8s ease}
-.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:16px;background:#60a5fa;border-radius:2px;box-shadow:0 0 8px rgba(96,165,250,.6)}
-.menu-nac-proy{color:rgba(255,255,255,.5);font-size:10px;margin-top:10px;text-align:center}
-.menu-sigec-panel{margin-bottom:14px;padding:14px;background:rgba(0,0,0,.3);border-radius:12px;border:1px solid rgba(96,165,250,.2)}
+.menu-nac-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.menu-nac-lbl{color:var(--gray);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.menu-nac-big{color:var(--dark);font-size:22px;font-weight:900;margin-top:4px;line-height:1.1}
+.menu-nac-sub{color:var(--text2);font-size:9px;margin-top:4px}
+.menu-nac-meta .menu-nac-big{color:var(--dark)}
+.menu-nac-meta{border-top:3px solid var(--yellow)}
+.menu-nac-ejec .menu-nac-big{color:var(--teal-d)}
+.menu-nac-ejec{border-top:3px solid var(--teal)}
+.menu-nac-deber .menu-nac-big{color:var(--teal)}
+.menu-nac-deber{border-top:3px solid var(--teal-l)}
+.menu-nac-brecha .menu-nac-big{color:var(--red)}
+.menu-nac-brecha{border-top:3px solid var(--red)}
+.menu-nac-bar-wrap{margin-bottom:14px;padding:12px 14px;background:var(--white);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--gray);margin-bottom:6px}
+.menu-nac-bar{position:relative;height:10px;background:var(--border);border-radius:6px;overflow:visible}
+.menu-nac-bar>div:first-child{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--yellow));transition:width .8s ease}
+.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:16px;background:var(--teal);border-radius:2px;box-shadow:0 0 6px rgba(0,176,185,.5)}
+.menu-nac-proy{color:var(--text2);font-size:10px;margin-top:10px;text-align:center}
+.menu-sigec-panel{margin-bottom:14px;padding:14px;background:var(--white);border-radius:12px;border:1px solid var(--border);border-left:4px solid var(--teal);box-shadow:0 1px 3px rgba(0,0,0,.04)}
 .menu-sigec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.menu-sigec-title{color:#60a5fa;font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px}
-.menu-sigec-sem{font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px;background:rgba(255,255,255,.08);color:rgba(255,255,255,.6)}
+.menu-sigec-title{color:var(--dark);font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px}
+.menu-sigec-title i{color:var(--teal)}
+.menu-sigec-sem{font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px;background:var(--teal-l);color:var(--teal-d)}
 .menu-sigec-main{display:flex;gap:14px;align-items:center;margin-bottom:12px}
-.menu-sigec-circle{width:78px;height:78px;border-radius:50%;border:4px solid #4ade80;display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:rgba(74,222,128,.08);transition:border-color .4s,background .4s}
-.menu-sigec-pct{font-size:18px;font-weight:900;color:#fff;line-height:1}
-.menu-sigec-pct-sub{font-size:7px;color:rgba(255,255,255,.45);text-align:center;margin-top:2px;padding:0 4px}
+.menu-sigec-circle{width:78px;height:78px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:var(--green-l);transition:border-color .4s,background .4s}
+.menu-sigec-pct{font-size:18px;font-weight:900;color:var(--dark);line-height:1}
+.menu-sigec-pct-sub{font-size:7px;color:var(--gray);text-align:center;margin-top:2px;padding:0 4px}
 .menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.menu-sigec-stat{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:8px;padding:8px 10px}
-.menu-sigec-stat .lbl{display:block;color:rgba(255,255,255,.4);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.menu-sigec-stat .val{display:block;color:#fff;font-size:16px;font-weight:900;margin-top:3px}
-.menu-sig-fact .val{color:#4ade80}
-.menu-sig-cfac .val{color:#a78bfa}
-.menu-sig-cerr .val{color:#fbbf24}
-.menu-sig-abi .val{color:#60a5fa}
-.menu-sig-rech .val{color:#f87171}
-.menu-sig-pend .val{color:#fb923c}
-.menu-sigec-bar-wrap{padding:10px 12px;background:rgba(255,255,255,.03);border-radius:10px;border:1px solid rgba(255,255,255,.06)}
-.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,.35);margin-bottom:5px}
-.menu-sigec-bar{height:8px;background:rgba(255,255,255,.08);border-radius:5px;overflow:hidden}
-.menu-sigec-bar>div{height:100%;border-radius:5px;background:#4ade80;transition:width .8s ease,background .4s}
-.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);margin-top:8px;flex-wrap:wrap;gap:4px}
-.menu-sigec-glpi{margin-top:10px;font-size:9px;color:rgba(255,255,255,.5);text-align:center}
-.menu-sigec-glpi .glpi-lbl{color:#c084fc;font-weight:800;margin-right:4px}
-.menu-sigec-glpi .glpi-sep{margin:0 4px;color:rgba(255,255,255,.2)}
+.menu-sigec-stat{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+.menu-sigec-stat .lbl{display:block;color:var(--gray);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.menu-sigec-stat .val{display:block;color:var(--dark);font-size:16px;font-weight:900;margin-top:3px}
+.menu-sig-fact .val{color:var(--teal-d)}
+.menu-sig-cfac .val{color:var(--dark)}
+.menu-sig-cerr .val{color:var(--amber)}
+.menu-sig-abi .val{color:var(--teal)}
+.menu-sig-rech .val{color:var(--red)}
+.menu-sig-pend .val{color:var(--amber)}
+.menu-sigec-bar-wrap{padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--border)}
+.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:8px;color:var(--gray);margin-bottom:5px}
+.menu-sigec-bar{height:8px;background:var(--border);border-radius:5px;overflow:hidden}
+.menu-sigec-bar>div{height:100%;border-radius:5px;background:var(--green);transition:width .8s ease,background .4s}
+.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:9px;color:var(--text2);margin-top:8px;flex-wrap:wrap;gap:4px}
+.menu-sigec-glpi{margin-top:10px;font-size:9px;color:var(--text2);text-align:center}
+.menu-sigec-glpi .glpi-lbl{color:var(--teal-d);font-weight:800;margin-right:4px}
+.menu-sigec-glpi .glpi-sep{margin:0 4px;color:var(--border)}
 .menu-kpi-compact{padding:0;background:transparent;border:none;gap:6px}
 .menu-kpi-compact .menu-kpi{min-width:90px;padding:8px 10px}
-.menu-actions-panel{padding:18px 16px;background:rgba(0,0,0,.2)}
-.menu-grid-compact{grid-template-columns:repeat(2,1fr);gap:8px}
-.menu-grid-compact .menu-card{padding:14px 10px;min-height:auto}
-.menu-grid-compact .menu-card-icon{font-size:22px;margin-bottom:6px}
-.menu-grid-compact .menu-card-title{font-size:11px}
-.menu-grid-compact .menu-card-desc{display:none}
-.menu-body{padding:18px 20px 24px}
-.menu-section-title{color:rgba(255,255,255,.35);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
 .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
-.menu-card{position:relative;padding:18px 14px;border:none;border-radius:14px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .22s cubic-bezier(.4,0,.2,1);overflow:hidden;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
-.menu-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.06),transparent);opacity:0;transition:opacity .2s}
-.menu-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.45);border-color:rgba(255,255,255,.15)}
-.menu-card:hover::before{opacity:1}
-.menu-card-feature{grid-column:span 1;min-height:120px}
-@media(min-width:720px){.menu-card-feature{grid-column:span 1}}
-.menu-card-icon{font-size:28px;margin-bottom:10px;display:block;opacity:.95}
-.menu-card-title{color:#fff;font-size:13px;font-weight:800;line-height:1.2}
-.menu-card-desc{color:rgba(255,255,255,.45);font-size:10px;margin-top:5px;line-height:1.35}
-.menu-card-badge{position:absolute;top:10px;right:10px;font-size:8px;font-weight:800;padding:3px 7px;border-radius:6px;background:rgba(255,255,255,.12);color:rgba(255,255,255,.7)}
-.menu-card-teal{background:linear-gradient(145deg,rgba(0,61,69,.9),rgba(0,90,102,.7));border-color:rgba(200,151,30,.35)} .menu-card-teal .menu-card-icon{color:#C8971E}
-.menu-card-purple{background:linear-gradient(145deg,rgba(26,26,46,.95),rgba(45,27,105,.8));border-color:rgba(167,139,250,.35)} .menu-card-purple .menu-card-icon{color:#a78bfa}
-.menu-card-blue{background:linear-gradient(145deg,rgba(26,39,68,.9),rgba(36,52,96,.75));border-color:rgba(96,165,250,.3)} .menu-card-blue .menu-card-icon{color:#60a5fa}
-.menu-card-red{background:linear-gradient(145deg,rgba(45,21,21,.9),rgba(74,28,28,.75));border-color:rgba(248,113,113,.3)} .menu-card-red .menu-card-icon{color:#f87171}
-.menu-card-green{background:linear-gradient(145deg,rgba(13,40,24,.9),rgba(15,61,31,.75));border-color:rgba(52,211,153,.3)} .menu-card-green .menu-card-icon{color:#34d399}
-.menu-card-amber{background:linear-gradient(145deg,rgba(26,18,5,.9),rgba(45,31,8,.75));border-color:rgba(251,191,36,.3)} .menu-card-amber .menu-card-icon{color:#fbbf24}
-.menu-card-orange{background:linear-gradient(145deg,rgba(31,15,5,.9),rgba(61,31,10,.75));border-color:rgba(251,146,60,.3)} .menu-card-orange .menu-card-icon{color:#fb923c}
-.menu-card-sky{background:linear-gradient(145deg,rgba(10,26,46,.9),rgba(15,36,64,.75));border-color:rgba(147,197,253,.3)} .menu-card-sky .menu-card-icon{color:#93c5fd}
-.menu-card-lime{background:linear-gradient(145deg,rgba(15,26,15,.9),rgba(26,46,26,.75));border-color:rgba(134,239,172,.3)} .menu-card-lime .menu-card-icon{color:#86efac}
-.menu-card-violet{background:linear-gradient(145deg,rgba(26,15,26,.9),rgba(45,26,45,.75));border-color:rgba(216,180,254,.3)} .menu-card-violet .menu-card-icon{color:#d8b4fe}
-.menu-card-pink{background:linear-gradient(145deg,rgba(30,10,20,.9),rgba(50,15,30,.75));border-color:rgba(244,114,182,.35)} .menu-card-pink .menu-card-icon{color:#f472b6}
-.menu-card-cyan{background:linear-gradient(145deg,rgba(8,30,36,.92),rgba(12,50,58,.78));border-color:rgba(34,211,238,.32)} .menu-card-cyan .menu-card-icon{color:#22d3ee}
-.menu-card-gold{background:linear-gradient(145deg,rgba(30,24,8,.92),rgba(50,40,12,.78));border-color:rgba(255,217,0,.35)} .menu-card-gold .menu-card-icon{color:#FFD900}
-.menu-footer{text-align:center;margin-top:18px;padding-top:12px;border-top:1px solid rgba(255,255,255,.06);color:rgba(255,255,255,.25);font-size:9px;line-height:1.5}
-.herr-tab{border:1px solid #cbd5e1;background:#fff;color:#334155;border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
-.herr-tab:hover,.herr-tab.active{background:#003D45;color:#FFD900;border-color:#003D45}
-.herr-launch-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;background:#fff;border:1.5px solid #e2e8f0;border-radius:12px;cursor:pointer;font-family:Ubuntu,sans-serif;font-size:11px;font-weight:700;color:#003D45;transition:.15s}
+.menu-card{position:relative;padding:14px 12px;border-radius:12px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .2s;background:var(--white);border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.menu-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,61,69,.12);border-color:var(--teal)}
+.menu-card-icon{font-size:22px;margin-bottom:8px;display:block}
+.menu-card-title{color:var(--dark);font-size:12px;font-weight:800;line-height:1.2}
+.menu-card-desc{color:var(--text2);font-size:9px;margin-top:4px;line-height:1.35}
+.menu-card-teal{border-left:4px solid var(--teal)} .menu-card-teal .menu-card-icon{color:var(--teal)}
+.menu-card-purple{border-left:4px solid var(--dark)} .menu-card-purple .menu-card-icon{color:var(--dark)}
+.menu-card-blue{border-left:4px solid var(--teal-d)} .menu-card-blue .menu-card-icon{color:var(--teal-d)}
+.menu-card-red{border-left:4px solid var(--red)} .menu-card-red .menu-card-icon{color:var(--red)}
+.menu-card-green{border-left:4px solid var(--green)} .menu-card-green .menu-card-icon{color:#6b7f00}
+.menu-card-amber{border-left:4px solid var(--amber)} .menu-card-amber .menu-card-icon{color:var(--amber)}
+.menu-card-orange{border-left:4px solid var(--teal)} .menu-card-orange .menu-card-icon{color:var(--teal-d)}
+.menu-card-sky{border-left:4px solid var(--teal-l)} .menu-card-sky .menu-card-icon{color:var(--teal)}
+.menu-card-lime{border-left:4px solid var(--green)} .menu-card-lime .menu-card-icon{color:#6b7f00}
+.menu-card-violet{border-left:4px solid var(--dark)} .menu-card-violet .menu-card-icon{color:var(--dark)}
+.menu-card-pink{border-left:4px solid #ec4899} .menu-card-pink .menu-card-icon{color:#ec4899}
+.menu-card-cyan{border-left:4px solid var(--teal)} .menu-card-cyan .menu-card-icon{color:var(--teal-d)}
+.menu-card-gold{border-left:4px solid var(--yellow)} .menu-card-gold .menu-card-icon{color:var(--dark)}
+.menu-card-indigo{border-left:4px solid var(--dark)} .menu-card-indigo .menu-card-icon{color:var(--teal-d)}
+.menu-footer{text-align:center;margin-top:18px;padding-top:12px;border-top:1px solid var(--border);color:var(--gray);font-size:9px;line-height:1.5}
+.herr-tab{border:1px solid var(--border);background:var(--white);color:var(--text);border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
+.herr-tab:hover,.herr-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
+.herr-launch-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;font-family:Ubuntu,sans-serif;font-size:11px;font-weight:700;color:var(--dark);transition:.15s}
 .herr-launch-btn span{font-size:26px;line-height:1}
-.herr-launch-btn:hover{border-color:#003D45;background:#f0fdfa;transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,61,69,.12)}
-.menu-btn{padding:18px 14px;border:none;border-radius:12px;cursor:pointer;text-align:center;font-family:Ubuntu,sans-serif;transition:all .2s;width:100%}
-.menu-btn:hover{transform:translateY(-2px);filter:brightness(1.1);box-shadow:0 6px 20px rgba(0,0,0,.4)}
+.herr-launch-btn:hover{border-color:var(--teal);background:var(--teal-l);transform:translateY(-2px);box-shadow:0 4px 14px rgba(0,176,185,.15)}
 </style>
 <!-- Legacy compatibility hidden elements -->
 <div style="display:none">
@@ -3123,7 +3131,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // ════════════════════════════════════════════════════════════
 
 // Versión
-var APP_VERSION = 'SCIC-4.14.0';
+var APP_VERSION = 'SCIC-4.15.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -5916,7 +5924,22 @@ https://minutodediosportal.com/login/
       <button onclick="document.getElementById('modal-brujula-academica').style.display='none'"
         style="background:#ffffff22;border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px">✕</button>
     </div>
-    <div id="brujula-contenido" style="max-height:82vh;overflow-y:auto;padding:16px 18px"></div>
+    <div id="brujula-contenido" style="max-height:82vh;overflow-y:auto;padding:16px 18px">    </div>
+  </div>
+</div>
+
+<!-- MODAL GUÍA COBRANZA PYV (PV-IN-05) -->
+<div id="modal-guia-cobranza-pyv" style="display:none;position:fixed;inset:0;background:#00000088;z-index:3000;overflow-y:auto;padding:12px">
+  <div style="max-width:960px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
+    <div style="background:linear-gradient(135deg,#003d45,#007a80);padding:16px 20px;display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #FFD900">
+      <div>
+        <div style="font-size:15px;font-weight:800;color:#FFD900">📋 Guía Cobranza PYV</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.75);margin-top:2px">PV-IN-05 Gestión Comercial de Cobranza · v02 · 27-ago-2025</div>
+      </div>
+      <button onclick="document.getElementById('modal-guia-cobranza-pyv').style.display='none'"
+        style="background:#ffffff22;border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px">✕</button>
+    </div>
+    <div id="guia-cobranza-contenido" style="max-height:82vh;overflow-y:auto;padding:16px 18px"></div>
   </div>
 </div>
 
@@ -6356,7 +6379,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.14.0';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.15.0';
     var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
     var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
     var badge = document.getElementById('app-version-badge');
@@ -7713,6 +7736,7 @@ function _parseCumpleMMDD(s){
     html += _cartMetaBanner(ctx, ind);
     html += '<div style="padding:10px 14px;display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid #f1f5f9">'+vistaBtns
       +'<span style="margin-left:auto;font-size:10px;color:#94a3b8;align-self:center">'+ctx.name+' · '+d.ts+'</span>'
+      +'<button onclick="abrirGuiaCobranzaPYV()" style="padding:5px 12px;border-radius:6px;border:1px solid #00B0B9;font-size:10px;font-weight:700;cursor:pointer;background:#e0f7f8;color:#007a80">📋 Guía Cobranza PYV</button>'
       +'<button onclick="_cargarCartera()" style="padding:5px 10px;border-radius:6px;border:1px solid #e2e8f0;font-size:10px;cursor:pointer;background:#fff">↺</button>'
       +'<button onclick="exportarExcelCartera()" style="padding:5px 10px;border-radius:6px;border:none;font-size:10px;cursor:pointer;background:#003D45;color:#fff">⬇️ Excel</button></div>';
 
@@ -8323,6 +8347,115 @@ function _parseCumpleMMDD(s){
     if(typeof renderBrujulaAcademica==='function') renderBrujulaAcademica();
   };
 
+  var GUIA_COBRANZA_CALENDARIO = [
+    {dia:'5',act:'Recordatorio WhatsApp · validación de pagos recibidos · actualización Cygnus/SAP'},
+    {dia:'10',act:'Segundo recordatorio · confirmación de abonos · seguimiento a mora 1-30'},
+    {dia:'20',act:'Recordatorio formal · correo institucional · gestión telefónica prioritaria'},
+    {dia:'25',act:'Cierre de ciclo · envío de recibos · preparación informe de gestión (días 1–3 del mes siguiente)'}
+  ];
+
+  var GUIA_COBRANZA_FASES = [
+    {fase:'5.1',titulo:'Créditos recién desembolsados — Bienvenida',items:['Contacto de bienvenida en los primeros 3 días hábiles','Explicar fechas de pago, canales y beneficios del crédito','Registrar gestión en el sistema de seguimiento']},
+    {fase:'5.2',titulo:'Créditos recién desembolsados — Seguimiento',items:['Seguimiento a los 15 y 30 días del desembolso','Verificar primer pago y orientar sobre medios de pago','Anticipar dudas sobre cuota y fechas de vencimiento']},
+    {fase:'5.3',titulo:'Créditos recién desembolsados — Alerta temprana',items:['Identificar señales de riesgo antes del primer vencimiento','Escalar al coordinador si hay mora inminente','Activar plan de contención personalizado']},
+    {fase:'5.4',titulo:'Créditos antiguos vigentes',items:['Gestión preventiva según calendario de vencimientos (5/10/20/25)','Priorizar cartera en mora 1-30 y persistencia en mora','Coordinar con cobranza administrativa casos 31-60 y superiores']}
+  ];
+
+  window.renderGuiaCobranzaPYV = function(){
+    var el = document.getElementById('guia-cobranza-contenido');
+    if(!el) return;
+    var port = (window._cartPortafolio || 'cygnus');
+    var metaRec = port==='sap' ? 75 : 80;
+    var metaRod = port==='sap' ? 25 : 20;
+    var metaLbl = port==='sap' ? 'SAP' : (port==='total' ? 'Consolidado' : 'Cygnus (RP)');
+
+    var html = '<div style="margin-bottom:16px;padding:12px 14px;background:#e0f7f8;border-radius:12px;border-left:4px solid #00B0B9">'
+      +'<div style="font-size:12px;font-weight:800;color:#003d45;margin-bottom:4px">Objetivo del instructivo</div>'
+      +'<div style="font-size:11px;color:#007a80;line-height:1.6">Estandarizar la gestión comercial de cobranza en sedes PYV: contacto preventivo, seguimiento por vencimientos, '
+      +'recuperación de cartera y cumplimiento de indicadores de recaudo y rodada por portafolio.</div></div>';
+
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:16px">';
+    [
+      {l:'Alcance',v:'Asesores y coordinadores comerciales PYV',c:'#003d45',bg:'#f4f5f7'},
+      {l:'Portafolio activo',v:metaLbl,c:'#007a80',bg:'#e0f7f8'},
+      {l:'Spin rate meta',v:'100%',c:'#5a6a00',bg:'#f4f9e0'},
+      {l:'Código',v:'PV-IN-05 v02',c:'#707372',bg:'#f8fafc'}
+    ].forEach(function(k){
+      html += '<div style="background:'+k.bg+';border-radius:10px;padding:10px 12px;border:1px solid #e5e7eb">'
+        +'<div style="font-size:8px;font-weight:700;color:#707372;text-transform:uppercase;letter-spacing:.3px">'+k.l+'</div>'
+        +'<div style="font-size:13px;font-weight:800;color:'+k.c+';margin-top:4px">'+k.v+'</div></div>';
+    });
+    html += '</div>';
+
+    html += '<div style="font-size:12px;font-weight:800;color:#003d45;margin-bottom:10px">📊 Indicadores de gestión (KPIs)</div>';
+    html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">';
+    html += '<div style="background:#eff6ff;border-radius:10px;padding:12px;border-left:4px solid #1d4ed8">'
+      +'<div style="font-size:10px;font-weight:800;color:#1d4ed8">Cygnus (RP)</div>'
+      +'<div style="font-size:11px;color:#003d45;margin-top:6px;line-height:1.5">'
+      +'<div>✅ Recaudo <b>&gt;80%</b></div><div>⚠️ Cartera rodada <b>&lt;20%</b></div></div></div>';
+    html += '<div style="background:#ecfdf5;border-radius:10px;padding:12px;border-left:4px solid #059669">'
+      +'<div style="font-size:10px;font-weight:800;color:#059669">SAP</div>'
+      +'<div style="font-size:11px;color:#003d45;margin-top:6px;line-height:1.5">'
+      +'<div>✅ Recaudo <b>&gt;75%</b></div><div>⚠️ Cartera rodada <b>&lt;25%</b></div></div></div>';
+    html += '</div>';
+
+    if(port!=='total'){
+      var ind = null;
+      if(window._cartData && typeof _cartIndicadoresPortafolio==='function'){
+        ind = _cartIndicadoresPortafolio(window._cartData, port);
+      }
+      if(ind){
+        var recPct = ind.recPct||0, rodPct = ind.rodPct||0;
+        var recOk = recPct >= metaRec, rodOk = rodPct < metaRod;
+        html += '<div style="margin-bottom:16px;padding:12px 14px;background:#fff;border-radius:12px;border:1px solid #e5e7eb;border-top:3px solid #FFD900">'
+          +'<div style="font-size:11px;font-weight:800;color:#003d45;margin-bottom:8px">Tu cartera actual · '+metaLbl+'</div>'
+          +'<div style="display:flex;gap:16px;flex-wrap:wrap;font-size:12px">'
+          +'<span>Recaudo: <b style="color:'+(recOk?'#16a34a':'#dc2626')+'">'+recPct+'%</b> (meta &gt;'+metaRec+'%)</span>'
+          +'<span>Rodada: <b style="color:'+(rodOk?'#16a34a':'#dc2626')+'">'+rodPct+'%</b> (meta &lt;'+metaRod+'%)</span>'
+          +'</div></div>';
+      }
+    }
+
+    html += '<div style="font-size:12px;font-weight:800;color:#003d45;margin-bottom:10px">📅 Calendario de gestión por vencimientos</div>';
+    html += '<div style="overflow-x:auto;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:16px">'
+      +'<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#003d45;color:#fff">'
+      +'<th style="padding:10px 12px;text-align:center;width:70px">Día</th>'
+      +'<th style="padding:10px 12px;text-align:left">Actividades</th></tr></thead><tbody>';
+    GUIA_COBRANZA_CALENDARIO.forEach(function(r,i){
+      html += '<tr style="background:'+(i%2?'#fff':'#f8fafc')+';border-bottom:1px solid #f1f5f9">'
+        +'<td style="padding:8px 12px;text-align:center;font-weight:900;color:#00B0B9;font-size:14px">'+r.dia+'</td>'
+        +'<td style="padding:8px 12px;color:#003d45;line-height:1.5">'+r.act+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+
+    html += '<div style="font-size:12px;font-weight:800;color:#003d45;margin-bottom:10px">🔄 Fases de gestión (5.1 – 5.4)</div>';
+    html += '<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:16px">';
+    GUIA_COBRANZA_FASES.forEach(function(f){
+      html += '<div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:12px 14px;border-left:4px solid #AEC900">'
+        +'<div style="font-size:10px;font-weight:800;color:#5a6a00">Fase '+f.fase+'</div>'
+        +'<div style="font-size:11px;font-weight:800;color:#003d45;margin:4px 0 6px">'+f.titulo+'</div>'
+        +'<ul style="margin:0;padding-left:18px;font-size:10px;color:#707372;line-height:1.6">';
+      f.items.forEach(function(it){ html += '<li>'+it+'</li>'; });
+      html += '</ul></div>';
+    });
+    html += '</div>';
+
+    html += '<div style="padding:12px 14px;background:#fffbe0;border-radius:12px;border:1px solid rgba(255,217,0,.45);margin-bottom:12px">'
+      +'<div style="font-size:11px;font-weight:800;color:#003d45;margin-bottom:6px">📝 Informe de gestión comercial</div>'
+      +'<div style="font-size:10px;color:#707372;line-height:1.6">Entre el día 1 y 3 de cada mes, el coordinador consolida: gestiones realizadas por asesor, '
+      +'recaudo vs meta, cartera en mora, casos escalados y plan de acción del mes. Usar los KPIs de este informe de cartera como referencia.</div></div>';
+
+    html += '<div style="font-size:9px;color:#94a3b8;text-align:center">Fuente: PV-IN-05 Gestión Comercial de Cobranza · Cooperativa Minuto de Dios · Proceso PYV</div>';
+    el.innerHTML = html;
+  };
+
+  window.abrirGuiaCobranzaPYV = function(){
+    var modal = document.getElementById('modal-guia-cobranza-pyv');
+    if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Guía no disponible'); return; }
+    modal.style.display = 'block';
+    if(typeof renderGuiaCobranzaPYV==='function') renderGuiaCobranzaPYV();
+  };
+
   var _renderCarteraOrig = window._renderCartera;
   if(typeof _renderCarteraOrig==='function'){
     window._renderCartera = function(){
@@ -8331,7 +8464,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[SCIC v4.14.0] Menú híbrido · Cartera rectorías · Brújula Académica CMD');
+  console.log('[SCIC v4.15.0] Línea gráfica CMD · Guía Cobranza PV-IN-05 · Menú claro institucional');
 })();
 </script>
 <footer class="app-footer" id="app-footer-global">
