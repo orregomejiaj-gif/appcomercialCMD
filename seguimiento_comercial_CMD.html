@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.3   (APP_VERSION = 'pyv-comercial-5.4.3')
+  Versión actual: pyv-comercial-5.4.4   (APP_VERSION = 'pyv-comercial-5.4.4')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.4 (2026-06-30)
+    - Nuevo informe «Comparativo vs año anterior»: semáforo YoY con VAR # del Sheet.
   pyv-comercial-5.4.3 (2026-06-30)
     - Malla Hoy: horas del Sheet (inicio/fin), en turno ahora vs app (sin cierre / cerró).
     - Etiquetas «Ejecutado» aclaradas → Colocado S2 (acumulado, corte día anterior).
@@ -1009,7 +1011,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.3</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.4</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -1144,6 +1146,55 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-nac-bar"><div id="menu-nac-bar-fill"></div><div id="menu-nac-bar-ideal" title="Curva ideal hoy"></div></div>
         <div class="menu-nac-proy" id="menu-nac-proy">Proyección de cierre: —</div>
       </div>
+      </div>
+
+      <div class="menu-report-block menu-yoy-panel" id="menu-yoy-panel">
+        <div class="menu-yoy-hdr">
+          <div>
+            <div class="menu-yoy-title"><i class="ti ti-arrows-diff"></i> Comparativo vs año anterior</div>
+            <div class="menu-yoy-sub">Mismo período S2 · fuente INFORME COLOCACION P ACTUAL (ANT # CRED · VAR # · VAR% #)</div>
+          </div>
+          <div class="menu-yoy-sem-wrap">
+            <div class="menu-yoy-sem" id="menu-yoy-sem">—</div>
+            <div class="menu-yoy-sem-lbl" id="menu-yoy-sem-lbl">Semáforo YoY</div>
+          </div>
+        </div>
+        <div class="menu-yoy-grid">
+          <div class="menu-yoy-card">
+            <div class="menu-yoy-lbl">Colocado S2 ahora</div>
+            <div class="menu-yoy-big" id="menu-yoy-acum">—</div>
+            <div class="menu-yoy-foot">Acumulado período actual</div>
+          </div>
+          <div class="menu-yoy-card">
+            <div class="menu-yoy-lbl">Año anterior (mismo período)</div>
+            <div class="menu-yoy-big" id="menu-yoy-ant">—</div>
+            <div class="menu-yoy-foot">Columna ANT # CRED</div>
+          </div>
+          <div class="menu-yoy-card menu-yoy-var">
+            <div class="menu-yoy-lbl">VAR # (diferencia)</div>
+            <div class="menu-yoy-big" id="menu-yoy-varn">—</div>
+            <div class="menu-yoy-foot" id="menu-yoy-varn-foot">Columna VAR #</div>
+          </div>
+          <div class="menu-yoy-card menu-yoy-pct">
+            <div class="menu-yoy-lbl">Variación %</div>
+            <div class="menu-yoy-big" id="menu-yoy-pct">—</div>
+            <div class="menu-yoy-foot" id="menu-yoy-pct-foot">VAR% # o cálculo vs año ant.</div>
+          </div>
+        </div>
+        <div class="menu-yoy-bar-wrap">
+          <div class="menu-yoy-bar-labels"><span>Peor</span><span id="menu-yoy-bar-center">0% = igual al año anterior</span><span>Mejor</span></div>
+          <div class="menu-yoy-bar"><div id="menu-yoy-bar-fill"></div><div id="menu-yoy-bar-zero" title="Referencia año anterior"></div></div>
+        </div>
+        <div class="menu-yoy-tables">
+          <div class="menu-yoy-col">
+            <div class="menu-yoy-tbl-title">🟢 Mejor vs año anterior</div>
+            <div id="menu-yoy-top" class="menu-yoy-tbl-body"></div>
+          </div>
+          <div class="menu-yoy-col">
+            <div class="menu-yoy-tbl-title">🔴 Peor vs año anterior</div>
+            <div id="menu-yoy-low" class="menu-yoy-tbl-body"></div>
+          </div>
+        </div>
       </div>
 
       <div class="menu-report-block menu-sigec-panel">
@@ -1354,6 +1405,32 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-nac-bar>div:first-child{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--yellow));transition:width .8s ease}
 .menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:18px;background:var(--yellow);border-radius:2px}
 .menu-nac-proy{color:var(--text2);font-size:11px;margin-top:12px;text-align:center}
+.menu-yoy-panel{margin-bottom:26px}
+.menu-yoy-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.menu-yoy-title{font-size:14px;font-weight:800;color:var(--dark);display:flex;align-items:center;gap:8px}
+.menu-yoy-sub{font-size:10px;color:var(--gray);margin-top:4px;max-width:520px;line-height:1.45}
+.menu-yoy-sem-wrap{text-align:center}
+.menu-yoy-sem{font-size:11px;font-weight:800;padding:6px 14px;border-radius:8px;background:var(--bg);border:1px solid var(--border);color:var(--dark)}
+.menu-yoy-sem-lbl{font-size:8px;color:var(--gray);margin-top:4px;font-weight:700;text-transform:uppercase}
+.menu-yoy-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:14px}
+@media(min-width:800px){.menu-yoy-grid{grid-template-columns:repeat(4,1fr)}}
+.menu-yoy-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:12px 14px}
+.menu-yoy-lbl{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase;letter-spacing:.3px}
+.menu-yoy-big{font-size:22px;font-weight:900;color:var(--dark);margin-top:6px;line-height:1.1}
+.menu-yoy-foot{font-size:9px;color:var(--text2);margin-top:6px}
+.menu-yoy-bar-wrap{padding:12px 14px;background:var(--bg);border-radius:12px;border:1px solid var(--border);margin-bottom:14px}
+.menu-yoy-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--gray);margin-bottom:8px}
+.menu-yoy-bar{position:relative;height:12px;background:linear-gradient(90deg,#fca5a5,#fde68a,#86efac);border-radius:6px}
+.menu-yoy-bar>div:first-child{position:absolute;top:0;height:100%;width:3px;background:var(--dark);border-radius:2px;transition:left .6s ease}
+.menu-yoy-bar-zero{position:absolute;top:-3px;width:3px;height:18px;background:#64748b;border-radius:2px;left:50%;transform:translateX(-50%)}
+.menu-yoy-tables{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:700px){.menu-yoy-tables{grid-template-columns:1fr}}
+.menu-yoy-tbl-title{font-size:10px;font-weight:800;color:var(--dark);margin-bottom:8px}
+.menu-yoy-tbl-body{max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;background:var(--bg)}
+.menu-yoy-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-bottom:1px solid var(--border);font-size:10px}
+.menu-yoy-row:last-child{border-bottom:none}
+.menu-yoy-row-nombre{font-weight:600;color:var(--dark);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.menu-yoy-row-val{font-weight:800;flex-shrink:0}
 .menu-sigec-panel .menu-sigec-hdr{margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .menu-sigec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
 .menu-sigec-title{color:var(--dark);font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
@@ -3310,7 +3387,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.3';
+var APP_VERSION = 'pyv-comercial-5.4.4';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6700,6 +6777,15 @@ function _parseCumpleMMDD(s){
     }catch(e){}
     try{
       var col=window._coloc_data||[];
+      var acumY=0, antY=0;
+      col.forEach(function(r){ acumY+=r.acum_n||0; antY+=r.ant_n||0; });
+      var varY = acumY - antY;
+      var pctY = antY>0 ? Math.round(varY/antY*100) : null;
+      var semY = _yoySem(pctY);
+      push('📊','vs Año anterior',pctY!=null?((pctY>=0?'+':'')+pctY+'%'):'—',_yoyFmtVar(varY)+' créd. · '+fmtN(acumY)+' vs '+fmtN(antY),semY.lbl,'#6366f1');
+    }catch(e){}
+    try{
+      var col=window._coloc_data||[];
       var verdes=col.filter(function(r){return (r.semaforo||'').toUpperCase().indexOf('VERDE')>=0;}).length;
       var rojos=col.filter(function(r){return (r.semaforo||'').toUpperCase().indexOf('ROJO')>=0;}).length;
       var pctV=col.length?Math.round(verdes/col.length*100):0;
@@ -6731,6 +6817,101 @@ function _parseCumpleMMDD(s){
     if(sub) sub.textContent=items.length+' indicadores MCM · actualizado '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
   }
   window.renderMenuMcmRadar=renderMenuMcmRadar;
+
+  function _yoyNormPct(v){
+    if(v==null||v===''||isNaN(v)) return null;
+    var n = parseFloat(String(v).replace('%','').replace(',','.'));
+    if(isNaN(n)) return null;
+    if(n!==0 && Math.abs(n)<=1) return Math.round(n*100);
+    return Math.round(n);
+  }
+  function _yoyVarN(r){
+    if(r.var_n!=null && r.var_n!=='' && !isNaN(r.var_n)) return Math.round(r.var_n);
+    return Math.round((r.acum_n||0)-(r.ant_n||0));
+  }
+  function _yoyPctRow(r){
+    var p = _yoyNormPct(r.var_pn);
+    if(p!=null) return p;
+    var ant = r.ant_n||0;
+    if(ant>0){
+      var vn = _yoyVarN(r);
+      return Math.round(vn/ant*100);
+    }
+    return null;
+  }
+  function _yoySem(pct){
+    if(pct==null) return {lbl:'SIN DATO', col:'#94a3b8', emoji:'⚪'};
+    if(pct>=5) return {lbl:'VERDE', col:'#16a34a', emoji:'🟢'};
+    if(pct>=0) return {lbl:'AMARILLO', col:'#ca8a04', emoji:'🟡'};
+    if(pct>=-10) return {lbl:'NARANJA', col:'#ea580c', emoji:'🟠'};
+    return {lbl:'ROJO', col:'#dc2626', emoji:'🔴'};
+  }
+  function _yoyFmtVar(n){
+    if(n==null||isNaN(n)) return '—';
+    return (n>=0?'+':'')+fmtN(n);
+  }
+  function _yoyRowHtml(r){
+    var pct = _yoyPctRow(r);
+    var vn = _yoyVarN(r);
+    var sem = _yoySem(pct);
+    return '<div class="menu-yoy-row">'
+      +'<span class="menu-yoy-row-nombre" title="'+String(r.sede||'').replace(/"/g,'&quot;')+'">'+(r.sede||'—')+'</span>'
+      +'<span class="menu-yoy-row-val" style="color:'+sem.col+'">'+_yoyFmtVar(vn)+(pct!=null?' ('+(pct>=0?'+':'')+pct+'%)':'')+'</span>'
+      +'</div>';
+  }
+  function renderMenuVsAnterior(){
+    var col = (window._coloc_data||[]).filter(function(r){ return r&&r.sede&&(r.acum_n||r.ant_n); });
+    var acum=0, ant=0, varN=0;
+    col.forEach(function(r){
+      acum += r.acum_n||0;
+      ant += r.ant_n||0;
+      varN += _yoyVarN(r);
+    });
+    var pctNat = ant>0 ? Math.round(varN/ant*100) : (acum>0&&ant===0 ? 100 : null);
+    var sem = _yoySem(pctNat);
+    var setTxt = function(id, txt, col){
+      var el = document.getElementById(id);
+      if(!el) return;
+      el.textContent = txt;
+      if(col) el.style.color = col;
+    };
+    setTxt('menu-yoy-acum', acum?fmtN(acum):'—');
+    setTxt('menu-yoy-ant', ant?fmtN(ant):'—');
+    setTxt('menu-yoy-varn', ant||acum? _yoyFmtVar(varN) : '—', varN>=0?'#16a34a':'#dc2626');
+    setTxt('menu-yoy-pct', pctNat!=null?((pctNat>=0?'+':'')+pctNat+'%'):'—', sem.col);
+    var semEl = document.getElementById('menu-yoy-sem');
+    if(semEl){
+      semEl.textContent = sem.emoji+' '+sem.lbl;
+      semEl.style.color = sem.col;
+      semEl.style.borderColor = sem.col;
+      semEl.style.background = sem.col+'18';
+    }
+    var bar = document.getElementById('menu-yoy-bar-fill');
+    if(bar && pctNat!=null){
+      var pos = Math.max(5, Math.min(95, 50 + pctNat/2));
+      bar.style.left = pos+'%';
+      bar.title = 'Variación nacional: '+(pctNat>=0?'+':'')+pctNat+'%';
+    }
+    var ranked = col.map(function(r){
+      return {sede:r.sede, acum:r.acum_n||0, ant:r.ant_n||0, var_n:_yoyVarN(r), pct:_yoyPctRow(r)};
+    }).filter(function(x){ return x.ant>0 || x.var_n!==0; });
+    ranked.sort(function(a,b){ return (b.pct!=null?b.pct:-999) - (a.pct!=null?a.pct:-999); });
+    var top = document.getElementById('menu-yoy-top');
+    var low = document.getElementById('menu-yoy-low');
+    if(top){
+      var best = ranked.filter(function(x){ return x.pct!=null && x.pct>=0; }).slice(0,6);
+      top.innerHTML = best.length ? best.map(function(x){
+        return _yoyRowHtml({sede:x.sede, acum_n:x.acum, ant_n:x.ant, var_n:x.var_n, var_pn:x.pct});
+      }).join('') : '<div style="padding:12px;text-align:center;color:var(--gray);font-size:10px">Ninguna sede por encima del año anterior</div>';
+    }
+    if(low){
+      var worst = ranked.filter(function(x){ return x.pct!=null && x.pct<0; }).slice(-6).reverse();
+      low.innerHTML = worst.length ? worst.map(function(x){
+        return _yoyRowHtml({sede:x.sede, acum_n:x.acum, ant_n:x.ant, var_n:x.var_n, var_pn:x.pct});
+      }).join('') : '<div style="padding:12px;text-align:center;color:var(--gray);font-size:10px">Ninguna sede por debajo del año anterior</div>';
+    }
+  }
+  window.renderMenuVsAnterior = renderMenuVsAnterior;
 
   function actualizarMenuKPIs(){
     try{
@@ -6795,6 +6976,7 @@ function _parseCumpleMMDD(s){
         : 'Proyección de cierre: —';
 
       renderMenuSigecSemaforo(metaN, sig, glpi);
+      renderMenuVsAnterior();
       renderMenuMcmRadar();
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
@@ -7539,7 +7721,6 @@ function _parseCumpleMMDD(s){
     var meta=0, acum=0, ant=0;
     filas.forEach(function(r){ meta+=r.meta_n||0; acum+=r.acum_n||0; ant+=r.ant_n||0; });
     var pct = meta>0 ? Math.round(acum/meta*100) : 0;
-    var varAnt = ant>0 ? Math.round((acum-ant)/ant*100) : 0;
     var titulo = nivel==='nacional' ? 'Nacional' : (nivel==='rectoria' ? sel||'Todas las rectorías' : sel||'Todas las sedes');
     var sedeUnica = (nivel==='sede' && sel) ? sel : '';
     var sig = sedeUnica ? _cdSigecSede(sedeUnica) : (typeof obtenerSigecNacional==='function' ? obtenerSigecNacional() : {});
@@ -7550,7 +7731,12 @@ function _parseCumpleMMDD(s){
       html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:12px">';
       html += _cdKpiCard('Meta #', _cdFmtN(Math.round(meta)), '#003D45');
       html += _cdKpiCard('Colocado S2', _cdFmtN(acum), pct>=90?'#16a34a':pct>=70?'#ca8a04':'#dc2626', pct+'% · acum. corte día ant.');
-      html += _cdKpiCard('Var. año ant.', (varAnt>=0?'+':'')+varAnt+'%', varAnt>=0?'#16a34a':'#dc2626');
+      var varN = acum - ant;
+      var varPct = ant>0 ? Math.round(varN/ant*100) : null;
+      if(varPct==null && filas.length===1 && filas[0].var_pn!=null) varPct = _yoyNormPct(filas[0].var_pn);
+      if(varPct==null && filas.length===1 && filas[0].var_n!=null && ant>0) varPct = Math.round(filas[0].var_n/ant*100);
+      var yoySem = _yoySem(varPct);
+      html += _cdKpiCard('vs Año ant.', varPct!=null?((varPct>=0?'+':'')+varPct+'%'):'—', yoySem.col, _cdFmtN(varN)+' créd. (VAR #)');
       html += _cdKpiCard('Sedes', filas.length, '#6366f1');
       html += '</div>';
     }
@@ -7575,15 +7761,21 @@ function _parseCumpleMMDD(s){
       html += '<div style="font-size:10px;font-weight:800;color:#003D45;margin:10px 0 6px">📊 Detalle por sede</div>';
       html += '<div style="overflow-x:auto;max-height:280px;border:1px solid #e5e7eb;border-radius:10px">';
       html += '<table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#f1f5f9;position:sticky;top:0">';
-      html += '<th style="padding:6px 8px;text-align:left">Sede</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Colocado</th><th style="padding:6px 8px;text-align:right">%</th><th style="padding:6px 8px;text-align:center">Sem</th></tr></thead><tbody>';
+      html += '<th style="padding:6px 8px;text-align:left">Sede</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Colocado</th><th style="padding:6px 8px;text-align:right">Año ant.</th><th style="padding:6px 8px;text-align:right">VAR #</th><th style="padding:6px 8px;text-align:right">YoY %</th><th style="padding:6px 8px;text-align:right">%</th><th style="padding:6px 8px;text-align:center">Sem</th></tr></thead><tbody>';
       filas.sort(function(a,b){ return (b.acum_n||0)-(a.acum_n||0); }).slice(0,40).forEach(function(r){
         var p = r.meta_n>0 ? Math.round(r.acum_n/r.meta_n*100) : 0;
         var sem = r.semaforo || (p>=90?'VERDE':p>=70?'AMARILLO':'ROJO');
         var sc = sem==='VERDE'?'#16a34a':sem==='AMARILLO'?'#ca8a04':'#dc2626';
+        var yp = _yoyPctRow(r);
+        var yn = _yoyVarN(r);
+        var yc = yp!=null ? _yoySem(yp).col : '#94a3b8';
         html += '<tr style="border-bottom:1px solid #f1f5f9;cursor:pointer" onclick="document.getElementById(\'cd-nivel\').value=\'sede\';cdCambiarNivel();document.getElementById(\'cd-rectoria\').value=\''+String(r.sede||'').replace(/'/g,"\\'")+'\';cdActualizar()">';
         html += '<td style="padding:5px 8px;font-weight:600">'+r.sede+'</td>';
         html += '<td style="padding:5px 8px;text-align:right;color:#64748b">'+_cdFmtN(Math.round(r.meta_n||0))+'</td>';
         html += '<td style="padding:5px 8px;text-align:right;font-weight:700">'+_cdFmtN(r.acum_n||0)+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;color:#64748b">'+_cdFmtN(r.ant_n||0)+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+yc+'">'+_cdFmtN(yn)+'</td>';
+        html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+yc+'">'+(yp!=null?((yp>=0?'+':'')+yp+'%'):'—')+'</td>';
         html += '<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+sc+'">'+p+'%</td>';
         html += '<td style="padding:5px 8px;text-align:center;font-size:9px;font-weight:800;color:'+sc+'">'+sem+'</td></tr>';
       });
