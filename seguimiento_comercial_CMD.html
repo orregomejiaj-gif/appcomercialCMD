@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.10   (APP_VERSION = 'pyv-comercial-5.4.10')
+  Versión actual: pyv-comercial-5.4.11   (APP_VERSION = 'pyv-comercial-5.4.11')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,7 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
-  pyv-comercial-5.4.10 (2026-07-02)
+  pyv-comercial-5.4.11 (2026-07-02)
+    - Radar MCM: SIGEC, GLPI, cobertura, embudo y seguimientos usan datos reales + respaldo _DATA.
+    - Precarga matrículas e historial de seguimientos al abrir menú; refresco tras cargar Sheets.
+  pyv-comercial-5.4.11 (2026-07-02)
     - Versión visible en HTML del encabezado y menú (sin depender solo de JS tardío).
     - Eliminado IIFE duplicado que pisaba el badge; forzar redespliegue GitHub Pages.
   pyv-comercial-5.4.9 (2026-06-30)
@@ -143,12 +146,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.10">
-<meta name="build-id" content="pyv-comercial-5.4.10-20260702">
-<title>SCIC pyv-comercial 5.4.10 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.11">
+<meta name="build-id" content="pyv-comercial-5.4.11-20260702">
+<title>SCIC pyv-comercial 5.4.11 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.10';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.10';
+window.APP_VERSION='pyv-comercial-5.4.11';
+window.APP_VERSION_LABEL='pyv-comercial 5.4.11';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -830,7 +833,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.10</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.11</div>
     <div id="turno-hdr-badge" onclick="abrirTurno()" style="display:none;cursor:pointer;background:rgba(255,255,255,.12);border-radius:6px;padding:3px 8px;margin-top:2px;align-items:center;gap:4px" title="Ver registro de turno">
       <span id="turno-hdr-icono" style="font-size:11px">⏰</span>
       <span id="turno-hdr-txt" style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8)">Sin turno</span>
@@ -1046,7 +1049,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.10</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.11</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -3414,7 +3417,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.10';
+var APP_VERSION = 'pyv-comercial-5.4.11';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3508,6 +3511,26 @@ var _DATA = {
   window._hubspot_data = _DATA.hubspot;
   // Cartera
   window._cartera_data = _DATA.cartera;
+  // SIGEC / GLPI nacional (respaldo inmediato para radar MCM y menú)
+  if(_DATA.sigec){
+    var ds = _DATA.sigec;
+    var sigNac = {
+      facturada: ds.facturada||0, cerrada_fac: ds.cerrada_fac||0, cerrada: ds.cerrada||0,
+      abierta: ds.abierta||0, rechazada: ds.rechazado||0, pendiente_doc: ds.pend_doc||0,
+      pendiente: ds.pend_doc||0, otro: 0, total: 0, _fuente: 'respaldo _DATA'
+    };
+    sigNac.total = sigNac.facturada + sigNac.cerrada_fac + sigNac.cerrada + sigNac.abierta + sigNac.rechazada + sigNac.pendiente_doc;
+    window._sigecNacional = sigNac;
+  }
+  if(_DATA.glpi){
+    var dg = _DATA.glpi;
+    var gTot = (dg.aprobada||0) + (dg.abierta||0) + (dg.negada||0);
+    window._glpiNacional = {
+      aprobada: dg.aprobada||0, abierta: dg.abierta||0, negada: dg.negada||0,
+      otro: 0, total: gTot,
+      pct_aprobada: gTot>0 ? Math.round((dg.aprobada||0)/gTot*100) : 0
+    };
+  }
   console.log('[SCIC v4.6] Datos maestros cargados: '
     + _DATA.coloc.length + ' sedes | acum=' + _DATA.acum_s2.toLocaleString()
     + ' | leads=' + _DATA.leads.total_nuevos.toLocaleString()
@@ -6544,7 +6567,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : (window.APP_VERSION||'pyv-comercial-5.4.10');
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : (window.APP_VERSION||'pyv-comercial-5.4.11');
     var s = String(raw);
     var mProc = s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
     var txt = window.APP_VERSION_LABEL || (mProc ? (mProc[1]+' '+mProc[2]) : (function(){
@@ -6760,12 +6783,17 @@ function _parseCumpleMMDD(s){
       }
     }catch(e){}
     var d = (_DATA && _DATA.glpi) || {};
-    return {
+    var tot = (d.aprobada||0)+(d.abierta||0)+(d.negada||0);
+    var g = {
       aprobada: d.aprobada || d.aprobadas || 0,
       abierta: d.abierta || d.abiertas || 0,
       negada: d.negada || d.negadas || 0,
-      total: (d.aprobada||0)+(d.abierta||0)+(d.negada||0)
+      otro: 0,
+      total: tot
     };
+    g.pct_aprobada = g.total>0 ? Math.round(g.aprobada/g.total*100) : 0;
+    g.semaforo = (typeof mcm_sem==='function') ? mcm_sem(g.pct_aprobada,54,35) : (g.pct_aprobada>=54?'VERDE':g.pct_aprobada>=35?'AMARILLO':'ROJO');
+    return g;
   }
 
   function renderMenuSigecSemaforo(metaN, sig, glpi){
@@ -6813,6 +6841,27 @@ function _parseCumpleMMDD(s){
     return '⚪';
   }
 
+  function _mcmMatriculasTotal(){
+    if(window._matriculas_total>0) return window._matriculas_total;
+    var data = window._matriculasData || [];
+    if(data.length) return data.reduce(function(s,r){ return s+(r.total_real||0); }, 0);
+    return 0;
+  }
+
+  function _mcmEmbudoNacional(acumN){
+    var emb = null;
+    try{
+      if(typeof MCM_SALUD_COMERCIAL!=='undefined' && MCM_SALUD_COMERCIAL.embudo_nacional)
+        emb = MCM_SALUD_COMERCIAL.embudo_nacional();
+    }catch(e){}
+    if(emb && (emb.total_pipeline>0 || emb.desembolsados>0)) return emb;
+    var ld = window._leads_data || (typeof _DATA!=='undefined' && _DATA.leads) || {};
+    var pipeline = ld.total_nuevos || ((ld.call||0)+(ld.admitidos||0)+(ld.susceptibles||0)+(ld.scala||0));
+    var desemb = (window._baseColocData||[]).length || acumN || 0;
+    var conv = pipeline>0 ? Math.round(desemb/pipeline*100) : 0;
+    return {total_pipeline:pipeline, desembolsados:desemb, conv_lead_a_des:conv};
+  }
+
   function renderMenuMcmRadar(){
     var grid=document.getElementById('menu-mcm-grid');
     if(!grid)return;
@@ -6821,29 +6870,71 @@ function _parseCumpleMMDD(s){
       items.push({emoji:emoji,lbl:lbl,val:val,sub:sub||'',sem:sem||'—',accent:accent||'#333'});
     }
     try{
-      var cum=typeof MCM_CUMPLIMIENTO!=='undefined'&&MCM_CUMPLIMIENTO.nacional?MCM_CUMPLIMIENTO.nacional():null;
-      if(cum) push('📈','Cumplimiento S2',(cum.pct_n||0)+'%','Ritmo '+(cum.ritmo_actual||0)+'/dh · nec '+(cum.ritmo_necesario||0),cum.semaforo,cum.va_a_cumplir?'#4ade80':'#f87171');
+      if(window._coloc_data && window._coloc_data.length && typeof _normColocArray==='function')
+        window._coloc_data = _normColocArray(window._coloc_data);
     }catch(e){}
+
+    var col = window._coloc_data || (typeof _DATA!=='undefined' && _DATA.coloc) || [];
+    var metaN=0, acumN=0, antN=0;
+    col.forEach(function(r){ metaN+=r.meta_n||0; acumN+=r.acum_n||0; antN+=r.ant_n||0; });
+    if(!metaN && window._mtsMetaN) metaN = window._mtsMetaN;
+    if(!metaN && typeof _DATA!=='undefined' && _DATA.meta_s2) metaN = _DATA.meta_s2;
+    if(!acumN && window._mtsEjecN) acumN = window._mtsEjecN;
+    if(!acumN && typeof _DATA!=='undefined' && _DATA.acum_s2) acumN = _DATA.acum_s2;
+
+    var cum = null;
     try{
-      var cob=typeof MCM_COBERTURA!=='undefined'&&MCM_COBERTURA.nacional?MCM_COBERTURA.nacional():null;
-      if(cob) push('🎓','Cobertura créditos',(cob.pct||0)+'%','Meta 25% · faltan '+(cob.cred_para_meta||0)+' créd.',cob.semaforo,'#60a5fa');
+      if(typeof MCM_CUMPLIMIENTO!=='undefined' && MCM_CUMPLIMIENTO.nacional && col.length)
+        cum = MCM_CUMPLIMIENTO.nacional();
     }catch(e){}
-    try{
-      var mix=typeof MCM_MIX_SIGEC!=='undefined'&&MCM_MIX_SIGEC.nacional?MCM_MIX_SIGEC.nacional():null;
-      if(mix) push('⚡','Conversión SIGEC',(mix.pct_conv||0)+'%',(mix.facturada||0)+' fact / '+(mix.total||0)+' total',mix.semaforo,'#a78bfa');
-    }catch(e){}
-    try{
-      var g=typeof MCM_MIX_GLPI!=='undefined'&&MCM_MIX_GLPI.nacional?MCM_MIX_GLPI.nacional():null;
-      if(g) push('✅','GLPI aprobadas',(g.pct_aprobada||0)+'%',(g.aprobada||0)+' / '+(g.total||0)+' · meta 54%',g.semaforo,'#4ade80');
-    }catch(e){}
-    try{
-      var emb=typeof MCM_SALUD_COMERCIAL!=='undefined'&&MCM_SALUD_COMERCIAL.embudo_nacional?MCM_SALUD_COMERCIAL.embudo_nacional():null;
-      if(emb){
-        var conv=emb.conv_lead_a_des||0;
-        var semE=conv>=15?'VERDE':conv>=8?'AMARILLO':'ROJO';
-        push('🔄','Lead → desembolso',conv+'%',(emb.total_pipeline||0)+' pipeline · '+(emb.desembolsados||0)+' desemb.',semE,'#38bdf8');
+    if(cum && (cum.meta_n||cum.acum_n)){
+      push('📈','Cumplimiento S2',(cum.pct_n||0)+'%','Ritmo '+(cum.ritmo_actual||0)+'/dh · nec '+(cum.ritmo_necesario||0),cum.semaforo,cum.va_a_cumplir?'#4ade80':'#f87171');
+    }else if(metaN){
+      var pctC = Math.round(acumN/metaN*100);
+      var semC = (typeof _semS2Pct==='function') ? _semS2Pct(pctC) : (pctC>=90?'VERDE':pctC>=70?'AMARILLO':'ROJO');
+      var diasTot = window._mtsDiasTotal || (typeof _DATA!=='undefined' && _DATA.dh_total) || 0;
+      var diasTra = window._mtsDiasTrans || (typeof _DATA!=='undefined' && _DATA.dh_trans) || 0;
+      if(!diasTot){
+        var d0=new Date('2026-05-01'), d1=new Date('2026-10-31'), hoy=new Date();
+        diasTot = Math.max(1, Math.floor((d1-d0)/864e5));
+        diasTra = Math.max(0, Math.floor((hoy-d0)/864e5));
       }
-    }catch(e){}
+      var ritmoAct = diasTra>0 ? Math.round(acumN/diasTra*10)/10 : 0;
+      var ritmoNec = (diasTot-diasTra)>0 ? Math.round((metaN-acumN)/Math.max(1,diasTot-diasTra)*10)/10 : 0;
+      push('📈','Cumplimiento S2', pctC+'%', 'Ritmo '+ritmoAct+'/dh · nec '+ritmoNec, semC, ritmoAct>=ritmoNec?'#4ade80':'#f87171');
+    }
+
+    var matReal = _mcmMatriculasTotal();
+    if(matReal>0){
+      var cobPct = Math.round(acumN/matReal*1000)/10;
+      var semCob = (typeof mcm_sem==='function') ? mcm_sem(cobPct,25,15) : (cobPct>=25?'VERDE':cobPct>=15?'AMARILLO':'ROJO');
+      var faltan = Math.max(0, Math.round(matReal*0.25 - acumN));
+      push('🎓','Cobertura créditos', cobPct+'%', 'Meta 25% · faltan '+faltan+' créd.', semCob, '#60a5fa');
+    }
+
+    var sig = (typeof obtenerSigecNacional==='function') ? obtenerSigecNacional() : {};
+    var totalSig = sig.total || 0;
+    var convSig = (sig.facturada||0) + (sig.cerrada_fac||0);
+    if(totalSig>0){
+      var pctConv = Math.round(convSig/totalSig*100);
+      var semSig = (typeof mcm_sem==='function') ? mcm_sem(pctConv,65,45) : (pctConv>=65?'VERDE':pctConv>=45?'AMARILLO':'ROJO');
+      push('⚡','Conversión SIGEC', pctConv+'%', convSig+' fact / '+totalSig+' total', semSig, '#a78bfa');
+    }
+
+    var g = (typeof obtenerGlpiNacional==='function') ? obtenerGlpiNacional() : null;
+    if(g && g.total){
+      var pctG = g.pct_aprobada!=null ? g.pct_aprobada : Math.round((g.aprobada||0)/g.total*100);
+      var semG = g.semaforo || ((typeof mcm_sem==='function') ? mcm_sem(pctG,54,35) : (pctG>=54?'VERDE':pctG>=35?'AMARILLO':'ROJO'));
+      push('✅','GLPI aprobadas', pctG+'%', (g.aprobada||0)+' / '+g.total+' · meta 54%', semG, '#4ade80');
+    }
+
+    var emb = _mcmEmbudoNacional(acumN);
+    if(emb.total_pipeline>0 || emb.desembolsados>0){
+      var convE = emb.conv_lead_a_des||0;
+      var semE = convE>=15?'VERDE':convE>=8?'AMARILLO':'ROJO';
+      push('🔄','Lead → desembolso', convE+'%', (emb.total_pipeline||0)+' pipeline · '+(emb.desembolsados||0)+' desemb.', semE, '#38bdf8');
+    }
+
     try{
       if(typeof _resumenSemaforoSedesSeg==='function'){
         var seg=_resumenSemaforoSedesSeg();
@@ -6851,23 +6942,23 @@ function _parseCumpleMMDD(s){
         push('📋','Seguimientos sedes',(seg.al_dia||0)+' al día',(seg.atrasadas||0)+' atrasadas · '+(seg.sin_seguimiento||0)+' sin reg.',semS,'#fbbf24');
       }
     }catch(e){}
+
     try{
-      var col=window._coloc_data||[];
-      var acumY=0, antY=0, varY=0;
-      col.forEach(function(r){ acumY+=r.acum_n||0; antY+=r.ant_n||0; varY+=_yoyVarN(r); });
-      var pctY = antY>0 ? Math.round(varY/antY*100) : null;
+      var varY = acumN - antN;
+      var pctY = antN>0 ? Math.round(varY/antN*100) : null;
       var semY = _yoySem(pctY);
-      push('📊','vs Año anterior',pctY!=null?((pctY>=0?'+':'')+pctY+'%'):'—',_yoyFmtVar(varY)+' créd. · '+fmtN(acumY)+' vs '+fmtN(antY),semY.lbl,'#6366f1');
+      push('📊','vs Año anterior',pctY!=null?((pctY>=0?'+':'')+pctY+'%'):'—',_yoyFmtVar(varY)+' créd. · '+fmtN(acumN)+' vs '+fmtN(antN),semY.lbl,'#6366f1');
     }catch(e){}
+
     try{
-      var col=window._coloc_data||[];
       var verdes=col.filter(function(r){return _getSemaforoColoc(r)==='VERDE';}).length;
       var rojos=col.filter(function(r){return _getSemaforoColoc(r)==='ROJO';}).length;
       var pctV=col.length?Math.round(verdes/col.length*100):0;
       push('🏫','Sedes en verde',pctV+'%',verdes+' / '+col.length+' sedes · '+rojos+' en rojo',pctV>=60?'VERDE':pctV>=40?'AMARILLO':'ROJO','#84cc16');
     }catch(e){}
+
     try{
-      var cart=window._cartData;
+      var cart=window._cartData || window._cartera_data || (typeof _DATA!=='undefined' && _DATA.cartera);
       if(cart&&typeof _cartIndicadoresPortafolio==='function'){
         var ind=_cartIndicadoresPortafolio(cart,'total');
         var cyg=ind.cyg||{}, sap=ind.sap||{};
@@ -6875,6 +6966,7 @@ function _parseCumpleMMDD(s){
         push('💰','Cartera rodada','Cyg '+(cyg.rodPct||0)+'% · SAP '+(sap.rodPct||0)+'%','Meta Cyg <20% · SAP <25%',rodOk?'VERDE':'ROJO','#f87171');
       }
     }catch(e){}
+
     if(!items.length){
       grid.innerHTML='<div class="menu-mcm-card menu-mcm-loading">Sin datos MCM · cargando repositorios…</div>';
       return;
@@ -7179,7 +7271,13 @@ function _parseCumpleMMDD(s){
       if(typeof _cargarGLPI==='function'){
         _cargarGLPI().then(recargar).catch(recargar);
       }
-      [400, 1200, 3000].forEach(function(ms){ setTimeout(recargar, ms); });
+      if(typeof _cargarMatriculas==='function'){
+        _cargarMatriculas().then(recargar).catch(recargar);
+      }
+      if(typeof _cargarHistorialSeguimientos==='function'){
+        _cargarHistorialSeguimientos().then(recargar).catch(recargar);
+      }
+      [400, 1200, 3000, 6000].forEach(function(ms){ setTimeout(recargar, ms); });
     };
   }
 
@@ -7466,6 +7564,7 @@ function _parseCumpleMMDD(s){
       console.log('[SCIC] Historial seguimientos:', window._histSeguimientos.length, '(coord:', coord.length, 'asesor:', ases.length, ')');
       if(loading) loading.style.display = 'none';
       if(contenido) contenido.style.display = 'block';
+      try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
       return window._histSeguimientos;
     }).catch(function(err){
       console.warn('[SCIC] Error historial seguimientos:', err && err.message);
@@ -10072,7 +10171,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[pyv-comercial 5.4.10] Versión en HTML + GitHub Pages deploy');
+  console.log('[pyv-comercial 5.4.11] Radar MCM con datos reales + respaldo _DATA');
 
   /* ── pyv-comercial-5.4.8: Seguimiento rectoría/sede · panel SIGEC · MCM ── */
   if(!window.MESES_IDX || !Object.keys(window.MESES_IDX).length){
@@ -10359,93 +10458,6 @@ function _parseCumpleMMDD(s){
       }
     };
   }
-
-  var _origRenderMcm = window.renderMenuMcmRadar;
-  window.renderMenuMcmRadar = function(){
-    var grid = document.getElementById('menu-mcm-grid');
-    if(!grid) return;
-    try{
-      if(window._coloc_data && window._coloc_data.length && typeof _normColocArray==='function')
-        window._coloc_data = _normColocArray(window._coloc_data);
-      var col = window._coloc_data || [];
-      var items = [];
-      function push(emoji,lbl,val,sub,sem,accent){
-        items.push({emoji:emoji,lbl:lbl,val:val,sub:sub||'',sem:sem||'—',accent:accent||'#333'});
-      }
-      var metaN=0, acumN=0, antN=0;
-      col.forEach(function(r){ metaN+=r.meta_n||0; acumN+=r.acum_n||0; antN+=r.ant_n||0; });
-      if(!metaN && window._mtsMetaN) metaN = window._mtsMetaN;
-      if(!acumN && window._mtsEjecN) acumN = window._mtsEjecN;
-      var pct = metaN>0 ? Math.round(acumN/metaN*100) : 0;
-      var sem = (typeof _semS2Pct==='function') ? _semS2Pct(pct) : (pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO');
-      var diasTot = window._mtsDiasTotal || 0;
-      var diasTra = window._mtsDiasTrans || 0;
-      var ritmoAct = diasTra>0 ? Math.round(acumN/diasTra*10)/10 : 0;
-      var ritmoNec = (diasTot-diasTra)>0 ? Math.round((metaN-acumN)/Math.max(1,diasTot-diasTra)*10)/10 : 0;
-      push('📈','Cumplimiento S2', pct+'%', 'Ritmo '+ritmoAct+'/dh · nec '+ritmoNec, sem, ritmoAct>=ritmoNec?'#4ade80':'#f87171');
-
-      var matReal = window._matriculas_total || 0;
-      if(matReal>0){
-        var cobPct = Math.round(acumN/matReal*1000)/10;
-        var semCob = (typeof mcm_sem==='function') ? mcm_sem(cobPct,25,15) : (cobPct>=25?'VERDE':cobPct>=15?'AMARILLO':'ROJO');
-        var faltan = Math.max(0, Math.round(matReal*0.25 - acumN));
-        push('🎓','Cobertura créditos', cobPct+'%', 'Meta 25% · faltan '+faltan+' créd.', semCob, '#60a5fa');
-      }
-
-      var sig = (typeof obtenerSigecNacional==='function') ? obtenerSigecNacional() : {};
-      var totalSig = sig.total || 0;
-      var conv = (sig.facturada||0) + (sig.cerrada_fac||0);
-      var pctConv = totalSig>0 ? Math.round(conv/totalSig*100) : 0;
-      var semSig = (typeof mcm_sem==='function') ? mcm_sem(pctConv,65,45) : (pctConv>=65?'VERDE':pctConv>=45?'AMARILLO':'ROJO');
-      push('⚡','Conversión SIGEC', pctConv+'%', conv+' fact / '+totalSig+' total', semSig, '#a78bfa');
-
-      var g = (typeof MCM_MIX_GLPI!=='undefined' && MCM_MIX_GLPI.nacional) ? MCM_MIX_GLPI.nacional() : null;
-      if(g) push('✅','GLPI aprobadas', (g.pct_aprobada||0)+'%', (g.aprobada||0)+' / '+(g.total||0)+' · meta 54%', g.semaforo, '#4ade80');
-
-      if(typeof _resumenSemaforoSedesSeg==='function'){
-        var seg=_resumenSemaforoSedesSeg();
-        var semS=seg.sin_seguimiento>15?'ROJO':seg.atrasadas>8?'AMARILLO':'VERDE';
-        push('📋','Seguimientos sedes', (seg.al_dia||0)+' al día', (seg.atrasadas||0)+' atrasadas · '+(seg.sin_seguimiento||0)+' sin reg.', semS, '#fbbf24');
-      }
-
-      var varY = acumN - antN;
-      var pctY = antN>0 ? Math.round(varY/antN*100) : null;
-      var semY = (typeof _yoySem==='function') ? _yoySem(pctY) : {lbl:'—',col:'#6366f1'};
-      push('📊','vs Año anterior', pctY!=null?((pctY>=0?'+':'')+pctY+'%'):'—', (typeof _yoyFmtVar==='function'?_yoyFmtVar(varY):_segFmtN(varY))+' créd.', semY.lbl||'—', '#6366f1');
-
-      var verdes = col.filter(function(r){ return (typeof _getSemaforoColoc==='function'?_getSemaforoColoc(r):'')==='VERDE'; }).length;
-      var rojos = col.filter(function(r){ return (typeof _getSemaforoColoc==='function'?_getSemaforoColoc(r):'')==='ROJO'; }).length;
-      var pctV = col.length ? Math.round(verdes/col.length*100) : 0;
-      push('🏫','Sedes en verde', pctV+'%', verdes+' / '+col.length+' sedes · '+rojos+' en rojo', pctV>=60?'VERDE':pctV>=40?'AMARILLO':'ROJO', '#84cc16');
-
-      var cart = window._cartData;
-      if(cart && typeof _cartIndicadoresPortafolio==='function'){
-        var ind = _cartIndicadoresPortafolio(cart,'total');
-        var cyg = ind.cyg||{}, sap = ind.sap||{};
-        var rodOk = (cyg.rodPct||99)<20 && (sap.rodPct||99)<25;
-        push('💰','Cartera rodada', 'Cyg '+(cyg.rodPct||0)+'% · SAP '+(sap.rodPct||0)+'%', 'Meta Cyg <20% · SAP <25%', rodOk?'VERDE':'ROJO', '#f87171');
-      }
-
-      if(!items.length){
-        grid.innerHTML = '<div class="menu-mcm-card menu-mcm-loading">Sin datos MCM · cargando repositorios…</div>';
-        return;
-      }
-      grid.innerHTML = items.map(function(it){
-        var c = (typeof _menuSemColor==='function') ? _menuSemColor(it.sem) : '#94a3b8';
-        var em = (typeof _menuSemEmoji==='function') ? _menuSemEmoji(it.sem) : '';
-        return '<div class="menu-mcm-card" style="--mcm-accent:'+it.accent+'">'
-          +'<div class="menu-mcm-sem" style="color:'+c+'">'+em+' '+it.sem+'</div>'
-          +'<div class="menu-mcm-emoji">'+it.emoji+'</div>'
-          +'<div class="menu-mcm-lbl">'+it.lbl+'</div>'
-          +'<div class="menu-mcm-val" style="color:'+c+'">'+it.val+'</div>'
-          +'<div class="menu-mcm-sub2">'+it.sub+'</div></div>';
-      }).join('');
-      var sub = document.getElementById('menu-mcm-sub');
-      if(sub) sub.textContent = items.length+' indicadores MCM · actualizado '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
-    }catch(e){
-      if(typeof _origRenderMcm==='function') _origRenderMcm();
-    }
-  };
 
   aplicarVersionApp();
   setTimeout(aplicarVersionApp, 50);
