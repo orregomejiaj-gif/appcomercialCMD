@@ -1,17 +1,21 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: 4.15.0   (APP_VERSION = 'SCIC-4.15.0')
+  Versión actual: pyv-comercial-5.0.0   (APP_VERSION = 'pyv-comercial-5.0.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
-  A partir de aquí, CADA cambio debe subir la versión (APP_VERSION + las
-  etiquetas "SCIC vX.Y" visibles) y registrarse en este changelog para que
-  sea visible por versión.
+  Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
+  - {proceso}: identificador del módulo/proceso dentro de SCIC (pyv-comercial, etc.).
+  - {semver}: número que sube en cada actualización (5.0.0 → 5.0.1 → 5.1.0 …).
+  CADA cambio debe incrementar el número y registrarse en este changelog.
+  La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
-  v4.15.0 (2026-06-30)
+  pyv-comercial-5.0.0 (2026-06-30)
+    - Nuevo esquema de versionado por proceso dentro de SCIC.
     - Identidad visual alineada a manual de línea gráfica CMD (teal, amarillo, verde, gris).
     - Menú en fondo claro institucional (deja de usar negro puro).
     - Cartera: botón «Guía Cobranza PYV» con instructivo PV-IN-05 integrado.
+  v4.15.0 (2026-06-30) [histórico SCIC — equivalente a pyv-comercial-5.0.0]
   v4.14.0 (2026-06-30)
     - Cartera Cygnus: rectorías alineadas a hoja RECTORIAS SEDES (no sedes como rectorías).
     - Menú: botones bajo semáforos; arquitectura Operación en Vivo / Gestión Comercial / Inteligencia / Herramientas.
@@ -3130,8 +3134,9 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 // SCIC v4.6 — FIXES CRÍTICOS — NO MINIFICAR — 2026-06-29
 // ════════════════════════════════════════════════════════════
 
-// Versión
-var APP_VERSION = 'SCIC-4.15.0';
+// Versión — formato {proceso}-{semver}; cada actualización incrementa el número
+var APP_PROCESS = 'pyv-comercial';
+var APP_VERSION = 'pyv-comercial-5.0.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6379,9 +6384,13 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'SCIC-4.15.0';
-    var m = String(raw).match(/(\d+\.\d+(?:\.\d+)?)/);
-    var txt = m ? ('SCIC v'+m[1]) : String(raw).replace('SCIC-','SCIC v');
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.0.0';
+    var s = String(raw);
+    var mProc = s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
+    var txt = mProc ? (mProc[1]+' '+mProc[2]) : (function(){
+      var m = s.match(/(\d+\.\d+(?:\.\d+)?)/);
+      return m ? ('SCIC v'+m[1]) : s;
+    })();
     var badge = document.getElementById('app-version-badge');
     if(badge){ badge.textContent = txt; badge.style.display = 'block'; }
     ['menu-version','menu-footer-version','app-version-footer','menu-version-label','footer-version'].forEach(function(id){
@@ -8464,7 +8473,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[SCIC v4.15.0] Línea gráfica CMD · Guía Cobranza PV-IN-05 · Menú claro institucional');
+  console.log('[pyv-comercial 5.0.0] Línea gráfica CMD · Guía Cobranza PV-IN-05 · Menú claro institucional');
 })();
 </script>
 <footer class="app-footer" id="app-footer-global">
