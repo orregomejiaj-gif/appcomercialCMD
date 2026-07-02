@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.0.0   (APP_VERSION = 'pyv-comercial-5.0.0')
+  Versión actual: pyv-comercial-5.1.0   (APP_VERSION = 'pyv-comercial-5.1.0')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.1.0 (2026-06-30)
+    - Menú: fondo blanco con botones y semáforos oscuros (negro + indicadores de color + emojis).
+    - Login: nombre visible solo con coincidencia exacta en repositorio de empleados.
+    - Radar Comercial MCM: 8 semáforos críticos (cobertura, cumplimiento, conversión, GLPI, embudo, seguimientos, cartera, ritmo).
   pyv-comercial-5.0.0 (2026-06-30)
     - Nuevo esquema de versionado por proceso dentro de SCIC.
     - Identidad visual alineada a manual de línea gráfica CMD (teal, amarillo, verde, gris).
@@ -909,7 +913,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div id="login-resultado" style="min-height:48px;margin-bottom:10px">
           <div style="text-align:center;padding:6px;color:rgba(255,255,255,.4);font-size:9px"><i class="ti ti-users" style="margin-right:3px"></i>Cargando directorio...</div>
         </div>
-        <button id="login-btn" onclick="loginIngresar()"
+        <button id="login-btn" onclick="loginIngresar()" disabled
           style="width:100%;padding:11px;background:linear-gradient(135deg,#C8971E,#FFD900);color:#003D45;border:none;border-radius:9px;font-size:13px;font-weight:900;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.2s"
           onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
           <i class="ti ti-arrow-right" style="margin-right:5px;font-size:11px"></i>Ingresar al SCIC
@@ -1072,6 +1076,15 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <span id="menu-glpi-neg">—</span> negadas
         </div>
       </div>
+      <div class="menu-mcm-panel">
+        <div class="menu-mcm-hdr">
+          <div class="menu-mcm-title">🎯 Radar Comercial MCM</div>
+          <div class="menu-mcm-sub" id="menu-mcm-sub">Indicadores críticos · alto rendimiento PYV</div>
+        </div>
+        <div class="menu-mcm-grid" id="menu-mcm-grid">
+          <div class="menu-mcm-card menu-mcm-loading">Calculando indicadores MCM…</div>
+        </div>
+      </div>
       <div class="menu-kpi-strip menu-kpi-compact">
         <div class="menu-kpi menu-kpi-blue"><div class="menu-kpi-lbl">SIGEC</div><div class="menu-kpi-val" id="menu-kpi-sigec">—</div></div>
         <div class="menu-kpi menu-kpi-purple"><div class="menu-kpi-lbl">GLPI</div><div class="menu-kpi-val" id="menu-kpi-glpi">—</div></div>
@@ -1084,35 +1097,35 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-live">🟢 Operación en Vivo</span><span class="menu-mod-note">Tiempo real</span></div>
           <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon"><i class="ti ti-clipboard-check"></i></div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Coord · Asesor</div></button>
-            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon"><i class="ti ti-history"></i></div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Seguimientos</div></button>
-            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon"><i class="ti ti-calendar-week"></i></div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Turnos del día</div></button>
-            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon"><i class="ti ti-chart-dots-3"></i></div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Por sede</div></button>
+            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon">📋</div><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Coord · Asesor</div></button>
+            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon">📜</div><div class="menu-card-title">Historial</div><div class="menu-card-desc">Seguimientos</div></button>
+            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon">📅</div><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Turnos del día</div></button>
+            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon">📊</div><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Por sede</div></button>
           </div>
         </div>
         <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📊 Gestión Comercial</span><span class="menu-mod-note">Día vencido</span></div>
           <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon"><i class="ti ti-chart-line"></i></div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot</div></button>
-            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon"><i class="ti ti-users"></i></div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline gerencial</div></button>
-            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon"><i class="ti ti-target-arrow"></i></div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias</div></button>
-            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon"><i class="ti ti-traffic-cone"></i></div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Cygnus · SAP</div></button>
-            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon"><i class="ti ti-compass"></i></div><div class="menu-card-title">Brújula Académica CMD</div><div class="menu-card-desc">Ritmo UNIMINUTO</div></button>
+            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon">📈</div><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot</div></button>
+            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon">🎯</div><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline gerencial</div></button>
+            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon">🏆</div><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas diarias</div></button>
+            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon">💰</div><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Cygnus · SAP</div></button>
+            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon">🧭</div><div class="menu-card-title">Brújula Académica</div><div class="menu-card-desc">Ritmo UNIMINUTO</div></button>
           </div>
         </div>
         <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">📈 Inteligencia Comercial</span><span class="menu-mod-note">Análisis</span></div>
           <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple"><div class="menu-card-icon"><i class="ti ti-brain"></i></div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Inteligencia IA</div></button>
+            <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple"><div class="menu-card-icon">🧠</div><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">Inteligencia IA</div></button>
           </div>
         </div>
         <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-tools">🛠 Herramientas del Colaborador</span></div>
           <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon"><i class="ti ti-tools"></i></div><div class="menu-card-title">Herramientas PYV</div></button>
-            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon"><i class="ti ti-address-book"></i></div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Empleados</div></button>
-            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon"><i class="ti ti-cake"></i></div><div class="menu-card-title">Cumpleaños</div></button>
-            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon"><i class="ti ti-calendar-plus"></i></div><div class="menu-card-title">Agendar</div></button>
+            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon">🛠️</div><div class="menu-card-title">Herramientas PYV</div></button>
+            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon">📇</div><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Empleados</div></button>
+            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon">🎂</div><div class="menu-card-title">Cumpleaños</div></button>
+            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon">📆</div><div class="menu-card-title">Agendar</div></button>
           </div>
         </div>
       </div>
@@ -1186,73 +1199,93 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-nacional-fecha{color:var(--gray);font-size:10px}
 .menu-nac-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
 @media(min-width:700px){.menu-nac-grid{grid-template-columns:repeat(4,1fr)}}
-.menu-nac-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.menu-nac-lbl{color:var(--gray);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.menu-nac-big{color:var(--dark);font-size:22px;font-weight:900;margin-top:4px;line-height:1.1}
-.menu-nac-sub{color:var(--text2);font-size:9px;margin-top:4px}
-.menu-nac-meta .menu-nac-big{color:var(--dark)}
+.menu-nac-card{background:#111;border:1px solid #222;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.menu-nac-lbl{color:rgba(255,255,255,.45);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.menu-nac-big{color:#fff;font-size:22px;font-weight:900;margin-top:4px;line-height:1.1}
+.menu-nac-sub{color:rgba(255,255,255,.4);font-size:9px;margin-top:4px}
+.menu-nac-meta .menu-nac-big{color:var(--yellow)}
 .menu-nac-meta{border-top:3px solid var(--yellow)}
-.menu-nac-ejec .menu-nac-big{color:var(--teal-d)}
+.menu-nac-ejec .menu-nac-big{color:var(--teal)}
 .menu-nac-ejec{border-top:3px solid var(--teal)}
-.menu-nac-deber .menu-nac-big{color:var(--teal)}
-.menu-nac-deber{border-top:3px solid var(--teal-l)}
-.menu-nac-brecha .menu-nac-big{color:var(--red)}
+.menu-nac-deber .menu-nac-big{color:#60a5fa}
+.menu-nac-deber{border-top:3px solid #60a5fa}
+.menu-nac-brecha .menu-nac-big{color:#f87171}
 .menu-nac-brecha{border-top:3px solid var(--red)}
-.menu-nac-bar-wrap{margin-bottom:14px;padding:12px 14px;background:var(--white);border-radius:12px;border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--gray);margin-bottom:6px}
-.menu-nac-bar{position:relative;height:10px;background:var(--border);border-radius:6px;overflow:visible}
+.menu-nac-bar-wrap{margin-bottom:14px;padding:12px 14px;background:#111;border-radius:12px;border:1px solid #222;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);margin-bottom:6px}
+.menu-nac-bar{position:relative;height:10px;background:#222;border-radius:6px;overflow:visible}
 .menu-nac-bar>div:first-child{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--yellow));transition:width .8s ease}
-.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:16px;background:var(--teal);border-radius:2px;box-shadow:0 0 6px rgba(0,176,185,.5)}
-.menu-nac-proy{color:var(--text2);font-size:10px;margin-top:10px;text-align:center}
-.menu-sigec-panel{margin-bottom:14px;padding:14px;background:var(--white);border-radius:12px;border:1px solid var(--border);border-left:4px solid var(--teal);box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:16px;background:var(--yellow);border-radius:2px;box-shadow:0 0 6px rgba(255,217,0,.5)}
+.menu-nac-proy{color:rgba(255,255,255,.5);font-size:10px;margin-top:10px;text-align:center}
+.menu-sigec-panel{margin-bottom:14px;padding:14px;background:#0d0d0d;border-radius:12px;border:1px solid #222;border-left:4px solid var(--teal);box-shadow:0 2px 10px rgba(0,0,0,.3)}
 .menu-sigec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.menu-sigec-title{color:var(--dark);font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px}
+.menu-sigec-title{color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px}
 .menu-sigec-title i{color:var(--teal)}
-.menu-sigec-sem{font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px;background:var(--teal-l);color:var(--teal-d)}
+.menu-sigec-sem{font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px;background:#1a1a1a;color:var(--teal);border:1px solid #333}
 .menu-sigec-main{display:flex;gap:14px;align-items:center;margin-bottom:12px}
-.menu-sigec-circle{width:78px;height:78px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:var(--green-l);transition:border-color .4s,background .4s}
-.menu-sigec-pct{font-size:18px;font-weight:900;color:var(--dark);line-height:1}
-.menu-sigec-pct-sub{font-size:7px;color:var(--gray);text-align:center;margin-top:2px;padding:0 4px}
+.menu-sigec-circle{width:78px;height:78px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:#1a1a1a;transition:border-color .4s,background .4s}
+.menu-sigec-pct{font-size:18px;font-weight:900;color:#fff;line-height:1}
+.menu-sigec-pct-sub{font-size:7px;color:rgba(255,255,255,.45);text-align:center;margin-top:2px;padding:0 4px}
 .menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.menu-sigec-stat{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
-.menu-sigec-stat .lbl{display:block;color:var(--gray);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.menu-sigec-stat .val{display:block;color:var(--dark);font-size:16px;font-weight:900;margin-top:3px}
-.menu-sig-fact .val{color:var(--teal-d)}
-.menu-sig-cfac .val{color:var(--dark)}
+.menu-sigec-stat{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px}
+.menu-sigec-stat .lbl{display:block;color:rgba(255,255,255,.4);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.menu-sigec-stat .val{display:block;color:#fff;font-size:16px;font-weight:900;margin-top:3px}
+.menu-sig-fact .val{color:var(--teal)}
+.menu-sig-cfac .val{color:#fff}
 .menu-sig-cerr .val{color:var(--amber)}
-.menu-sig-abi .val{color:var(--teal)}
+.menu-sig-abi .val{color:#60a5fa}
 .menu-sig-rech .val{color:var(--red)}
-.menu-sig-pend .val{color:var(--amber)}
-.menu-sigec-bar-wrap{padding:10px 12px;background:var(--bg);border-radius:10px;border:1px solid var(--border)}
-.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:8px;color:var(--gray);margin-bottom:5px}
-.menu-sigec-bar{height:8px;background:var(--border);border-radius:5px;overflow:hidden}
+.menu-sig-pend .val{color:var(--yellow)}
+.menu-sigec-bar-wrap{padding:10px 12px;background:#1a1a1a;border-radius:10px;border:1px solid #2a2a2a}
+.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,.4);margin-bottom:5px}
+.menu-sigec-bar{height:8px;background:#333;border-radius:5px;overflow:hidden}
 .menu-sigec-bar>div{height:100%;border-radius:5px;background:var(--green);transition:width .8s ease,background .4s}
-.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:9px;color:var(--text2);margin-top:8px;flex-wrap:wrap;gap:4px}
-.menu-sigec-glpi{margin-top:10px;font-size:9px;color:var(--text2);text-align:center}
-.menu-sigec-glpi .glpi-lbl{color:var(--teal-d);font-weight:800;margin-right:4px}
-.menu-sigec-glpi .glpi-sep{margin:0 4px;color:var(--border)}
+.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);margin-top:8px;flex-wrap:wrap;gap:4px}
+.menu-sigec-glpi{margin-top:10px;font-size:9px;color:rgba(255,255,255,.5);text-align:center}
+.menu-sigec-glpi .glpi-lbl{color:var(--teal);font-weight:800;margin-right:4px}
+.menu-sigec-glpi .glpi-sep{margin:0 4px;color:#444}
+.menu-mcm-panel{margin-bottom:14px;padding:14px;background:#0a0a0a;border-radius:12px;border:1px solid #222;border-left:4px solid var(--yellow);box-shadow:0 2px 10px rgba(0,0,0,.3)}
+.menu-mcm-hdr{margin-bottom:12px}
+.menu-mcm-title{color:#fff;font-size:13px;font-weight:800}
+.menu-mcm-sub{color:rgba(255,255,255,.4);font-size:9px;margin-top:3px}
+.menu-mcm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
+.menu-mcm-card{background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:10px 12px;position:relative;overflow:hidden}
+.menu-mcm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mcm-accent,#333)}
+.menu-mcm-emoji{font-size:18px;margin-bottom:4px}
+.menu-mcm-lbl{color:rgba(255,255,255,.45);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.35px}
+.menu-mcm-val{color:#fff;font-size:17px;font-weight:900;margin:3px 0 2px;line-height:1.1}
+.menu-mcm-sub2{color:rgba(255,255,255,.35);font-size:8px;line-height:1.35}
+.menu-mcm-sem{position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;background:#1a1a1a;border:1px solid #333}
+.menu-mcm-loading{color:rgba(255,255,255,.35);font-size:10px;text-align:center;padding:16px;grid-column:1/-1}
 .menu-kpi-compact{padding:0;background:transparent;border:none;gap:6px}
-.menu-kpi-compact .menu-kpi{min-width:90px;padding:8px 10px}
+.menu-kpi-compact .menu-kpi{min-width:90px;padding:8px 10px;background:#111;border-color:#222}
+.menu-kpi-compact .menu-kpi-lbl{color:rgba(255,255,255,.4)}
+.menu-kpi-compact .menu-kpi-val{color:#fff}
+.menu-kpi-compact .menu-kpi-blue .menu-kpi-val{color:var(--teal)}
+.menu-kpi-compact .menu-kpi-purple .menu-kpi-val{color:#a78bfa}
+.menu-kpi-compact .menu-kpi-green .menu-kpi-val{color:var(--green)}
+.menu-kpi-compact .menu-kpi-orange .menu-kpi-val{color:var(--yellow)}
+.menu-kpi-compact .menu-kpi-red .menu-kpi-val{color:#f87171}
 .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
-.menu-card{position:relative;padding:14px 12px;border-radius:12px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .2s;background:var(--white);border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.04)}
-.menu-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,61,69,.12);border-color:var(--teal)}
-.menu-card-icon{font-size:22px;margin-bottom:8px;display:block}
-.menu-card-title{color:var(--dark);font-size:12px;font-weight:800;line-height:1.2}
-.menu-card-desc{color:var(--text2);font-size:9px;margin-top:4px;line-height:1.35}
-.menu-card-teal{border-left:4px solid var(--teal)} .menu-card-teal .menu-card-icon{color:var(--teal)}
-.menu-card-purple{border-left:4px solid var(--dark)} .menu-card-purple .menu-card-icon{color:var(--dark)}
-.menu-card-blue{border-left:4px solid var(--teal-d)} .menu-card-blue .menu-card-icon{color:var(--teal-d)}
-.menu-card-red{border-left:4px solid var(--red)} .menu-card-red .menu-card-icon{color:var(--red)}
-.menu-card-green{border-left:4px solid var(--green)} .menu-card-green .menu-card-icon{color:#6b7f00}
-.menu-card-amber{border-left:4px solid var(--amber)} .menu-card-amber .menu-card-icon{color:var(--amber)}
-.menu-card-orange{border-left:4px solid var(--teal)} .menu-card-orange .menu-card-icon{color:var(--teal-d)}
-.menu-card-sky{border-left:4px solid var(--teal-l)} .menu-card-sky .menu-card-icon{color:var(--teal)}
-.menu-card-lime{border-left:4px solid var(--green)} .menu-card-lime .menu-card-icon{color:#6b7f00}
-.menu-card-violet{border-left:4px solid var(--dark)} .menu-card-violet .menu-card-icon{color:var(--dark)}
-.menu-card-pink{border-left:4px solid #ec4899} .menu-card-pink .menu-card-icon{color:#ec4899}
-.menu-card-cyan{border-left:4px solid var(--teal)} .menu-card-cyan .menu-card-icon{color:var(--teal-d)}
-.menu-card-gold{border-left:4px solid var(--yellow)} .menu-card-gold .menu-card-icon{color:var(--dark)}
-.menu-card-indigo{border-left:4px solid var(--dark)} .menu-card-indigo .menu-card-icon{color:var(--teal-d)}
+.menu-card{position:relative;padding:14px 12px;border-radius:12px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .2s;background:linear-gradient(145deg,#161616,#0a0a0a);border:1px solid #2a2a2a;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.menu-card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,176,185,.18);border-color:var(--teal)}
+.menu-card-icon{font-size:24px;margin-bottom:8px;display:block;line-height:1}
+.menu-card-title{color:#fff;font-size:12px;font-weight:800;line-height:1.2}
+.menu-card-desc{color:rgba(255,255,255,.42);font-size:9px;margin-top:4px;line-height:1.35}
+.menu-card-teal{border-left:4px solid var(--teal)}
+.menu-card-purple{border-left:4px solid #a78bfa}
+.menu-card-blue{border-left:4px solid #60a5fa}
+.menu-card-red{border-left:4px solid #f87171}
+.menu-card-green{border-left:4px solid var(--green)}
+.menu-card-amber{border-left:4px solid var(--amber)}
+.menu-card-orange{border-left:4px solid var(--yellow)}
+.menu-card-sky{border-left:4px solid #38bdf8}
+.menu-card-lime{border-left:4px solid #84cc16}
+.menu-card-violet{border-left:4px solid #c084fc}
+.menu-card-pink{border-left:4px solid #f472b6}
+.menu-card-cyan{border-left:4px solid var(--teal)}
+.menu-card-gold{border-left:4px solid var(--yellow)}
+.menu-card-indigo{border-left:4px solid #818cf8}
 .menu-footer{text-align:center;margin-top:18px;padding-top:12px;border-top:1px solid var(--border);color:var(--gray);font-size:9px;line-height:1.5}
 .herr-tab{border:1px solid var(--border);background:var(--white);color:var(--text);border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
 .herr-tab:hover,.herr-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
@@ -3136,7 +3169,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.0.0';
+var APP_VERSION = 'pyv-comercial-5.1.0';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3410,274 +3443,15 @@ function _cargarEmpleados(){
 }
 window._cargarEmpleados=_cargarEmpleados;
 
-// 6. buscarEmpleado
-function buscarEmpleado(usuario){
-  var wrap=document.getElementById('login-input-wrap'),res=document.getElementById('login-resultado'),btn=document.getElementById('login-btn');
-  if(!res)return;
+// 6. Login — solo acceso con usuario exacto del repositorio
+function _resolverEmpleadoLogin(usuario){
   usuario=(usuario||'').trim().toLowerCase();
-  if(btn)btn.disabled=false;
-  if(usuario.length<3){
-    res.innerHTML='<div style="text-align:center;padding:6px;color:rgba(255,255,255,.4);font-size:9px">'+Object.keys(EMPLEADOS_BD).length+' usuarios disponibles</div>';
-    if(wrap)wrap.style.borderColor='rgba(255,255,255,.15)';return;
-  }
-  var correo=usuario+'@coopminutodedios.com',emp=EMPLEADOS_BD[correo];
-  if(!emp){var keys=Object.keys(EMPLEADOS_BD);for(var i=0;i<keys.length;i++){if(keys[i].indexOf(usuario)===0){emp=EMPLEADOS_BD[keys[i]];break;}}}
-  if(emp){
-    if(wrap)wrap.style.borderColor='#4ade80';
-    var ini=emp.nombre.split(' ').filter(function(p){return p.length>1;}).slice(0,2).map(function(p){return p[0].toUpperCase();}).join('');
-    res.innerHTML='<div style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:9px;padding:9px 11px;display:flex;align-items:center;gap:9px">'
-      +'<div style="width:36px;height:36px;background:#003D45;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;color:#C8971E;flex-shrink:0">'+ini+'</div>'
-      +'<div><div style="color:#fff;font-size:13px;font-weight:800">'+emp.nombre+'</div>'
-      +'<div style="color:#4ade80;font-size:9px">'+emp.cargo+'</div>'
-      +'<div style="color:rgba(255,255,255,.4);font-size:9px">'+emp.sede+'</div></div></div>';
-  }else{
-    if(wrap)wrap.style.borderColor='rgba(255,255,255,.15)';
-    res.innerHTML='<div style="text-align:center;padding:6px;color:rgba(255,255,255,.35);font-size:9px">Escribe la parte antes del @ &bull; ej: <b>juan.orrego</b></div>';
-  }
-}
-
-// 7. loginIngresar
-function loginIngresar(){
-  var input=document.getElementById('login-usuario');
-  if(!input)return;
-  var usuario=(input.value||'').trim().toLowerCase();
-  if(usuario.length<3){
-    var r0=document.getElementById('login-resultado');
-    if(r0)r0.innerHTML='<div style="text-align:center;padding:6px;color:#fbbf24;font-size:10px">Escribe al menos 3 caracteres</div>';return;
-  }
+  if(usuario.length<3)return null;
   var correo=usuario.indexOf('@')>=0?usuario:usuario+'@coopminutodedios.com';
-  var emp=EMPLEADOS_BD[correo];
-  {
-    // Usuario no en BD — acceso con nombre ingresado
-    sesionActiva={correo:correo,nombre:usuario,cargo:'Equipo PYV',sede:'CMD'};
-    navState.nombreEjecutor=usuario; navState.correoEjecutor=correo;
-    navState.cargoEjecutor='Equipo PYV'; navState.sedeEjecutor='CMD';
-    state.ejecutor=usuario;
-    var _li=document.getElementById('etapa-login');
-    var _me=document.getElementById('etapa-menu');
-    if(_li)_li.style.display='none';
-    if(_me)_me.style.display='block';
-    var _av=document.getElementById('menu-avatar');
-    var _mn=document.getElementById('menu-nombre');
-    if(_av)_av.textContent=(usuario.charAt(0)||'U').toUpperCase();
-    if(_mn)_mn.textContent=usuario;
-    guardarLS&&guardarLS();
-    mostrarAlertaNav&&mostrarAlertaNav('Bienvenido/a '+usuario+' al SCIC v4.6');
-    return;
-  }
-  if(!emp){
-    // Acceso con nombre de usuario ingresado (no en BD)
-    sesionActiva={correo:correo,nombre:usuario,cargo:'Equipo PYV',sede:'CMD'};
-    navState.nombreEjecutor=usuario; navState.correoEjecutor=correo;
-    navState.cargoEjecutor='Equipo PYV'; navState.sedeEjecutor='CMD';
-    state.ejecutor=usuario;
-    var _li=document.getElementById('etapa-login');
-    var _me=document.getElementById('etapa-menu');
-    if(_li)_li.style.display='none';
-    if(_me)_me.style.display='block';
-    var _av=document.getElementById('menu-avatar');
-    var _mn=document.getElementById('menu-nombre');
-    if(_av)_av.textContent=(usuario.charAt(0)||'U').toUpperCase();
-    if(_mn)_mn.textContent=usuario;
-    guardarLS&&guardarLS();
-    mostrarAlertaNav&&mostrarAlertaNav('Bienvenido/a '+usuario+' al SCIC v4.6');
-    return;
-  }
-  if(emp.estado&&emp.estado.toLowerCase().indexOf('inactiv')>=0){
-    var r2=document.getElementById('login-resultado');
-    if(r2)r2.innerHTML='<div style="text-align:center;padding:8px;color:#fbbf24;font-size:10px;font-weight:700">Usuario inactivo</div>';return;
-  }
-  window._pendingEmp={correo:correo,emp:emp};
-  if(typeof _completarLogin==='function'){
-    _completarLogin();
-  }else{
-    sesionActiva={correo:correo,nombre:emp.nombre,cargo:emp.cargo,sede:emp.sede};
-    Object.assign(navState,{nombreEjecutor:emp.nombre,correoEjecutor:correo,cargoEjecutor:emp.cargo,sedeEjecutor:emp.sede});
-    var el=document.getElementById('etapa-login'),em=document.getElementById('etapa-menu');
-    if(el)el.style.display='none';if(em)em.style.display='block';
-    var mn=document.getElementById('menu-nombre'),mc=document.getElementById('menu-cargo-sede');
-    if(mn)mn.textContent=emp.nombre;if(mc)mc.textContent=emp.cargo+' · '+emp.sede;
-    guardarLS();
-    if(typeof mostrarAlertaNav==='function')mostrarAlertaNav('Bienvenido/a, '+emp.nombre.split(' ')[0]);
-  }
+  var emp=EMPLEADOS_BD[correo]||null;
+  return emp?{emp:emp,correo:correo}:null;
 }
 
-// 8. cargarDesdeSheetsCompleto — función que _arrancar necesita
-function cargarDesdeSheetsCompleto(forzar){
-  // Asegurar IDs disponibles
-  if(!REPO_IDS||!REPO_IDS.interno) Object.assign(REPO_IDS,_REPOS_OFICIALES||{});
-  var ps=[], intentar=function(fn,nombre){
-    if(typeof fn==='function'){
-      ps.push(Promise.resolve().then(function(){return fn();}).catch(function(e){
-        console.warn('[SCIC]',nombre,'error:',e&&e.message);
-      }));
-    }
-  };
-  intentar(_cargarColocacion,'colocacion');
-  intentar(_cargarHistoricoColocacion,'coloc-hist');
-  intentar(_cargarSIGEC,'sigec');
-  intentar(_cargarGLPI,'glpi');
-  intentar(_cargarCongelados,'congelados');
-  intentar(_cargarBaseColoc,'base-coloc');
-  intentar(_cargarMatriculas,'matriculas');
-  intentar(_cargarMetas,'metas');
-  intentar(_cargarCartera,'cartera');
-  intentar(_cargarLeadsCall,'leads-call');
-  intentar(_cargarLeadsAdmitidos,'leads-adm');
-  intentar(_cargarLeadsScala,'leads-scala');
-  intentar(_cargarSusceptibles,'susceptibles');
-  intentar(_cargarSeguimientosPorSede,'seguimientos');
-  intentar(_cargarMallaTurnos,'malla');
-  intentar(_cargarMemoriaSheet,'memoria');
-  return Promise.all(ps).then(function(){
-    console.log('[SCIC] Carga completa: '+ps.length+' fuentes');
-    if(typeof SCIC_construirMUS==='function') SCIC_construirMUS();
-  });
-}
-window.cargarDesdeSheetsCompleto=cargarDesdeSheetsCompleto;
-
-window.cargarDesdeSheetsCompleto = cargarDesdeSheetsCompleto;
-
-// DOMContentLoaded movido al final del script
-// ════════════════════════════════════════════════════════════
-
-
-// ════════════ FIXES SCIC v4.3 — NO MINIFICAR ════════════════
-// Variables globales (el minificador las elimina)
-if(typeof EMPLEADOS_BD==='undefined') var EMPLEADOS_BD={};
-if(typeof navState==='undefined') var navState={};
-if(typeof sesionActiva==='undefined') var sesionActiva=false;
-if(typeof state==='undefined') var state={};
-if(typeof mode==='undefined') var mode='';
-if(typeof SHEETS_ACTIVO==='undefined') var SHEETS_ACTIVO=true;
-if(typeof REPO_IDS==='undefined') var REPO_IDS={};
-if(typeof SHEETS_HOJAS==='undefined') var SHEETS_HOJAS={};
-
-// Agregar HubSpot al REPO_IDS cuando esté disponible
-setTimeout(function(){
-  if(window.REPO_IDS && !REPO_IDS.hubspot){
-    REPO_IDS.hubspot = '1uPPXzpv6iNcmVeMpzhWzX5sycxS8xj_u9z9FiELlhTE';
-  }
-}, 500);
-
-// guardarLS — guardado de estado local
-function guardarLS(){
-  try{
-    localStorage.setItem('cmd_scic_sesion', JSON.stringify({
-      sesion: sesionActiva||null, ts: Date.now()
-    }));
-  }catch(e){}
-}
-
-// ── EMPLEADOS FALLBACK (93 del xlsx — instantáneo) ──────────
-var _EMPLEADOS_FALLBACK = [{"correo": "yara.diaz@coopminutodedios.com", "nombre": "Diaz Julio Yara Liney", "cargo": "Asesor Comercial", "sede": "Apartado", "cedula": "1045517843", "estado": "Activo"}, {"correo": "orlys.solano@coopminutodedios.com", "nombre": "Solano Hoyos Orlydes", "cargo": "Coordinador Comercial", "sede": "Apartado", "cedula": "39428775", "estado": "Activo"}, {"correo": "marlen.vergara@coopminutodedios.com", "nombre": "Vergara Rios Marlen Daniela", "cargo": "Asesor Comercial", "sede": "Apartado", "cedula": "1028008923", "estado": "Activo"}, {"correo": "skarleen.lopez@coopminutodedios.com", "nombre": "Lopez Tapia Skarleen Carolina", "cargo": "Asesor Comercial", "sede": "Barranquilla", "cedula": "1045717577", "estado": "Activo"}, {"correo": "karen.nino@coopminutodedios.com", "nombre": "Niño Campo Karen Dayana", "cargo": "Asesor Comercial", "sede": "Barranquilla", "cedula": "1129491124", "estado": "Activo"}, {"correo": "nathalia.cardona@coopminutodedios.com", "nombre": "Cardona Osorio Nathalia", "cargo": "Asesor Comercial", "sede": "Bello", "cedula": "1214730347", "estado": "Activo"}, {"correo": "jonathan.colmenares@coopminutodedios.com", "nombre": "Colmenares Deossa Jonathan Manuel", "cargo": "Asesor Comercial", "sede": "Bello", "cedula": "1007029650", "estado": "Activo"}, {"correo": "juan.orrego@coopminutodedios.com", "nombre": "Orrego Mejia Juan Bernardo", "cargo": "Coordinador Comercial", "sede": "Bello-Virtual", "cedula": "1038213114", "estado": "Activo"}, {"correo": "isabel.patino@coopminutodedios.com", "nombre": "Patiño Mahecha Isabel", "cargo": "Asesor Comercial", "sede": "Bello", "cedula": "1128283569", "estado": "Activo"}, {"correo": "angie.ariza@coopminutodedios.com", "nombre": "Ariza Benitez Angie Katherine", "cargo": "Formadora Comercial", "sede": "Bogota", "cedula": "1012451627", "estado": "Activo"}, {"correo": "milena.azcarate@coopminutodedios.com", "nombre": "Azcarate Ossa Alba Milena", "cargo": "Subdirectora Comercial", "sede": "Bogota", "cedula": "52068575", "estado": "Activo"}, {"correo": "laura.beltran@coopminutodedios.com", "nombre": "Beltran Castro Laura Daniela", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1030700208", "estado": "Activo"}, {"correo": "diego.carranza@coopminutodedios.com", "nombre": "Carranza Palomino Diego Alejandro", "cargo": "Analista Comercial", "sede": "Bogota", "cedula": "1014302498", "estado": "Activo"}, {"correo": "jean.castano@coopminutodedios.com", "nombre": "Castaño Ruiz Jean Poul.", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1024488608", "estado": "Activo"}, {"correo": "alexander.castro@coopminutodedios.com", "nombre": "Castro Ardila Alexander", "cargo": "Director Consumo", "sede": "Bogota", "cedula": "1121824817", "estado": "Activo"}, {"correo": "hamilton.chavez@coopminutodedios.com", "nombre": "Chaves Vargas Hamilton Steek", "cargo": "Asesor Consumo", "sede": "Bogota", "cedula": "1023303517", "estado": "Activo"}, {"correo": "jorge.cruz@coopminutodedios.com", "nombre": "Cruz Mateus Jorge Eliecer", "cargo": "Asesor Comercial", "sede": "Virtual", "cedula": "80157133", "estado": "Activo"}, {"correo": "paula.gonzalez@coopminutodedios.com", "nombre": "Gonzalez Martinez Paula Daniela", "cargo": "Asesor Consumo", "sede": "Bogota", "cedula": "1000366224", "estado": "Activo"}, {"correo": "lisbeth.martinez@coopminutodedios.com", "nombre": "Martinez Lopez Lisbeth Gabriela", "cargo": "Analista Comercial", "sede": "Bogota", "cedula": "1007912303", "estado": "Activo"}, {"correo": "johan.nino@coopminutodedios.com", "nombre": "Niño Perez Johan Alberto", "cargo": "Aprendiz Comercial", "sede": "Bogota", "cedula": "1018491134", "estado": "Activo"}, {"correo": "analistadeconsumo@coopminutodedios.com", "nombre": "Quintero Barreto Yeferson Daniel", "cargo": "Analista Consumo", "sede": "Bogota", "cedula": "1007391887", "estado": "Activo"}, {"correo": "yailin.rangel@coopminutodedios.com", "nombre": "Rangel Gonzalez Yailin Vanessa", "cargo": "Asesor Comercial", "sede": "Virtual", "cedula": "1004506762", "estado": "Activo"}, {"correo": "john.rengifo@coopminutodedios.com", "nombre": "Rengifo Onatra John Henry", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1012385396", "estado": "Activo"}, {"correo": "maria.rios@coopminutodedios.com", "nombre": "Rios Diaz Maria Fernanda", "cargo": "Asesor Consumo", "sede": "Bogota", "cedula": "1010228713", "estado": "Activo"}, {"correo": "carolina.tapiero@coopminutodedios.com", "nombre": "Tapiero Tapiero Carolina", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1105062267", "estado": "Activo"}, {"correo": "juleidy.vanegas@coopminutodedios.com", "nombre": "Vanegas Gaitan Juleidy", "cargo": "Asesor Consumo", "sede": "Bogota", "cedula": "1030541536", "estado": "Activo"}, {"correo": "tatiana.vega@coopminutodedios.com", "nombre": "Vega Mendez Leidy Tatiana", "cargo": "Asesor Comercial", "sede": "Virtual", "cedula": "1122732330", "estado": "Activo"}, {"correo": "yesid.villamil@coopminutodedios.com", "nombre": "Villamil Avendaño Yesid Alexander", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1053326578", "estado": "Activo"}, {"correo": "durley.figueroa@coopminutodedios.com", "nombre": "Figueroa Merchan Durley Eduardo", "cargo": "Asesor Comercial", "sede": "Bogota Sur", "cedula": "1000214243", "estado": "Activo"}, {"correo": "rony.hernandez@coopminutodedios.com", "nombre": "Hernandez Barrios Rony Duvan", "cargo": "Asesor Comercial", "sede": "Bogota Sur", "cedula": "1012445595", "estado": "Activo"}, {"correo": "adriana.poveda@coopminutodedios.com", "nombre": "Poveda Sanchez Adriana", "cargo": "Coordinador Consumo", "sede": "Bogota Sur", "cedula": "52075506", "estado": "Activo"}, {"correo": "sandra.cuevas@coopminutodedios.com", "nombre": "Cuevas Rodriguez Sandra", "cargo": "Coordinador Comercial", "sede": "Bucaramanga", "cedula": "52322601", "estado": "Activo"}, {"correo": "stefany.paez@coopminutodedios.com", "nombre": "Paez Sandoval Stefany Andrea", "cargo": "Asesor Comercial", "sede": "Bucaramanga", "cedula": "1102371757", "estado": "Activo"}, {"correo": "diego.zapata@coopminutodedios.com", "nombre": "Zapata Montañez Diego Andres", "cargo": "Asesor Comercial", "sede": "Bucaramanga", "cedula": "80858873", "estado": "Activo"}, {"correo": "luisa.arrunategui@coopminutodedios.com", "nombre": "Arrunategui Ortiz Luisa Fernanda", "cargo": "Asesor Comercial", "sede": "Buenaventura", "cedula": "1144144537", "estado": "Activo"}, {"correo": "yineth.moreno@coopminutodedios.com", "nombre": "Moreno Gonzalez Yineth", "cargo": "Asesor Comercial", "sede": "Buenaventura", "cedula": "1143931785", "estado": "Activo"}, {"correo": "luis.latorre@coopminutodedios.com", "nombre": "Latorre Molina Luis Felipe", "cargo": "Asesor Comercial", "sede": "Buga", "cedula": "1115079132", "estado": "Activo"}, {"correo": "sebastian.melo@coopminutodedios.com", "nombre": "Melo Quitian Sebastian", "cargo": "Asesor Comercial", "sede": "Buga", "cedula": "1115087538", "estado": "Activo"}, {"correo": "paola.rodriguez@coopminutodedios.com", "nombre": "Rodriguez Claros Paola Andrea", "cargo": "Coordinador Comercial", "sede": "Cali Umd", "cedula": "1107042489", "estado": "Activo"}, {"correo": "maryuri.jaramillo@coopminutodedios.com", "nombre": "Jaramillo Santos Maryuri", "cargo": "Asesor Comercial", "sede": "Cali Unicatolica", "cedula": "1112105257", "estado": "Activo"}, {"correo": "yury.perez@coopminutodedios.com", "nombre": "Perez Restrepo Yury Marcela", "cargo": "Analista Lider", "sede": "Cali Unicatolica", "cedula": "1144143492", "estado": "Activo"}, {"correo": "marlady.taborda@coopminutodedios.com", "nombre": "Taborda Cruz Marlady Indira", "cargo": "Asesor Comercial", "sede": "Cali Unicatolica", "cedula": "1059709826", "estado": "Activo"}, {"correo": "belkis.lopez@coopminutodedios.com", "nombre": "Lopez Gil Belkis Del Socorro", "cargo": "Asesor Comercial", "sede": "Cartagena - Manga Utb", "cedula": "55245945", "estado": "Activo"}, {"correo": "nathalia.herrera@coopminutodedios.com", "nombre": "Herrera Jaramillo Nathalia", "cargo": "Asesor Comercial", "sede": "Chinchina", "cedula": "1054987814", "estado": "Activo"}, {"correo": "andrea.alvarado@coopminutodedios.com", "nombre": "Alvarado Niño Andrea Milena", "cargo": "Asesor Comercial", "sede": "Cucuta", "cedula": "37395349", "estado": "Activo"}, {"correo": "astrid.ochoa@coopminutodedios.com", "nombre": "Ochoa Ochoa Astrid Carolina", "cargo": "Coordinador Comercial", "sede": "Cucuta", "cedula": "1093768319", "estado": "Activo"}, {"correo": "yessica.jaramillo@coopminutodedios.com", "nombre": "Jaramillo Ortiz Yessica Maryuris", "cargo": "Asesor Comercial", "sede": "El Bagre", "cedula": "1007578461", "estado": "Activo"}, {"correo": "laura.murcia@coopminutodedios.com", "nombre": "Murcia Cruz Laura Stepfany", "cargo": "Asesor Comercial", "sede": "Facatativa", "cedula": "1070963567", "estado": "Activo"}, {"correo": "rafael.agudelo@coopminutodedios.com", "nombre": "Agudelo Agudelo Rafael Ernesto", "cargo": "Asesor Comercial", "sede": "Funza", "cedula": "1073521512", "estado": "Activo"}, {"correo": "yennifer.trochez@coopminutodedios.com", "nombre": "Trochez Calderon Yennifer", "cargo": "Asesor Comercial", "sede": "Garzon", "cedula": "1080937514", "estado": "Activo"}, {"correo": "deisy.barco@coopminutodedios.com", "nombre": "Barco Salcedo Deyci Alejandra", "cargo": "Coordinador Comercial", "sede": "Girardot", "cedula": "1070594436", "estado": "Activo"}, {"correo": "jose.marquez@coopminutodedios.com", "nombre": "Marquez Bazurto Jose Luis", "cargo": "Asesor Comercial", "sede": "Girardot", "cedula": "1070621430", "estado": "Activo"}, {"correo": "luisa.zabala@coopminutodedios.com", "nombre": "Zabala Barrios Luisa Fernanda", "cargo": "Asesor Comercial", "sede": "Girardot", "cedula": "1070599056", "estado": "Activo"}, {"correo": "daniela.barreto@coopminutodedios.com", "nombre": "Barreto Riaños Daniela Camila", "cargo": "Asesor Comercial", "sede": "Ibague", "cedula": "1110589407", "estado": "Activo"}, {"correo": "danny.franco@coopminutodedios.com", "nombre": "Franco Aranda Danny Alejandro", "cargo": "Asesor Comercial", "sede": "Ibague", "cedula": "1110558509", "estado": "Activo"}, {"correo": "andrea.gaitan@coopminutodedios.com", "nombre": "Gaitan Ospina Andrea Del Pilar", "cargo": "Coordinador Comercial", "sede": "Ibague", "cedula": "1110466579", "estado": "Activo"}, {"correo": "daniel.jimenez@coopminutodedios.com", "nombre": "Jimenez Calderon Jose Daniel", "cargo": "Asesor Comercial", "sede": "Ibague", "cedula": "1110547060", "estado": "Activo"}, {"correo": "jennifer.marin@coopminutodedios.com", "nombre": "Marin Agredo Jennifer Paola", "cargo": "Asesor Comercial", "sede": "La Dorada", "cedula": "1054550704", "estado": "Activo"}, {"correo": "yenny.alfonso@coopminutodedios.com", "nombre": "Alfonso Bolaños Yenny Adriana", "cargo": "Coordinador Comercial", "sede": "Lerida", "cedula": "1109382766", "estado": "Activo"}, {"correo": "angie.contreras@coopminutodedios.com", "nombre": "Contreras Ortiz Angie Daniela", "cargo": "Asesor Comercial", "sede": "Lerida", "cedula": "1109387558", "estado": "Activo"}, {"correo": "julie.salgar@coopminutodedios.com", "nombre": "Salgar Vanessa", "cargo": "Directora Comercial", "sede": "Nacional", "cedula": "", "estado": "Activo"}, {"correo": "nidia.betancourt@coopminutodedios.com", "nombre": "Betancourt Vasquez Nidia Constanza", "cargo": "Asesor Comercial", "sede": "Neiva", "cedula": "1075228339", "estado": "Activo"}, {"correo": "yuly.perdomo@coopminutodedios.com", "nombre": "Perdomo Barreto Yuly Paola", "cargo": "Analista Lider", "sede": "Neiva", "cedula": "1003688392", "estado": "Activo"}, {"correo": "yanid.ruiz@coopminutodedios.com", "nombre": "Ruiz Pedroza Yanid", "cargo": "Asesor Comercial", "sede": "Neiva", "cedula": "1075257719", "estado": "Activo"}, {"correo": "juan.gonzalez@coopminutodedios.com", "nombre": "Gonzalez Villadiego Juan Jose", "cargo": "Asesor Comercial", "sede": "Otras Ies", "cedula": "1014264134", "estado": "Activo"}, {"correo": "lucero.figueroa@coopminutodedios.com", "nombre": "Figueroa Escobar Lucero Alcira", "cargo": "Asesor Comercial", "sede": "Pasto", "cedula": "59795865", "estado": "Activo"}, {"correo": "erwin.guerrero@coopminutodedios.com", "nombre": "Guerrero Acosta Erwin Marcelo", "cargo": "Asesor Comercial", "sede": "Pasto", "cedula": "1085260668", "estado": "Activo"}, {"correo": "diana.miranda@coopminutodedios.com", "nombre": "Miranda Delgado Diana Marcela", "cargo": "Coordinador Comercial", "sede": "Pasto", "cedula": "1085290920", "estado": "Activo"}, {"correo": "coor.comercialp@coopminutodedios.com", "nombre": "Castellanos Mora Alix Marcela", "cargo": "Coordinador Comercial", "sede": "Pereira", "cedula": "27601125", "estado": "Activo"}, {"correo": "nathaly.jimenez@coopminutodedios.com", "nombre": "Jimenez Vergara Nathaly", "cargo": "Asesor Comercial", "sede": "Pereira", "cedula": "1088345694", "estado": "Activo"}, {"correo": "luisa.medina@coopminutodedios.com", "nombre": "Medina Cuellar Luisa Fernanda", "cargo": "Asesor Comercial", "sede": "Pitalito", "cedula": "1080935402", "estado": "Activo"}, {"correo": "martha.agredo@coopminutodedios.com", "nombre": "Agredo Fernandez Martha Isabel", "cargo": "Coordinador Comercial", "sede": "Popayan", "cedula": "34564609", "estado": "Activo"}, {"correo": "maryi.guzman@coopminutodedios.com", "nombre": "Lebaza Guzman Maryi Lizeth", "cargo": "Asesor Comercial", "sede": "Popayan", "cedula": "1061797825", "estado": "Activo"}, {"correo": "cristian.rivera@coopminutodedios.com", "nombre": "Rivera Ruiz Cristian Fernando", "cargo": "Asesor Comercial", "sede": "Popayan", "cedula": "1061768026", "estado": "Activo"}, {"correo": "yennifer.ochoa@coopminutodedios.com", "nombre": "Ochoa De Avila Yennifer", "cargo": "Asesor Comercial", "sede": "Rafael Nuñez", "cedula": "1050954773", "estado": "Activo"}, {"correo": "jairo.rodriguez@coopminutodedios.com", "nombre": "Rodriguez Ducuara Jairo Antonio", "cargo": "Asesor Rol Seguimiento", "sede": "Virtual", "cedula": "1022983549", "estado": "Activo"}, {"correo": "geraldine.bermudez@coopminutodedios.com", "nombre": "Bermudez Buitrago Geraldine", "cargo": "Asesor Comercial", "sede": "Santa Marta", "cedula": "1006526927", "estado": "Activo"}, {"correo": "paola.jordan@coopminutodedios.com", "nombre": "Jordan Medina Paola Andrea", "cargo": "Asesor Comercial", "sede": "Santander De Quilichao", "cedula": "1061434195", "estado": "Activo"}, {"correo": "karoline.borrero@coopminutodedios.com", "nombre": "Borrero Quiroga Karoline Natalia", "cargo": "Asesor Comercial", "sede": "Soacha", "cedula": "1003749864", "estado": "Activo"}, {"correo": "nalleivy.cardona@coopminutodedios.com", "nombre": "Cardona Sarmiento Nalleivy", "cargo": "Coordinador Comercial", "sede": "Soacha", "cedula": "41960743", "estado": "Activo"}, {"correo": "jennifer.reyes@coopminutodedios.com", "nombre": "Reyes Leyton Jennifer", "cargo": "Asesor Comercial", "sede": "Soacha", "cedula": "1018500235", "estado": "Activo"}, {"correo": "janeire.tovar@coopminutodedios.com", "nombre": "Tovar Monterrosa Janeire Mahut", "cargo": "Analista Comercial", "sede": "Tecnologico Comfenalco", "cedula": "45529947", "estado": "Activo"}, {"correo": "elena.gomez@coopminutodedios.com", "nombre": "Gomez Franco Elena", "cargo": "Subdirectora Comercial", "sede": "Ternera", "cedula": "45515216", "estado": "Activo"}, {"correo": "marly.malvaceda@coopminutodedios.com", "nombre": "Malvaceda Diaz Marly", "cargo": "Asesor Comercial", "sede": "Ternera", "cedula": "1143338801", "estado": "Activo"}, {"correo": "valentina.hernandez@coopminutodedios.com", "nombre": "Hernandez Cajigas Valentina", "cargo": "Asesor Comercial", "sede": "Unicatolica", "cedula": "1112497152", "estado": "Activo"}, {"correo": "juan.bonilla@coopminutodedios.com", "nombre": "Bonilla Gonzalez Juan David", "cargo": "Asesor Comercial", "sede": "Villavicencio", "cedula": "1122508114", "estado": "Activo"}, {"correo": "davey.figueredo@coopminutodedios.com", "nombre": "Figueredo Diaz Davey Lorena", "cargo": "Asesor Comercial", "sede": "Villavicencio", "cedula": "1121878028", "estado": "Activo"}, {"correo": "leidy.hincapie@coopminutodedios.com", "nombre": "Hincapie Bonilla Leidy Liliana", "cargo": "Coordinador Comercial", "sede": "Villavicencio", "cedula": "40187244", "estado": "Activo"}, {"correo": "yesika.triana@coopminutodedios.com", "nombre": "Triana Molina Yesika Daniela", "cargo": "Asesor Comercial", "sede": "Villavicencio", "cedula": "1121932623", "estado": "Activo"}, {"correo": "laura.velasquez@coopminutodedios.com", "nombre": "Velasquez Oliveros Laura Daniela", "cargo": "Asesor Comercial", "sede": "Villavicencio", "cedula": "1121908369", "estado": "Activo"}, {"correo": "juan.hernandez@coopminutodedios.com", "nombre": "Hernandez Lozano Juan Camilo", "cargo": "Asesor Comercial", "sede": "Villeta", "cedula": "1193091594", "estado": "Activo"}, {"correo": "lady.arevalo@coopminutodedios.com", "nombre": "Arevalo Pachon Lady Tatiana", "cargo": "Coordinador Comercial", "sede": "Zipaquira", "cedula": "1075663825", "estado": "Activo"}, {"correo": "leidy.suarez@coopminutodedios.com", "nombre": "Suarez Garavito Leidy Nataly", "cargo": "Asesor Comercial", "sede": "Zipaquira", "cedula": "1075675568", "estado": "Activo"}];
-(function(){
-  _EMPLEADOS_FALLBACK.forEach(function(emp){ EMPLEADOS_BD[emp.correo]=emp; });
-  console.log('[LOGIN] '+Object.keys(EMPLEADOS_BD).length+' usuarios listos');
-})();
-
-function _cargarEmpleados(){
-  if(!Object.keys(EMPLEADOS_BD).length){
-    _EMPLEADOS_FALLBACK.forEach(function(emp){ EMPLEADOS_BD[emp.correo]=emp; });
-  }
-  var res=document.getElementById('login-resultado'),n=Object.keys(EMPLEADOS_BD).length;
-  if(res&&n>0) res.innerHTML='<div style="text-align:center;padding:8px;color:rgba(255,255,255,.5);font-size:10px"><i class="ti ti-users" style="color:#4ade80;margin-right:4px"></i>'+n+' usuarios disponibles</div>';
-  // Actualizar desde Sheet en background
-  try{
-    var cb='_eg_'+Date.now(),sc2=document.createElement('script');
-    window[cb]=function(data){
-      try{
-        if(!data||!data.table||!data.table.rows)return;
-        var cols=(data.table.cols||[]).map(function(c){return(c.label||c.id||'').trim();});
-        (data.table.rows||[]).forEach(function(row){
-          var v=(row.c||[]).map(function(c){return c?(c.v!==null&&c.v!==undefined?c.v:(c.f||'')):'';});
-          var correo='';for(var ci=0;ci<cols.length;ci++){if(cols[ci].toUpperCase()==='CORREO'&&v[ci]){correo=String(v[ci]).trim().toLowerCase();break;}}
-          if(!correo)correo=String(v[0]||'').trim().toLowerCase();
-          if(!correo||correo.indexOf('@')<0)return;
-          function fld(nm,ix){for(var j=0;j<cols.length;j++)if(cols[j].toUpperCase()===nm&&v[j]!==undefined)return String(v[j]||'').trim();return String(v[ix]||'').trim();}
-          EMPLEADOS_BD[correo]={correo:correo,nombre:fld('NOMBRE COMPLETO',1),cargo:fld('CARGO',2),sede:fld('SEDE',3),cedula:fld('CEDULA',4),estado:fld('ESTADO',7)||'Activo'};
-        });
-        delete window[cb];
-      }catch(e){delete window[cb];}
-    };
-    sc2.onerror=function(){delete window[cb];};
-    sc2.src='https://docs.google.com/spreadsheets/d/1dRf-Gvs-jp5WWsXo9TFgqDICuMCPNWYIiPqTKhTJDuM/gviz/tq?tqx=out:json;responseHandler:'+cb+'&sheet=EMPLEADOS&_='+Date.now();
-    document.head.appendChild(sc2);
-  }catch(e){}
-  return Promise.resolve(EMPLEADOS_BD);
-}
-window._cargarEmpleados=_cargarEmpleados;
-
-function buscarEmpleado(usuario){
-  var wrap=document.getElementById('login-input-wrap'),res=document.getElementById('login-resultado'),btn=document.getElementById('login-btn');
-  if(!res)return;
-  usuario=(usuario||'').trim().toLowerCase();
-  if(btn)btn.disabled=false;
-  if(usuario.length<3){
-    res.innerHTML='<div style="text-align:center;padding:8px;color:rgba(255,255,255,.4);font-size:10px">'+Object.keys(EMPLEADOS_BD).length+' usuarios disponibles</div>';
-    if(wrap)wrap.style.borderColor='rgba(255,255,255,.15)';return;
-  }
-  var correo=usuario+'@coopminutodedios.com',emp=EMPLEADOS_BD[correo];
-  if(!emp){var keys=Object.keys(EMPLEADOS_BD);for(var i=0;i<keys.length;i++){if(keys[i].indexOf(usuario)===0){emp=EMPLEADOS_BD[keys[i]];break;}}}
-  if(emp){
-    if(wrap)wrap.style.borderColor='#4ade80';
-    var ini=emp.nombre.split(' ').filter(function(p){return p.length>1;}).slice(0,2).map(function(p){return p[0].toUpperCase();}).join('');
-    res.innerHTML='<div style="background:rgba(74,222,128,.1);border:1px solid rgba(74,222,128,.3);border-radius:10px;padding:10px 12px;display:flex;align-items:center;gap:10px"><div style="width:38px;height:38px;background:#003D45;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:14px;color:#C8971E;flex-shrink:0">'+ini+'</div><div><div style="color:#fff;font-size:14px;font-weight:800">'+emp.nombre+'</div><div style="color:#4ade80;font-size:10px">'+emp.cargo+'</div><div style="color:rgba(255,255,255,.4);font-size:10px">'+emp.sede+'</div></div></div>';
-  }else{
-    if(wrap)wrap.style.borderColor='rgba(255,255,255,.15)';
-    res.innerHTML='<div style="text-align:center;padding:8px;color:rgba(255,255,255,.35);font-size:10px">Escribe la parte antes del @ &bull; ej: <b>juan.orrego</b></div>';
-  }
-}
-
-function loginIngresar(){
-  var input=document.getElementById('login-usuario');
-  if(!input)return;
-  var usuario=(input.value||'').trim().toLowerCase();
-  if(usuario.length<3){
-    var r0=document.getElementById('login-resultado');
-    if(r0)r0.innerHTML='<div style="text-align:center;padding:8px;color:#fbbf24;font-size:11px">Escribe al menos 3 caracteres</div>';return;
-  }
-  var correo=usuario.indexOf('@')>=0?usuario:usuario+'@coopminutodedios.com';
-  var emp=EMPLEADOS_BD[correo];
-  if(!emp){var keys2=Object.keys(EMPLEADOS_BD);for(var k=0;k<keys2.length;k++){if(keys2[k].indexOf(usuario)===0){emp=EMPLEADOS_BD[keys2[k]];correo=keys2[k];break;}}}
-  if(!emp){
-    // Acceso con nombre de usuario ingresado
-    sesionActiva={correo:correo,nombre:usuario,cargo:'Equipo PYV',sede:'CMD'};
-    navState.nombreEjecutor=usuario;navState.correoEjecutor=correo;
-    navState.cargoEjecutor='Equipo PYV';navState.sedeEjecutor='CMD';
-    state.ejecutor=usuario;
-    var _li2=document.getElementById('etapa-login');
-    var _me2=document.getElementById('etapa-menu');
-    if(_li2)_li2.style.display='none';
-    if(_me2)_me2.style.display='block';
-    var _av2=document.getElementById('menu-avatar');
-    var _mn2=document.getElementById('menu-nombre');
-    if(_av2)_av2.textContent=(usuario.charAt(0)||'U').toUpperCase();
-    if(_mn2)_mn2.textContent=usuario;
-    typeof guardarLS==='function'&&guardarLS();
-    typeof mostrarAlertaNav==='function'&&mostrarAlertaNav('Bienvenido/a '+usuario+' al SCIC');
-    return;
-  }
-  if(emp.estado&&emp.estado.toLowerCase().indexOf('inactiv')>=0){
-    var r2=document.getElementById('login-resultado');
-    if(r2)r2.innerHTML='<div style="text-align:center;padding:10px;color:#fbbf24;font-size:11px;font-weight:700">Usuario inactivo</div>';return;
-  }
-  window._pendingEmp={correo:correo,emp:emp};
-  if(typeof _completarLogin==='function')_completarLogin();
-  else{
-    // Fallback si _completarLogin no cargó
-    sesionActiva={correo:correo,nombre:emp.nombre,cargo:emp.cargo,sede:emp.sede};
-    Object.assign(navState,{nombreEjecutor:emp.nombre,correoEjecutor:correo,cargoEjecutor:emp.cargo,sedeEjecutor:emp.sede});
-    var el=document.getElementById('etapa-login'),em=document.getElementById('etapa-menu');
-    if(el)el.style.display='none';
-    if(em){em.style.display='block';}
-    var mn=document.getElementById('menu-nombre'),mc=document.getElementById('menu-cargo-sede');
-    if(mn)mn.textContent=emp.nombre;
-    if(mc)mc.textContent=emp.cargo+' · '+emp.sede;
-    guardarLS();
-    if(typeof mostrarAlertaNav==='function')mostrarAlertaNav('Bienvenido/a, '+emp.nombre.split(' ')[0]);
-  }
-}
 // ════════════════════════════════════════════════════════════
 
 
@@ -6384,7 +6158,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.0.0';
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : 'pyv-comercial-5.1.0';
     var s = String(raw);
     var mProc = s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
     var txt = mProc ? (mProc[1]+' '+mProc[2]) : (function(){
@@ -6596,6 +6370,94 @@ function _parseCumpleMMDD(s){
     el=document.getElementById('menu-glpi-neg'); if(el) el.textContent=fmtN(glpi.negada||0);
   }
 
+  function _menuSemColor(sem){
+    var s=String(sem||'').toUpperCase();
+    if(s.indexOf('VERDE')>=0)return '#4ade80';
+    if(s.indexOf('AMARILLO')>=0||s.indexOf('AMBAR')>=0)return '#fbbf24';
+    if(s.indexOf('ROJO')>=0)return '#f87171';
+    return '#94a3b8';
+  }
+  function _menuSemEmoji(sem){
+    var s=String(sem||'').toUpperCase();
+    if(s.indexOf('VERDE')>=0)return '🟢';
+    if(s.indexOf('AMARILLO')>=0||s.indexOf('AMBAR')>=0)return '🟡';
+    if(s.indexOf('ROJO')>=0)return '🔴';
+    if(s.indexOf('SIN')>=0)return '⚫';
+    return '⚪';
+  }
+
+  function renderMenuMcmRadar(){
+    var grid=document.getElementById('menu-mcm-grid');
+    if(!grid)return;
+    var items=[];
+    function push(emoji,lbl,val,sub,sem,accent){
+      items.push({emoji:emoji,lbl:lbl,val:val,sub:sub||'',sem:sem||'—',accent:accent||'#333'});
+    }
+    try{
+      var cum=typeof MCM_CUMPLIMIENTO!=='undefined'&&MCM_CUMPLIMIENTO.nacional?MCM_CUMPLIMIENTO.nacional():null;
+      if(cum) push('📈','Cumplimiento S2',(cum.pct_n||0)+'%','Ritmo '+(cum.ritmo_actual||0)+'/dh · nec '+(cum.ritmo_necesario||0),cum.semaforo,cum.va_a_cumplir?'#4ade80':'#f87171');
+    }catch(e){}
+    try{
+      var cob=typeof MCM_COBERTURA!=='undefined'&&MCM_COBERTURA.nacional?MCM_COBERTURA.nacional():null;
+      if(cob) push('🎓','Cobertura créditos',(cob.pct||0)+'%','Meta 25% · faltan '+(cob.cred_para_meta||0)+' créd.',cob.semaforo,'#60a5fa');
+    }catch(e){}
+    try{
+      var mix=typeof MCM_MIX_SIGEC!=='undefined'&&MCM_MIX_SIGEC.nacional?MCM_MIX_SIGEC.nacional():null;
+      if(mix) push('⚡','Conversión SIGEC',(mix.pct_conv||0)+'%',(mix.facturada||0)+' fact / '+(mix.total||0)+' total',mix.semaforo,'#a78bfa');
+    }catch(e){}
+    try{
+      var g=typeof MCM_MIX_GLPI!=='undefined'&&MCM_MIX_GLPI.nacional?MCM_MIX_GLPI.nacional():null;
+      if(g) push('✅','GLPI aprobadas',(g.pct_aprobada||0)+'%',(g.aprobada||0)+' / '+(g.total||0)+' · meta 54%',g.semaforo,'#4ade80');
+    }catch(e){}
+    try{
+      var emb=typeof MCM_SALUD_COMERCIAL!=='undefined'&&MCM_SALUD_COMERCIAL.embudo_nacional?MCM_SALUD_COMERCIAL.embudo_nacional():null;
+      if(emb){
+        var conv=emb.conv_lead_a_des||0;
+        var semE=conv>=15?'VERDE':conv>=8?'AMARILLO':'ROJO';
+        push('🔄','Lead → desembolso',conv+'%',(emb.total_pipeline||0)+' pipeline · '+(emb.desembolsados||0)+' desemb.',semE,'#38bdf8');
+      }
+    }catch(e){}
+    try{
+      if(typeof _resumenSemaforoSedesSeg==='function'){
+        var seg=_resumenSemaforoSedesSeg();
+        var semS=seg.sin_seguimiento>15?'ROJO':seg.atrasadas>8?'AMARILLO':'VERDE';
+        push('📋','Seguimientos sedes',(seg.al_dia||0)+' al día',(seg.atrasadas||0)+' atrasadas · '+(seg.sin_seguimiento||0)+' sin reg.',semS,'#fbbf24');
+      }
+    }catch(e){}
+    try{
+      var col=window._coloc_data||[];
+      var verdes=col.filter(function(r){return (r.semaforo||'').toUpperCase().indexOf('VERDE')>=0;}).length;
+      var rojos=col.filter(function(r){return (r.semaforo||'').toUpperCase().indexOf('ROJO')>=0;}).length;
+      var pctV=col.length?Math.round(verdes/col.length*100):0;
+      push('🏫','Sedes en verde',pctV+'%',verdes+' / '+col.length+' sedes · '+rojos+' en rojo',pctV>=60?'VERDE':pctV>=40?'AMARILLO':'ROJO','#84cc16');
+    }catch(e){}
+    try{
+      var cart=window._cartData;
+      if(cart&&typeof _cartIndicadoresPortafolio==='function'){
+        var ind=_cartIndicadoresPortafolio(cart,'total');
+        var cyg=ind.cyg||{}, sap=ind.sap||{};
+        var rodOk=(cyg.rodPct||99)<20&&(sap.rodPct||99)<25;
+        push('💰','Cartera rodada','Cyg '+(cyg.rodPct||0)+'% · SAP '+(sap.rodPct||0)+'%','Meta Cyg <20% · SAP <25%',rodOk?'VERDE':'ROJO','#f87171');
+      }
+    }catch(e){}
+    if(!items.length){
+      grid.innerHTML='<div class="menu-mcm-card menu-mcm-loading">Sin datos MCM · cargando repositorios…</div>';
+      return;
+    }
+    grid.innerHTML=items.map(function(it){
+      var c=_menuSemColor(it.sem);
+      return '<div class="menu-mcm-card" style="--mcm-accent:'+it.accent+'">'
+        +'<div class="menu-mcm-sem" style="color:'+c+'">'+_menuSemEmoji(it.sem)+' '+it.sem+'</div>'
+        +'<div class="menu-mcm-emoji">'+it.emoji+'</div>'
+        +'<div class="menu-mcm-lbl">'+it.lbl+'</div>'
+        +'<div class="menu-mcm-val" style="color:'+c+'">'+it.val+'</div>'
+        +'<div class="menu-mcm-sub2">'+it.sub+'</div></div>';
+    }).join('');
+    var sub=document.getElementById('menu-mcm-sub');
+    if(sub) sub.textContent=items.length+' indicadores MCM · actualizado '+new Date().toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'});
+  }
+  window.renderMenuMcmRadar=renderMenuMcmRadar;
+
   function actualizarMenuKPIs(){
     try{
       var col = window._coloc_data || (_DATA&&_DATA.coloc) || [];
@@ -6659,6 +6521,7 @@ function _parseCumpleMMDD(s){
         : 'Proyección de cierre: —';
 
       renderMenuSigecSemaforo(metaN, sig, glpi);
+      renderMenuMcmRadar();
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
   window.actualizarMenuKPIs = actualizarMenuKPIs;
@@ -8473,7 +8336,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[pyv-comercial 5.0.0] Línea gráfica CMD · Guía Cobranza PV-IN-05 · Menú claro institucional');
+  console.log('[pyv-comercial 5.1.0] Menú oscuro · Login estricto · Radar MCM');
 })();
 </script>
 <footer class="app-footer" id="app-footer-global">
