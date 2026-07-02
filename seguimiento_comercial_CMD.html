@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.11   (APP_VERSION = 'pyv-comercial-5.4.11')
+  Versión actual: pyv-comercial-5.4.12   (APP_VERSION = 'pyv-comercial-5.4.12')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,10 +10,12 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.12 (2026-07-02)
+    - Cartera rodada en menú: precarga Sheet al abrir menú; KPIs Cygnus/SAP en radar MCM y salud comercial.
   pyv-comercial-5.4.11 (2026-07-02)
     - Radar MCM: SIGEC, GLPI, cobertura, embudo y seguimientos usan datos reales + respaldo _DATA.
     - Precarga matrículas e historial de seguimientos al abrir menú; refresco tras cargar Sheets.
-  pyv-comercial-5.4.11 (2026-07-02)
+  pyv-comercial-5.4.10 (2026-07-02)
     - Versión visible en HTML del encabezado y menú (sin depender solo de JS tardío).
     - Eliminado IIFE duplicado que pisaba el badge; forzar redespliegue GitHub Pages.
   pyv-comercial-5.4.9 (2026-06-30)
@@ -146,12 +148,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.11">
-<meta name="build-id" content="pyv-comercial-5.4.11-20260702">
-<title>SCIC pyv-comercial 5.4.11 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.12">
+<meta name="build-id" content="pyv-comercial-5.4.12-20260702">
+<title>SCIC pyv-comercial 5.4.12 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.11';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.11';
+window.APP_VERSION='pyv-comercial-5.4.12';
+window.APP_VERSION_LABEL='pyv-comercial 5.4.12';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -833,7 +835,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.11</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.12</div>
     <div id="turno-hdr-badge" onclick="abrirTurno()" style="display:none;cursor:pointer;background:rgba(255,255,255,.12);border-radius:6px;padding:3px 8px;margin-top:2px;align-items:center;gap:4px" title="Ver registro de turno">
       <span id="turno-hdr-icono" style="font-size:11px">⏰</span>
       <span id="turno-hdr-txt" style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8)">Sin turno</span>
@@ -1049,7 +1051,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.11</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.12</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -3417,7 +3419,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.11';
+var APP_VERSION = 'pyv-comercial-5.4.12';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6567,7 +6569,7 @@ function _parseCumpleMMDD(s){
   function fmtM(n){ var v=Number(n)||0; return v>=1e9?'$'+(v/1e9).toFixed(1)+'B':v>=1e6?'$'+(v/1e6).toFixed(1)+'M':'$'+fmtN(Math.round(v)); }
 
   function aplicarVersionApp(){
-    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : (window.APP_VERSION||'pyv-comercial-5.4.11');
+    var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : (window.APP_VERSION||'pyv-comercial-5.4.12');
     var s = String(raw);
     var mProc = s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
     var txt = window.APP_VERSION_LABEL || (mProc ? (mProc[1]+' '+mProc[2]) : (function(){
@@ -6958,12 +6960,13 @@ function _parseCumpleMMDD(s){
     }catch(e){}
 
     try{
-      var cart=window._cartData || window._cartera_data || (typeof _DATA!=='undefined' && _DATA.cartera);
-      if(cart&&typeof _cartIndicadoresPortafolio==='function'){
-        var ind=_cartIndicadoresPortafolio(cart,'total');
+      var ind = (typeof _obtenerIndicadoresCarteraMenu==='function') ? _obtenerIndicadoresCarteraMenu() : null;
+      if(ind){
         var cyg=ind.cyg||{}, sap=ind.sap||{};
         var rodOk=(cyg.rodPct||99)<20&&(sap.rodPct||99)<25;
-        push('💰','Cartera rodada','Cyg '+(cyg.rodPct||0)+'% · SAP '+(sap.rodPct||0)+'%','Meta Cyg <20% · SAP <25%',rodOk?'VERDE':'ROJO','#f87171');
+        push('💰','Cartera rodada','Cyg '+(cyg.rodPct||0)+'% · SAP '+(sap.rodPct||0)+'%','Rec '+(cyg.recPct||0)+'% / '+(sap.recPct||0)+'% · Meta rod &lt;20% / &lt;25%',rodOk?'VERDE':'ROJO','#f87171');
+      }else if(!window._cartCargandoMenu){
+        push('💰','Cartera rodada','…','Cargando Cygnus + SAP desde Sheet','AMARILLO','#f87171');
       }
     }catch(e){}
 
@@ -7277,6 +7280,19 @@ function _parseCumpleMMDD(s){
       if(typeof _cargarHistorialSeguimientos==='function'){
         _cargarHistorialSeguimientos().then(recargar).catch(recargar);
       }
+      if(typeof _cargarCartera==='function' && !(window._cartData && window._cartData.ciDistCyg && window._cartData.ciDistCyg.total>0)){
+        window._cartCargandoMenu = true;
+        try{ _cargarCartera(); }catch(e){ window._cartCargandoMenu = false; }
+        var _cartPoll = 0;
+        var _cartIv = setInterval(function(){
+          _cartPoll++;
+          if(window._cartData && (window._cartData.ciDistCyg||window._cartData.ciDistSAP)){
+            window._cartCargandoMenu = false;
+            clearInterval(_cartIv);
+            recargar();
+          }else if(_cartPoll>90){ window._cartCargandoMenu = false; clearInterval(_cartIv); }
+        }, 1000);
+      }
       [400, 1200, 3000, 6000].forEach(function(ms){ setTimeout(recargar, ms); });
     };
   }
@@ -7371,6 +7387,12 @@ function _parseCumpleMMDD(s){
   setTimeout(aplicarVersionApp, 100);
   setTimeout(actualizarMenuKPIs, 500);
   setTimeout(actualizarMenuKPIs, 3000);
+  setTimeout(function(){
+    if(typeof _cargarCartera==='function' && !(window._cartData && window._cartData.ciDistCyg && window._cartData.ciDistCyg.total>0)){
+      window._cartCargandoMenu = true;
+      try{ _cargarCartera(); }catch(e){ window._cartCargandoMenu = false; }
+    }
+  }, 800);
   setTimeout(construirResumenGerencial, 5000);
   setTimeout(function(){ try{ cargarSigecContadoresMenu(); }catch(e){} }, 1200);
 
@@ -8124,6 +8146,24 @@ function _parseCumpleMMDD(s){
     return {recPct:recPct, rodPct:rodPct, vigente:vigente, moraCi:moraCi, ciTotal:ciTotal};
   }
 
+  function _cartDatosDistribucionListos(d){
+    return !!(d && ((d.ciDistCyg && d.ciDistCyg.total>0) || (d.ciDistSAP && d.ciDistSAP.total>0)));
+  }
+  function _obtenerIndicadoresCarteraMenu(){
+    var d = window._cartData;
+    if(!_cartDatosDistribucionListos(d) || typeof _cartIndicadoresPortafolio!=='function') return null;
+    return _cartIndicadoresPortafolio(d, 'total');
+  }
+  window._obtenerIndicadoresCarteraMenu = _obtenerIndicadoresCarteraMenu;
+
+  function _cartRefrescarMenuTrasCarga(){
+    try{
+      if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs();
+      if(typeof renderSaludComercialCMD==='function') renderSaludComercialCMD();
+    }catch(e){}
+  }
+  window._cartRefrescarMenuTrasCarga = _cartRefrescarMenuTrasCarga;
+
   function _cartIndicadoresPortafolio(d, port){
     if(port==='cygnus') return _cartCalcIndicadores(d.ciDistCyg||{});
     if(port==='sap') return _cartCalcIndicadores(d.ciDistSAP||{});
@@ -8221,8 +8261,10 @@ function _parseCumpleMMDD(s){
   window._renderCartera = function(){
     var d = window._cartData;
     var el = document.getElementById('cart-contenido');
-    if(!d||!el) return;
+    if(!d) return;
     _cartRecomputarCruces(d);
+    _cartRefrescarMenuTrasCarga();
+    if(!el) return;
     var port = window._cartPortafolio || 'cygnus';
     var ind = _cartIndicadoresPortafolio(d, port);
     var ctx = _cartGetCtx(d, port);
@@ -9620,12 +9662,15 @@ function _parseCumpleMMDD(s){
 
     var scCart = 70;
     try{
-      if(window._cartData && typeof _cartIndicadoresPortafolio==='function'){
-        var ind = _cartIndicadoresPortafolio(window._cartData,'total');
-        var rod = Math.max(ind.cyg&&ind.cyg.rodPct||0, ind.sap&&ind.sap.rodPct||0);
+      var indCart = (typeof _obtenerIndicadoresCarteraMenu==='function') ? _obtenerIndicadoresCarteraMenu() : null;
+      if(indCart){
+        var rod = Math.max(indCart.cyg&&indCart.cyg.rodPct||0, indCart.sap&&indCart.sap.rodPct||0);
         scCart = rod<15 ? 95 : rod<20 ? 75 : rod<25 ? 55 : 35;
-        add('Cartera rodada', rod+'%', scCart, scCart>=75?'VERDE':scCart>=55?'AMARILLO':'ROJO', 0.12, 'Cygnus/SAP');
-      } else { add('Cartera rodada', '—', 60, 'AMARILLO', 0.12, ''); }
+        add('Cartera rodada', rod+'%', scCart, scCart>=75?'VERDE':scCart>=55?'AMARILLO':'ROJO', 0.12,
+          'Cyg '+(indCart.cyg&&indCart.cyg.rodPct||0)+'% · SAP '+(indCart.sap&&indCart.sap.rodPct||0)+'%');
+      } else if(window._cartCargandoMenu) {
+        add('Cartera rodada', '…', 60, 'AMARILLO', 0.12, 'Cargando Sheet');
+      } else { add('Cartera rodada', '—', 60, 'AMARILLO', 0.12, 'Abrir menú de nuevo'); }
     }catch(e){ add('Cartera rodada', '—', 60, 'AMARILLO', 0.12, ''); }
 
     try{
@@ -10171,7 +10216,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[pyv-comercial 5.4.11] Radar MCM con datos reales + respaldo _DATA');
+  console.log('[pyv-comercial 5.4.12] Cartera rodada menú + radar MCM con datos reales');
 
   /* ── pyv-comercial-5.4.8: Seguimiento rectoría/sede · panel SIGEC · MCM ── */
   if(!window.MESES_IDX || !Object.keys(window.MESES_IDX).length){
