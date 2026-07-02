@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.1   (APP_VERSION = 'pyv-comercial-5.4.1')
+  Versión actual: pyv-comercial-5.4.2   (APP_VERSION = 'pyv-comercial-5.4.2')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.2 (2026-06-30)
+    - Menú: eliminados botones «Exportar panel» PDF/Excel; informes con tarjetas y más espacio.
+    - Mapa Colombia rediseñado: semáforo S2 por defecto, leyenda visual y resumen por departamento.
+    - Sidebar compacto y bloques SIGEC/MCM/KPI reorganizados en panel principal.
   pyv-comercial-5.4.1 (2026-06-30)
     - Mapa Colombia: render al abrir menú (fix visibilidad ECharts), estilo departamentos con bordes.
     - Menú reorganizado: sidebar compacto + panel principal en 2 columnas con mapa destacado.
@@ -1002,7 +1006,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.1</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.2</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -1067,14 +1071,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     </aside>
     <div class="menu-main-panel">
     <div class="menu-nacional-panel">
-      <div class="menu-dashboard">
-      <div class="menu-dashboard-main">
-
-      <div class="menu-export-bar" id="menu-export-bar">
-        <span class="menu-export-lbl">Exportar panel</span>
-        <button onclick="exportarExcelMenuComercial()" class="menu-export-btn menu-export-btn-excel">📊 Excel</button>
-        <button onclick="exportarPDFMenuComercial()" class="menu-export-btn menu-export-btn-pdf">📄 PDF</button>
-      </div>
 
       <div class="menu-salud-panel" id="menu-salud-panel">
         <div class="menu-salud-hdr">
@@ -1095,6 +1091,25 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </div>
       </div>
 
+      <div class="menu-report-block menu-mapa-panel" id="menu-mapa-panel">
+        <div class="menu-report-hdr">
+          <div>
+            <div class="menu-mapa-title">Mapa de cumplimiento por departamento</div>
+            <div class="menu-mapa-sub" id="menu-mapa-sub">Semáforo S2: identifica dónde reforzar gestión comercial</div>
+          </div>
+        </div>
+        <div class="menu-mapa-tabs" id="menu-mapa-tabs">
+          <button type="button" class="menu-mapa-tab active" data-layer="cumplimiento" onclick="setMapaColombiaLayer('cumplimiento')">🚦 Cumplimiento S2</button>
+          <button type="button" class="menu-mapa-tab" data-layer="colocacion" onclick="setMapaColombiaLayer('colocacion')">📈 Colocación</button>
+          <button type="button" class="menu-mapa-tab" data-layer="meta" onclick="setMapaColombiaLayer('meta')">🎯 Meta</button>
+          <button type="button" class="menu-mapa-tab" data-layer="capacidad" onclick="setMapaColombiaLayer('capacidad')">🏢 Sedes PYV</button>
+        </div>
+        <div id="menu-mapa-chart" class="menu-mapa-chart"></div>
+        <div class="menu-mapa-resumen" id="menu-mapa-resumen"></div>
+        <div class="menu-mapa-leyenda" id="menu-mapa-leyenda"></div>
+      </div>
+
+      <div class="menu-report-block">
       <div class="menu-nacional-hdr">
         <div class="menu-nacional-title"><i class="ti ti-chart-dots"></i> Estado Nacional · Colocación S2</div>
         <div class="menu-nacional-fecha" id="menu-nac-fecha">—</div>
@@ -1126,7 +1141,9 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="menu-nac-bar"><div id="menu-nac-bar-fill"></div><div id="menu-nac-bar-ideal" title="Curva ideal hoy"></div></div>
         <div class="menu-nac-proy" id="menu-nac-proy">Proyección de cierre: —</div>
       </div>
-      <div class="menu-sigec-panel">
+      </div>
+
+      <div class="menu-report-block menu-sigec-panel">
         <div class="menu-sigec-hdr">
           <div class="menu-sigec-title"><i class="ti ti-traffic-lights"></i> Cómo vamos según SIGEC</div>
           <div class="menu-sigec-sem" id="menu-sigec-sem-lbl">—</div>
@@ -1159,7 +1176,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <span id="menu-glpi-neg">—</span> negadas
         </div>
       </div>
-      <div class="menu-mcm-panel">
+
+      <div class="menu-report-block menu-mcm-panel">
         <div class="menu-mcm-hdr">
           <div class="menu-mcm-title">🎯 Radar Comercial MCM</div>
           <div class="menu-mcm-sub" id="menu-mcm-sub">Indicadores críticos · alto rendimiento PYV</div>
@@ -1169,35 +1187,20 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </div>
       </div>
 
-      </div><!-- menu-dashboard-main -->
-
-      <aside class="menu-dashboard-map">
-      <div class="menu-mapa-panel" id="menu-mapa-panel">
-        <div class="menu-mapa-hdr">
+      <div class="menu-report-block menu-kpi-block">
+        <div class="menu-report-hdr">
           <div>
-            <div class="menu-mapa-title">🗺️ Departamentos y Capitales · Colombia</div>
-            <div class="menu-mapa-sub" id="menu-mapa-sub">Mapa comercial PYV · 32 departamentos + sedes</div>
-          </div>
-          <div class="menu-mapa-tabs" id="menu-mapa-tabs">
-            <button type="button" class="menu-mapa-tab active" data-layer="capacidad" onclick="setMapaColombiaLayer('capacidad')" title="Sedes por departamento">🏢 Sedes</button>
-            <button type="button" class="menu-mapa-tab" data-layer="meta" onclick="setMapaColombiaLayer('meta')" title="Meta S2">🎯 Meta</button>
-            <button type="button" class="menu-mapa-tab" data-layer="colocacion" onclick="setMapaColombiaLayer('colocacion')" title="Colocación">📈 Coloc.</button>
-            <button type="button" class="menu-mapa-tab" data-layer="cumplimiento" onclick="setMapaColombiaLayer('cumplimiento')" title="Cumplimiento">🚦 %</button>
+            <div class="menu-kpi-block-title">Indicadores rápidos</div>
+            <div class="menu-kpi-block-sub">SIGEC · GLPI · Pipeline · HubSpot · Cartera (corte día anterior)</div>
           </div>
         </div>
-        <div id="menu-mapa-chart" class="menu-mapa-chart"></div>
-        <div class="menu-mapa-leyenda" id="menu-mapa-leyenda"></div>
-      </div>
-      </aside>
-
-      </div><!-- menu-dashboard -->
-
-      <div class="menu-kpi-strip menu-kpi-compact">
-        <div class="menu-kpi menu-kpi-blue"><div class="menu-kpi-lbl">SIGEC</div><div class="menu-kpi-val" id="menu-kpi-sigec">—</div></div>
-        <div class="menu-kpi menu-kpi-purple"><div class="menu-kpi-lbl">GLPI</div><div class="menu-kpi-val" id="menu-kpi-glpi">—</div></div>
-        <div class="menu-kpi menu-kpi-green"><div class="menu-kpi-lbl">Pipeline</div><div class="menu-kpi-val" id="menu-kpi-leads">—</div></div>
-        <div class="menu-kpi menu-kpi-orange"><div class="menu-kpi-lbl">HubSpot</div><div class="menu-kpi-val" id="menu-kpi-hub">—</div></div>
-        <div class="menu-kpi menu-kpi-red"><div class="menu-kpi-lbl">Cartera</div><div class="menu-kpi-val" id="menu-kpi-cartera">—</div></div>
+        <div class="menu-kpi-strip menu-kpi-compact">
+          <div class="menu-kpi menu-kpi-blue"><div class="menu-kpi-lbl">SIGEC</div><div class="menu-kpi-val" id="menu-kpi-sigec">—</div></div>
+          <div class="menu-kpi menu-kpi-purple"><div class="menu-kpi-lbl">GLPI</div><div class="menu-kpi-val" id="menu-kpi-glpi">—</div></div>
+          <div class="menu-kpi menu-kpi-green"><div class="menu-kpi-lbl">Pipeline</div><div class="menu-kpi-val" id="menu-kpi-leads">—</div></div>
+          <div class="menu-kpi menu-kpi-orange"><div class="menu-kpi-lbl">HubSpot</div><div class="menu-kpi-val" id="menu-kpi-hub">—</div></div>
+          <div class="menu-kpi menu-kpi-red"><div class="menu-kpi-lbl">Cartera</div><div class="menu-kpi-val" id="menu-kpi-cartera">—</div></div>
+        </div>
       </div>
 
       <div class="menu-footer">© 2024–2026 Cooperativa Minuto de Dios · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía</div>
@@ -1274,53 +1277,43 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-orange{border-color:rgba(0,176,185,.25)} .menu-kpi-orange .menu-kpi-val{color:var(--teal)}
 .menu-kpi-red{border-color:rgba(239,68,68,.25)} .menu-kpi-red .menu-kpi-val{color:var(--red)}
 .menu-layout{display:flex;gap:0;min-height:calc(100vh - 180px);align-items:stretch}
-.menu-sidebar{width:240px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:12px 10px 16px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
-.menu-sidebar-title{font-size:10px;font-weight:800;color:var(--dark);margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid var(--teal-l);letter-spacing:.3px}
+.menu-sidebar{width:260px;flex-shrink:0;background:var(--white);border-right:1px solid var(--border);padding:16px 14px 20px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
+.menu-sidebar-title{font-size:11px;font-weight:800;color:var(--dark);margin-bottom:12px;padding-bottom:8px;border-bottom:2px solid var(--teal-l)}
 .menu-main-panel{flex:1;min-width:0;overflow-x:hidden}
-.menu-sidebar .menu-modules{margin-top:0;gap:8px}
-.menu-sidebar .menu-module{padding:8px 8px 6px;border-radius:10px}
-.menu-sidebar .menu-module-hdr{margin-bottom:6px;padding-bottom:6px}
-.menu-sidebar .menu-mod-badge{font-size:9px}
-.menu-sidebar .menu-mod-note{font-size:7px}
-.menu-sidebar .menu-grid-modules{grid-template-columns:1fr;gap:4px}
-.menu-sidebar .menu-card{display:flex;flex-direction:row;align-items:center;gap:8px;min-height:auto;padding:7px 9px;text-align:left;border-radius:8px}
-.menu-sidebar .menu-card-icon{font-size:16px;margin-bottom:0;flex-shrink:0;width:22px;text-align:center}
-.menu-sidebar .menu-card-title{font-size:10px;line-height:1.2}
+.menu-sidebar .menu-modules{margin-top:0;gap:12px}
+.menu-sidebar .menu-module{padding:12px;border-radius:12px}
+.menu-sidebar .menu-module-hdr{margin-bottom:8px;padding-bottom:8px}
+.menu-sidebar .menu-grid-modules{grid-template-columns:1fr;gap:6px}
+.menu-sidebar .menu-card{display:flex;flex-direction:row;align-items:center;gap:10px;min-height:auto;padding:9px 11px;border-radius:10px}
+.menu-sidebar .menu-card-icon{font-size:17px;margin-bottom:0;flex-shrink:0;width:24px;text-align:center}
+.menu-sidebar .menu-card-title{font-size:11px;line-height:1.25}
 .menu-sidebar .menu-card-desc{display:none}
-.menu-dashboard{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
-.menu-dashboard-main{display:flex;flex-direction:column;gap:12px;min-width:0}
-.menu-dashboard-map{min-width:0}
-.menu-export-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:0}
-.menu-export-lbl{font-size:9px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px;margin-right:4px}
-.menu-export-btn{padding:6px 12px;border-radius:8px;border:none;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif}
-.menu-export-btn-excel{background:#003D45;color:#FFD900}
-.menu-export-btn-pdf{background:#b91c1c;color:#fff}
-.menu-mapa-panel{margin:0;padding:12px;background:var(--white);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 8px rgba(0,61,69,.08)}
-.menu-mapa-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;flex-wrap:wrap}
-.menu-mapa-title{font-size:12px;font-weight:800;color:var(--dark);line-height:1.3}
-.menu-mapa-sub{font-size:8px;color:var(--gray);margin-top:2px}
-.menu-mapa-tabs{display:flex;flex-wrap:wrap;gap:4px}
-.menu-mapa-tab{border:1px solid var(--border);background:var(--bg);color:var(--dark);border-radius:6px;padding:4px 8px;font-size:8px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s;white-space:nowrap}
-.menu-mapa-tab:hover,.menu-mapa-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
-.menu-mapa-chart{width:100%;height:420px;min-height:320px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px}
-.menu-mapa-leyenda{font-size:8px;color:var(--gray);margin-top:6px;text-align:center;line-height:1.4}
-.menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:280px;font-size:11px;color:#64748b;text-align:center;padding:16px}
+.menu-nacional-panel{padding:24px 28px 32px;background:var(--bg);max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:4px}
+.menu-report-block{background:var(--white);border:1px solid var(--border);border-radius:16px;padding:22px 24px;margin-bottom:26px;box-shadow:0 2px 12px rgba(0,61,69,.05)}
+.menu-kpi-block-title{font-size:14px;font-weight:800;color:var(--dark)}
+.menu-kpi-block-sub{font-size:10px;color:var(--gray);margin-top:4px}
+.menu-report-hdr{margin-bottom:14px}
+.menu-mapa-panel{margin-bottom:22px}
+.menu-mapa-title{font-size:15px;font-weight:800;color:var(--dark);line-height:1.3}
+.menu-mapa-sub{font-size:11px;color:var(--gray);margin-top:4px;line-height:1.45;max-width:640px}
+.menu-mapa-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.menu-mapa-tab{border:1px solid var(--border);background:var(--bg);color:var(--dark);border-radius:8px;padding:7px 14px;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
+.menu-mapa-tab:hover{border-color:var(--teal);background:var(--teal-l)}
+.menu-mapa-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
+.menu-mapa-chart{width:100%;height:400px;min-height:340px;background:#fafbfc;border:1px solid #e2e8f0;border-radius:12px}
+.menu-mapa-resumen{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+@media(max-width:700px){.menu-mapa-resumen{grid-template-columns:1fr}}
+.menu-mapa-resumen-col{background:var(--bg);border-radius:10px;padding:10px 12px;border:1px solid var(--border)}
+.menu-mapa-resumen-lbl{font-size:9px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.menu-mapa-resumen-item{font-size:11px;color:var(--dark);padding:3px 0;line-height:1.4}
+.menu-mapa-leyenda{font-size:10px;color:var(--gray);margin-top:12px;text-align:center;line-height:1.5;padding-top:10px;border-top:1px solid var(--border)}
+.menu-mapa-ley-swatches{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:14px 20px}
+.menu-mapa-ley-item{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:600;color:var(--dark)}
+.menu-ley-sw{width:14px;height:14px;border-radius:4px;border:1px solid rgba(0,61,69,.2);flex-shrink:0}
+.menu-ley-verde{background:#86efac}.menu-ley-amarillo{background:#fde68a}.menu-ley-rojo{background:#fca5a5}.menu-ley-gris{background:#e2e8f0}
+.menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;font-size:12px;color:#64748b;text-align:center;padding:20px}
 .menu-mapa-error{color:#dc2626;flex-direction:column}
-@media(min-width:1024px){
-  .menu-dashboard{grid-template-columns:1fr minmax(340px,44%);gap:16px}
-  .menu-dashboard-map{position:sticky;top:12px}
-  .menu-mapa-chart{height:min(72vh,560px);min-height:440px}
-  .menu-sidebar{width:220px}
-}
-@media(min-width:1280px){
-  .menu-dashboard{grid-template-columns:1fr minmax(400px,48%)}
-  .menu-sidebar{width:248px}
-  .menu-sidebar .menu-grid-modules{grid-template-columns:1fr 1fr;gap:5px}
-  .menu-sidebar .menu-card{flex-direction:column;align-items:flex-start;gap:2px;padding:8px}
-  .menu-sidebar .menu-card-icon{width:auto}
-}
-@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-right:none;border-bottom:1px solid var(--border)}.menu-sidebar .menu-grid-modules{grid-template-columns:repeat(2,1fr);gap:6px}.menu-sidebar .menu-card{flex-direction:column;align-items:flex-start}}
-.menu-nacional-panel{padding:14px 16px 20px;background:var(--bg)}
+@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-right:none;border-bottom:1px solid var(--border)}.menu-sidebar .menu-grid-modules{grid-template-columns:repeat(2,1fr);gap:8px}.menu-sidebar .menu-card{flex-direction:column;align-items:flex-start}}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
 .menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
@@ -1339,79 +1332,58 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-grid-modules .menu-card-icon{font-size:22px;margin-bottom:6px}
 .menu-grid-modules .menu-card-title{font-size:11px}
 .menu-grid-modules .menu-card-desc{font-size:9px;display:block;margin-top:3px}
-.menu-nacional-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.menu-nacional-title{color:var(--dark);font-size:13px;font-weight:800;display:flex;align-items:center;gap:8px}
-.menu-nacional-title i{color:var(--teal)}
-.menu-nacional-fecha{color:var(--gray);font-size:10px}
-.menu-nac-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.menu-nacional-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.menu-nacional-title{color:var(--dark);font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.menu-nacional-fecha{color:var(--gray);font-size:11px}
+.menu-nac-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:16px}
 @media(min-width:700px){.menu-nac-grid{grid-template-columns:repeat(4,1fr)}}
-.menu-nac-card{background:#111;border:1px solid #222;border-radius:12px;padding:12px 14px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
-.menu-nac-lbl{color:rgba(255,255,255,.45);font-size:8px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
-.menu-nac-big{color:#fff;font-size:22px;font-weight:900;margin-top:4px;line-height:1.1}
-.menu-nac-sub{color:rgba(255,255,255,.4);font-size:9px;margin-top:4px}
-.menu-nac-meta .menu-nac-big{color:var(--yellow)}
-.menu-nac-meta{border-top:3px solid var(--yellow)}
-.menu-nac-ejec .menu-nac-big{color:var(--teal)}
-.menu-nac-ejec{border-top:3px solid var(--teal)}
-.menu-nac-deber .menu-nac-big{color:#60a5fa}
-.menu-nac-deber{border-top:3px solid #60a5fa}
-.menu-nac-brecha .menu-nac-big{color:#f87171}
-.menu-nac-brecha{border-top:3px solid var(--red)}
-.menu-nac-bar-wrap{margin-bottom:14px;padding:12px 14px;background:#111;border-radius:12px;border:1px solid #222;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);margin-bottom:6px}
-.menu-nac-bar{position:relative;height:10px;background:#222;border-radius:6px;overflow:visible}
+.menu-nac-card{background:var(--bg);border:1px solid var(--border);border-radius:12px;padding:14px 16px}
+.menu-nac-lbl{color:var(--gray);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px}
+.menu-nac-big{color:var(--dark);font-size:24px;font-weight:900;margin-top:6px;line-height:1.1}
+.menu-nac-sub{color:var(--text2);font-size:10px;margin-top:6px}
+.menu-nac-meta .menu-nac-big{color:#b45309}
+.menu-nac-ejec .menu-nac-big{color:var(--teal-d)}
+.menu-nac-deber .menu-nac-big{color:#2563eb}
+.menu-nac-brecha .menu-nac-big{color:#dc2626}
+.menu-nac-bar-wrap{margin-bottom:0;padding:14px 16px;background:var(--bg);border-radius:12px;border:1px solid var(--border)}
+.menu-nac-bar-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--gray);margin-bottom:8px}
+.menu-nac-bar{position:relative;height:12px;background:#e2e8f0;border-radius:6px;overflow:visible}
 .menu-nac-bar>div:first-child{height:100%;border-radius:6px;background:linear-gradient(90deg,var(--teal),var(--yellow));transition:width .8s ease}
-.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:16px;background:var(--yellow);border-radius:2px;box-shadow:0 0 6px rgba(255,217,0,.5)}
-.menu-nac-proy{color:rgba(255,255,255,.5);font-size:10px;margin-top:10px;text-align:center}
-.menu-sigec-panel{margin-bottom:14px;padding:14px;background:#0d0d0d;border-radius:12px;border:1px solid #222;border-left:4px solid var(--teal);box-shadow:0 2px 10px rgba(0,0,0,.3)}
-.menu-sigec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-.menu-sigec-title{color:#fff;font-size:12px;font-weight:800;display:flex;align-items:center;gap:7px}
-.menu-sigec-title i{color:var(--teal)}
-.menu-sigec-sem{font-size:9px;font-weight:800;padding:3px 8px;border-radius:6px;background:#1a1a1a;color:var(--teal);border:1px solid #333}
-.menu-sigec-main{display:flex;gap:14px;align-items:center;margin-bottom:12px}
-.menu-sigec-circle{width:78px;height:78px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:#1a1a1a;transition:border-color .4s,background .4s}
-.menu-sigec-pct{font-size:18px;font-weight:900;color:#fff;line-height:1}
-.menu-sigec-pct-sub{font-size:7px;color:rgba(255,255,255,.45);text-align:center;margin-top:2px;padding:0 4px}
-.menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.menu-sigec-stat{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:8px 10px}
-.menu-sigec-stat .lbl{display:block;color:rgba(255,255,255,.4);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-.menu-sigec-stat .val{display:block;color:#fff;font-size:16px;font-weight:900;margin-top:3px}
-.menu-sig-fact .val{color:var(--teal)}
-.menu-sig-cfac .val{color:#fff}
-.menu-sig-cerr .val{color:var(--amber)}
-.menu-sig-abi .val{color:#60a5fa}
-.menu-sig-rech .val{color:var(--red)}
-.menu-sig-pend .val{color:var(--yellow)}
-.menu-sigec-bar-wrap{padding:10px 12px;background:#1a1a1a;border-radius:10px;border:1px solid #2a2a2a}
-.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:8px;color:rgba(255,255,255,.4);margin-bottom:5px}
-.menu-sigec-bar{height:8px;background:#333;border-radius:5px;overflow:hidden}
-.menu-sigec-bar>div{height:100%;border-radius:5px;background:var(--green);transition:width .8s ease,background .4s}
-.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:9px;color:rgba(255,255,255,.45);margin-top:8px;flex-wrap:wrap;gap:4px}
-.menu-sigec-glpi{margin-top:10px;font-size:9px;color:rgba(255,255,255,.5);text-align:center}
-.menu-sigec-glpi .glpi-lbl{color:var(--teal);font-weight:800;margin-right:4px}
-.menu-sigec-glpi .glpi-sep{margin:0 4px;color:#444}
-.menu-mcm-panel{margin-bottom:14px;padding:14px;background:#0a0a0a;border-radius:12px;border:1px solid #222;border-left:4px solid var(--yellow);box-shadow:0 2px 10px rgba(0,0,0,.3)}
-.menu-mcm-hdr{margin-bottom:12px}
-.menu-mcm-title{color:#fff;font-size:13px;font-weight:800}
-.menu-mcm-sub{color:rgba(255,255,255,.4);font-size:9px;margin-top:3px}
-.menu-mcm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
-.menu-mcm-card{background:#141414;border:1px solid #2a2a2a;border-radius:10px;padding:10px 12px;position:relative;overflow:hidden}
-.menu-mcm-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--mcm-accent,#333)}
-.menu-mcm-emoji{font-size:18px;margin-bottom:4px}
-.menu-mcm-lbl{color:rgba(255,255,255,.45);font-size:7px;font-weight:700;text-transform:uppercase;letter-spacing:.35px}
-.menu-mcm-val{color:#fff;font-size:17px;font-weight:900;margin:3px 0 2px;line-height:1.1}
-.menu-mcm-sub2{color:rgba(255,255,255,.35);font-size:8px;line-height:1.35}
-.menu-mcm-sem{position:absolute;top:8px;right:8px;font-size:9px;font-weight:800;padding:2px 6px;border-radius:5px;background:#1a1a1a;border:1px solid #333}
-.menu-mcm-loading{color:rgba(255,255,255,.35);font-size:10px;text-align:center;padding:16px;grid-column:1/-1}
-.menu-kpi-compact{padding:0;background:transparent;border:none;gap:6px}
-.menu-kpi-compact .menu-kpi{min-width:90px;padding:8px 10px;background:#111;border-color:#222}
-.menu-kpi-compact .menu-kpi-lbl{color:rgba(255,255,255,.4)}
-.menu-kpi-compact .menu-kpi-val{color:#fff}
-.menu-kpi-compact .menu-kpi-blue .menu-kpi-val{color:var(--teal)}
-.menu-kpi-compact .menu-kpi-purple .menu-kpi-val{color:#a78bfa}
-.menu-kpi-compact .menu-kpi-green .menu-kpi-val{color:var(--green)}
-.menu-kpi-compact .menu-kpi-orange .menu-kpi-val{color:var(--yellow)}
-.menu-kpi-compact .menu-kpi-red .menu-kpi-val{color:#f87171}
+.menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:18px;background:var(--yellow);border-radius:2px}
+.menu-nac-proy{color:var(--text2);font-size:11px;margin-top:12px;text-align:center}
+.menu-sigec-panel .menu-sigec-hdr{margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.menu-sigec-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.menu-sigec-title{color:var(--dark);font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px}
+.menu-sigec-sem{font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;background:var(--teal-l);color:var(--teal-d);border:1px solid rgba(0,176,185,.3)}
+.menu-sigec-main{display:flex;gap:18px;align-items:center;margin-bottom:16px;flex-wrap:wrap}
+.menu-sigec-circle{width:84px;height:84px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;background:#fff}
+.menu-sigec-pct{font-size:20px;font-weight:900;color:var(--dark);line-height:1}
+.menu-sigec-pct-sub{font-size:8px;color:var(--gray);text-align:center;margin-top:2px;padding:0 4px}
+.menu-sigec-stats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;min-width:200px}
+.menu-sigec-stat{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.menu-sigec-stat .lbl{display:block;color:var(--gray);font-size:8px;font-weight:700;text-transform:uppercase}
+.menu-sigec-stat .val{display:block;color:var(--dark);font-size:17px;font-weight:900;margin-top:4px}
+.menu-sigec-bar-wrap{padding:12px 14px;background:var(--bg);border-radius:10px;border:1px solid var(--border)}
+.menu-sigec-bar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--gray);margin-bottom:6px}
+.menu-sigec-bar{height:10px;background:#e2e8f0;border-radius:5px;overflow:hidden}
+.menu-sigec-bar>div{height:100%;border-radius:5px;background:var(--green);transition:width .8s ease}
+.menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:10px;flex-wrap:wrap;gap:6px}
+.menu-sigec-glpi{margin-top:12px;font-size:10px;color:var(--text2);text-align:center;padding-top:10px;border-top:1px solid var(--border)}
+.menu-mcm-panel .menu-mcm-hdr{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.menu-mcm-title{color:var(--dark);font-size:14px;font-weight:800}
+.menu-mcm-sub{color:var(--gray);font-size:10px;margin-top:4px}
+.menu-mcm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.menu-mcm-card{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px 14px;position:relative}
+.menu-mcm-lbl{color:var(--gray);font-size:8px;font-weight:700;text-transform:uppercase}
+.menu-mcm-val{color:var(--dark);font-size:18px;font-weight:900;margin:4px 0 3px}
+.menu-mcm-sub2{color:var(--text2);font-size:9px;line-height:1.4}
+.menu-mcm-sem{position:absolute;top:10px;right:10px;font-size:9px;font-weight:800;padding:3px 7px;border-radius:6px;background:#fff;border:1px solid var(--border)}
+.menu-mcm-loading{color:var(--gray);font-size:11px;text-align:center;padding:20px;grid-column:1/-1}
+.menu-kpi-compact{padding:4px 0 0;gap:12px}
+.menu-kpi-block .menu-kpi-compact .menu-kpi{background:var(--bg)}
+.menu-kpi-compact .menu-kpi{flex:1;min-width:100px;padding:12px 14px;background:var(--white);border-color:var(--border)}
+.menu-kpi-compact .menu-kpi-lbl{color:var(--gray)}
+.menu-kpi-compact .menu-kpi-val{color:var(--dark)}
 .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:12px}
 .menu-card{position:relative;padding:14px 12px;border-radius:12px;cursor:pointer;text-align:left;font-family:Ubuntu,sans-serif;transition:all .2s;background:var(--white);border:1px solid var(--border);box-shadow:0 1px 3px rgba(0,0,0,.05)}
 .menu-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,176,185,.14);border-color:var(--teal);background:var(--teal-l)}
@@ -1434,16 +1406,16 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-card-indigo{border-left:4px solid #818cf8}
 
 .menu-version-badge{font-size:9px;font-weight:700;color:var(--teal-d);margin-top:4px;padding:2px 8px;background:var(--teal-l);border-radius:6px;display:inline-block}
-.menu-salud-panel{margin-bottom:14px;padding:14px;background:linear-gradient(135deg,#f0fdf4,#fff);border:1px solid rgba(174,201,0,.35);border-radius:14px;border-left:4px solid var(--green)}
-.menu-salud-hdr{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap}
-.menu-salud-title{font-size:13px;font-weight:800;color:var(--dark)}
-.menu-salud-sub{font-size:9px;color:var(--gray);margin-top:3px;max-width:420px}
+.menu-salud-panel{margin-bottom:22px;padding:20px 22px;background:linear-gradient(135deg,#f0fdf4,#fff);border:1px solid rgba(174,201,0,.35);border-radius:16px;border-left:4px solid var(--green);box-shadow:0 2px 12px rgba(0,61,69,.05)}
+.menu-salud-hdr{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.menu-salud-title{font-size:14px;font-weight:800;color:var(--dark)}
+.menu-salud-sub{font-size:10px;color:var(--gray);margin-top:4px;max-width:520px}
 .menu-salud-score-wrap{display:flex;align-items:center;gap:10px}
-.menu-salud-circle{width:64px;height:64px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff}
-.menu-salud-pct{font-size:18px;font-weight:900;color:var(--dark);line-height:1}
-.menu-salud-pct-lbl{font-size:7px;color:var(--gray);font-weight:700}
-.menu-salud-sem{font-size:10px;font-weight:800;padding:4px 10px;border-radius:8px;background:#111;color:#fff}
-.menu-salud-dims{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.menu-salud-circle{width:68px;height:68px;border-radius:50%;border:4px solid var(--green);display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff}
+.menu-salud-pct{font-size:20px;font-weight:900;color:var(--dark);line-height:1}
+.menu-salud-pct-lbl{font-size:8px;color:var(--gray);font-weight:700}
+.menu-salud-sem{font-size:10px;font-weight:800;padding:5px 12px;border-radius:8px;background:var(--dark);color:#fff}
+.menu-salud-dims{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
 .menu-salud-dim{background:#fff;border:1px solid var(--border);border-radius:8px;padding:8px 10px}
 .menu-salud-dim-lbl{font-size:7px;font-weight:700;color:var(--gray);text-transform:uppercase}
 .menu-salud-dim-val{font-size:14px;font-weight:900;color:var(--dark);margin-top:2px}
@@ -3335,7 +3307,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.1';
+var APP_VERSION = 'pyv-comercial-5.4.2';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -8477,7 +8449,7 @@ function _parseCumpleMMDD(s){
 
 
   /* ── pyv-comercial-5.4.1: Mapa Colombia + auditoría dropdowns ── */
-  var _mapaColLayer = 'capacidad';
+  var _mapaColLayer = 'cumplimiento';
   var _mapaColChart = null;
   var _mapaColGeoLoaded = false;
   var _mapaColCentroids = {};
@@ -8668,14 +8640,77 @@ function _parseCumpleMMDD(s){
     if(layer==='capacidad') return v+' sede'+(v!==1?'s':'');
     return (v>=1000?(v/1000).toFixed(1)+'k':String(v))+' créd.';
   }
+  function _mapaColorDept(v, layer){
+    if(layer!=='cumplimiento') return null;
+    if(v>=90) return '#86efac';
+    if(v>=70) return '#fde68a';
+    if(v>0) return '#fca5a5';
+    return '#e2e8f0';
+  }
+  function _mapaActualizarResumen(agg, layer){
+    var el = document.getElementById('menu-mapa-resumen');
+    if(!el) return;
+    var items = Object.keys(agg.deptoData).map(function(k){
+      var o = agg.deptoData[k];
+      var v = layer==='capacidad'?o.capacidad:layer==='meta'?o.meta:layer==='colocacion'?o.colocacion:o.cumplimiento;
+      return {nombre:o.nombre, v:v, sedes:o.sedes.length};
+    }).filter(function(x){ return x.v>0 || layer==='capacidad'; });
+    if(layer==='cumplimiento'){
+      items.sort(function(a,b){ return b.v-a.v; });
+      var top = items.filter(function(x){ return x.v>=70; }).slice(0,4);
+      var low = items.filter(function(x){ return x.v>0 && x.v<70; }).slice(-4).reverse();
+      if(!top.length && !low.length){ el.innerHTML=''; return; }
+      el.innerHTML = '<div class="menu-mapa-resumen-col"><div class="menu-mapa-resumen-lbl">🟢 Mejor cumplimiento</div>'
+        +(top.length?top.map(function(x){ return '<div class="menu-mapa-resumen-item"><b>'+x.nombre+'</b> · '+x.v+'% · '+x.sedes+' sede(s)</div>'; }).join(''):'<div class="menu-mapa-resumen-item">Sin departamentos en verde aún</div>')
+        +'</div><div class="menu-mapa-resumen-col"><div class="menu-mapa-resumen-lbl">🔴 Requieren refuerzo</div>'
+        +(low.length?low.map(function(x){ return '<div class="menu-mapa-resumen-item"><b>'+x.nombre+'</b> · '+x.v+'% · '+x.sedes+' sede(s)</div>'; }).join(''):'<div class="menu-mapa-resumen-item">Ningún departamento en rojo</div>')
+        +'</div>';
+      return;
+    }
+    items.sort(function(a,b){ return b.v-a.v; });
+    var top3 = items.slice(0,3), bot3 = items.slice(-3).reverse();
+    el.innerHTML = '<div class="menu-mapa-resumen-col"><div class="menu-mapa-resumen-lbl">▲ Mayor valor</div>'
+      +top3.map(function(x){ return '<div class="menu-mapa-resumen-item"><b>'+x.nombre+'</b> · '+_mapaFmtVal(x.v,layer)+'</div>'; }).join('')
+      +'</div><div class="menu-mapa-resumen-col"><div class="menu-mapa-resumen-lbl">▼ Menor valor</div>'
+      +bot3.map(function(x){ return '<div class="menu-mapa-resumen-item"><b>'+x.nombre+'</b> · '+_mapaFmtVal(x.v,layer)+'</div>'; }).join('')
+      +'</div>';
+  }
   function setMapaColombiaLayer(layer){
-    _mapaColLayer = layer || 'capacidad';
+    _mapaColLayer = layer || 'cumplimiento';
     document.querySelectorAll('.menu-mapa-tab').forEach(function(btn){
       btn.classList.toggle('active', btn.getAttribute('data-layer')===_mapaColLayer);
     });
-    var labels = {capacidad:'Capacidad instalada (# sedes)', meta:'Meta S2 (créditos)', colocacion:'Colocación acumulada', cumplimiento:'% cumplimiento meta'};
+    var subs = {
+      cumplimiento:'Verde ≥90% · Amarillo 70-89% · Rojo <70% — ¿Dónde cerrar brecha de meta S2?',
+      colocacion:'Créditos acumulados S2 por departamento — volumen ejecutado',
+      meta:'Meta de colocación S2 asignada por departamento',
+      capacidad:'Número de sedes PYV por departamento — cobertura territorial'
+    };
+    var leys = {
+      cumplimiento:'Pase el cursor sobre un departamento para ver % cumplimiento, meta y acumulado',
+      colocacion:'Tonos teal: mayor colocación = color más intenso',
+      meta:'Tonos teal: mayor meta asignada = color más intenso',
+      capacidad:'Tonos teal: más sedes = color más intenso'
+    };
+    var leyHtml = {
+      cumplimiento:'<div class="menu-mapa-ley-swatches">'
+        +'<span class="menu-mapa-ley-item"><span class="menu-ley-sw menu-ley-verde"></span>≥90% en meta</span>'
+        +'<span class="menu-mapa-ley-item"><span class="menu-ley-sw menu-ley-amarillo"></span>70–89%</span>'
+        +'<span class="menu-mapa-ley-item"><span class="menu-ley-sw menu-ley-rojo"></span>&lt;70%</span>'
+        +'<span class="menu-mapa-ley-item"><span class="menu-ley-sw menu-ley-gris"></span>Sin datos</span>'
+        +'</div><div style="margin-top:6px;font-size:9px;color:#64748b">Pase el cursor sobre un departamento para ver meta, acumulado y %</div>',
+      colocacion:'Tonos teal: mayor colocación = color más intenso · Pase el cursor para detalle por departamento',
+      meta:'Tonos teal: mayor meta asignada = color más intenso · Pase el cursor para detalle por departamento',
+      capacidad:'Tonos teal: más sedes PYV = color más intenso · Pase el cursor para listado de sedes'
+    };
+    var sub = document.getElementById('menu-mapa-sub');
+    if(sub) sub.textContent = subs[_mapaColLayer]||'';
     var ley = document.getElementById('menu-mapa-leyenda');
-    if(ley) ley.textContent = (labels[_mapaColLayer]||'')+' · Clic en departamento o sede para detalle · Fuente: RECTORIAS + colocación S2';
+    if(ley){
+      var lh = leyHtml[_mapaColLayer];
+      if(lh) ley.innerHTML = lh;
+      else ley.textContent = leys[_mapaColLayer]||'';
+    }
     if(_mapaColGeoLoaded) _mapaColombiaPintar();
     else renderMapaColombia();
   }
@@ -8691,59 +8726,67 @@ function _parseCumpleMMDD(s){
   }
   function _mapaGeoStyle(){
     return {
-      map:'colombia', roam:true, zoom:1.12, aspectScale:0.92,
-      layoutCenter:['50%','52%'], layoutSize:'92%',
-      label:{show:true, fontSize:7, color:'#003D45', fontWeight:500},
-      itemStyle:{areaColor:'#f1f5f9', borderColor:'#003D45', borderWidth:1},
-      emphasis:{itemStyle:{areaColor:'#FFD900', borderColor:'#003D45', borderWidth:1.5}, label:{show:true, fontSize:8, fontWeight:700, color:'#003D45'}}
+      map:'colombia', roam:true, zoom:1.08, aspectScale:0.9,
+      layoutCenter:['50%','50%'], layoutSize:'88%',
+      label:{show:false},
+      itemStyle:{areaColor:'#e2e8f0', borderColor:'#003D45', borderWidth:1.2},
+      emphasis:{itemStyle:{areaColor:'#FFD900', borderColor:'#003D45', borderWidth:2}, label:{show:true, fontSize:9, fontWeight:700, color:'#003D45'}}
     };
+  }
+  function _mapaTooltipDept(name, o, layer){
+    if(!o) return '<b>'+name+'</b><br>Sin sedes PYV registradas';
+    var lines = ['<b>'+name+'</b>', o.sedes.length+' sede(s) PYV'];
+    if(layer==='cumplimiento' || layer==='meta' || layer==='colocacion'){
+      lines.push('Meta: '+_cmdFmtN(o.meta)+' créd.');
+      lines.push('Acumulado: '+_cmdFmtN(o.colocacion)+' créd.');
+      lines.push('Cumplimiento: <b>'+o.cumplimiento+'%</b>');
+    } else {
+      lines.push('Sedes: <b>'+o.capacidad+'</b>');
+    }
+    return lines.join('<br>');
   }
   function _mapaColombiaPintar(){
     if(!_mapaColChart || typeof echarts==='undefined') return;
     var agg = _mapaAgregarPorDepto(_mapaColLayer);
+    var layer = _mapaColLayer;
     var values = agg.values.map(function(v){
       var nk = _mapaNormDeptoAlias(v.name);
       var geo = _mapaMatchGeoName(nk);
-      return geo ? {name:geo, value:v.value} : v;
+      var nm = geo || v.name;
+      var color = _mapaColorDept(v.value, layer);
+      var item = {name:nm, value:v.value};
+      if(color) item.itemStyle = {areaColor:color};
+      item.deptoData = agg.deptoData[nk];
+      return item;
     });
     var maxV = Math.max.apply(null, values.map(function(x){return x.value;}).concat([1]));
-    var scatter = [];
-    Object.keys(agg.deptoData).forEach(function(k){
-      var o = agg.deptoData[k];
-      var cen = _mapaColCentroids[k] || _mapaColCentroids[_mapaNormDeptoAlias(k)];
-      if(!cen) return;
-      o.sedes.forEach(function(sede, idx){
-        var jitter = (idx - o.sedes.length/2) * 0.12;
-        scatter.push({
-          name: sede, value: [cen[0]+jitter, cen[1]+jitter*0.35, 1],
-          depto: o.nombre,
-          tooltip: sede+' · '+o.nombre
-        });
-      });
-    });
-    var layer = _mapaColLayer;
+    var vmOpt = layer==='cumplimiento' ? {show:false} : {
+      show:true, min:0, max:maxV, right:12, bottom:20, orient:'vertical',
+      text:['Alto','Bajo'], calculable:false,
+      inRange:{color:['#e0f7fa','#00B0B9','#003D45']},
+      textStyle:{fontSize:9, color:'#334155'}
+    };
     _mapaColChart.setOption({
-      visualMap: {
-        show:true, min:0, max:maxV, left:8, bottom:12, orient:'vertical',
-        text:['Alto','Bajo'], calculable:false,
-        inRange:{color:_mapaColorScale(layer)},
-        textStyle:{fontSize:8, color:'#334155'},
-        formatter:function(v){ return _mapaFmtVal(Math.round(v), layer); }
-      },
-      geo: _mapaGeoStyle(),
-      series: [
-        { type:'map', geoIndex:0, map:'colombia', data:values, name:layer,
-          label:{show:false},
-          emphasis:{label:{show:true, fontSize:9, color:'#003D45'}},
-          itemStyle:{borderColor:'#003D45', borderWidth:0.8}
-        },
-        { type:'effectScatter', coordinateSystem:'geo', geoIndex:0, data:scatter,
-          symbolSize:6, itemStyle:{color:'#FFD900', borderColor:'#003D45', borderWidth:1},
-          rippleEffect:{brushType:'stroke', scale:2},
-          tooltip:{formatter:function(p){ return p.data.tooltip||p.name; }}
+      tooltip: {
+        trigger:'item', backgroundColor:'#fff', borderColor:'#003D45', borderWidth:1,
+        textStyle:{color:'#1e293b', fontSize:11},
+        formatter:function(p){
+          if(!p.name) return '';
+          var nk = _mapaNormDeptoAlias(p.name);
+          var o = agg.deptoData[nk] || (p.data&&p.data.deptoData);
+          return _mapaTooltipDept(p.name, o, layer);
         }
-      ]
+      },
+      visualMap: vmOpt,
+      geo: _mapaGeoStyle(),
+      series: [{
+        type:'map', geoIndex:0, map:'colombia', data:values, name:layer,
+        label:{show:false},
+        emphasis:{label:{show:true, fontSize:10, fontWeight:700, color:'#003D45'}},
+        itemStyle:{borderColor:'#003D45', borderWidth:1}
+      }]
     }, true);
+    _mapaActualizarResumen(agg, layer);
     setTimeout(_mapaColombiaResize, 80);
   }
 
@@ -9567,7 +9610,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[pyv-comercial 5.4.1] Mapa Colombia visible · Menú reorganizado');
+  console.log('[pyv-comercial 5.4.2] Menú rediseñado · Mapa semáforo S2 · Sin export panel');
 
 })();
 </script>
