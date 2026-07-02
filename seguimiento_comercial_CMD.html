@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.8   (APP_VERSION = 'pyv-comercial-5.4.8')
+  Versión actual: pyv-comercial-5.4.9   (APP_VERSION = 'pyv-comercial-5.4.9')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.9 (2026-06-30)
+    - Fix visible: badge de versión del menú siempre desde APP_VERSION (eliminado 5.4.7 hardcodeado).
+    - Meta no-cache y título dinámico para evitar caché del navegador mostrando versión antigua.
   pyv-comercial-5.4.8 (2026-06-30)
     - Seguimientos: selección rectoría/sede corregida (sin reset al filtrar); datos desde hoja RECTORIAS SEDES.
     - Seguimientos: panel SIGEC (estados, colocación, mix, radicaciones nuevas vs antiguas) y metas mes/total visibles.
@@ -135,6 +138,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta name="app-version" content="pyv-comercial-5.4.9">
 <title>SCIC — Cooperativa Minuto de Dios</title>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet">
@@ -1022,7 +1028,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.7</div>
+          <div id="menu-version-badge" class="menu-version-badge"></div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
@@ -3390,7 +3396,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.8';
+var APP_VERSION = 'pyv-comercial-5.4.9';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6529,6 +6535,11 @@ function _parseCumpleMMDD(s){
     })();
     var badge = document.getElementById('app-version-badge');
     if(badge){ badge.textContent = txt; badge.style.display = 'block'; }
+    var menuBadge = document.getElementById('menu-version-badge');
+    if(menuBadge) menuBadge.textContent = txt;
+    var metaVer = document.querySelector('meta[name="app-version"]');
+    if(metaVer) metaVer.setAttribute('content', s);
+    document.title = 'SCIC '+txt+' — Cooperativa Minuto de Dios';
     ['menu-version','menu-footer-version','app-version-footer','menu-version-label','footer-version'].forEach(function(id){
       var el = document.getElementById(id);
       if(el) el.textContent = '';
@@ -9534,10 +9545,6 @@ function _parseCumpleMMDD(s){
   var _aplicarVersionOrig = window.aplicarVersionApp;
   window.aplicarVersionApp = function(){
     if(typeof _aplicarVersionOrig==='function') _aplicarVersionOrig();
-    var badge = document.getElementById('menu-version-badge');
-    var hdr = document.getElementById('app-version-badge');
-    if(badge && hdr && hdr.textContent) badge.textContent = hdr.textContent;
-    else if(badge && typeof APP_VERSION!=='undefined') badge.textContent = String(APP_VERSION).replace(/-(\d)/,' $1').replace('pyv-comercial-','pyv-comercial ');
   };
 
   var _origAbrirSCIC = window.abrirSCIC;
@@ -10046,7 +10053,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[pyv-comercial 5.4.8] Seguimiento sede/SIGEC · MCM radar corregido');
+  console.log('[pyv-comercial 5.4.9] Badge versión corregido · Seguimiento sede/SIGEC');
 
   /* ── pyv-comercial-5.4.8: Seguimiento rectoría/sede · panel SIGEC · MCM ── */
   if(!window.MESES_IDX || !Object.keys(window.MESES_IDX).length){
@@ -10420,6 +10427,10 @@ function _parseCumpleMMDD(s){
       if(typeof _origRenderMcm==='function') _origRenderMcm();
     }
   };
+
+  aplicarVersionApp();
+  setTimeout(aplicarVersionApp, 50);
+  setTimeout(aplicarVersionApp, 500);
 
 })();
 </script>
