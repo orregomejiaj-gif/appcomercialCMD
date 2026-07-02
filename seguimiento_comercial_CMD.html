@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.12   (APP_VERSION = 'pyv-comercial-5.4.12')
+  Versión actual: pyv-comercial-5.4.13   (APP_VERSION = 'pyv-comercial-5.4.13')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.13 (2026-07-02)
+    - Colocación siempre desde Sheet INFORME COLOCACION P ACTUAL (sin datos embebidos obsoletos).
+    - Restaurado cargarDesdeSheetsCompleto; bienvenida e informes refrescan tras carga en vivo.
+    - Login estricto: solo coincide usuario cuando nombre.apellido es exacto en la base.
   pyv-comercial-5.4.12 (2026-07-02)
     - Cartera rodada en menú: precarga Sheet al abrir menú; KPIs Cygnus/SAP en radar MCM y salud comercial.
   pyv-comercial-5.4.11 (2026-07-02)
@@ -148,12 +152,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.12">
-<meta name="build-id" content="pyv-comercial-5.4.12-20260702">
-<title>SCIC pyv-comercial 5.4.12 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.13">
+<meta name="build-id" content="pyv-comercial-5.4.13-20260702">
+<title>SCIC pyv-comercial 5.4.13 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.12';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.12';
+window.APP_VERSION='pyv-comercial-5.4.13';
+window.APP_VERSION_LABEL='pyv-comercial 5.4.13';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3491,19 +3495,10 @@ var _DATA = {
 // este punto del bloque) no aborte el resto del script ni rompa el inicio de sesión.
 (function(){
  try{
-  // Colocación
-  if(typeof window._coloc_data === 'undefined' || !window._coloc_data || !window._coloc_data.length){
-    window._coloc_data = (_DATA.coloc||[]).map(function(r){
-      var row = Object.assign({}, r);
-      if(!row.semaforo && row.sem) row.semaforo = row.sem;
-      if(!row.semaforo && row.meta_n>0){
-        var pn = Math.round((row.acum_n||0)/row.meta_n*100);
-        row.semaforo = pn>=90?'VERDE':pn>=70?'AMARILLO':'ROJO';
-      }
-      return row;
-    });
-    window._coloc_S2 = window._coloc_data;
-  }
+  // Colocación — NO precargar datos embebidos (se actualizan en el Sheet en vivo)
+  window._coloc_data = [];
+  window._coloc_S2 = [];
+  window._coloc_data_fuente = 'pendiente';
   // Rectorías y sedes
   Object.assign(RECTORIAS, _DATA.rectorias);
   Object.assign(PG_SEDE_RECTORIA, _DATA.sede_rect);
@@ -3610,17 +3605,9 @@ var _PG_SEDE_RECTORIA_FALLBACK = {"COA Engativa Pres": "Rectoría Bogotá", "COA
 // ════════════════════════════════════════════════════════════
 var _COLOC_FALLBACK = [{"sede": "COA Engativa Pres", "acum_n": 760, "acum_v": 2669484, "meta_n": 3381, "meta_v": 11859807, "ant_n": 763, "var_n": -3, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Bogotá", "pct_n": 22}, {"sede": "COA Usaquen", "acum_n": 1, "acum_v": 1714, "meta_n": 13, "meta_v": 33112, "ant_n": 0, "var_n": 1, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Bogotá", "pct_n": 8}, {"sede": "COA Ciudad Bolivar - Cofraternidad", "acum_n": 119, "acum_v": 303694, "meta_n": 626, "meta_v": 1479277, "ant_n": 92, "var_n": 27, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Bogotá", "pct_n": 19}, {"sede": "COA Santafe", "acum_n": 17, "acum_v": 41791, "meta_n": 138, "meta_v": 331068, "ant_n": 22, "var_n": -5, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Bogotá", "pct_n": 12}, {"sede": "COA Bosa", "acum_n": 11, "acum_v": 30217, "meta_n": 77, "meta_v": 188392, "ant_n": 10, "var_n": 1, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Bogotá", "pct_n": 14}, {"sede": "CO Kennedy", "acum_n": 21, "acum_v": 58062, "meta_n": 247, "meta_v": 526972, "ant_n": 15, "var_n": 6, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Bogotá", "pct_n": 9}, {"sede": "CO Tunal - San Camilo", "acum_n": 76, "acum_v": 186934, "meta_n": 0, "meta_v": 0, "ant_n": 50, "var_n": 26, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Bogotá", "pct_n": 0}, {"sede": "COA Girardot", "acum_n": 0, "acum_v": 0, "meta_n": 760, "meta_v": 1774955, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "CT Apulo", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "Fusagasuga", "acum_n": 1, "acum_v": 1968, "meta_n": 0, "meta_v": 0, "ant_n": 5, "var_n": -4, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "CT La Mesa", "acum_n": 0, "acum_v": 0, "meta_n": 48, "meta_v": 96940, "ant_n": 1, "var_n": -1, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "CT Silvania", "acum_n": 34, "acum_v": 95570, "meta_n": 1, "meta_v": 5043, "ant_n": 31, "var_n": 3, "periodo": "S2", "semaforo": "VERDE", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 3400}, {"sede": "CR Madrid", "acum_n": 6, "acum_v": 13364, "meta_n": 298, "meta_v": 745952, "ant_n": 15, "var_n": -9, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 2}, {"sede": "CP Gualiva - Villeta", "acum_n": 3, "acum_v": 13428, "meta_n": 158, "meta_v": 364835, "ant_n": 3, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 2}, {"sede": "CT Facatativa", "acum_n": 2, "acum_v": 3517, "meta_n": 87, "meta_v": 182915, "ant_n": 0, "var_n": 2, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 2}, {"sede": "CT Funza", "acum_n": 0, "acum_v": 0, "meta_n": 43, "meta_v": 82481, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "CT La Vega", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "Duitama", "acum_n": 2, "acum_v": 3051, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 2, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "Chiquinquira", "acum_n": 229, "acum_v": 641490, "meta_n": 2, "meta_v": 7375, "ant_n": 216, "var_n": 13, "periodo": "S2", "semaforo": "VERDE", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 11450}, {"sede": "CR Soacha", "acum_n": 0, "acum_v": 0, "meta_n": 1311, "meta_v": 3587079, "ant_n": 1, "var_n": -1, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "CT Choachi", "acum_n": 87, "acum_v": 245365, "meta_n": 0, "meta_v": 0, "ant_n": 48, "var_n": 39, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "CR Zipaquirá", "acum_n": 1, "acum_v": 2702, "meta_n": 585, "meta_v": 1456577, "ant_n": 0, "var_n": 1, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "CP Guavio - Guasca", "acum_n": 3, "acum_v": 6254, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 3, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 0}, {"sede": "CT Ubate", "acum_n": 1532, "acum_v": 5367923, "meta_n": 58, "meta_v": 110660, "ant_n": 1419, "var_n": 113, "periodo": "S2", "semaforo": "VERDE", "rectoria": "Rectoría Cundinamarca y Boyacá", "pct_n": 2641}, {"sede": "Virtual y Distancia", "acum_n": 211, "acum_v": 650116, "meta_n": 8994, "meta_v": 28342192, "ant_n": 182, "var_n": 29, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Virtual y Distancia", "pct_n": 2}, {"sede": "COA Bello", "acum_n": 135, "acum_v": 297690, "meta_n": 1385, "meta_v": 3626768, "ant_n": 36, "var_n": 99, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 10}, {"sede": "Urabá", "acum_n": 16, "acum_v": 44866, "meta_n": 576, "meta_v": 1319686, "ant_n": 8, "var_n": 8, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 3}, {"sede": "Itagüi", "acum_n": 7, "acum_v": 9892, "meta_n": 49, "meta_v": 160283, "ant_n": 1, "var_n": 6, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 14}, {"sede": "CT El Bagre", "acum_n": 13, "acum_v": 31655, "meta_n": 52, "meta_v": 80376, "ant_n": 0, "var_n": 13, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 25}, {"sede": "CT Istmina", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 0}, {"sede": "Quibdó", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 0}, {"sede": "COA Caucasia", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 0}, {"sede": "Zaragoza", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 0}, {"sede": "Rionegro", "acum_n": 155, "acum_v": 286415, "meta_n": 0, "meta_v": 0, "ant_n": 112, "var_n": 43, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Antioquia y Chocó", "pct_n": 0}, {"sede": "CR Barranquilla", "acum_n": 46, "acum_v": 75575, "meta_n": 1350, "meta_v": 2267675, "ant_n": 54, "var_n": -8, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Caribe", "pct_n": 3}, {"sede": "CR Cartagena", "acum_n": 37, "acum_v": 63013, "meta_n": 299, "meta_v": 495197, "ant_n": 52, "var_n": -15, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Caribe", "pct_n": 12}, {"sede": "CR Santa Marta", "acum_n": 0, "acum_v": 0, "meta_n": 390, "meta_v": 768764, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Caribe", "pct_n": 0}, {"sede": "Magangue", "acum_n": 58, "acum_v": 94600, "meta_n": 0, "meta_v": 0, "ant_n": 60, "var_n": -2, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Caribe", "pct_n": 0}, {"sede": "COA Chinchina", "acum_n": 85, "acum_v": 224153, "meta_n": 320, "meta_v": 565375, "ant_n": 86, "var_n": -1, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 27}, {"sede": "CR Pereira", "acum_n": 0, "acum_v": 0, "meta_n": 350, "meta_v": 856542, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 0}, {"sede": "CU Armenia", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 0}, {"sede": "CT Cartago", "acum_n": 170, "acum_v": 398888, "meta_n": 0, "meta_v": 0, "ant_n": 169, "var_n": 1, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 0}, {"sede": "CR Cali", "acum_n": 74, "acum_v": 153655, "meta_n": 653, "meta_v": 1371700, "ant_n": 81, "var_n": -7, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 11}, {"sede": "CR Buga", "acum_n": 34, "acum_v": 76258, "meta_n": 419, "meta_v": 931271, "ant_n": 24, "var_n": 10, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 8}, {"sede": "CT Buenaventura", "acum_n": 0, "acum_v": 0, "meta_n": 161, "meta_v": 363285, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 0}, {"sede": "CT Florida", "acum_n": 126, "acum_v": 268038, "meta_n": 0, "meta_v": 0, "ant_n": 146, "var_n": -20, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 0}, {"sede": "CR Pasto", "acum_n": 0, "acum_v": 0, "meta_n": 670, "meta_v": 1370995, "ant_n": 0, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 0}, {"sede": "Ipiales", "acum_n": 124, "acum_v": 311003, "meta_n": 0, "meta_v": 0, "ant_n": 65, "var_n": 59, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Centro Occidente", "pct_n": 0}, {"sede": "CR Bucaramanga", "acum_n": 1, "acum_v": 4863, "meta_n": 696, "meta_v": 1548504, "ant_n": 1, "var_n": 0, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Oriente", "pct_n": 0}, {"sede": "CS Floridablanca", "acum_n": 1, "acum_v": 2362, "meta_n": 0, "meta_v": 0, "ant_n": 0, "var_n": 1, "periodo": "S2", "semaforo": "ROJO", "rectoria": "Rectoría Oriente", "pct_n": 0}];
 
-// Pre-cargar datos en _coloc_data para que el SCIC funcione de inmediato
+// Fallback offline solo si falla la carga del Sheet (no precargar al arranque)
 (function(){
-  if(!window._coloc_data || !window._coloc_data.length){
-    window._coloc_data = _COLOC_FALLBACK;
-    window._coloc_S2 = _COLOC_FALLBACK;
-    console.log('[SCIC] Colocación fallback: '+_COLOC_FALLBACK.length+' sedes');
-    // Construir MUS con datos del fallback
-    if(typeof SCIC_construirMUS === 'function'){
-      try{ SCIC_construirMUS(); }catch(e){}
-    }
-  }
+  console.log('[SCIC] Colocación: esperando INFORME COLOCACION P ACTUAL desde Google Sheets');
 })();
 
 // Alias de sedes para normalización (completar SEDE_EQUIVALENCIAS_COLOCACION)
@@ -3927,6 +3914,53 @@ if(typeof _cargarSusceptibles==='function') window._cargarSusceptibles=_cargarSu
 if(typeof _cargarSeguimientosPorSede==='function') window._cargarSeguimientosPorSede=_cargarSeguimientosPorSede;
 if(typeof _cargarMallaTurnos==='function') window._cargarMallaTurnos=_cargarMallaTurnos;
 if(typeof _cargarMemoriaSheet==='function') window._cargarMemoriaSheet=_cargarMemoriaSheet;
+
+// Carga completa desde Google Sheets (restaurado — datos siempre en vivo)
+function cargarDesdeSheetsCompleto(forzar){
+  if(!REPO_IDS||!REPO_IDS.interno) Object.assign(REPO_IDS, _REPOS_OFICIALES||{});
+  var ps=[], intentar=function(fn,nombre){
+    if(typeof fn==='function'){
+      ps.push(Promise.resolve().then(function(){ return fn(); }).catch(function(e){
+        console.warn('[SCIC]', nombre, 'error:', e&&e.message);
+      }));
+    }
+  };
+  var per=(typeof periodoActivoPorFecha==='function')?periodoActivoPorFecha(new Date()):'S2';
+  if(typeof _cargarColocacion==='function'){
+    ps.push(Promise.resolve().then(function(){ return _cargarColocacion(per); }).catch(function(e){
+      console.warn('[SCIC] colocacion error:', e&&e.message);
+      if(typeof _COLOC_FALLBACK!=='undefined'&&_COLOC_FALLBACK.length){
+        window._coloc_data=_COLOC_FALLBACK.slice();
+        window._coloc_S2=window._coloc_data;
+        window._coloc_data_fuente='fallback';
+      }
+    }));
+  }
+  intentar(_cargarHistoricoColocacion,'coloc-hist');
+  intentar(_cargarSIGEC,'sigec');
+  intentar(_cargarGLPI,'glpi');
+  intentar(_cargarCongelados,'congelados');
+  intentar(_cargarBaseColoc,'base-coloc');
+  intentar(_cargarMatriculas,'matriculas');
+  intentar(_cargarMetas,'metas');
+  intentar(_cargarCartera,'cartera');
+  intentar(_cargarLeadsCall,'leads-call');
+  intentar(_cargarLeadsAdmitidos,'leads-adm');
+  intentar(_cargarLeadsScala,'leads-scala');
+  intentar(_cargarSusceptibles,'susceptibles');
+  intentar(_cargarSeguimientosPorSede,'seguimientos');
+  intentar(_cargarMallaTurnos,'malla');
+  intentar(_cargarMemoriaSheet,'memoria');
+  return Promise.all(ps).then(function(){
+    console.log('[SCIC] Carga completa desde Sheets: '+ps.length+' fuentes');
+    if(typeof SCIC_construirMUS==='function') try{ SCIC_construirMUS(); }catch(e){}
+    try{ if(typeof _mtsCargarPeriodoHabiles==='function') _mtsCargarPeriodoHabiles(); }catch(e){}
+    try{ if(typeof _mtsCargarMeta==='function') _mtsCargarMeta(); }catch(e){}
+    try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
+    try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+  });
+}
+window.cargarDesdeSheetsCompleto=cargarDesdeSheetsCompleto;
 
 
 // ════════════════════════════════════════════════════════════
@@ -6483,14 +6517,106 @@ function _parseCumpleMMDD(s){
   window.renderLoginDashboard=renderLoginDashboard;
   window._lgiCargarCumple=_lgiCargarCumple;
 
+  // Login estricto: solo coincidencia exacta de nombre.apellido (parte local del correo)
+  function _resolverEmpleadoExacto(input){
+    var raw=(input||'').trim().toLowerCase();
+    if(raw.length<3) return null;
+    var local=raw.indexOf('@')>=0?raw.split('@')[0]:raw;
+    var correo=local+'@coopminutodedios.com';
+    return (EMPLEADOS_BD&&EMPLEADOS_BD[correo])?EMPLEADOS_BD[correo]:null;
+  }
+  window._resolverEmpleadoExacto=_resolverEmpleadoExacto;
+
+  window.buscarEmpleado=function(val){
+    var wrap=document.getElementById('login-input-wrap');
+    var res=document.getElementById('login-resultado');
+    var btn=document.getElementById('login-btn');
+    if(!res) return;
+    val=(val||'').trim().toLowerCase();
+    var btnBase='width:100%;padding:13px;border:none;border-radius:10px;font-size:14px;font-weight:700;font-family:Ubuntu,sans-serif;transition:.3s;';
+    if(val.length<3){
+      if(btn){ btn.disabled=true; btn.style.cssText=btnBase+'background:#94a3b8;color:#fff;cursor:not-allowed;opacity:.7'; }
+      res.innerHTML=Object.keys(EMPLEADOS_BD||{}).length>0
+        ?'<div style="font-size:11px;color:#64748b;text-align:center;padding:8px 0">Escribe la parte antes del @ de tu correo institucional</div>'
+        :'<div style="font-size:11px;color:#94a3b8;text-align:center;padding:8px 0"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando directorio...</div>';
+      if(wrap) wrap.style.borderColor='var(--border)';
+      return;
+    }
+    if(!Object.keys(EMPLEADOS_BD||{}).length){
+      if(btn){ btn.disabled=true; btn.style.cssText=btnBase+'background:#94a3b8;color:#fff;cursor:not-allowed;opacity:.7'; }
+      res.innerHTML='<div style="text-align:center;padding:10px;color:#003D45;font-size:11px"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando directorio... Presiona <strong>Ingresar</strong> cuando esté listo</div>';
+      return;
+    }
+    var emp=_resolverEmpleadoExacto(val);
+    if(emp){
+      if(wrap) wrap.style.borderColor='#22c55e';
+      if(btn){ btn.disabled=false; btn.style.cssText=btnBase+'background:#003D45;color:#fff;cursor:pointer;opacity:1'; }
+      var ini=emp.nombre.split(' ').filter(function(p){return p.length>1;}).slice(0,2).map(function(p){return p[0].toUpperCase();}).join('');
+      res.innerHTML='<div style="background:linear-gradient(135deg,#f0fdf4,#dcfce7);border:1.5px solid #86efac;border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px">'
+        +'<div style="width:48px;height:48px;background:#003D45;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#C8971E;flex-shrink:0">'+ini+'</div>'
+        +'<div><div style="font-size:18px;font-weight:800;color:#003D45;line-height:1.2">'+emp.nombre+'</div>'
+        +'<div style="font-size:11px;color:#16a34a;font-weight:600;margin-top:2px">'+emp.cargo+'</div>'
+        +'<div style="font-size:10px;color:#64748b;margin-top:2px"><i class="ti ti-map-pin" style="font-size:10px"></i> '+emp.sede+'</div></div></div>';
+    } else {
+      if(wrap) wrap.style.borderColor='var(--border)';
+      if(btn){ btn.disabled=true; btn.style.cssText=btnBase+'background:#94a3b8;color:#fff;cursor:not-allowed;opacity:.7'; }
+      res.innerHTML='<div style="text-align:center;padding:10px"><div style="font-size:11px;color:#64748b">Escribe la parte antes del @ exacta (ej: <strong>juan.perez</strong>)</div></div>';
+    }
+  };
+
+  window.loginIngresar=function(){
+    var inp=document.getElementById('login-usuario');
+    if(!inp) return;
+    var val=(inp.value||'').trim().toLowerCase();
+    if(val.length<3){ mostrarAlertaNav('Escribe al menos 3 caracteres — usa la parte antes del @'); return; }
+    var res=document.getElementById('login-resultado');
+    var btn=document.getElementById('login-btn');
+    var intentar=function(){
+      var emp=_resolverEmpleadoExacto(val);
+      if(!emp){
+        if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-user-x" style="color:#dc2626;font-size:24px"></i>'
+          +'<div style="font-size:12px;color:#dc2626;font-weight:700;margin-top:8px">Usuario no encontrado</div>'
+          +'<div style="font-size:11px;color:#64748b;margin-top:6px;line-height:1.7">Escribe solo la parte <strong>antes</strong> del @, coincidiendo exactamente.<br>'
+          +'<span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-family:monospace">nombre.apellido</span><br>'
+          +'<small style="color:#94a3b8">('+Object.keys(EMPLEADOS_BD||{}).length+' usuarios en el directorio)</small></div></div>';
+        return;
+      }
+      if(emp.estado&&emp.estado.toLowerCase().indexOf('inactiv')>=0){
+        if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-user-off" style="color:#d97706;font-size:24px"></i>'
+          +'<div style="font-size:12px;color:#d97706;font-weight:700;margin-top:8px">Usuario inactivo</div>'
+          +'<div style="font-size:11px;color:#64748b;margin-top:4px">Contacta al administrador del sistema</div></div>';
+        return;
+      }
+      window._pendingEmp={correo:emp.correo||(val.indexOf('@')>=0?val:val+'@coopminutodedios.com'),emp:emp};
+      _completarLogin();
+    };
+    if(!Object.keys(EMPLEADOS_BD||{}).length){
+      if(res) res.innerHTML='<div style="text-align:center;padding:16px"><i class="ti ti-loader" style="font-size:24px;color:#003D45;animation:spin 1s linear infinite"></i>'
+        +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Conectando con el directorio...</div>'
+        +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Primera carga puede tomar hasta 15 segundos</div></div>';
+      if(btn){ btn.disabled=true; btn.style.opacity='0.7'; }
+      _cargarEmpleados().then(function(){
+        if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+        intentar();
+      }).catch(function(){ if(btn){ btn.disabled=false; btn.style.opacity='1'; } });
+      return;
+    }
+    intentar();
+  };
+
   // Fusión: el modal de bienvenida ya no se muestra; su contenido se renderiza en el login.
   window.mostrarTopSedes=function(){
     var m=document.getElementById('modal-top-sedes'); if(m)m.style.display='none';
     try{
-      var have=window._coloc_data&&window._coloc_data.length;
-      var done=function(){ try{typeof _mtsCargarPeriodoHabiles==='function'&&_mtsCargarPeriodoHabiles();}catch(e){} try{typeof _mtsCargarMeta==='function'&&_mtsCargarMeta();}catch(e){} renderLoginDashboard(); };
-      if(!have&&typeof _cargarColocacion==='function'&&typeof periodoActivoPorFecha==='function'){
-        _cargarColocacion(periodoActivoPorFecha(new Date())).then(done).catch(done);
+      var done=function(){
+        try{typeof _mtsCargarPeriodoHabiles==='function'&&_mtsCargarPeriodoHabiles();}catch(e){}
+        try{typeof _mtsCargarMeta==='function'&&_mtsCargarMeta();}catch(e){}
+        renderLoginDashboard();
+        try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+      };
+      var per=(typeof periodoActivoPorFecha==='function')?periodoActivoPorFecha(new Date()):'S2';
+      if(typeof _cargarColocacion==='function'){
+        _cargarColocacion(per).then(done).catch(done);
       } else { done(); }
       if(typeof _cargarTop5==='function'){ try{_cargarTop5().then(renderLoginDashboard).catch(function(){});}catch(e){} }
     }catch(e){ renderLoginDashboard(); }
@@ -6687,7 +6813,20 @@ function _parseCumpleMMDD(s){
     var _origCargarColoc547 = _cargarColocacion;
     window._cargarColocacion = function(){
       return _origCargarColoc547.apply(this, arguments).then(function(res){
-        if(window._coloc_data && window._coloc_data.length) window._coloc_data = _normColocArray(window._coloc_data);
+        if(window._coloc_data && window._coloc_data.length){
+          window._coloc_data = _normColocArray(window._coloc_data);
+          window._coloc_S2 = window._coloc_data;
+          window._coloc_data_fuente = 'sheet';
+          if(typeof SCIC_construirMUS==='function') try{ SCIC_construirMUS(); }catch(e){}
+        } else if(typeof _COLOC_FALLBACK!=='undefined'&&_COLOC_FALLBACK.length){
+          window._coloc_data=_COLOC_FALLBACK.slice();
+          window._coloc_S2=window._coloc_data;
+          window._coloc_data_fuente='fallback';
+          console.warn('[SCIC] Colocación vacía desde Sheet — usando fallback offline');
+        }
+        try{ if(typeof _mtsCargarPeriodoHabiles==='function') _mtsCargarPeriodoHabiles(); }catch(e){}
+        try{ if(typeof _mtsCargarMeta==='function') _mtsCargarMeta(); }catch(e){}
+        try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
         if(typeof actualizarMenuKPIs==='function') try{ actualizarMenuKPIs(); }catch(e){}
         return res;
       });
