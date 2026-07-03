@@ -14,6 +14,7 @@
     - Colocación y SIGEC siempre en vivo: recarga forzada al abrir informes y al volver al menú.
     - Auto-refresh cada 3 min (colocación + SIGEC + KPIs); sin fallback embebido al forzar actualización.
     - Botón Actualizar en menú con hora de última sincronización desde Sheets.
+    - SCIC IA: análisis local MCM cuando Claude API no es alcanzable desde el navegador (Failed to fetch).
   pyv-comercial-5.4.14 (2026-07-03)
     - Cumplimiento y Estado Operativo: informes integrales nacional → rectoría → sede (8 repositorios).
     - SIGEC todos los estados, GLPI, colocación P Actual, cartera, leads, matrículas, malla y asesores.
@@ -3563,6 +3564,9 @@ var _DATA = {
 // ════════════════════════════════════════════════════════════
 var SCIC_PROXY_URL = ''; // Proxy Apps Script deshabilitado (devolvía error). Se usa gviz directo sobre los sheets compartidos.
 // Ejemplo: var SCIC_PROXY_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
+// Proxy opcional para IA Claude (Apps Script / backend). Sin esto, SCIC usa análisis local MCM.
+var SCIC_IA_PROXY_URL = '';
+// Ejemplo: var SCIC_IA_PROXY_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 
 
 // Equivalencias de nombres de sede entre fuentes
@@ -10179,6 +10183,116 @@ function _parseCumpleMMDD(s){
   };
 
   var _origAbrirSCIC = window.abrirSCIC;
+
+  /* SCIC IA: Claude API no es invocable desde el navegador (CORS + API key).
+     Usamos análisis local MCM; proxy opcional vía SCIC_IA_PROXY_URL. */
+  function _scicExtraerCtxDePrompt(prompt){
+    if(!prompt) return null;
+    var i = prompt.indexOf('{');
+    if(i < 0) return null;
+    try{ return JSON.parse(prompt.slice(i, prompt.lastIndexOf('}') + 1)); }catch(e){ return null; }
+  }
+  function _scicAnalisisLocalIA(ctx, userPrompt){
+    ctx = ctx || {};
+    var lines = [];
+    var nl = ctx.nivel || 'NACIONAL';
+    var titulo = ctx.sede || ctx.rectoria || 'Nacional';
+    lines.push('📊 Análisis SCIC · Motor cognitivo local (MCM)');
+    lines.push('ℹ️ La API Claude en la nube no está disponible desde el navegador (CORS). Este informe usa indicadores en vivo de Sheets.');
+    lines.push('');
+    lines.push('━━ 1) ESTADO ACTUAL ━━');
+    if(nl === 'SEDE' || ctx.sede){
+      lines.push('Sede: ' + titulo + (ctx.rectoria ? ' · ' + ctx.rectoria : ''));
+      lines.push('• Cumplimiento S2: ' + (ctx.cumplimiento_pct || 0) + '% (' + (ctx.creditos_acum || 0).toLocaleString('es-CO') + ' / ' + (ctx.meta_creditos || 0).toLocaleString('es-CO') + ' créditos)');
+      lines.push('• SIGEC: ' + (ctx.sigec_total || 0) + ' radicados · ' + (ctx.sigec_facturadas || 0) + ' facturadas (' + (ctx.sigec_conversion_pct || 0) + '% conv.)');
+      lines.push('• GLPI: ' + (ctx.glpi_total || 0) + ' · aprobadas ' + (ctx.glpi_aprobadas || 0));
+      lines.push('• Cartera: ' + (ctx.cartera_pct_mora || 0) + '% mora · ' + (ctx.cartera_semaforo || '—'));
+      lines.push('• Seguimientos: ' + (ctx.dias_sin_seguimiento >= 999 ? 'sin registro' : (ctx.dias_sin_seguimiento + ' días sin seguimiento')));
+      if(ctx.iscic2_score) lines.push('• ISCIC2: ' + ctx.iscic2_score + '/100 (' + (ctx.iscic2_categoria || '—') + ')');
+    } else if(nl === 'RECTORÍA' || ctx.rectoria){
+      lines.push('Rectoría: ' + titulo);
+      lines.push('• Sedes: ' + (ctx.sedes_total || 0) + ' · en riesgo (<50%): ' + (ctx.sedes_en_riesgo || 0));
+      lines.push('• Cumplimiento: ' + (ctx.cumplimiento_pct || 0) + '%');
+      if(ctx.sedes_criticas && ctx.sedes_criticas.length) lines.push('• Sedes críticas: ' + ctx.sedes_criticas.join(', '));
+    } else {
+      lines.push('Ámbito: Nacional · ' + (ctx.periodo || 'S2'));
+      lines.push('• Cumplimiento: ' + (ctx.cumplimiento_pct || 0) + '% · brecha ' + (ctx.brecha_creditos || 0).toLocaleString('es-CO') + ' créditos');
+      lines.push('• Ritmo: ' + (ctx.ritmo_actual || 0) + ' cred/día · necesario ' + (ctx.ritmo_necesario || 0));
+      lines.push('• SIGEC: ' + (ctx.sigec_total || 0) + ' · facturadas ' + (ctx.sigec_facturadas || 0));
+      lines.push('• Cobertura: ' + (ctx.cobertura_pct || 0) + '% · ISCIC2: ' + (ctx.iscic2_nacional || 0) + '/100');
+      if(ctx.rectorias_en_riesgo && ctx.rectorias_en_riesgo.length) lines.push('• Rectorías en riesgo: ' + ctx.rectorias_en_riesgo.join(' · '));
+    }
+    lines.push('');
+    lines.push('━━ 2) CAUSAS Y ALERTAS ━━');
+    if(ctx.alertas_activas && ctx.alertas_activas.length){
+      ctx.alertas_activas.slice(0, 5).forEach(function(a, i){ lines.push((i + 1) + '. ⚠️ ' + a); });
+    } else if(typeof MOTOR_ANALITICO !== 'undefined'){
+      try{
+        var diag = ctx.sede ? MOTOR_ANALITICO.diagnosticar(ctx.sede) : MOTOR_ANALITICO.diagnosticar_nacional();
+        if(diag) lines.push(diag);
+      }catch(e){}
+    }
+    lines.push('');
+    lines.push('━━ 3) PROYECCIÓN ━━');
+    if(ctx.proyeccion_realista){
+      lines.push('Proyección: ' + ctx.proyeccion_realista.toLocaleString('es-CO') + ' créditos (' + (ctx.proyeccion_pct || 0) + '% meta).');
+    } else if(ctx.tendencia_30d){
+      lines.push('Tendencia 30d: ' + ctx.tendencia_30d);
+    }
+    lines.push('');
+    lines.push('━━ 4) ACCIONES RECOMENDADAS ━━');
+    if(ctx.acciones_recomendadas && ctx.acciones_recomendadas.length){
+      ctx.acciones_recomendadas.forEach(function(a, i){
+        lines.push((i + 1) + '. 🎯 ' + (typeof a === 'string' ? a : (a.accion || JSON.stringify(a))));
+      });
+    } else if(typeof MOTOR_PRESCRIPTIVO !== 'undefined' && ctx.sede){
+      try{
+        MOTOR_PRESCRIPTIVO.prescribir(ctx.sede).slice(0, 3).forEach(function(a, i){
+          lines.push((i + 1) + '. 🎯 ' + a.accion);
+        });
+      }catch(e){}
+    }
+    if(userPrompt){
+      lines.push('');
+      lines.push('━━ CONSULTA ━━');
+      var pregunta = userPrompt.match(/Pregunta:\s*(.+?)(?:\n\nContexto|$)/s);
+      var q = pregunta ? pregunta[1].trim() : userPrompt.slice(0, 200);
+      if(typeof IA_EJECUTIVA !== 'undefined' && IA_EJECUTIVA.responder){
+        try{ lines.push(IA_EJECUTIVA.responder(q)); }catch(e){}
+      } else if(typeof SCIC_AI !== 'undefined' && SCIC_AI.responder){
+        try{ lines.push(SCIC_AI.responder(q)); }catch(e){}
+      }
+    }
+    return lines.join('\n');
+  }
+  window._scicAnalisisLocalIA = _scicAnalisisLocalIA;
+
+  if(window.SCIC_AI_CENTER && typeof SCIC_AI_CENTER._llamar_claude === 'function'){
+    SCIC_AI_CENTER._llamar_claude = async function(system, userPrompt){
+      var proxy = window.SCIC_IA_PROXY_URL || '';
+      if(proxy){
+        try{
+          var resp = await fetch(proxy, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ accion: 'ia_claude', system: system, prompt: userPrompt })
+          });
+          if(resp.ok){
+            var data = await resp.json();
+            var txt = data.text || data.respuesta || data.response;
+            if(!txt && data.content && data.content[0]) txt = data.content[0].text;
+            if(txt) return txt;
+          }
+        }catch(e){ console.warn('[SCIC IA] Proxy error:', e && e.message); }
+      }
+      var ctx = _scicExtraerCtxDePrompt(userPrompt);
+      if(!ctx || !Object.keys(ctx).length){
+        try{ ctx = SCIC_AI_CENTER._contexto(null, null); }catch(e){ ctx = {}; }
+      }
+      return _scicAnalisisLocalIA(ctx, userPrompt);
+    };
+  }
+
   if(typeof _origAbrirSCIC==='function'){
     window.abrirSCIC = function(panel){
       try{
