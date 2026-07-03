@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.15   (APP_VERSION = 'pyv-comercial-5.4.15')
+  Versión actual: pyv-comercial-5.4.16   (APP_VERSION = 'pyv-comercial-5.4.16')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.16 (2026-07-03)
+    - Backend SCIC_IA_PROXY (Apps Script) para Claude API vía servidor.
+    - Auditoría informes/semáforos: filtros rectoría/sede no caen a datos nacionales; cartera y colocado mes filtrados.
+    - SIGEC por sede sin mezclar contadores nacionales cuando no hay filas.
   pyv-comercial-5.4.15 (2026-07-03)
     - Colocación y SIGEC siempre en vivo: recarga forzada al abrir informes y al volver al menú.
     - Auto-refresh cada 3 min (colocación + SIGEC + KPIs); sin fallback embebido al forzar actualización.
@@ -158,12 +162,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.15">
-<meta name="build-id" content="pyv-comercial-5.4.15-20260703">
-<title>SCIC pyv-comercial 5.4.15 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.16">
+<meta name="build-id" content="pyv-comercial-5.4.16-20260703">
+<title>SCIC pyv-comercial 5.4.16 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.15';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.15';
+window.APP_VERSION='pyv-comercial-5.4.16';
+window.APP_VERSION_LABEL='pyv-comercial 5.4.16';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3564,7 +3568,7 @@ var _DATA = {
 // ════════════════════════════════════════════════════════════
 var SCIC_PROXY_URL = ''; // Proxy Apps Script deshabilitado (devolvía error). Se usa gviz directo sobre los sheets compartidos.
 // Ejemplo: var SCIC_PROXY_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
-// Proxy opcional para IA Claude (Apps Script / backend). Sin esto, SCIC usa análisis local MCM.
+// Proxy IA Claude — desplegar backend/SCIC_IA_PROXY.gs en Apps Script y pegar URL aquí.
 var SCIC_IA_PROXY_URL = '';
 // Ejemplo: var SCIC_IA_PROXY_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 
@@ -8117,7 +8121,7 @@ function _parseCumpleMMDD(s){
   function _cdSigecSede(sede){
     var rows = window._sigecRows || [];
     var sig = {facturada:0,cerrada_fac:0,cerrada:0,abierta:0,rechazada:0,pendiente_doc:0,total:0};
-    if(!rows.length && window._sigecNacional) return window._sigecNacional;
+    if(!rows.length && window._sigecNacional && !sede) return window._sigecNacional;
     rows.forEach(function(row){
       var cols = row._cols || row._c || [];
       var s = row.Sede || cols[30] || '';
@@ -8921,11 +8925,49 @@ function _parseCumpleMMDD(s){
   }
   function _ioColocFilas(nivel, sel){
     var coloc=window._coloc_data||[];
-    return coloc.filter(function(r){
-      if(nivel==='rectoria'&&sel) return (r.rectoria||'')===sel;
-      if(nivel==='sede'&&sel) return _cdMatchSede(r.sede, sel);
-      return true;
+    if(nivel==='nacional'||!sel) return coloc;
+    if(nivel==='sede') return coloc.filter(function(r){ return _cdMatchSede(r.sede, sel); });
+    if(nivel==='rectoria'){
+      var sedes=(typeof _mapaListaSedes==='function')?_mapaListaSedes(sel):[];
+      if(sedes.length) return coloc.filter(function(r){
+        return sedes.some(function(s){ return _cdMatchSede(r.sede,s); });
+      });
+      return coloc.filter(function(r){ return String(r.rectoria||'').trim()===String(sel).trim(); });
+    }
+    return coloc;
+  }
+  function _ioSumPorSedes(mapObj, sedesFiltro){
+    if(!mapObj) return 0;
+    if(!sedesFiltro||!sedesFiltro.length) return Object.values(mapObj).reduce(function(a,b){return a+(Number(b)||0);},0);
+    var n=0;
+    Object.keys(mapObj).forEach(function(sk){
+      if(sedesFiltro.some(function(s){ return _cdMatchSede(sk,s); })) n+=Number(mapObj[sk])||0;
     });
+    return n;
+  }
+  function _ioSumColHoy(colM, sedesFiltro, hoyKey){
+    if(!colM) return 0;
+    if(!sedesFiltro||!sedesFiltro.length) return colM.porDia[hoyKey]||0;
+    var n=0;
+    Object.keys(colM.porSedeDia||{}).forEach(function(k){
+      var p=k.split('|'), sede=p[0], dia=p[1];
+      if(dia!==hoyKey) return;
+      if(sedesFiltro.some(function(s){ return _cdMatchSede(sede,s); })) n+=colM.porSedeDia[k];
+    });
+    return n;
+  }
+  function _ioSumColMes(colM, sedesFiltro){
+    if(!colM) return {total:0,sig:0,glpi:0};
+    if(!sedesFiltro||!sedesFiltro.length){
+      return {total:(colM.sigMes||0)+(colM.glpiMes||0), sig:colM.sigMes||0, glpi:colM.glpiMes||0};
+    }
+    var sig=_ioSumPorSedes(colM.porSedeMesSig, sedesFiltro);
+    var glpi=_ioSumPorSedes(colM.porSedeMesGlpi, sedesFiltro);
+    return {total:sig+glpi, sig:sig, glpi:glpi};
+  }
+  function _ioSumRadMes(rad, sedesFiltro){
+    if(!rad||!rad.porSedeMes) return 0;
+    return _ioSumPorSedes(rad.porSedeMes, sedesFiltro);
   }
   function _ioEmpleados(sedesFiltro){
     var asesores=0, coords=0, total=0, lista=[];
@@ -8994,16 +9036,34 @@ function _parseCumpleMMDD(s){
   }
   function _ioCartera(sedesFiltro){
     try{
-      if(!window._cartData) return null;
-      if(typeof _cartIndicadoresPortafolio!=='function') return null;
-      var ind=_cartIndicadoresPortafolio(window._cartData,'total');
+      if(!window._cartData || typeof _cartIndicadoresPortafolio!=='function') return null;
+      if(!sedesFiltro || !sedesFiltro.length) return _cartIndicadoresPortafolio(window._cartData,'total');
+      var d=window._cartData;
+      var cygF={Vigente:0,'1-30':0,'31-60':0,'61-90':0,'+90':0,total:0,cap:0};
+      var sapF={Vigente:0,'1-30':0,'31-60':0,'61-90':0,'+90':0,total:0,cap:0};
+      function addIdx(idx, dist){
+        Object.values(idx||{}).forEach(function(r){
+          var sede=r.sede||'';
+          if(!sedesFiltro.some(function(s){ return _cdMatchSede(sede,s); })) return;
+          dist.total++;
+          dist.cap+=(r.saldo||r.capital||0);
+          var est=r.estado||'Vigente';
+          if(dist[est]!=null) dist[est]++; else dist.Vigente++;
+        });
+      }
+      addIdx(d.ciIdxCyg, cygF);
+      addIdx(d.ciIdxSAP, sapF);
+      var merged=(typeof _cartMergeDist==='function')?_cartMergeDist(cygF,sapF):cygF;
+      var ind=(typeof _cartCalcIndicadores==='function')?_cartCalcIndicadores(merged):{};
+      ind.cyg=(typeof _cartCalcIndicadores==='function')?_cartCalcIndicadores(cygF):{};
+      ind.sap=(typeof _cartCalcIndicadores==='function')?_cartCalcIndicadores(sapF):{};
+      ind._filtrado=true;
       return ind;
     }catch(e){ return null; }
   }
   function _ioConstruirContexto(nivel, sel){
     var sedesFiltro=_ioSedesFiltro(nivel, sel);
     var coloc=_ioColocFilas(nivel, sel);
-    if(!coloc.length) coloc=window._coloc_data||[];
     var meta=0, acum=0, ant=0, metaV=0, acumV=0;
     coloc.forEach(function(r){ meta+=r.meta_n||0; acum+=r.acum_n||0; ant+=r.ant_n||0; metaV+=r.meta_v||0; acumV+=r.acum_v||0; });
     var hoy=new Date(), y=hoy.getFullYear(), m=hoy.getMonth();
@@ -9014,17 +9074,18 @@ function _parseCumpleMMDD(s){
     var colM=(typeof _mdConstruirColocado==='function')?_mdConstruirColocado(window._sigecRows||[],window._glpiRows||[],y,m):{porDia:{},sigMes:0,glpiMes:0};
     var sedeUnica=(nivel==='sede'&&sel)?sel:'';
     var hoyKey=(typeof _mdDateKey==='function')?_mdDateKey(hoy):'';
-    var colHoy=sedeUnica?(typeof _mdColSedeEnDia==='function'?_mdColSedeEnDia(colM,sedeUnica,hoyKey):0):(colM.porDia[hoyKey]||0);
-    var colMes=sedeUnica?(typeof _mdColMesSede==='function'?_mdColMesSede(colM,sedeUnica):0):((colM.sigMes||0)+(colM.glpiMes||0));
-    var radMes=sedeUnica?(typeof _mdRadMesSede==='function'?_mdRadMesSede(rad,sedeUnica):0):Object.values(rad.porSedeMes||{}).reduce(function(a,b){return a+b;},0);
+    var mesAgg=_ioSumColMes(colM, sedeUnica?[sedeUnica]:sedesFiltro);
+    var colHoy=sedeUnica?(typeof _mdColSedeEnDia==='function'?_mdColSedeEnDia(colM,sedeUnica,hoyKey):0):_ioSumColHoy(colM,sedesFiltro,hoyKey);
+    var colMes=mesAgg.total;
+    var radMes=sedeUnica?(typeof _mdRadMesSede==='function'?_mdRadMesSede(rad,sedeUnica):0):_ioSumRadMes(rad,sedesFiltro);
     return {
       nivel:nivel, sel:sel, sedesFiltro:sedesFiltro, titulo:_ioTitulo(nivel,sel),
       coloc:coloc, meta:meta, acum:acum, ant:ant, metaV:metaV, acumV:acumV,
       pct:meta>0?Math.round(acum/meta*100):0,
       metaDiaria:metaDiaria, metaMes:metaMes, colHoy:colHoy, colMes:colMes, radMes:radMes,
       sig:_ioAgregarSigec(sedesFiltro), glpi:_ioAgregarGlpi(sedesFiltro),
-      colocadoCombinado:(colM.sigMes||0)+(colM.glpiMes||0),
-      sigMes:colM.sigMes||0, glpiMes:colM.glpiMes||0,
+      colocadoCombinado:mesAgg.total,
+      sigMes:mesAgg.sig, glpiMes:mesAgg.glpi,
       empleados:_ioEmpleados(sedesFiltro), malla:_ioMalla(sedesFiltro),
       leads:_ioLeads(sedesFiltro), matriculas:_ioMatriculas(sedesFiltro),
       seguimientos:_ioSeguimientos(sedesFiltro), cartera:_ioCartera(sedesFiltro)
@@ -9121,7 +9182,8 @@ function _parseCumpleMMDD(s){
     opts=opts||{};
     var modo=opts.modo||'cumplimiento';
     var html='<div style="margin-bottom:10px"><div style="font-size:15px;font-weight:800;color:#003D45">'+ctx.titulo+'</div>';
-    html+='<div style="font-size:10px;color:#64748b">'+ctx.coloc.length+' sede(s) · Fuentes: 8 repositorios Google Sheets · Actualizado en vivo</div></div>';
+    html+='<div style="font-size:10px;color:#64748b">'+ctx.coloc.length+' sede(s) · Fuentes: 8 repositorios Google Sheets · Actualizado en vivo'
+      +(ctx.nivel!=='nacional'&&ctx.coloc.length===0?' · <span style="color:#dc2626">Sin sedes en este filtro</span>':'')+'</div></div>';
     html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px;margin-bottom:14px">';
     html+=_ioKpi('Meta S2 total',_ioFmtN(Math.round(ctx.meta)),'#003D45','Período actual');
     html+=_ioKpi('Meta mes en curso',_ioFmtN(Math.round(ctx.metaMes)),'#1e40af','Meta # del informe P Actual');
@@ -9155,7 +9217,7 @@ function _parseCumpleMMDD(s){
       +'<b>Total mes:</b> '+_ioFmtN(ctx.colocadoCombinado)+' créditos = <span style="color:#16a34a">SIGEC '+_ioFmtN(ctx.sigMes)+'</span> + <span style="color:#0891b2">GLPI '+_ioFmtN(ctx.glpiMes)+'</span>'
       +' · <b>Hoy:</b> '+_ioFmtN(ctx.colHoy)+' vs meta día '+ctx.metaDiaria.toFixed(1)+'</div>';
   if(ctx.cartera){
-      html+=_ioSec('💰 Estado de Cartera','Cygnus + SAP — recaudo y rodada');
+      html+=_ioSec('💰 Estado de Cartera','Cygnus + SAP — recaudo y rodada'+(ctx.cartera._filtrado?' · filtrado por sedes del ámbito':''));
       var cyg=ctx.cartera.cyg||{}, sap=ctx.cartera.sap||{};
       html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:6px">';
       html+=_ioKpi('Rec. Cygnus',(cyg.recPct||0)+'%','#1d4ed8');
@@ -10274,7 +10336,8 @@ function _parseCumpleMMDD(s){
         try{
           var resp = await fetch(proxy, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
             body: JSON.stringify({ accion: 'ia_claude', system: system, prompt: userPrompt })
           });
           if(resp.ok){
