@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.46   (APP_VERSION = 'pyv-comercial-5.4.46')
+  Versión actual: pyv-comercial-5.4.47   (APP_VERSION = 'pyv-comercial-5.4.47')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.47 (2026-07-04)
+    - Login EMPLEADOS: usuarios embebidos en encabezados del Sheet (orlys.solano, yara.diaz, etc.) ahora se cargan con sedes desde la hoja.
   pyv-comercial-5.4.46 (2026-07-04)
     - Fix login EMPLEADOS: fetch directo (reemplaza JSONP que fallaba) + consulta rápida por usuario.
     - Caché en memoria solo desde Sheet (2 min); sedes nunca desde fallback embebido.
@@ -252,11 +254,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.46">
-<meta name="build-id" content="pyv-comercial-5.4.46-20260704-1615">
+<meta name="app-version" content="pyv-comercial-5.4.47">
+<meta name="build-id" content="pyv-comercial-5.4.47-20260704-1700">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.46';
+window.APP_VERSION='pyv-comercial-5.4.47';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3814,7 +3816,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.46';
+var APP_VERSION = 'pyv-comercial-5.4.47';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4232,10 +4234,120 @@ function _empParseGvizText(text){
   if(!m) return null;
   try{ return JSON.parse(m[1]); }catch(e){ return null; }
 }
+function _empColLabel(data, prefix){
+  var cols=(data&&data.table&&data.table.cols)||[];
+  prefix=String(prefix||'').toUpperCase();
+  for(var i=0;i<cols.length;i++){
+    var lbl=String((cols[i]&&cols[i].label)||'').trim();
+    if(lbl.toUpperCase().indexOf(prefix)===0) return lbl;
+  }
+  return '';
+}
+function _empLabelSinPrefijo(label, prefix){
+  label=String(label||'').trim();
+  prefix=String(prefix||'').trim();
+  if(!label||!prefix) return label;
+  var up=label.toUpperCase(), pf=prefix.toUpperCase();
+  if(up.indexOf(pf)===0) return label.slice(prefix.length).trim();
+  return label;
+}
+function _empNombreFallback(correo){
+  correo=String(correo||'').trim().toLowerCase();
+  for(var i=0;i<_EMPLEADOS_FALLBACK.length;i++){
+    if(String(_EMPLEADOS_FALLBACK[i].correo||'').toLowerCase()===correo) return _EMPLEADOS_FALLBACK[i].nombre||'';
+  }
+  return '';
+}
+var _EMP_CARGOS_HDR=['Subdirectora Comercial','Subdirector Comercial','Coordinador Comercial','Coordinador Consumo','Director Consumo','Director Nacional Comercial','Directora Comercial','Formadora Comercial','Analista Comercial','Analista Consumo','Analista Lider','Asesor Comercial','Asesor Consumo','Asesor Rol Seguimiento','Aprendiz Comercial'];
+function _empSplitCargosHeader(text, n){
+  var s=_empLabelSinPrefijo(text,'CARGO'), out=[];
+  while(out.length<n&&s.length){
+    var hit=null, i;
+    for(i=0;i<_EMP_CARGOS_HDR.length;i++){
+      if(s.indexOf(_EMP_CARGOS_HDR[i])===0){ hit=_EMP_CARGOS_HDR[i]; break; }
+    }
+    if(!hit) break;
+    out.push(hit);
+    s=s.slice(hit.length).trim();
+  }
+  return out;
+}
+function _empSplitSedesHeader(text, n){
+  if(n<1) return [];
+  var tokens=String(text||'').trim().split(/\s+/).filter(Boolean);
+  if(!tokens.length) return [];
+  var out=[], i=0;
+  while(out.length<n&&i<tokens.length){
+    if(tokens[i].indexOf(';')>=0){
+      var chunk=tokens[i++];
+      while(i<tokens.length){
+        var tail=chunk.slice(-1);
+        if(tail===';'||chunk.indexOf(';')>=0){
+          var remaining=tokens.length-i, need=n-out.length-1;
+          if(remaining<=need) break;
+          if(tokens[i].indexOf(';')>=0) chunk+=' '+tokens[i++];
+          else if(remaining>need) chunk+=' '+tokens[i++];
+          else break;
+        } else break;
+      }
+      out.push(chunk);
+    } else {
+      out.push(tokens[i++]);
+    }
+  }
+  return out.slice(0,n);
+}
+function _empProcesarEncabezadosSheet(data){
+  if(!data||!data.table||!data.table.cols) return 0;
+  var correoLbl=_empColLabel(data,'CORREO');
+  var emails=(correoLbl.match(/[\w.+-]+@coopminutodedios\.com/gi)||[]).map(function(e){return e.toLowerCase();});
+  if(!emails.length) return 0;
+  var rowCorreos={};
+  (data.table.rows||[]).forEach(function(row){
+    var v=(row.c||[]).map(function(c){return c?(c.v!==null&&c.v!==undefined?c.v:(c.f||'')):'';});
+    var c=String(v[0]||'').trim().toLowerCase();
+    if(c&&c.indexOf('@')>=0) rowCorreos[c]=1;
+  });
+  var soloHdr=emails.filter(function(e){return!rowCorreos[e];});
+  if(!soloHdr.length) return 0;
+  var n=soloHdr.length;
+  var cedulas=(_empLabelSinPrefijo(_empColLabel(data,'CEDULA'),'CEDULA').match(/\d{6,}/g)||[]).slice(0,n);
+  var cargos=_empSplitCargosHeader(_empColLabel(data,'CARGO'),n);
+  var sedes=_empSplitSedesHeader(_empLabelSinPrefijo(_empColLabel(data,'SEDE'),'SEDE'),n);
+  var estados=_empLabelSinPrefijo(_empColLabel(data,'ESTADO'),'ESTADO').split(/\s+/).filter(Boolean);
+  var inserted=0;
+  soloHdr.forEach(function(correo,ix){
+    var sede=sedes[ix]||'';
+    if(!sede) return;
+    var nombre=_empNombreFallback(correo);
+    if(!nombre){
+      var nomLbl=_empLabelSinPrefijo(_empColLabel(data,'NOMBRE COMPLETO'),'NOMBRE COMPLETO');
+      var nomParts=nomLbl.split(/\s{2,}/).filter(Boolean);
+      nombre=nomParts[ix]||nomLbl;
+    }
+    EMPLEADOS_BD[correo]={
+      correo:correo,
+      nombre:nombre,
+      cargo:cargos[ix]||'',
+      sede:sede,
+      cedula:cedulas[ix]||'',
+      estado:estados[ix]||estados[0]||'Activo',
+      cumpleanos:'',
+      _fromSheet:true,
+      _sinSheet:false,
+      _fromHeader:true
+    };
+    inserted++;
+  });
+  if(inserted>0) console.log('[SCIC] Sheet EMPLEADOS encabezado: '+inserted+' usuarios embebidos');
+  return inserted;
+}
 function _empProcesarFilasSheet(data){
-  if(!data||!data.table||!data.table.rows||!data.table.rows.length) return 0;
+  if(!data||!data.table) return 0;
+  var nHdr=_empProcesarEncabezadosSheet(data);
+  if(!data.table.rows||!data.table.rows.length) return nHdr;
   var cols=(data.table.cols||[]).map(function(c){return(c.label||c.id||'').trim();});
-  var n=0;
+  var n=nHdr;
   (data.table.rows||[]).forEach(function(row){
     var v=(row.c||[]).map(function(c){return c?(c.v!==null&&c.v!==undefined?c.v:(c.f||'')):'';});
     var correo='';
@@ -4262,7 +4374,7 @@ function _empProcesarFilasSheet(data){
     window._empleadosSheetTs=Date.now();
     try{ EMPLEADOS_CUM=Object.keys(EMPLEADOS_BD).map(function(k){return EMPLEADOS_BD[k];}).filter(function(e){return e&&e.cumpleanos&&e.cumpleanos.length===5;}); }catch(e){}
     try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
-    console.log('[SCIC] Sheet EMPLEADOS: '+n+' filas');
+    console.log('[SCIC] Sheet EMPLEADOS: '+n+' filas'+(nHdr?(' (+'+nHdr+' encabezado)'):''));
   }
   return n;
 }
@@ -4323,8 +4435,9 @@ function _cargarEmpleadoPorUsuario(usuario){
   var tq="select * where A contains '"+local.replace(/'/g,'')+"'";
   return _empLeerSheet(tq).then(function(data){
     var n=_empProcesarFilasSheet(data);
-    if(n>0&&EMPLEADOS_BD[correo]) return EMPLEADOS_BD[correo];
-    return _cargarEmpleados(true).then(function(){ return EMPLEADOS_BD[correo]||null; });
+    if(EMPLEADOS_BD[correo]&&EMPLEADOS_BD[correo]._fromSheet&&EMPLEADOS_BD[correo].sede) return EMPLEADOS_BD[correo];
+    if(!n) return _cargarEmpleados(true).then(function(){ return EMPLEADOS_BD[correo]||null; });
+    return EMPLEADOS_BD[correo]||null;
   }).catch(function(){
     return _cargarEmpleados(true).then(function(){ return EMPLEADOS_BD[correo]||null; });
   });
