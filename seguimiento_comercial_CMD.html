@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.31   (APP_VERSION = 'pyv-comercial-5.4.31')
+  Versión actual: pyv-comercial-5.4.32   (APP_VERSION = 'pyv-comercial-5.4.32')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.32 (2026-07-04)
+    - Menú accesos rápidos: eliminados CogniPYV, IA Ejecutiva y MCM; se conserva SCIC Pulso.
   pyv-comercial-5.4.31 (2026-07-04)
     - Menú: solo texto fijo «Vista al cierre del [día anterior] (23:59)» + enlace «Ver por sede →»; sin calendario ni filtro por fecha.
     - Salud Comercial Nacional: SIGEC/GLPI en vivo (sin filtrado por corte en el panel).
@@ -209,11 +211,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.31">
-<meta name="build-id" content="pyv-comercial-5.4.31-20260704-0400">
-<title>SCIC pyv-comercial 5.4.31 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.32">
+<meta name="build-id" content="pyv-comercial-5.4.32-20260704-0425">
+<title>SCIC pyv-comercial 5.4.32 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.31';
+window.APP_VERSION='pyv-comercial-5.4.32';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -954,7 +956,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.31</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.32</div>
 </div>
 
 
@@ -963,7 +965,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.31</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.32</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -1253,12 +1255,9 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       </div>
     </div>
     <div class="menu-quick-group">
-      <div class="menu-quick-grp-lbl">🧠 Inteligencia CogniPYV</div>
+      <div class="menu-quick-grp-lbl">🧠 SCIC</div>
       <div class="menu-quick-grid">
-        <button type="button" onclick="abrirCogniPYV()" class="menu-quick-btn menu-quick-cogni" title="Motor cognitivo ejecutivo CMD"><span class="menu-quick-icon">✨</span><span class="menu-quick-lbl">CogniPYV</span></button>
-        <button type="button" onclick="abrirSCIC('ia')" class="menu-quick-btn menu-quick-gold" title="IA ejecutiva SCIC"><span class="menu-quick-icon">⚡</span><span class="menu-quick-lbl">IA Ejecutiva</span></button>
         <button type="button" onclick="abrirSCIC('pulso')" class="menu-quick-btn menu-quick-scic" title="ISCIC nacional"><span class="menu-quick-icon">🧠</span><span class="menu-quick-lbl">SCIC Pulso</span></button>
-        <button type="button" onclick="abrirSCIC('mcm')" class="menu-quick-btn menu-quick-teal" title="MCM completo"><span class="menu-quick-icon">🎯</span><span class="menu-quick-lbl">MCM</span></button>
       </div>
     </div>
     <div class="menu-quick-group">
@@ -3642,7 +3641,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.31';
+var APP_VERSION = 'pyv-comercial-5.4.32';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -12617,7 +12616,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.31 — corte fijo día anterior + Ver por sede');
+  console.log('[CMD] Informes Comerciales v5.4.32 — accesos rápidos sin CogniPYV/IA/MCM');
 })();
 
 </script>
