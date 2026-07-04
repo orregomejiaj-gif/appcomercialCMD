@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.36   (APP_VERSION = 'pyv-comercial-5.4.36')
+  Versión actual: pyv-comercial-5.4.37   (APP_VERSION = 'pyv-comercial-5.4.37')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.37 (2026-07-04)
+    - Fix deploy GitHub Pages: reintentos automáticos + espera anti-colisión (publica v5.4.36 en vivo).
   pyv-comercial-5.4.36 (2026-07-04)
     - Menú: semáforos Solo SIGEC / Solo GLPI / SIGEC+GLPI vs meta S2 (nacional y por sede).
     - Selector «Vista del menú» para filtrar KPIs y semáforos por sede individual.
@@ -223,11 +225,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.36">
-<meta name="build-id" content="pyv-comercial-5.4.36-20260704-1330">
+<meta name="app-version" content="pyv-comercial-5.4.37">
+<meta name="build-id" content="pyv-comercial-5.4.37-20260704-1435">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.36';
+window.APP_VERSION='pyv-comercial-5.4.37';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3724,7 +3726,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.36';
+var APP_VERSION = 'pyv-comercial-5.4.37';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
