@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.20   (APP_VERSION = 'pyv-comercial-5.4.20')
+  Versión actual: pyv-comercial-5.4.21   (APP_VERSION = 'pyv-comercial-5.4.21')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.21 (2026-07-04)
+    - Cobertura corregida: colocado P Actual vs Total Real PARA LA UNIVERSIDAD.
+    - Hub Informes Comerciales: nuevos/renovación, corte día anterior, tiempos, pendientes, retomas.
   pyv-comercial-5.4.20 (2026-07-04)
     - Menú: accesos rápidos visibles + botón Asistente Gemini IA en módulos.
     - Modal de bienvenida personalizado por sede(s) del empleado al ingresar.
@@ -173,12 +176,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.20">
-<meta name="build-id" content="pyv-comercial-5.4.20-20260704">
-<title>SCIC pyv-comercial 5.4.20 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.21">
+<meta name="build-id" content="pyv-comercial-5.4.21-20260704">
+<title>SCIC pyv-comercial 5.4.21 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.20';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.20';
+window.APP_VERSION='pyv-comercial-5.4.21';
+window.APP_VERSION_LABEL='pyv-comercial 5.4.21';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -902,7 +905,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.20</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.21</div>
     <div id="turno-hdr-badge" onclick="abrirTurno()" style="display:none;cursor:pointer;background:rgba(255,255,255,.12);border-radius:6px;padding:3px 8px;margin-top:2px;align-items:center;gap:4px" title="Ver registro de turno">
       <span id="turno-hdr-icono" style="font-size:11px">⏰</span>
       <span id="turno-hdr-txt" style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8)">Sin turno</span>
@@ -1118,7 +1121,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.20</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.21</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:#64748b;margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -1175,6 +1178,11 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <span class="menu-quick-icon">📋</span>
         <span class="menu-quick-lbl">Seguimiento</span>
         <span class="menu-quick-desc">Registrar visita comercial</span>
+      </button>
+      <button type="button" onclick="abrirInformesComerciales('cobertura-uni')" class="menu-quick-btn menu-quick-cob">
+        <span class="menu-quick-icon">🎓</span>
+        <span class="menu-quick-lbl">Informes Cobertura</span>
+        <span class="menu-quick-desc">Colocado vs Real PARA LA UNIVERSIDAD</span>
       </button>
     </div>
   </div>
@@ -1371,6 +1379,19 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           </div>
         </div>
         <div class="menu-module">
+          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📑 Informes Comerciales</span><span class="menu-mod-note">Cobertura · SIGEC</span></div>
+          <div class="menu-grid menu-grid-modules">
+            <button onclick="abrirInformesComerciales('cobertura-uni')" class="menu-card menu-card-indigo"><div class="menu-card-icon">🎓</div><div class="menu-card-body"><div class="menu-card-title">Cobertura Universidad</div><div class="menu-card-desc">Colocado P Actual ÷ Total Real PARA LA UNIVERSIDAD.</div></div></button>
+            <button onclick="abrirInformesComerciales('cobertura-mat')" class="menu-card menu-card-blue"><div class="menu-card-icon">📚</div><div class="menu-card-body"><div class="menu-card-title">Cobertura Matrículas</div><div class="menu-card-desc">Matriculados vs SIGEC facturadas + GLPI aprobadas.</div></div></button>
+            <button onclick="abrirInformesComerciales('nuevos-renov')" class="menu-card menu-card-teal"><div class="menu-card-icon">🆕</div><div class="menu-card-body"><div class="menu-card-title">Nuevos vs Renovación</div><div class="menu-card-desc">Desglose SIGEC por estado y cobertura nuevos/continuos.</div></div></button>
+            <button onclick="abrirInformesComerciales('corte-dia')" class="menu-card menu-card-gold"><div class="menu-card-icon">📅</div><div class="menu-card-body"><div class="menu-card-title">Colocación Corte</div><div class="menu-card-desc">SIGEC facturadas + GLPI aprobadas al día anterior 11:59 pm.</div></div></button>
+            <button onclick="abrirInformesComerciales('tiempos')" class="menu-card menu-card-sky"><div class="menu-card-icon">⏱️</div><div class="menu-card-body"><div class="menu-card-title">Tiempos Radicación</div><div class="menu-card-desc">48h hábiles · congelados vs fuera de tiempo.</div></div></button>
+            <button onclick="abrirInformesComerciales('pendientes')" class="menu-card menu-card-amber"><div class="menu-card-icon">⏳</div><div class="menu-card-body"><div class="menu-card-title">Pendientes Desembolso</div><div class="menu-card-desc">Aprobadas SIGEC/GLPI sin cruce en base colocación.</div></div></button>
+            <button onclick="abrirInformesComerciales('retomas')" class="menu-card menu-card-purple"><div class="menu-card-icon">🔄</div><div class="menu-card-body"><div class="menu-card-title">Retomas</div><div class="menu-card-desc">Recuperación vs pérdida: retomas fact. − cerradas.</div></div></button>
+            <button onclick="abrirInformesComerciales()" class="menu-card menu-card-green"><div class="menu-card-icon">📑</div><div class="menu-card-body"><div class="menu-card-title">Panel Completo</div><div class="menu-card-desc">Abrir hub con todos los informes comerciales.</div></div></button>
+          </div>
+        </div>
+        <div class="menu-module">
           <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">✨ Inteligencia · Gemini IA</span><span class="menu-mod-note">Análisis</span></div>
           <div class="menu-grid menu-grid-modules">
             <button onclick="abrirAsistenteGeminiIA()" class="menu-card menu-card-gemini" title="Motor Gemini vía proxy Apps Script"><div class="menu-card-icon">✨</div><div class="menu-card-body"><div class="menu-card-title">Asistente Gemini IA</div><div class="menu-card-desc">AI CENTER: análisis ejecutivo, comité y preguntas con Gemini.</div></div></button>
@@ -1480,6 +1501,24 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-quick-ops{background:rgba(174,201,0,.08);border-color:rgba(174,201,0,.3)}
 .menu-quick-meta{background:rgba(255,217,0,.1);border-color:rgba(255,217,0,.4)}
 .menu-quick-seg{background:rgba(0,176,185,.06)}
+.menu-quick-cob{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.3)}
+.ic-tab{display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:#334155;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;line-height:1.3;transition:.15s}
+.ic-tab:hover{background:#e0f2fe;border-color:#bae6fd;color:#003D45}
+.ic-tab.active{background:#003D45;color:#FFD900;border-color:#003D45}
+.ic-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.ic-kpi{background:#fff;border-radius:12px;padding:12px;border-top:3px solid #003D45;box-shadow:0 1px 4px rgba(0,0,0,.05)}
+.ic-kpi-lbl{font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.3px}
+.ic-kpi-val{font-size:20px;font-weight:900;color:#003D45;margin-top:4px;line-height:1.1}
+.ic-kpi-sub{font-size:9px;color:#94a3b8;margin-top:4px;line-height:1.35}
+.ic-sec{margin:16px 0 8px;padding-bottom:6px;border-bottom:2px solid #e2e8f0;font-size:12px;font-weight:800;color:#003D45}
+.ic-sec-sub{font-size:9px;color:#64748b;font-weight:600;margin-top:3px}
+.ic-explain{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px 12px;font-size:10px;color:#334155;line-height:1.55;margin-bottom:14px}
+.ic-tbl{width:100%;border-collapse:collapse;font-size:10px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0}
+.ic-tbl th{background:#003D45;color:#fff;padding:7px 8px;text-align:left;font-weight:700;position:sticky;top:0}
+.ic-tbl td{padding:6px 8px;border-bottom:1px solid #f1f5f9}
+.ic-tbl tr:nth-child(even) td{background:#fafbfc}
+.ic-sem{display:inline-block;padding:2px 8px;border-radius:6px;font-size:9px;font-weight:800}
+.ic-sem-v{background:#dcfce7;color:#166534}.ic-sem-a{background:#fef9c3;color:#a16207}.ic-sem-r{background:#fee2e2;color:#b91c1c}
 .menu-sidebar{width:min(420px,38vw);flex-shrink:0;background:var(--white);border-left:1px solid var(--border);padding:20px 18px 28px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
 .menu-sidebar-title{font-size:12px;font-weight:800;color:var(--dark);margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid var(--teal-l)}
 .menu-main-panel{flex:1;min-width:0;overflow-x:hidden}
@@ -3553,7 +3592,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.20';
+var APP_VERSION = 'pyv-comercial-5.4.21';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6284,6 +6323,57 @@ https://minutodediosportal.com/login/
   </div>
 </div>
 
+<!-- ═══════════ HUB INFORMES COMERCIALES AVANZADOS ═══════════ -->
+<div id="modal-informes-comerciales" style="display:none;position:fixed;inset:0;background:rgba(0,29,33,.88);z-index:10050;overflow:hidden;padding:12px">
+  <div style="max-width:1180px;margin:0 auto;height:100%;display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45)">
+    <div style="background:linear-gradient(135deg,#003D45,#005a66);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0">
+      <div>
+        <div style="color:#FFD900;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase">Informes Comerciales CMD</div>
+        <div style="color:#fff;font-size:17px;font-weight:800">📑 Panel de Informes · Cobertura y Operación</div>
+        <div style="color:rgba(255,255,255,.55);font-size:10px;margin-top:3px" id="ic-modal-sub">Cobertura universidad · SIGEC/GLPI · tiempos · pendientes · retomas</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button type="button" onclick="icRefrescarInformes()" style="padding:8px 12px;border:none;border-radius:8px;background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↺ Actualizar</button>
+        <button type="button" onclick="cerrarInformesComerciales()" style="width:34px;height:34px;border:none;border-radius:50%;background:rgba(255,255,255,.15);color:#fff;font-size:18px;cursor:pointer">✕</button>
+      </div>
+    </div>
+    <div style="display:flex;flex:1;min-height:0;overflow:hidden">
+      <div id="ic-tabs" style="width:220px;flex-shrink:0;background:#f8fafc;border-right:1px solid #e2e8f0;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:4px">
+        <button type="button" class="ic-tab active" data-ic="cobertura-uni" onclick="icSeleccionarTab('cobertura-uni')">🎓 Cobertura Universidad</button>
+        <button type="button" class="ic-tab" data-ic="cobertura-mat" onclick="icSeleccionarTab('cobertura-mat')">📚 Cobertura Matrículas</button>
+        <button type="button" class="ic-tab" data-ic="nuevos-renov" onclick="icSeleccionarTab('nuevos-renov')">🆕 Nuevos vs Renovación</button>
+        <button type="button" class="ic-tab" data-ic="corte-dia" onclick="icSeleccionarTab('corte-dia')">📅 Colocación Corte Día Ant.</button>
+        <button type="button" class="ic-tab" data-ic="tiempos" onclick="icSeleccionarTab('tiempos')">⏱️ Tiempos Radicación</button>
+        <button type="button" class="ic-tab" data-ic="pendientes" onclick="icSeleccionarTab('pendientes')">⏳ Pendientes Desembolso</button>
+        <button type="button" class="ic-tab" data-ic="retomas" onclick="icSeleccionarTab('retomas')">🔄 Retomas</button>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;min-width:0">
+        <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
+          <div>
+            <div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">NIVEL</div>
+            <select id="ic-nivel" onchange="icCambiarNivel()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:120px">
+              <option value="nacional">🇨🇴 Nacional</option>
+              <option value="rectoria">Por Rectoría</option>
+              <option value="sede">Por Sede</option>
+            </select>
+          </div>
+          <div>
+            <div id="ic-lbl-ambito" style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">ÁMBITO</div>
+            <select id="ic-ambito" onchange="icRenderInformeActivo()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:180px">
+              <option value="">Todas</option>
+            </select>
+          </div>
+          <div id="ic-desc-activo" style="flex:1;min-width:200px;font-size:10px;color:#64748b;line-height:1.45;padding:4px 0"></div>
+        </div>
+        <div id="ic-contenido" style="flex:1;overflow-y:auto;padding:16px 18px;background:#f5f7fa;min-height:200px">
+          <div style="text-align:center;padding:40px;color:#94a3b8;font-size:12px">Selecciona un informe del menú lateral</div>
+        </div>
+        <div id="ic-fuente" style="font-size:9px;color:#94a3b8;text-align:center;padding:8px 12px;border-top:1px solid #e2e8f0;background:#fff"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- MODAL ESTADO CARTERA -->
 <div id="modal-cartera" style="display:none;position:fixed;inset:0;background:#00000088;z-index:3000;overflow-y:auto;padding:12px">
   <div style="max-width:900px;margin:0 auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
@@ -7232,14 +7322,30 @@ function _parseCumpleMMDD(s){
     }
 
     var matReal = _mcmMatriculasTotal();
-    if(matReal>0){
-      var cobPct = Math.round(acumN/matReal*1000)/10;
-      var semCob = (typeof mcm_sem==='function') ? mcm_sem(cobPct,25,15) : (cobPct>=25?'VERDE':cobPct>=15?'AMARILLO':'ROJO');
-      var faltan = Math.max(0, Math.round(matReal*0.25 - acumN));
-      push('🎓','Cobertura créditos', cobPct+'%', 'Meta 25% · faltan '+faltan+' créd.', semCob, '#60a5fa');
-    }
-
     var sig = (typeof obtenerSigecNacional==='function') ? obtenerSigecNacional() : {};
+    var g = (typeof obtenerGlpiNacional==='function') ? obtenerGlpiNacional() : null;
+    var realUni = 0;
+    try{
+      if(typeof icSumarRealUniversidad==='function') realUni = icSumarRealUniversidad();
+      else col.forEach(function(r){ realUni += r.real_total_uni||0; });
+    }catch(e){ col.forEach(function(r){ realUni += r.real_total_uni||0; }); }
+    if(!realUni && matReal>0) realUni = matReal;
+    if(realUni>0){
+      var cobPct = Math.round(acumN/realUni*1000)/10;
+      var semCob = (typeof mcm_sem==='function') ? mcm_sem(cobPct,25,15) : (cobPct>=25?'VERDE':cobPct>=15?'AMARILLO':'ROJO');
+      var faltan = Math.max(0, Math.round(realUni*0.25 - acumN));
+      push('🎓','Cobertura Universidad', cobPct+'%', 'Colocado '+fmtN(acumN)+' / Real UNI '+fmtN(Math.round(realUni)), semCob, '#60a5fa');
+    }
+    if(matReal>0){
+      var sigF = (sig.facturada||0);
+      var glpA = (g && g.aprobada) ? g.aprobada : 0;
+      var colocSigGlpi = sigF + glpA;
+      if(colocSigGlpi>0){
+        var cobMat = Math.round(colocSigGlpi/matReal*1000)/10;
+        var semMat = (typeof mcm_sem==='function') ? mcm_sem(cobMat,25,15) : (cobMat>=25?'VERDE':cobMat>=15?'AMARILLO':'ROJO');
+        push('📚','Cobertura Matrículas', cobMat+'%', 'SIGEC+GLPI '+fmtN(colocSigGlpi)+' / mat. '+fmtN(matReal), semMat, '#818cf8');
+      }
+    }
     var totalSig = sig.total || 0;
     var convSig = (sig.facturada||0) + (sig.cerrada_fac||0);
     if(totalSig>0){
@@ -7248,7 +7354,6 @@ function _parseCumpleMMDD(s){
       push('⚡','Conversión SIGEC', pctConv+'%', convSig+' fact / '+totalSig+' total', semSig, '#a78bfa');
     }
 
-    var g = (typeof obtenerGlpiNacional==='function') ? obtenerGlpiNacional() : null;
     if(g && g.total){
       var pctG = g.pct_aprobada!=null ? g.pct_aprobada : Math.round((g.aprobada||0)/g.total*100);
       var semG = g.semaforo || ((typeof mcm_sem==='function') ? mcm_sem(pctG,54,35) : (pctG>=54?'VERDE':pctG>=35?'AMARILLO':'ROJO'));
@@ -11515,6 +11620,617 @@ function _parseCumpleMMDD(s){
   setTimeout(aplicarVersionApp, 500);
 
 })();
+</script>
+
+<!-- pyv-comercial-5.4.21: Informes Comerciales -->
+<script>
+/* CMD Informes Comerciales v5.4.21 — injected into seguimiento_comercial_CMD.html */
+(function(){
+  var IC_TAB = 'cobertura-uni';
+  var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
+  var IC_GLP = {TICKET:0,FC:1,CED:2,EST:3,FA:9,SED:8,TIPO:5};
+
+  function icFmt(n){ return (Number(n)||0).toLocaleString('es-CO'); }
+  function icNum(v){
+    if(v==null||v==='') return 0;
+    if(typeof v==='number') return v;
+    return parseFloat(String(v).replace('%','').replace(/,/g,'').replace('+',''))||0;
+  }
+  function icStr(v){ return v==null?'':String(v).trim(); }
+  function icNormCed(c){ return String(c||'').replace(/\D/g,'').replace(/^0+/,''); }
+  function icSem(pct,a,b){
+    if(pct>=(a||25)) return 'VERDE';
+    if(pct>=(b||15)) return 'AMARILLO';
+    return 'ROJO';
+  }
+  function icSemHtml(s){
+    var c=s==='VERDE'?'ic-sem-v':s==='AMARILLO'?'ic-sem-a':'ic-sem-r';
+    return '<span class="ic-sem '+c+'">'+s+'</span>';
+  }
+  function icMatchSede(a,b){
+    if(typeof _cdMatchSede==='function') return _cdMatchSede(a,b);
+    if(!a||!b) return false;
+    var x=icStr(a).toLowerCase(), y=icStr(b).toLowerCase();
+    return x===y||x.indexOf(y)>=0||y.indexOf(x)>=0;
+  }
+  function icFld(row, patterns, colIdx){
+    if(!row) return '';
+    var cols=row._cols||row._c||[];
+    var keys=Object.keys(row);
+    for(var i=0;i<patterns.length;i++){
+      var p=patterns[i].toUpperCase();
+      for(var k=0;k<keys.length;k++){
+        if(keys[k].toUpperCase().indexOf(p)>=0 && row[keys[k]]!=null && row[keys[k]]!=='')
+          return row[keys[k]];
+      }
+    }
+    if(colIdx!=null && cols[colIdx]!=null) return cols[colIdx];
+    return '';
+  }
+  function icParseDate(v){
+    if(!v) return null;
+    if(v instanceof Date && !isNaN(v)) return v;
+    if(typeof _mdParseGvizDate==='function'){
+      var d=_mdParseGvizDate(v); if(d) return d;
+    }
+    var s=String(v).trim();
+    var m=s.match(/Date\((\d+),(\d+),(\d+)/);
+    if(m) return new Date(+m[1],+m[2],+m[3]);
+    var p=s.split(/[\/\-\.]/);
+    if(p.length>=3){
+      var d=+p[0], mo=+p[1]-1, y=+p[2];
+      if(y<100) y+=2000;
+      if(!isNaN(y)&&!isNaN(mo)&&!isNaN(d)) return new Date(y,mo,d);
+    }
+    var d2=new Date(s);
+    return isNaN(d2)?null:d2;
+  }
+  function icHorasHabiles(ini, fin){
+    try{
+      var a=icParseDate(ini), b=icParseDate(fin)||new Date();
+      if(!a||isNaN(a)||isNaN(b)||b<=a) return 0;
+      var h=0, n=new Date(a);
+      while(n<b){
+        var dow=n.getDay(), hr=n.getHours();
+        if(dow>=1&&dow<=5&&hr>=8&&hr<18) h++;
+        n.setHours(n.getHours()+1);
+        if(h>500) break;
+      }
+      return h;
+    }catch(e){ return 0; }
+  }
+  function icCorteAyer(){
+    var d=new Date();
+    d.setDate(d.getDate()-1);
+    d.setHours(23,59,59,999);
+    return d;
+  }
+  function icKpi(lbl,val,sub,col){
+    return '<div class="ic-kpi" style="border-top-color:'+(col||'#003D45')+'"><div class="ic-kpi-lbl">'+lbl+'</div><div class="ic-kpi-val">'+val+'</div>'+(sub?'<div class="ic-kpi-sub">'+sub+'</div>':'')+'</div>';
+  }
+  function icSec(t,sub){ return '<div class="ic-sec">'+t+(sub?'<div class="ic-sec-sub">'+sub+'</div>':'')+'</div>'; }
+
+  function icColValUni(row, kind){
+    var map={
+      nuevos:['REAL NUEVOS PARA LA UNIVERSIDAD','REAL NUEVOS','REAL NUEVO'],
+      continuos:['REAL CONTINUOS PARA LA UNIVERSIDAD','REAL CONTINUOS','REAL CONTINUO'],
+      total:['TOTAL REAL PARA LA UNIVERSIDAD','TOTAL REAL UNIVERSIDAD','TOTAL REAL']
+    };
+    var pats=map[kind]||map.total;
+    return icNum(icFld(row,pats,null));
+  }
+
+  window.icEnriquecerColocUniversidad=function(){
+    return new Promise(function(resolve){
+      if(typeof _leerHoja!=='function'||typeof SHEETS_HOJAS==='undefined'){
+        icFallbackMatriculaEnColoc(); resolve(); return;
+      }
+      _leerHoja(SHEETS_HOJAS.colocacion,1).then(function(rows){
+        var map={};
+        (rows||[]).forEach(function(row){
+          var cols=row._cols||[];
+          var sedeRaw=icStr(row['SEDE']||row['Sede']||cols[0]);
+          if(!sedeRaw||sedeRaw.length<3) return;
+          var up=sedeRaw.toUpperCase();
+          if(up.indexOf('TOTAL')>=0||up==='SEDE'||up==='META') return;
+          var sede=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(sedeRaw):sedeRaw;
+          var rn=icColValUni(row,'nuevos'), rc=icColValUni(row,'continuos'), rt=icColValUni(row,'total');
+          if(!rt) rt=rn+rc;
+          map[sede]={real_nuevos_uni:rn,real_continuos_uni:rc,real_total_uni:rt};
+        });
+        (window._coloc_data||[]).forEach(function(r){
+          var e=map[r.sede];
+          if(e) Object.assign(r,e);
+        });
+        icFallbackMatriculaEnColoc();
+        resolve();
+      }).catch(function(){ icFallbackMatriculaEnColoc(); resolve(); });
+    });
+  };
+
+  function icFallbackMatriculaEnColoc(){
+    var matByRect={};
+    (window._matriculasData||[]).forEach(function(m){
+      matByRect[icStr(m.rectoria)]=m;
+    });
+    (window._coloc_data||[]).forEach(function(r){
+      if(r.real_total_uni>0) return;
+      var m=matByRect[r.rectoria||''];
+      if(!m) return;
+      var sedesRect=(typeof _mapaListaSedes==='function')?_mapaListaSedes(r.rectoria):[];
+      var n=sedesRect.length||1;
+      r.real_nuevos_uni=Math.round((m.real_nuevos||0)/n);
+      r.real_continuos_uni=Math.round((m.real_continuos||0)/n);
+      r.real_total_uni=Math.round((m.total_real||0)/n);
+    });
+  }
+
+  window.icSumarRealUniversidad=function(filtro){
+    var n=0;
+    icFilasColoc(filtro).forEach(function(r){ n+=r.real_total_uni||0; });
+    return n;
+  };
+
+  function icFilasColoc(filtro){
+    filtro=filtro||{};
+    var col=window._coloc_data||[];
+    if(filtro.nivel==='sede'&&filtro.sel) return col.filter(function(r){ return icMatchSede(r.sede,filtro.sel); });
+    if(filtro.nivel==='rectoria'&&filtro.sel){
+      return col.filter(function(r){ return icStr(r.rectoria)===icStr(filtro.sel); });
+    }
+    return col;
+  }
+
+  function icFilasSigec(filtro){
+    var rows=window._sigecRows||[];
+    if(filtro.nivel==='sede'&&filtro.sel)
+      return rows.filter(function(r){ var c=r._cols||[]; return icMatchSede(r.Sede||c[IC_SIG.SED],filtro.sel); });
+    if(filtro.nivel==='rectoria'&&filtro.sel)
+      return rows.filter(function(r){
+        var c=r._cols||[], s=r.Sede||c[IC_SIG.SED];
+        var rect=(window.PG_SEDE_RECTORIA||{})[s]||'';
+        return icStr(rect)===icStr(filtro.sel);
+      });
+    return rows;
+  }
+
+  function icFilasGlpi(filtro){
+    var rows=window._glpiRows||[];
+    if(filtro.nivel==='sede'&&filtro.sel)
+      return rows.filter(function(r){ var c=r._cols||[]; return icMatchSede(r.Sede||c[IC_GLP.SED],filtro.sel); });
+    if(filtro.nivel==='rectoria'&&filtro.sel)
+      return rows.filter(function(r){
+        var c=r._cols||[], s=r.Sede||c[IC_GLP.SED];
+        var rect=(window.PG_SEDE_RECTORIA||{})[s]||'';
+        return icStr(rect)===icStr(filtro.sel);
+      });
+    return rows;
+  }
+
+  function icFiltroActual(){
+    return {
+      nivel:(document.getElementById('ic-nivel')||{}).value||'nacional',
+      sel:(document.getElementById('ic-ambito')||{}).value||''
+    };
+  }
+
+  function icClasifSigec(row){
+    var est=(typeof leerEstadoSigec==='function')?leerEstadoSigec(row):icStr((row._cols||[])[IC_SIG.EST]);
+    return (typeof clasificarEstadoSigec==='function')?clasificarEstadoSigec(est):'otro';
+  }
+  function icEsNuevo(row){
+    var c=row._cols||[];
+    var g=icStr(row['Nuevo (1) /Renovación (2)']||c[IC_SIG.NR]);
+    return g==='1'||g.toLowerCase().indexOf('nuevo')>=0;
+  }
+  function icEsRetoma(row){
+    var c=row._cols||[];
+    var t=icStr(row.Tipo||c[IC_SIG.TIPO]).toLowerCase();
+    return t.indexOf('retoma')>=0||t.indexOf('recuper')>=0;
+  }
+  function icCongeladosSet(){
+    var set={}, list=window._congeladosData||[];
+    if(!list.length && window._congeladosRaw){
+      (window._congeladosRaw||[]).forEach(function(r){
+        var c=r._cols||[];
+        var tk=icStr(r.Ticket||c[1]); if(tk) set[tk]=true;
+      });
+    }
+    list.forEach(function(s){
+      (s.fechas_cargue||[]).forEach(function(f){ if(f.ticket) set[f.ticket]=true; });
+    });
+    return set;
+  }
+
+  var IC_DESCS={
+    'cobertura-uni':'Cobertura = créditos colocados (P Actual acum #) ÷ Total Real PARA LA UNIVERSIDAD del informe de colocación.',
+    'cobertura-mat':'Cobertura matrículas = (SIGEC facturadas + GLPI aprobadas) ÷ total matriculados UNIMINUTO.',
+    'nuevos-renov':'Nuevos y renovaciones desde COLOCACION SIGEC por estado. Cobertura nuevos = facturados nuevos ÷ Real Nuevos UNI; renovación = facturados renov ÷ Real Continuos UNI.',
+    'corte-dia':'Colocación reconocida con corte al día anterior 11:59 pm = SIGEC facturadas + GLPI aprobadas en ese período.',
+    'tiempos':'Horas hábiles entre fecha de cargue y última actualización (o facturación). Meta 48h. Congelados se reportan aparte.',
+    'pendientes':'Cédulas aprobadas en SIGEC/GLPI que NO aparecen en BASE COLOCACIÓN = pendientes de desembolso. Coincidencia = colocado reconocido.',
+    'retomas':'Tasa recuperación: retomas facturadas SIGEC vs cerradas + cerradas facturadas. Diferencia indica recuperación neta vs pérdida.'
+  };
+
+  function icRenderCoberturaUni(f){
+    var filas=icFilasColoc(f);
+    var acum=0, realT=0, realN=0, realC=0;
+    filas.forEach(function(r){
+      acum+=r.acum_n||0;
+      realT+=r.real_total_uni||0;
+      realN+=r.real_nuevos_uni||0;
+      realC+=r.real_continuos_uni||0;
+    });
+    var pct=realT>0?Math.round(acum/realT*1000)/10:0;
+    var html='<div class="ic-explain">'+IC_DESCS['cobertura-uni']+'</div>';
+    html+='<div class="ic-kpi-grid">';
+    html+=icKpi('Colocado S2',icFmt(acum),'P Actual acum #','#16a34a');
+    html+=icKpi('Real UNI total',icFmt(Math.round(realT)),'Total Real PARA LA UNIVERSIDAD','#6366f1');
+    html+=icKpi('Cobertura',pct+'%',icSemHtml(icSem(pct,25,15)),pct>=25?'#16a34a':pct>=15?'#ca8a04':'#dc2626');
+    html+=icKpi('Brecha créditos',icFmt(Math.max(0,Math.round(realT*0.25-acum))),'Meta referencia 25%','#dc2626');
+    html+='</div>';
+    html+=icSec('Desglose por sede','Colocado vs Real PARA LA UNIVERSIDAD');
+    html+='<div style="overflow:auto;max-height:360px"><table class="ic-tbl"><thead><tr><th>Sede</th><th>Colocado</th><th>Real UNI</th><th>Cobertura</th><th>Real Nuevos</th><th>Real Continuos</th></tr></thead><tbody>';
+    filas.sort(function(a,b){ return (b.acum_n||0)-(a.acum_n||0); }).forEach(function(r){
+      var rt=r.real_total_uni||0, p=rt>0?Math.round((r.acum_n||0)/rt*100):0;
+      html+='<tr><td>'+r.sede+'</td><td style="text-align:right;font-weight:700">'+icFmt(r.acum_n||0)+'</td><td style="text-align:right">'+icFmt(Math.round(rt))+'</td><td>'+icSemHtml(icSem(p,25,15))+' '+p+'%</td><td style="text-align:right">'+icFmt(Math.round(r.real_nuevos_uni||0))+'</td><td style="text-align:right">'+icFmt(Math.round(r.real_continuos_uni||0))+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+    return html;
+  }
+
+  function icRenderCoberturaMat(f){
+    var mat=0;
+    if(f.nivel==='nacional') mat=window._matriculas_total||0;
+    else if(f.nivel==='rectoria'&&f.sel){
+      var m=(window._matriculasData||[]).find(function(x){ return icStr(x.rectoria)===icStr(f.sel); });
+      mat=m?m.total_real||0:0;
+    } else if(f.nivel==='sede'&&f.sel){
+      var rect=(window.PG_SEDE_RECTORIA||{})[f.sel]||'';
+      var m2=(window._matriculasData||[]).find(function(x){ return icStr(x.rectoria)===icStr(rect); });
+      var sedes=(typeof _mapaListaSedes==='function')?_mapaListaSedes(rect):[];
+      mat=m2?Math.round((m2.total_real||0)/Math.max(1,sedes.length)):0;
+    }
+    var sigF=0, glpA=0;
+    icFilasSigec(f).forEach(function(r){ if(icClasifSigec(r)==='facturada') sigF++; });
+    icFilasGlpi(f).forEach(function(r){
+      var c=r._cols||[], est=icStr(r.estado||r.Estado||c[IC_GLP.EST]).toLowerCase();
+      if(est.indexOf('factur')>=0||est.indexOf('aprob')>=0) glpA++;
+    });
+    var comb=sigF+glpA;
+    var pct=mat>0?Math.round(comb/mat*1000)/10:0;
+    var html='<div class="ic-explain">'+IC_DESCS['cobertura-mat']+'</div><div class="ic-kpi-grid">';
+    html+=icKpi('Matriculados',icFmt(mat),'Repositorio matrículas','#6366f1');
+    html+=icKpi('SIGEC fact.',icFmt(sigF),'Estado facturada','#16a34a');
+    html+=icKpi('GLPI aprob.',icFmt(glpA),'Estado aprobada/facturada','#0891b2');
+    html+=icKpi('Cobertura',pct+'%',icSemHtml(icSem(pct,25,15)),'#003D45');
+    html+='</div>';
+    return html;
+  }
+
+  function icRenderNuevosRenov(f){
+    var estados=['facturada','cerrada_fac','cerrada','abierta','rechazada','pendiente_doc','pendiente','otro'];
+    var agg={}, i;
+    for(i=0;i<estados.length;i++){ agg[estados[i]]={nuevos:0,renov:0,total:0}; }
+    var factN=0, factR=0;
+    icFilasSigec(f).forEach(function(r){
+      var cls=icClasifSigec(r);
+      if(!agg[cls]) agg[cls]={nuevos:0,renov:0,total:0};
+      agg[cls].total++;
+      if(icEsNuevo(r)){ agg[cls].nuevos++; if(cls==='facturada') factN++; }
+      else { agg[cls].renov++; if(cls==='facturada') factR++; }
+    });
+    var col=icFilasColoc(f), realN=0, realC=0;
+    col.forEach(function(r){ realN+=r.real_nuevos_uni||0; realC+=r.real_continuos_uni||0; });
+    var cobN=realN>0?Math.round(factN/realN*1000)/10:0;
+    var cobR=realC>0?Math.round(factR/realC*1000)/10:0;
+    var html='<div class="ic-explain">'+IC_DESCS['nuevos-renov']+'</div><div class="ic-kpi-grid">';
+    html+=icKpi('Fact. nuevos',icFmt(factN),'÷ Real Nuevos UNI '+icFmt(Math.round(realN)),'#16a34a');
+    html+=icKpi('Cob. nuevos',cobN+'%',icSemHtml(icSem(cobN,25,15)),'#003D45');
+    html+=icKpi('Fact. renov.',icFmt(factR),'÷ Real Continuos UNI '+icFmt(Math.round(realC)),'#6366f1');
+    html+=icKpi('Cob. renov.',cobR+'%',icSemHtml(icSem(cobR,25,15)),'#7c3aed');
+    html+='</div>';
+    html+=icSec('Desglose SIGEC por estado','Conteo nuevos (1) vs renovación (2)');
+    html+='<table class="ic-tbl"><thead><tr><th>Estado</th><th>Nuevos</th><th>Renovación</th><th>Total</th></tr></thead><tbody>';
+    estados.forEach(function(e){
+      var o=agg[e]||{nuevos:0,renov:0,total:0};
+      if(!o.total) return;
+      html+='<tr><td>'+e+'</td><td style="text-align:right">'+icFmt(o.nuevos)+'</td><td style="text-align:right">'+icFmt(o.renov)+'</td><td style="text-align:right;font-weight:700">'+icFmt(o.total)+'</td></tr>';
+    });
+    html+='</tbody></table>';
+    return html;
+  }
+
+  function icRenderCorteDia(f){
+    var corte=icCorteAyer();
+    var sigF=0, glpA=0;
+    icFilasSigec(f).forEach(function(r){
+      if(icClasifSigec(r)!=='facturada') return;
+      var c=r._cols||[];
+      var ff=icParseDate(r['Fecha de Facturación']||c[IC_SIG.FF]);
+      if(ff&&ff<=corte) sigF++;
+    });
+    icFilasGlpi(f).forEach(function(r){
+      var c=r._cols||[];
+      var est=icStr(r.estado||r.Estado||c[IC_GLP.EST]).toLowerCase();
+      if(est.indexOf('factur')<0&&est.indexOf('aprob')<0) return;
+      var fa=icParseDate(r['Fecha última actualización']||c[IC_GLP.FA])||icParseDate(c[IC_GLP.FC]);
+      if(fa&&fa<=corte) glpA++;
+    });
+    var total=sigF+glpA;
+    var html='<div class="ic-explain">'+IC_DESCS['corte-dia']+' Corte: <b>'+corte.toLocaleString('es-CO')+'</b></div><div class="ic-kpi-grid">';
+    html+=icKpi('SIGEC fact.',icFmt(sigF),'Hasta corte día ant.','#16a34a');
+    html+=icKpi('GLPI aprob.',icFmt(glpA),'Hasta corte día ant.','#0891b2');
+    html+=icKpi('Colocación total',icFmt(total),'SIGEC fact. + GLPI aprob.','#003D45');
+    html+='</div>';
+    return html;
+  }
+
+  function icRenderTiempos(f){
+    var cong=icCongeladosSet();
+    var dentro=0, fuera=0, congAtras=0, total=0;
+    var det=[];
+    icFilasSigec(f).forEach(function(r){
+      var c=r._cols||[];
+      var cls=icClasifSigec(r);
+      if(cls==='cerrada'||cls==='rechazada') return;
+      var fc=icStr(r['Fecha de Cargue']||c[IC_SIG.FC]);
+      var fa=icStr(r['Fecha última actualización']||c[IC_SIG.FA]);
+      var ff=icStr(r['Fecha de Facturación']||c[IC_SIG.FF]);
+      var fin=ff||fa||'';
+      var hrs=icHorasHabiles(fc, fin||new Date());
+      var tk=icStr(r.Ticket||c[IC_SIG.TICKET]);
+      var esCong=!!cong[tk];
+      total++;
+      if(esCong&&hrs>48) congAtras++;
+      else if(!esCong&&hrs>48) fuera++;
+      else dentro++;
+      if(hrs>48||esCong) det.push({tk:tk,sede:icStr(r.Sede||c[IC_SIG.SED]),hrs:hrs,cong:esCong,est:cls});
+    });
+    var html='<div class="ic-explain">'+IC_DESCS['tiempos']+'</div><div class="ic-kpi-grid">';
+    html+=icKpi('Dentro 48h',icFmt(dentro),'En tiempo hábil','#16a34a');
+    html+=icKpi('Fuera 48h',icFmt(fuera),'Sin congelar · requiere gestión','#dc2626');
+    html+=icKpi('Atraso congelados',icFmt(congAtras),'Demora por estar congelados','#ca8a04');
+    html+=icKpi('Tickets analizados',icFmt(total),'SIGEC activos/pendientes','#64748b');
+    html+='</div>';
+    html+=icSec('Tickets fuera de tiempo o congelados','Fecha cargue → última actualización / facturación');
+    html+='<div style="overflow:auto;max-height:320px"><table class="ic-tbl"><thead><tr><th>Ticket</th><th>Sede</th><th>Horas</th><th>Congelado</th><th>Estado</th></tr></thead><tbody>';
+    det.sort(function(a,b){ return b.hrs-a.hrs; }).slice(0,80).forEach(function(d){
+      html+='<tr><td>'+d.tk+'</td><td>'+d.sede+'</td><td style="text-align:right;color:'+(d.hrs>48?'#dc2626':'#16a34a')+'">'+d.hrs+'h</td><td>'+(d.cong?'❄️ Sí':'No')+'</td><td>'+d.est+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+    return html;
+  }
+
+  function icBaseCedulas(){
+    var set={};
+    (window._baseColocFilas||[]).forEach(function(r){ var c=icNormCed(r.cedula); if(c) set[c]=true; });
+    if(!Object.keys(set).length){
+      (window._baseColocData||[]).forEach(function(s){
+        (s.ccs||[]).forEach(function(c){ var n=icNormCed(c); if(n) set[n]=true; });
+      });
+    }
+    return set;
+  }
+
+  function icRenderPendientes(f){
+    var base=icBaseCedulas();
+    var aprobadas=[], pendientes=[], desembolsadas=0;
+    function proc(ced,sede,origen,tk){
+      var n=icNormCed(ced); if(!n||n.length<5) return;
+      if(base[n]){ desembolsadas++; return; }
+      pendientes.push({ced:n,sede:sede,origen:origen,tk:tk});
+    }
+    icFilasSigec(f).forEach(function(r){
+      if(icClasifSigec(r)!=='facturada') return;
+      var c=r._cols||[];
+      proc(r['Cedula asociado']||r['Cédula asociado']||c[IC_SIG.CED], icStr(r.Sede||c[IC_SIG.SED]), 'SIGEC', icStr(r.Ticket||c[0]));
+    });
+    icFilasGlpi(f).forEach(function(r){
+      var c=r._cols||[];
+      var est=icStr(r.estado||c[IC_GLP.EST]).toLowerCase();
+      if(est.indexOf('factur')<0&&est.indexOf('aprob')<0) return;
+      proc(r['Cédula asociado']||c[IC_GLP.CED], icStr(r.Sede||c[IC_GLP.SED]), 'GLPI', icStr(r.Ticket||c[0]));
+    });
+    var html='<div class="ic-explain">'+IC_DESCS['pendientes']+'</div><div class="ic-kpi-grid">';
+    html+=icKpi('Desembolsadas',icFmt(desembolsadas),'Cédula en BASE COLOCACIÓN','#16a34a');
+    html+=icKpi('Pendientes',icFmt(pendientes.length),'Aprobadas sin cruce en base','#dc2626');
+    html+=icKpi('Base cédulas',icFmt(Object.keys(base).length),'BASE COLOCACIÓN','#6366f1');
+    html+='</div>';
+    html+=icSec('Pendientes de desembolso','Aprobadas SIGEC/GLPI sin match en base');
+    html+='<div style="overflow:auto;max-height:340px"><table class="ic-tbl"><thead><tr><th>Cédula</th><th>Sede</th><th>Origen</th><th>Ticket</th></tr></thead><tbody>';
+    pendientes.slice(0,100).forEach(function(p){
+      html+='<tr><td>'+p.ced+'</td><td>'+p.sede+'</td><td>'+p.origen+'</td><td>'+p.tk+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+    return html;
+  }
+
+  function icRenderRetomas(f){
+    var cong=icCongeladosSet();
+    var retFact=0, cerr=0, cerrFac=0, cerrCong=0;
+    icFilasSigec(f).forEach(function(r){
+      var cls=icClasifSigec(r);
+      var c=r._cols||[];
+      var tk=icStr(r.Ticket||c[0]);
+      if(cls==='cerrada'){ cerr++; if(cong[tk]) cerrCong++; }
+      if(cls==='cerrada_fac') cerrFac++;
+      if(cls==='facturada'&&icEsRetoma(r)) retFact++;
+    });
+    var cerrTot=cerr+cerrFac;
+    var diff=retFact-cerrTot;
+    var tasaRec=(retFact+cerrTot)>0?Math.round(retFact/(retFact+cerrTot)*1000)/10:0;
+    var tasaPerd=cerrTot>0?Math.round(cerrTot/(retFact+cerrTot)*1000)/10:0;
+    var html='<div class="ic-explain">'+IC_DESCS['retomas']+'</div><div class="ic-kpi-grid">';
+    html+=icKpi('Retomas fact.',icFmt(retFact),'SIGEC facturada tipo retoma/recuperación','#16a34a');
+    html+=icKpi('Cerradas',icFmt(cerr),'Solicitudes cerradas','#dc2626');
+    html+=icKpi('Cerradas fac.',icFmt(cerrFac),'Cerradas facturadas','#ca8a04');
+    html+=icKpi('Diferencia',icFmt(diff),'Retomas − (cerradas+cerr.fac)','#6366f1');
+    html+=icKpi('Tasa recuperación',tasaRec+'%','Retomas / (retomas+cerradas)','#16a34a');
+    html+=icKpi('Cerradas congeladas',icFmt(cerrCong),'Posible cierre por falta de gestión','#f97316');
+    html+='</div>';
+    return html;
+  }
+
+  var IC_RENDERERS={
+    'cobertura-uni':icRenderCoberturaUni,
+    'cobertura-mat':icRenderCoberturaMat,
+    'nuevos-renov':icRenderNuevosRenov,
+    'corte-dia':icRenderCorteDia,
+    'tiempos':icRenderTiempos,
+    'pendientes':icRenderPendientes,
+    'retomas':icRenderRetomas
+  };
+
+  window.icRenderInformeActivo=function(){
+    var f=icFiltroActual();
+    var fn=IC_RENDERERS[IC_TAB];
+    var el=document.getElementById('ic-contenido');
+    var desc=document.getElementById('ic-desc-activo');
+    var fu=document.getElementById('ic-fuente');
+    if(desc) desc.textContent=IC_DESCS[IC_TAB]||'';
+    if(!el||!fn) return;
+    el.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Calculando…</div>';
+    setTimeout(function(){
+      try{
+        el.innerHTML=fn(f);
+        if(fu) fu.textContent='Fuentes: P Actual · SIGEC · GLPI · Matrículas · Base Colocación · Congelados · '+new Date().toLocaleString('es-CO');
+      }catch(e){
+        el.innerHTML='<div style="color:#dc2626;padding:20px">Error: '+(e&&e.message||e)+'</div>';
+      }
+    },30);
+  };
+
+  window.icSeleccionarTab=function(tab){
+    IC_TAB=tab||'cobertura-uni';
+    document.querySelectorAll('.ic-tab').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-ic')===IC_TAB);
+    });
+    icRenderInformeActivo();
+  };
+
+  window.icCambiarNivel=function(){
+    var nivel=(document.getElementById('ic-nivel')||{}).value||'nacional';
+    var sel=document.getElementById('ic-ambito');
+    var lbl=document.getElementById('ic-lbl-ambito');
+    if(!sel) return;
+    sel.innerHTML='<option value="">Todas</option>';
+    if(nivel==='rectoria'){
+      if(lbl) lbl.textContent='RECTORÍA';
+      var rects={};
+      (window._coloc_data||[]).forEach(function(r){ if(r.rectoria) rects[r.rectoria]=1; });
+      Object.keys(rects).sort().forEach(function(r){
+        var o=document.createElement('option'); o.value=r; o.textContent=r; sel.appendChild(o);
+      });
+    } else if(nivel==='sede'){
+      if(lbl) lbl.textContent='SEDE';
+      var sedes=(typeof _mapaListaSedes==='function')?_mapaListaSedes(''):Object.keys(window.PG_SEDE_RECTORIA||{});
+      sedes.sort().forEach(function(s){
+        var o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
+      });
+    } else if(lbl) lbl.textContent='ÁMBITO';
+    icRenderInformeActivo();
+  };
+
+  window.abrirInformesComerciales=function(tab){
+    var m=document.getElementById('modal-informes-comerciales');
+    if(!m) return;
+    m.style.display='block';
+    icCargarDatosInformes().then(function(){
+      if(tab) icSeleccionarTab(tab);
+      else icRenderInformeActivo();
+    });
+  };
+  window.cerrarInformesComerciales=function(){
+    var m=document.getElementById('modal-informes-comerciales');
+    if(m) m.style.display='none';
+  };
+  window.icRefrescarInformes=function(){ icCargarDatosInformes(true).then(icRenderInformeActivo); };
+
+  function icCargarDatosInformes(forzar){
+    var ps=[];
+    if(typeof window._scicRefrescarDatosVivos==='function'&&forzar) ps.push(window._scicRefrescarDatosVivos(true).catch(function(){}));
+    else if(typeof cargarDesdeSheetsCompleto==='function'&&forzar) ps.push(cargarDesdeSheetsCompleto(true).catch(function(){}));
+    ps.push(window.icEnriquecerColocUniversidad());
+    ps.push(icCargarBaseFilas());
+    ps.push(icCargarCongeladosRaw());
+    return Promise.all(ps);
+  }
+
+  function icCargarBaseFilas(){
+    if(window._baseColocFilas&&window._baseColocFilas.length) return Promise.resolve();
+    if(typeof _leerHoja!=='function'||typeof SHEETS_HOJAS==='undefined') return Promise.resolve();
+    return _leerHoja(SHEETS_HOJAS.baseColoc).then(function(rows){
+      window._baseColocFilas=(rows||[]).map(function(row){
+        var c=row._cols||[];
+        return {
+          cedula: icStr(row.Identificacion||row['Identificación']||c[6]),
+          sede: (typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(icStr(row.Sede||c[13])):icStr(row.Sede||c[13]),
+          radicado: icStr(row.Radicado||c[0])
+        };
+      }).filter(function(r){ return r.cedula; });
+    }).catch(function(){ window._baseColocFilas=[]; });
+  }
+
+  function icCargarCongeladosRaw(){
+    if(window._congeladosRaw&&window._congeladosRaw.length) return Promise.resolve();
+    if(typeof _cargarCongelados==='function') return _cargarCongelados().then(function(){
+      if(typeof _leerHoja==='function'&&SHEETS_HOJAS.congelados)
+        return _leerHoja(SHEETS_HOJAS.congelados).then(function(r){ window._congeladosRaw=r||[]; });
+    }).catch(function(){});
+    return Promise.resolve();
+  }
+
+  // Parche MCM_COBERTURA — fórmula correcta
+  if(window.MCM_COBERTURA){
+    var _icCobOrigN=MCM_COBERTURA.nacional;
+    var _icCobOrigS=MCM_COBERTURA.por_sede;
+    MCM_COBERTURA.nacional=function(){
+      var cred=(window._coloc_data||[]).reduce(function(s,r){ return s+(r.acum_n||0); },0);
+      var matReal=window.icSumarRealUniversidad?window.icSumarRealUniversidad():0;
+      if(!matReal) matReal=window._matriculas_total||0;
+      var pct=matReal>0?Math.round(cred/matReal*1000)/10:0;
+      return {cred:cred,mat_real:matReal,mat_meta:window._matriculas_total_meta||0,pct:pct,meta_pct:25,brecha_pct:Math.max(0,25-pct),cred_para_meta:Math.max(0,Math.round(matReal*0.25-cred)),semaforo:(typeof mcm_sem==='function')?mcm_sem(pct,25,15):icSem(pct,25,15),fuente:'Real PARA LA UNIVERSIDAD'};
+    };
+    MCM_COBERTURA.por_sede=function(sede){
+      var r=(window._coloc_data||[]).find(function(x){ return x.sede===sede; });
+      var cred=r?r.acum_n||0:0;
+      var matReal=r?r.real_total_uni||0:0;
+      if(!matReal){
+        var m=(window._matriculasData||[]).find(function(x){
+          return sede && (window.PG_SEDE_RECTORIA||{})[sede]===x.rectoria;
+        });
+        if(m){
+          var sedes=(typeof _mapaListaSedes==='function')?_mapaListaSedes(m.rectoria):[];
+          matReal=Math.round((m.total_real||0)/Math.max(1,sedes.length));
+        }
+      }
+      var pct=matReal>0?Math.round(cred/matReal*1000)/10:0;
+      return {sede:sede,cred:cred,mat_real:matReal,pct:pct,semaforo:(typeof mcm_sem==='function')?mcm_sem(pct,25,15):icSem(pct,25,15)};
+    };
+  }
+
+  // Enriquecer colocación tras cada carga
+  if(typeof _cargarColocacion==='function'){
+    var _icOrigColoc=_cargarColocacion;
+    window._cargarColocacion=_cargarColocacion=function(){
+      return _icOrigColoc.apply(this,arguments).then(function(res){
+        return window.icEnriquecerColocUniversidad().then(function(){ return res; });
+      });
+    };
+  }
+  if(typeof cargarDesdeSheetsCompleto==='function'){
+    var _icOrigCompleto=cargarDesdeSheetsCompleto;
+    window.cargarDesdeSheetsCompleto=function(forzar){
+      return _icOrigCompleto(forzar).then(function(res){
+        return window.icEnriquecerColocUniversidad().then(function(){ return res; });
+      });
+    };
+  }
+
+  console.log('[CMD] Informes Comerciales v5.4.21 — cobertura universidad + 7 informes');
+})();
+
 </script>
 <footer class="app-footer" id="app-footer-global">
   <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:#94a3b8;font-size:10px;padding:14px 16px 20px">
