@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.47   (APP_VERSION = 'pyv-comercial-5.4.47')
+  Versión actual: pyv-comercial-5.4.48   (APP_VERSION = 'pyv-comercial-5.4.48')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.48 (2026-07-04)
+    - Menú e informes: vista nacional por defecto para todos tras el login.
+    - Bienvenida sigue mostrando las sedes asignadas del empleado.
+    - Botón «Ver mis sedes» alterna KPIs del menú a las sedes del usuario (opcional).
   pyv-comercial-5.4.47 (2026-07-04)
     - Login EMPLEADOS: usuarios embebidos en encabezados del Sheet (orlys.solano, yara.diaz, etc.) ahora se cargan con sedes desde la hoja.
   pyv-comercial-5.4.46 (2026-07-04)
@@ -254,11 +258,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.47">
-<meta name="build-id" content="pyv-comercial-5.4.47-20260704-1700">
+<meta name="app-version" content="pyv-comercial-5.4.48">
+<meta name="build-id" content="pyv-comercial-5.4.48-20260704-1750">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.47';
+window.APP_VERSION='pyv-comercial-5.4.48';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -852,7 +856,7 @@ window._cargarTop5 = window._cargarTop5 || function(){
           </div>
         </div>
         <div id="mbs-explicacion" style="font-size:10px;color:rgba(255,255,255,.5);line-height:1.55;padding:10px 12px;background:rgba(0,176,185,.08);border-radius:10px;border:1px solid rgba(0,176,185,.2)">
-          Este resumen muestra solo la información de las sedes a las que perteneces según el repositorio de empleados. Los datos provienen de los 8 repositorios en vivo (colocación, SIGEC, GLPI, cartera, etc.).
+          Este resumen muestra las sedes a las que perteneces según EMPLEADOS. Al continuar, el menú e informes se muestran a nivel <strong style="color:#FFD900">nacional</strong>; usa «Ver mis sedes» en el menú si quieres filtrar solo tus sedes.
         </div>
         <div id="mbs-contenido" style="min-height:120px">
           <div style="text-align:center;padding:28px;color:rgba(255,255,255,.45);font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:22px"></i><div style="margin-top:10px">Cargando tu panorama…</div></div>
@@ -1351,7 +1355,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
       <div class="cmd-corte-bar" id="menu-corte-bar">
         <span class="cmd-corte-hint" id="cmd-corte-hint">Vista al cierre del día anterior (23:59)</span>
-        <button type="button" class="cmd-corte-link" onclick="cmdVerPorSede()" title="Abrir informes filtrados por sede">Ver por sede →</button>
+        <button type="button" class="cmd-corte-link" id="cmd-vista-sedes-btn" onclick="cmdToggleVistaMenu()" title="Alternar entre vista nacional y tus sedes asignadas">Ver mis sedes →</button>
       </div>
 
       <div class="menu-salud-panel" id="menu-salud-panel">
@@ -3816,7 +3820,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.47';
+var APP_VERSION = 'pyv-comercial-5.4.48';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7967,6 +7971,9 @@ function _parseCumpleMMDD(s){
   window.renderMenuSemTrio=renderMenuSemTrio;
 
   function _getMenuAmbitoVista(){
+    if(window._menuVistaAmbito!=='mis-sedes'){
+      return { esNacional:true, sedes:[], etiqueta:'Nacional', sedeUnica:null };
+    }
     var scope=_menuResolverSedesUsuario();
     if(scope.esNacional) return { esNacional:true, sedes:[], etiqueta:'Nacional', sedeUnica:null };
     var sedes=scope.sedes||[];
@@ -8470,6 +8477,7 @@ function _parseCumpleMMDD(s){
       renderMenuSigecSemaforo(metaN, sig, glpi, sedeAmb || ambitoLbl);
       renderMenuVsAnterior(vista.esNacional ? null : sedesFiltro);
       renderMenuMcmRadar();
+      try{ if(typeof cmdActualizarBotonVistaMenu==='function') cmdActualizarBotonVistaMenu(); }catch(e){}
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
   window.actualizarMenuKPIs = actualizarMenuKPIs;
@@ -9287,6 +9295,8 @@ function _parseCumpleMMDD(s){
   window.abrirConsultaDinamica = function(refresh){
     var modal = document.getElementById('modal-consulta-dinamica');
     if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Estado operativo no disponible'); return; }
+    var cdNivel=document.getElementById('cd-nivel');
+    if(cdNivel) cdNivel.value='nacional';
     modal.style.display = 'block';
     var el = document.getElementById('cd-contenido');
     var pintar = function(aviso){
@@ -10100,6 +10110,8 @@ function _parseCumpleMMDD(s){
   window.abrirMetasDiarias = function(refresh){
     var modal = document.getElementById('modal-metas-diarias');
     if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Módulo no disponible'); return; }
+    var mdNivel=document.getElementById('md-nivel');
+    if(mdNivel) mdNivel.value='nacional';
     modal.style.display = 'block';
     var mesInp = document.getElementById('md-mes');
     if(mesInp && !mesInp.value){
@@ -11617,6 +11629,17 @@ function _parseCumpleMMDD(s){
   };
 
   (function(){
+    var _origCerrar = window.cerrarSesion;
+    if(typeof _origCerrar === 'function'){
+      window.cerrarSesion = function(){
+        window._menuVistaAmbito='nacional';
+        if(navState&&typeof navState==='object') navState.menuVistaAmbito='nacional';
+        _origCerrar();
+      };
+    }
+  })();
+
+  (function(){
     var _origLogin = window._completarLogin;
     if(typeof _origLogin === 'function'){
       window._completarLogin = function(){
@@ -11624,6 +11647,9 @@ function _parseCumpleMMDD(s){
         var emp = window._pendingEmp && window._pendingEmp.emp;
         if(correo && EMPLEADOS_BD && EMPLEADOS_BD[correo]) emp = EMPLEADOS_BD[correo];
         _origLogin();
+        window._menuVistaAmbito='nacional';
+        if(navState&&typeof navState==='object') navState.menuVistaAmbito='nacional';
+        try{ if(typeof cmdActualizarBotonVistaMenu==='function') cmdActualizarBotonVistaMenu(); }catch(e){}
         if(emp){
           try{ if(typeof _empAplicarEmpleadoSesion==='function') _empAplicarEmpleadoSesion(emp); }catch(e){}
           try{ if(typeof mostrarModalBienvenidaSede === 'function') mostrarModalBienvenidaSede(emp); }catch(e){}
@@ -11841,11 +11867,43 @@ function _parseCumpleMMDD(s){
       if(ms) ms.textContent='corte '+lbl;
     };
     window.cmdVerPorSede=function(){
+      cmdSetVistaMenu('mis-sedes');
       if(typeof abrirInformesComerciales==='function') abrirInformesComerciales('cobertura-uni');
       setTimeout(function(){
         var n=document.getElementById('ic-nivel');
+        var sel=document.getElementById('ic-ambito');
+        var scope=(typeof _menuResolverSedesUsuario==='function')?_menuResolverSedesUsuario():{sedes:[]};
         if(n){ n.value='sede'; if(typeof icCambiarNivel==='function') icCambiarNivel(); }
+        if(sel&&scope.sedes&&scope.sedes.length===1) sel.value=scope.sedes[0];
+        if(typeof icRenderInformeActivo==='function') icRenderInformeActivo();
       },250);
+    };
+    window._menuVistaAmbito='nacional';
+    window.cmdSetVistaMenu=function(modo){
+      window._menuVistaAmbito=(modo==='mis-sedes')?'mis-sedes':'nacional';
+      if(navState&&typeof navState==='object') navState.menuVistaAmbito=window._menuVistaAmbito;
+      cmdActualizarBotonVistaMenu();
+      try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+    };
+    window.cmdToggleVistaMenu=function(){
+      cmdSetVistaMenu(window._menuVistaAmbito==='mis-sedes'?'nacional':'mis-sedes');
+    };
+    window.cmdActualizarBotonVistaMenu=function(){
+      var btn=document.getElementById('cmd-vista-sedes-btn');
+      if(!btn) return;
+      var scope=(typeof _menuResolverSedesUsuario==='function')?_menuResolverSedesUsuario():{esNacional:true,sedes:[]};
+      if(scope.esNacional||!scope.sedes||!scope.sedes.length){
+        btn.style.display='none';
+        return;
+      }
+      btn.style.display='';
+      if(window._menuVistaAmbito==='mis-sedes'){
+        btn.textContent='Ver nacional →';
+        btn.title='Volver a la vista nacional en el menú';
+      } else {
+        btn.textContent='Ver mis sedes →';
+        btn.title='Filtrar KPIs del menú a tus sedes asignadas';
+      }
     };
     if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',cmdCorteInit);
     else setTimeout(cmdCorteInit,100);
@@ -13594,6 +13652,12 @@ function _parseCumpleMMDD(s){
   window.abrirInformesComerciales=function(tab){
     var m=document.getElementById('modal-informes-comerciales');
     if(!m) return;
+    var icNivel=document.getElementById('ic-nivel');
+    var icAmbito=document.getElementById('ic-ambito');
+    if(icNivel) icNivel.value='nacional';
+    if(icAmbito) icAmbito.innerHTML='<option value="">Todas</option>';
+    var icLbl=document.getElementById('ic-lbl-ambito');
+    if(icLbl) icLbl.textContent='ÁMBITO';
     m.style.display='block';
     icCargarDatosInformes().then(function(){
       if(tab) icSeleccionarTab(tab);
