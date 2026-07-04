@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.43   (APP_VERSION = 'pyv-comercial-5.4.43')
+  Versión actual: pyv-comercial-5.4.44   (APP_VERSION = 'pyv-comercial-5.4.44')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.44 (2026-07-04)
+    - Login inmediato: ya no espera la hoja EMPLEADOS antes de entrar; Sheets se refresca en segundo plano.
+    - Sedes unificadas para todos los usuarios (mismo criterio que juan.orrego): hoja EMPLEADOS + alias, sin expandir rectoría.
+    - Bienvenida y menú se actualizan al llegar datos vivos del Sheet.
   pyv-comercial-5.4.43 (2026-07-04)
     - Eliminado selector «Vista del menú» (Nacional / por sede); KPIs usan ámbito automático del usuario.
     - Bienvenida: empleados multi-sede ven un bloque por cada sede de la hoja EMPLEADOS antes del menú.
@@ -241,11 +245,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.43">
-<meta name="build-id" content="pyv-comercial-5.4.43-20260704-1540">
+<meta name="app-version" content="pyv-comercial-5.4.44">
+<meta name="build-id" content="pyv-comercial-5.4.44-20260704-1550">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.43';
+window.APP_VERSION='pyv-comercial-5.4.44';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3803,7 +3807,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.43';
+var APP_VERSION = 'pyv-comercial-5.4.44';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4064,6 +4068,86 @@ function _empParseSedes(sedeStr){
 }
 window._empParseSedes=_empParseSedes;
 
+function _empNormSede(s){
+  return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
+}
+function _empEsRolNacional(cargo){
+  var c=_empNormSede(cargo);
+  return c.indexOf('director nacional')>=0 || c.indexOf('nacional comercial')>=0
+    || c.indexOf('gerente general')>=0 || c.indexOf('vicepresident')>=0
+    || (c.indexOf('nacional')>=0 && (c.indexOf('director')>=0 || c.indexOf('gerente')>=0));
+}
+function _empCanonizarSede(raw){
+  if(!raw) return null;
+  var norm=typeof normalizarSedeColocacion==='function'?normalizarSedeColocacion(raw):raw;
+  if(typeof buscarFilasColoc==='function'){
+    var f=buscarFilasColoc([raw,norm]);
+    if(f.length&&f[0].sede) return f[0].sede;
+  }
+  if(typeof _mbsResolverSedeColoc==='function'){
+    var r=_mbsResolverSedeColoc(raw);
+    if(r) return r;
+  }
+  return norm||raw;
+}
+// Sedes del usuario: siempre desde hoja EMPLEADOS (como juan.orrego), sin expandir rectoría
+function _empResolverSedesDesdeSheet(emp){
+  emp=emp||{};
+  var cargo=emp.cargo||'';
+  var sedeRaw=emp.sede||'';
+  if(_empEsRolNacional(cargo)) return { esNacional:true, raw:[], canon:[], items:[] };
+  var raw=_empParseSedes(sedeRaw);
+  if(raw.some(function(s){ return _empNormSede(s).indexOf('nacional')>=0; })){
+    return { esNacional:true, raw:[], canon:[], items:[] };
+  }
+  var items=raw.map(function(r){
+    return { label:r, canon:_empCanonizarSede(r)||r };
+  });
+  var canon=[], seen={};
+  items.forEach(function(it){
+    if(it.canon&&!seen[it.canon]){ seen[it.canon]=1; canon.push(it.canon); }
+  });
+  return { esNacional:false, raw:raw, canon:canon, items:items };
+}
+window._empResolverSedesDesdeSheet=_empResolverSedesDesdeSheet;
+
+function _empAplicarEmpleadoSesion(emp){
+  if(!emp) return;
+  var correo=String(emp.correo||'').trim().toLowerCase();
+  if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
+  if(sesionActiva&&typeof sesionActiva==='object'){
+    sesionActiva.nombre=emp.nombre;
+    sesionActiva.cargo=emp.cargo;
+    sesionActiva.sede=emp.sede;
+    sesionActiva.cedula=emp.cedula;
+    if(correo) sesionActiva.correo=correo;
+  }
+  if(navState&&typeof navState==='object'){
+    navState.nombreEjecutor=emp.nombre;
+    navState.cargoEjecutor=emp.cargo;
+    navState.sedeEjecutor=emp.sede;
+    navState.cedulaEjecutor=emp.cedula;
+    if(correo) navState.correoEjecutor=correo;
+  }
+  try{ _sincronizarSesionDesdeEmpleados(); }catch(e){}
+  var i=document.getElementById('menu-cargo-sede');
+  if(i) i.textContent=(emp.cargo||'—')+' · '+(emp.sede||'—');
+  try{ if(typeof actualizarMenuKPIs==='function'&&sesionActiva) actualizarMenuKPIs(); }catch(e){}
+  try{ if(typeof window._mbsActualizarSiAbierta==='function') window._mbsActualizarSiAbierta(emp); }catch(e){}
+}
+window._empAplicarEmpleadoSesion=_empAplicarEmpleadoSesion;
+
+function _empRefrescarDesdeSheet(correo, onListo){
+  if(typeof _cargarEmpleados!=='function'){ if(onListo) onListo(); return Promise.resolve(); }
+  return _cargarEmpleados(true).then(function(){
+    if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]){
+      _empAplicarEmpleadoSesion(EMPLEADOS_BD[correo]);
+      if(onListo) onListo(EMPLEADOS_BD[correo]);
+    } else if(onListo) onListo();
+  }).catch(function(){ if(onListo) onListo(); });
+}
+window._empRefrescarDesdeSheet=_empRefrescarDesdeSheet;
+
 function _empCorreoSesion(){
   return (navState&&navState.correoEjecutor)||(sesionActiva&&sesionActiva.correo)||'';
 }
@@ -4109,7 +4193,7 @@ function _cargarEmpleados(forzar){
   return new Promise(function(resolve){
     var listo=function(){
       try{ _sincronizarSesionDesdeEmpleados(); }catch(e){}
-      try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+      try{ if(typeof actualizarMenuKPIs==='function'&&sesionActiva) actualizarMenuKPIs(); }catch(e){}
       resolve(EMPLEADOS_BD);
     };
     try{
@@ -4139,7 +4223,7 @@ function _cargarEmpleados(forzar){
         listo();
       };
       sc2.onerror=function(){ clearTimeout(tm); delete window[cb]; listo(); };
-      tm=setTimeout(function(){ delete window[cb]; listo(); }, forzar?20000:12000);
+      tm=setTimeout(function(){ delete window[cb]; listo(); }, forzar?8000:12000);
       sc2.src='https://docs.google.com/spreadsheets/d/1dRf-Gvs-jp5WWsXo9TFgqDICuMCPNWYIiPqTKhTJDuM/gviz/tq?tqx=out:json;responseHandler='+cb+'&sheet=EMPLEADOS&_='+Date.now();
       document.head.appendChild(sc2);
     }catch(e){ listo(); }
@@ -7134,6 +7218,7 @@ function _parseCumpleMMDD(s){
           +'<div style="font-size:11px;color:#64748b;margin-top:6px;line-height:1.7">Escribe solo la parte <strong>antes</strong> del @, coincidiendo exactamente.<br>'
           +'<span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-family:monospace">nombre.apellido</span><br>'
           +'<small style="color:#94a3b8">('+Object.keys(EMPLEADOS_BD||{}).length+' usuarios en el directorio)</small></div></div>';
+        if(btn){ btn.disabled=false; btn.style.opacity='1'; }
         return;
       }
       var correo=emp.correo||(val.indexOf('@')>=0?val:val+'@coopminutodedios.com');
@@ -7142,19 +7227,28 @@ function _parseCumpleMMDD(s){
         if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-user-off" style="color:#d97706;font-size:24px"></i>'
           +'<div style="font-size:12px;color:#d97706;font-weight:700;margin-top:8px">Usuario inactivo</div>'
           +'<div style="font-size:11px;color:#64748b;margin-top:4px">Contacta al administrador del sistema</div></div>';
+        if(btn){ btn.disabled=false; btn.style.opacity='1'; }
         return;
       }
       window._pendingEmp={correo:correo,emp:emp};
       _completarLogin();
+      if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+      if(typeof _empRefrescarDesdeSheet==='function'){
+        _empRefrescarDesdeSheet(correo);
+      }
     };
+    var previo=_resolverEmpleadoExacto(val);
+    if(previo){
+      intentar();
+      return;
+    }
     if(res) res.innerHTML='<div style="text-align:center;padding:16px"><i class="ti ti-loader" style="font-size:24px;color:#003D45;animation:spin 1s linear infinite"></i>'
-      +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Actualizando directorio de empleados...</div>'
-      +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Sedes asignadas desde hoja EMPLEADOS</div></div>';
+      +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Consultando hoja EMPLEADOS…</div>'
+      +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Solo la primera vez o si el usuario no está en caché local</div></div>';
     if(btn){ btn.disabled=true; btn.style.opacity='0.7'; }
     _cargarEmpleados(true).then(function(){
-      if(btn){ btn.disabled=false; btn.style.opacity='1'; }
       intentar();
-    }).catch(function(){ if(btn){ btn.disabled=false; btn.style.opacity='1'; } intentar(); });
+    }).catch(function(){ intentar(); });
   };
 
   // Fusión: el modal de bienvenida ya no se muestra; su contenido se renderiza en el login.
@@ -7738,40 +7832,26 @@ function _parseCumpleMMDD(s){
   }
   function _menuResolverSedesUsuario(opts){
     opts=opts||{};
-    var cargo=opts.cargo||_menuCargoSesion();
-    var sedeRaw=(opts.sede!=null)?opts.sede:_menuSedeSesionRaw();
-    if(_menuEsRolNacional(cargo)) return { esNacional:true, sedes:null };
-    var userSedesRaw=_menuParseSedes(sedeRaw);
-    if(!userSedesRaw.length) return { esNacional:false, sedes:[] };
-    _menuAsegurarMapaRectorias();
-    var multiSede=userSedesRaw.length>1;
-    var out=[], seen={};
-    function pushSede(s){
-      var canon=_menuCanonizarSedeColoc(s);
-      if(!canon||seen[canon]) return;
-      seen[canon]=1;
-      out.push(canon);
-    }
-    userSedesRaw.forEach(function(raw){
-      if(!multiSede&&_menuExpandeRectoria(cargo, raw)){
-        var rect=_menuResolverRectoriaDesdeSede(raw);
-        if(rect){
-          var lista=typeof _mapaListaSedes==='function'?_mapaListaSedes(rect):[];
-          if(lista.length){ lista.forEach(pushSede); return; }
-        }
+    var emp=null;
+    if(opts.cargo!=null||opts.sede!=null){
+      emp={ cargo:opts.cargo||'', sede:opts.sede||'' };
+    } else {
+      var correo=(typeof _empCorreoSesion==='function')?_empCorreoSesion():((navState&&navState.correoEjecutor)||(sesionActiva&&sesionActiva.correo)||'');
+      if(correo){
+        emp=(typeof _empVivoDesdeBD==='function')?_empVivoDesdeBD(correo):((EMPLEADOS_BD&&EMPLEADOS_BD[correo])||null);
       }
-      var resolved=typeof _mbsResolverSedeColoc==='function'?_mbsResolverSedeColoc(raw):raw;
-      pushSede(resolved||raw);
-    });
-    if(!out.length){
-      var coloc=_menuColocSedes();
-      userSedesRaw.forEach(function(raw){
-        coloc.forEach(function(cs){ if(_menuMatchSede(cs,raw)) pushSede(cs); });
-      });
+      if(!emp){
+        emp={
+          cargo:(navState&&navState.cargoEjecutor)||(sesionActiva&&sesionActiva.cargo)||'',
+          sede:(navState&&navState.sedeEjecutor)||(sesionActiva&&sesionActiva.sede)||''
+        };
+      }
     }
-    if(!out.length) userSedesRaw.forEach(function(raw){ pushSede(raw); });
-    out.sort(function(a,b){ return a.localeCompare(b,'es'); });
-    return { esNacional:false, sedes:out };
+    var pack=(typeof _empResolverSedesDesdeSheet==='function')
+      ?_empResolverSedesDesdeSheet(emp)
+      :{ esNacional:false, canon:[] };
+    if(pack.esNacional) return { esNacional:true, sedes:null };
+    return { esNacional:false, sedes:pack.canon||[] };
   }
   function _menuEtiquetaSedesUsuario(){
     var scope=_menuResolverSedesUsuario();
@@ -11232,25 +11312,14 @@ function _parseCumpleMMDD(s){
     return html;
   }
   function _mbsSedesParaBienvenida(emp){
+    if(typeof _empResolverSedesDesdeSheet==='function'){
+      var pack=_empResolverSedesDesdeSheet(emp);
+      if(pack.esNacional) return { esNacional:true, items:[] };
+      return { esNacional:false, items:pack.items||[] };
+    }
     if(_mbsEsRolNacional(emp.cargo)) return { esNacional:true, items:[] };
     var raw=(typeof _empParseSedes==='function')?_empParseSedes(emp.sede):_mbsParseSedes(emp.sede);
-    if(raw.some(function(s){ return _mbsNorm(s).indexOf('nacional')>=0; })) return { esNacional:true, items:[] };
-    if(raw.length>1){
-      return { esNacional:false, items:raw.map(function(r){
-        return { label:r, canon:_mbsResolverSedeColoc(r)||r };
-      })};
-    }
-    var scope=(typeof _menuResolverSedesUsuario==='function')
-      ?_menuResolverSedesUsuario({cargo:emp.cargo,sede:emp.sede})
-      :{ esNacional:false, sedes:raw.map(function(r){ return _mbsResolverSedeColoc(r)||r; }) };
-    if(scope.esNacional) return { esNacional:true, items:[] };
-    var items=(scope.sedes||[]).map(function(c){
-      var label=c;
-      raw.forEach(function(r){ if((_mbsResolverSedeColoc(r)||r)===c||_mbsNorm(r)===_mbsNorm(c)) label=r; });
-      return { label:label, canon:c };
-    });
-    if(!items.length) items=raw.map(function(r){ return { label:r, canon:_mbsResolverSedeColoc(r)||r }; });
-    return { esNacional:false, items:items };
+    return { esNacional:false, items:raw.map(function(r){ return { label:r, canon:_mbsResolverSedeColoc(r)||r }; }) };
   }
   function _mbsRenderContenido(emp){
     var cont = document.getElementById('mbs-contenido');
@@ -11289,8 +11358,7 @@ function _parseCumpleMMDD(s){
     if(sd) sd.textContent = sedesLbl;
     modal.style.display = 'block';
     var cont = document.getElementById('mbs-contenido');
-    if(cont) cont.innerHTML = '<div style="text-align:center;padding:28px;color:rgba(255,255,255,.45);font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:22px"></i><div style="margin-top:10px">Cargando tu panorama…</div></div>';
-    var cargar = function(){
+    var pintar = function(){
       if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
       var p = _mbsSedesParaBienvenida(emp);
       var lbl = p.esNacional ? '🌎 Ámbito nacional'
@@ -11298,21 +11366,27 @@ function _parseCumpleMMDD(s){
       if(sd) sd.textContent = lbl;
       _mbsRenderContenido(emp);
     };
-    var chain = Promise.resolve();
-    if(typeof _cargarEmpleados==='function') chain = _cargarEmpleados(true);
-    chain.then(function(){
-      if(typeof window._scicRefrescarDatosVivos === 'function'){
-        return window._scicRefrescarDatosVivos(true);
-      }
-      if(typeof cargarDesdeSheetsCompleto === 'function'){
-        return cargarDesdeSheetsCompleto(true);
-      }
-      return null;
-    }).then(cargar).catch(cargar);
+    pintar();
+    if(typeof window._scicRefrescarDatosVivos==='function'){
+      window._scicRefrescarDatosVivos(true).then(pintar).catch(function(){});
+    }
   };
   window.cerrarModalBienvenidaSede = function(){
     var m = document.getElementById('modal-bienvenida-sede');
     if(m) m.style.display = 'none';
+  };
+  window._mbsActualizarSiAbierta = function(emp){
+    if(!emp) return;
+    var m=document.getElementById('modal-bienvenida-sede');
+    if(!m||m.style.display==='none') return;
+    var correo=emp.correo||'';
+    if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
+    var sd=document.getElementById('mbs-sedes');
+    var p=_mbsSedesParaBienvenida(emp);
+    var lbl=p.esNacional?'🌎 Ámbito nacional'
+      :(p.items.length?('📍 '+p.items.map(function(it){return it.label;}).join(' · ')):('📍 '+((typeof _empParseSedes==='function'?_empParseSedes(emp.sede):_mbsParseSedes(emp.sede)).join(' · ')||'—')));
+    if(sd) sd.textContent=lbl;
+    _mbsRenderContenido(emp);
   };
 
   (function(){
@@ -11324,9 +11398,7 @@ function _parseCumpleMMDD(s){
         if(correo && EMPLEADOS_BD && EMPLEADOS_BD[correo]) emp = EMPLEADOS_BD[correo];
         _origLogin();
         if(emp){
-          setTimeout(function(){
-            try{ if(typeof mostrarModalBienvenidaSede === 'function') mostrarModalBienvenidaSede(emp); }catch(e){}
-          }, 600);
+          try{ if(typeof mostrarModalBienvenidaSede === 'function') mostrarModalBienvenidaSede(emp); }catch(e){}
         }
       };
     }
