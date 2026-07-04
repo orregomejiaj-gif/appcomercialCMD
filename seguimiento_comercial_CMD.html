@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.42   (APP_VERSION = 'pyv-comercial-5.4.42')
+  Versión actual: pyv-comercial-5.4.43   (APP_VERSION = 'pyv-comercial-5.4.43')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.43 (2026-07-04)
+    - Eliminado selector «Vista del menú» (Nacional / por sede); KPIs usan ámbito automático del usuario.
+    - Bienvenida: empleados multi-sede ven un bloque por cada sede de la hoja EMPLEADOS antes del menú.
   pyv-comercial-5.4.42 (2026-07-04)
     - Empleados multi-sede (;): login y menú leen siempre la hoja EMPLEADOS en vivo.
     - Sesión se resincroniza al actualizar Sheets; alias RECTORIAS SEDES para orlys.solano y elena.gomez.
@@ -238,11 +241,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.42">
-<meta name="build-id" content="pyv-comercial-5.4.42-20260704-1525">
+<meta name="app-version" content="pyv-comercial-5.4.43">
+<meta name="build-id" content="pyv-comercial-5.4.43-20260704-1540">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.42';
+window.APP_VERSION='pyv-comercial-5.4.43';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1338,14 +1341,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <button type="button" class="cmd-corte-link" onclick="cmdVerPorSede()" title="Abrir informes filtrados por sede">Ver por sede →</button>
       </div>
 
-      <div class="menu-ambito-bar">
-        <label class="menu-ambito-lbl" for="menu-ambito-sel">Vista del menú</label>
-        <select id="menu-ambito-sel" class="menu-ambito-sel" onchange="onMenuAmbitoChange()">
-          <option value="nacional">🇨🇴 Nacional (todas las sedes)</option>
-        </select>
-        <span class="menu-ambito-hint" id="menu-ambito-hint">Semáforos SIGEC · GLPI · combinado vs meta</span>
-      </div>
-
       <div class="menu-salud-panel" id="menu-salud-panel">
         <div class="menu-salud-hdr">
           <div>
@@ -1640,10 +1635,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-qb-pink{background:linear-gradient(135deg,#fdf2f8,#fce7f3);color:#be185d;border-color:#f9a8d4}
 .menu-qb-lime{background:linear-gradient(135deg,#f7fee7,#ecfccb);color:#4d7c0f;border-color:#bef264}
 .menu-qb-violet{background:linear-gradient(135deg,#f5f3ff,#ede9fe);color:#6d28d9;border-color:#c4b5fd}
-.menu-ambito-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:10px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #7dd3fc;border-radius:10px;flex-wrap:wrap}
-.menu-ambito-lbl{font-size:11px;font-weight:700;color:#0369a1;flex-shrink:0}
-.menu-ambito-sel{flex:1;min-width:180px;padding:6px 10px;border:1px solid #7dd3fc;border-radius:8px;font-size:12px;font-weight:600;background:#fff;color:#0c4a6e;font-family:Ubuntu,sans-serif}
-.menu-ambito-hint{font-size:9px;color:#0369a1;font-weight:600;opacity:.85}
 .menu-sem-trio-wrap{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
 .menu-sem-trio-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:8px}
 .menu-sem-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -3812,7 +3803,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.42';
+var APP_VERSION = 'pyv-comercial-5.4.43';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7654,12 +7645,15 @@ function _parseCumpleMMDD(s){
   }
   window.renderMenuSemTrio=renderMenuSemTrio;
 
-  function _getMenuAmbitoSede(){
-    var sel=document.getElementById('menu-ambito-sel');
-    if(!sel) return null;
-    var v=sel.value;
-    return (v&&v!=='nacional')?v:null;
+  function _getMenuAmbitoVista(){
+    var scope=_menuResolverSedesUsuario();
+    if(scope.esNacional) return { esNacional:true, sedes:[], etiqueta:'Nacional', sedeUnica:null };
+    var sedes=scope.sedes||[];
+    if(!sedes.length) return { esNacional:false, sedes:[], etiqueta:_menuSedeSesionRaw()||'—', sedeUnica:null };
+    if(sedes.length===1) return { esNacional:false, sedes:sedes, etiqueta:sedes[0], sedeUnica:sedes[0] };
+    return { esNacional:false, sedes:sedes, etiqueta:sedes.join(' · '), sedeUnica:null };
   }
+  window._getMenuAmbitoVista=_getMenuAmbitoVista;
 
   function _menuAsegurarMapaRectorias(){
     if(typeof _cartAsegurarMapaRectorias==='function') _cartAsegurarMapaRectorias();
@@ -7787,48 +7781,6 @@ function _parseCumpleMMDD(s){
   }
   window._menuEtiquetaSedesUsuario=_menuEtiquetaSedesUsuario;
   window._menuResolverSedesUsuario=_menuResolverSedesUsuario;
-
-  function poblarMenuAmbitoSedes(){
-    var sel=document.getElementById('menu-ambito-sel');
-    if(!sel) return;
-    var prev=sel.value||'nacional';
-    var scope=_menuResolverSedesUsuario();
-    var esNacional=scope.esNacional;
-    var sedes=[];
-    if(esNacional){
-      (window._coloc_data||[]).forEach(function(r){ if(r.sede&&sedes.indexOf(r.sede)<0) sedes.push(r.sede); });
-      if(!sedes.length&&typeof _mapaListaSedes==='function') sedes=_mapaListaSedes('');
-      sedes.sort(function(a,b){ return a.localeCompare(b,'es'); });
-    } else {
-      sedes=scope.sedes||[];
-    }
-    sel.innerHTML='<option value="nacional">🇨🇴 Nacional (todas las sedes)</option>';
-    sedes.forEach(function(s){
-      var opt=document.createElement('option');
-      opt.value=s;
-      opt.textContent='📍 '+s;
-      sel.appendChild(opt);
-    });
-    if(prev&&(prev==='nacional'||sedes.indexOf(prev)>=0)) sel.value=prev;
-    else if(!esNacional&&sedes.length===1) sel.value=sedes[0];
-    else if(!esNacional&&sedes.length>1&&!sedes.some(function(s){ return s===prev; })) sel.value=sedes[0];
-    else sel.value='nacional';
-    var hint=document.getElementById('menu-ambito-hint');
-    if(hint) hint.textContent=sel.value==='nacional'
-      ?'Semáforos SIGEC · GLPI · combinado vs meta nacional'
-      :('Vista sede · semáforos vs meta '+sel.value);
-  }
-  window.poblarMenuAmbitoSedes=poblarMenuAmbitoSedes;
-
-  function onMenuAmbitoChange(){
-    var hint=document.getElementById('menu-ambito-hint');
-    var sel=document.getElementById('menu-ambito-sel');
-    if(hint&&sel) hint.textContent=sel.value==='nacional'
-      ?'Semáforos SIGEC · GLPI · combinado vs meta nacional'
-      :('Vista sede · semáforos vs meta '+sel.value);
-    if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs();
-  }
-  window.onMenuAmbitoChange=onMenuAmbitoChange;
 
   window.menuCloseAllDropdowns = function(){
     document.querySelectorAll('.menu-dd-panel').forEach(function(p){ p.hidden = true; });
@@ -8064,7 +8016,10 @@ function _parseCumpleMMDD(s){
   }
   function renderMenuVsAnterior(sedeFiltro){
     var col = (window._coloc_data||[]).filter(function(r){ return r&&r.sede&&(r.acum_n||r.ant_n); });
-    if(sedeFiltro && typeof buscarFilasColoc==='function') col = buscarFilasColoc([sedeFiltro]);
+    if(sedeFiltro){
+      var lista = Array.isArray(sedeFiltro) ? sedeFiltro : [sedeFiltro];
+      if(lista.length && typeof buscarFilasColoc==='function') col = buscarFilasColoc(lista);
+    }
     var acum=0, ant=0, varN=0;
     col.forEach(function(r){
       acum += r.acum_n||0;
@@ -8120,17 +8075,18 @@ function _parseCumpleMMDD(s){
   function actualizarMenuKPIs(){
     try{
       try{ if(typeof _sincronizarSesionDesdeEmpleados==='function') _sincronizarSesionDesdeEmpleados(); }catch(e){}
-      try{ poblarMenuAmbitoSedes(); }catch(e){}
-      var sedeAmb = _getMenuAmbitoSede();
+      var vista = _getMenuAmbitoVista();
+      var sedeAmb = vista.sedeUnica;
+      var sedesFiltro = vista.esNacional ? null : vista.sedes;
       if(window._coloc_data && window._coloc_data.length) window._coloc_data = _normColocArray(window._coloc_data);
       var col = window._coloc_data || (_DATA&&_DATA.coloc) || [];
-      if(sedeAmb && typeof buscarFilasColoc==='function') col = buscarFilasColoc([sedeAmb]);
+      if(sedesFiltro && sedesFiltro.length && typeof buscarFilasColoc==='function') col = buscarFilasColoc(sedesFiltro);
       var metaN=0, acumN=0;
       col.forEach(function(r){ metaN+=r.meta_n||0; acumN+=r.acum_n||0; });
-      if(!metaN && window._mtsMetaN && !sedeAmb) metaN = window._mtsMetaN;
-      if(!metaN && _DATA && _DATA.meta_s2 && !sedeAmb) metaN = _DATA.meta_s2;
-      if(!acumN && window._mtsEjecN && !sedeAmb) acumN = window._mtsEjecN;
-      if(!acumN && _DATA && _DATA.acum_s2 && !sedeAmb) acumN = _DATA.acum_s2;
+      if(!metaN && window._mtsMetaN && vista.esNacional) metaN = window._mtsMetaN;
+      if(!metaN && _DATA && _DATA.meta_s2 && vista.esNacional) metaN = _DATA.meta_s2;
+      if(!acumN && window._mtsEjecN && vista.esNacional) acumN = window._mtsEjecN;
+      if(!acumN && _DATA && _DATA.acum_s2 && vista.esNacional) acumN = _DATA.acum_s2;
 
       var diasTot = window._mtsDiasTotal || (_DATA&&_DATA.dh_total) || 0;
       var diasTra = window._mtsDiasTrans || (_DATA&&_DATA.dh_trans) || 0;
@@ -8142,28 +8098,33 @@ function _parseCumpleMMDD(s){
       var colSem = _semS2Color(pct);
 
       var sig, glpi;
-      if(sedeAmb){
+      if(vista.esNacional){
+        sig=obtenerSigecNacional();
+        glpi=obtenerGlpiNacional();
+      } else if(sedesFiltro && sedesFiltro.length){
         if(typeof _ioAgregarSigec==='function'){
-          sig=_ioAgregarSigec([sedeAmb]);
-          glpi=(typeof _ioAgregarGlpi==='function')?_ioAgregarGlpi([sedeAmb]):_menuGlpiSede(sedeAmb);
-        } else {
-          sig=_menuSigecSede(sedeAmb);
-          glpi=_menuGlpiSede(sedeAmb);
+          sig=_ioAgregarSigec(sedesFiltro);
+          glpi=(typeof _ioAgregarGlpi==='function')?_ioAgregarGlpi(sedesFiltro):null;
         }
+        if(!sig && sedeAmb) sig=_menuSigecSede(sedeAmb);
+        if(!glpi && sedeAmb) glpi=_menuGlpiSede(sedeAmb);
+        if(!sig) sig={ facturada:0, total:0 };
+        if(!glpi) glpi={ aprobada:0, total:0 };
       } else {
         sig=obtenerSigecNacional();
         glpi=obtenerGlpiNacional();
       }
+      var ambitoLbl = vista.esNacional ? null : vista.etiqueta;
       var el;
       el=document.getElementById('menu-nacional-title');
-      if(el) el.innerHTML = sedeAmb
-        ? '<i class="ti ti-chart-dots"></i> Estado · '+sedeAmb+' · Colocación S2'
+      if(el) el.innerHTML = ambitoLbl
+        ? '<i class="ti ti-chart-dots"></i> Estado · '+ambitoLbl+' · Colocación S2'
         : '<i class="ti ti-chart-dots"></i> Estado Nacional · Colocación S2';
       el=document.getElementById('menu-salud-title');
-      if(el) el.textContent = sedeAmb ? ('💚 Salud Comercial · '+sedeAmb) : '💚 Salud Comercial Nacional';
+      if(el) el.textContent = ambitoLbl ? ('💚 Salud Comercial · '+ambitoLbl) : '💚 Salud Comercial Nacional';
       var sigTitle=document.querySelector('.menu-sigec-title');
-      if(sigTitle) sigTitle.innerHTML = sedeAmb
-        ? '<i class="ti ti-traffic-lights"></i> Cómo vamos según SIGEC · '+sedeAmb
+      if(sigTitle) sigTitle.innerHTML = ambitoLbl
+        ? '<i class="ti ti-traffic-lights"></i> Cómo vamos según SIGEC · '+ambitoLbl
         : '<i class="ti ti-traffic-lights"></i> Cómo vamos según SIGEC';
       el=document.getElementById('menu-kpi-sigec'); if(el) el.textContent=(sig.facturada||sig.total)?fmtN(sig.facturada||0):'—';
       el=document.getElementById('menu-kpi-glpi'); if(el) el.textContent=(glpi.total||glpi.aprobada)?fmtN(glpi.aprobada||0):'—';
@@ -8187,7 +8148,7 @@ function _parseCumpleMMDD(s){
       el=document.getElementById('menu-nac-fecha'); if(el) el.textContent=hoy.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
       el=document.getElementById('menu-nac-meta'); if(el) el.textContent=metaN?fmtN(metaN):'—';
       el=document.getElementById('menu-nac-acum'); if(el) el.textContent=acumN?fmtN(acumN):'—';
-      el=document.getElementById('menu-nac-pct-txt'); if(el) el.textContent=metaN?((sedeAmb?'':'')+pct+'% de la meta'+(sedeAmb?' '+sedeAmb:' nacional')):'—';
+      el=document.getElementById('menu-nac-pct-txt'); if(el) el.textContent=metaN?((ambitoLbl?'':'')+pct+'% de la meta'+(ambitoLbl?' '+ambitoLbl:' nacional')):'—';
       el=document.getElementById('menu-nac-deber'); if(el) el.textContent=metaN?fmtN(Math.round(deb)):'—';
       el=document.getElementById('menu-nac-dh'); if(el) el.textContent=diasTot?(diasTra+' de '+diasTot+' días hábiles transcurridos'):'— días hábiles';
       el=document.getElementById('menu-nac-brecha'); if(el){ el.textContent=metaN?brechaTxt:'—'; el.style.color=brechaCol; }
@@ -8199,8 +8160,8 @@ function _parseCumpleMMDD(s){
         ? ('Proyección de cierre: '+fmtN(proy)+' créditos ('+proyPct+'% meta) · Ritmo actual: '+(diasTra>0?(acumN/diasTra).toFixed(1):'—')+'/dh · Necesario: '+(Math.max(0,diasTot-diasTra)>0?((metaN-acumN)/Math.max(1,diasTot-diasTra)).toFixed(1):'—')+'/dh')
         : 'Proyección de cierre: —';
 
-      renderMenuSigecSemaforo(metaN, sig, glpi, sedeAmb);
-      renderMenuVsAnterior(sedeAmb);
+      renderMenuSigecSemaforo(metaN, sig, glpi, sedeAmb || ambitoLbl);
+      renderMenuVsAnterior(vista.esNacional ? null : sedesFiltro);
       renderMenuMcmRadar();
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
@@ -11270,33 +11231,43 @@ function _parseCumpleMMDD(s){
     }
     return html;
   }
+  function _mbsSedesParaBienvenida(emp){
+    if(_mbsEsRolNacional(emp.cargo)) return { esNacional:true, items:[] };
+    var raw=(typeof _empParseSedes==='function')?_empParseSedes(emp.sede):_mbsParseSedes(emp.sede);
+    if(raw.some(function(s){ return _mbsNorm(s).indexOf('nacional')>=0; })) return { esNacional:true, items:[] };
+    if(raw.length>1){
+      return { esNacional:false, items:raw.map(function(r){
+        return { label:r, canon:_mbsResolverSedeColoc(r)||r };
+      })};
+    }
+    var scope=(typeof _menuResolverSedesUsuario==='function')
+      ?_menuResolverSedesUsuario({cargo:emp.cargo,sede:emp.sede})
+      :{ esNacional:false, sedes:raw.map(function(r){ return _mbsResolverSedeColoc(r)||r; }) };
+    if(scope.esNacional) return { esNacional:true, items:[] };
+    var items=(scope.sedes||[]).map(function(c){
+      var label=c;
+      raw.forEach(function(r){ if((_mbsResolverSedeColoc(r)||r)===c||_mbsNorm(r)===_mbsNorm(c)) label=r; });
+      return { label:label, canon:c };
+    });
+    if(!items.length) items=raw.map(function(r){ return { label:r, canon:_mbsResolverSedeColoc(r)||r }; });
+    return { esNacional:false, items:items };
+  }
   function _mbsRenderContenido(emp){
     var cont = document.getElementById('mbs-contenido');
     if(!cont) return;
-    var esNacional = _mbsEsRolNacional(emp.cargo);
-    var sedesCanon = [];
-    if(typeof _menuResolverSedesUsuario==='function'){
-      var scope=_menuResolverSedesUsuario({cargo:emp.cargo,sede:emp.sede});
-      if(scope.esNacional) esNacional=true;
-      else if(scope.sedes&&scope.sedes.length) sedesCanon=scope.sedes;
-    }
-    if(!sedesCanon.length) sedesCanon=_mbsParseSedes(emp.sede).map(function(s){ return _mbsResolverSedeColoc(s)||s; });
+    var pack = _mbsSedesParaBienvenida(emp);
     var html = '';
-    if(esNacional || _mbsParseSedes(emp.sede).some(function(s){ return _mbsNorm(s).indexOf('nacional')>=0; })){
+    if(pack.esNacional){
       document.getElementById('mbs-titulo').textContent = 'Panorama Nacional';
       document.getElementById('mbs-subtitulo').textContent = 'Vista ejecutiva de todo el canal comercial CMD';
       html = _mbsRenderNacional();
-    } else if(!sedesCanon.length){
+    } else if(!pack.items.length){
       html = '<div style="font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:20px">No se encontraron sedes asignadas en tu perfil. Contacta al administrador.</div>';
     } else {
       document.getElementById('mbs-titulo').textContent = 'Tus sedes · Estado actual';
-      document.getElementById('mbs-subtitulo').textContent = sedesCanon.length+' sede(s) según hoja EMPLEADOS y RECTORIAS SEDES';
-      sedesCanon.forEach(function(coloc){
-        var label=coloc;
-        _mbsParseSedes(emp.sede).forEach(function(raw){
-          if(_mbsResolverSedeColoc(raw)===coloc||_mbsNorm(raw)===_mbsNorm(coloc)) label=raw;
-        });
-        html += _mbsRenderBloqueSede(label, coloc);
+      document.getElementById('mbs-subtitulo').textContent = pack.items.length+' sede(s) según hoja EMPLEADOS';
+      pack.items.forEach(function(it){
+        html += _mbsRenderBloqueSede(it.label, it.canon);
       });
     }
     cont.innerHTML = html || '<div style="color:rgba(255,255,255,.45);font-size:11px;text-align:center">Sin datos disponibles aún. Presiona Continuar e intenta Actualizar en el menú.</div>';
@@ -11312,22 +11283,32 @@ function _parseCumpleMMDD(s){
     var nm = document.getElementById('mbs-nombre'); if(nm) nm.textContent = emp.nombre || '—';
     var cg = document.getElementById('mbs-cargo'); if(cg) cg.textContent = emp.cargo || '—';
     var sd = document.getElementById('mbs-sedes');
-    var sedesLbl = _mbsEsRolNacional(emp.cargo) ? '🌎 Ámbito nacional'
-      : ((typeof _menuResolverSedesUsuario==='function')
-        ? (function(){ var sc=_menuResolverSedesUsuario({cargo:emp.cargo,sede:emp.sede}); return sc.sedes&&sc.sedes.length ? ('📍 '+sc.sedes.join(' · ')) : ('📍 '+(_mbsParseSedes(emp.sede).join(' · ')||'—')); })()
-        : ('📍 '+_mbsParseSedes(emp.sede).join(' · ')));
+    var pack = _mbsSedesParaBienvenida(emp);
+    var sedesLbl = pack.esNacional ? '🌎 Ámbito nacional'
+      : (pack.items.length ? ('📍 '+pack.items.map(function(it){ return it.label; }).join(' · ')) : ('📍 '+((typeof _empParseSedes==='function'?_empParseSedes(emp.sede):_mbsParseSedes(emp.sede)).join(' · ')||'—')));
     if(sd) sd.textContent = sedesLbl;
     modal.style.display = 'block';
     var cont = document.getElementById('mbs-contenido');
     if(cont) cont.innerHTML = '<div style="text-align:center;padding:28px;color:rgba(255,255,255,.45);font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:22px"></i><div style="margin-top:10px">Cargando tu panorama…</div></div>';
-    var cargar = function(){ _mbsRenderContenido(emp); };
-    if(typeof window._scicRefrescarDatosVivos === 'function'){
-      window._scicRefrescarDatosVivos(true).then(cargar).catch(cargar);
-    } else if(typeof cargarDesdeSheetsCompleto === 'function'){
-      cargarDesdeSheetsCompleto(true).then(cargar).catch(cargar);
-    } else {
-      setTimeout(cargar, 300);
-    }
+    var cargar = function(){
+      if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
+      var p = _mbsSedesParaBienvenida(emp);
+      var lbl = p.esNacional ? '🌎 Ámbito nacional'
+        : (p.items.length ? ('📍 '+p.items.map(function(it){ return it.label; }).join(' · ')) : ('📍 '+((typeof _empParseSedes==='function'?_empParseSedes(emp.sede):_mbsParseSedes(emp.sede)).join(' · ')||'—')));
+      if(sd) sd.textContent = lbl;
+      _mbsRenderContenido(emp);
+    };
+    var chain = Promise.resolve();
+    if(typeof _cargarEmpleados==='function') chain = _cargarEmpleados(true);
+    chain.then(function(){
+      if(typeof window._scicRefrescarDatosVivos === 'function'){
+        return window._scicRefrescarDatosVivos(true);
+      }
+      if(typeof cargarDesdeSheetsCompleto === 'function'){
+        return cargarDesdeSheetsCompleto(true);
+      }
+      return null;
+    }).then(cargar).catch(cargar);
   };
   window.cerrarModalBienvenidaSede = function(){
     var m = document.getElementById('modal-bienvenida-sede');
