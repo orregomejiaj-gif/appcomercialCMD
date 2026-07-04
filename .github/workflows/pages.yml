@@ -23,6 +23,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Verify app version in source
+        run: |
+          grep -m1 "APP_VERSION" seguimiento_comercial_CMD.html
+          grep -m1 "build-id" seguimiento_comercial_CMD.html
+
       - name: Prepare site artifact
         run: |
           mkdir -p _site
@@ -43,6 +48,46 @@ jobs:
         with:
           path: _site
 
-      - name: Deploy to GitHub Pages
+      - name: Stagger deploy (evita colisión con pages-build-deployment)
+        run: sleep 90
+
+      - name: Deploy to GitHub Pages (intento 1)
+        id: deploy1
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Esperar entre reintentos
+        if: steps.deploy1.outcome == 'failure'
+        run: sleep 60
+
+      - name: Deploy to GitHub Pages (intento 2)
+        if: steps.deploy1.outcome == 'failure'
+        id: deploy2
+        uses: actions/deploy-pages@v4
+        continue-on-error: true
+
+      - name: Esperar entre reintentos
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
+        run: sleep 60
+
+      - name: Deploy to GitHub Pages (intento 3)
+        if: steps.deploy1.outcome == 'failure' && steps.deploy2.outcome == 'failure'
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Comprobar despliegue
+        run: |
+          if [ "${{ steps.deploy1.outcome }}" = "success" ]; then
+            echo "Deploy exitoso en intento 1"
+            exit 0
+          fi
+          if [ "${{ steps.deploy1.outcome }}" = "failure" ] && [ "${{ steps.deploy2.outcome }}" = "success" ]; then
+            echo "Deploy exitoso en intento 2"
+            exit 0
+          fi
+          if [ "${{ steps.deploy1.outcome }}" = "failure" ] && [ "${{ steps.deploy2.outcome }}" = "failure" ] && [ "${{ steps.deployment.outcome }}" = "success" ]; then
+            echo "Deploy exitoso en intento 3"
+            exit 0
+          fi
+          echo "Todos los intentos de deploy fallaron"
+          exit 1
