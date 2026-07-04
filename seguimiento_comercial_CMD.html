@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.16   (APP_VERSION = 'pyv-comercial-5.4.16')
+  Versión actual: pyv-comercial-5.4.17   (APP_VERSION = 'pyv-comercial-5.4.17')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.17 (2026-07-04)
+    - SCIC_IA_PROXY_URL enlazado a Apps Script desplegado (Claude API en SCIC AI CENTER).
   pyv-comercial-5.4.16 (2026-07-03)
     - Backend SCIC_IA_PROXY (Apps Script) para Claude API vía servidor.
     - Auditoría informes/semáforos: filtros rectoría/sede no caen a datos nacionales; cartera y colocado mes filtrados.
@@ -162,12 +164,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.16">
-<meta name="build-id" content="pyv-comercial-5.4.16-20260703">
-<title>SCIC pyv-comercial 5.4.16 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.17">
+<meta name="build-id" content="pyv-comercial-5.4.17-20260704">
+<title>SCIC pyv-comercial 5.4.17 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.16';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.16';
+window.APP_VERSION='pyv-comercial-5.4.17';
+window.APP_VERSION_LABEL='pyv-comercial 5.4.17';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1074,7 +1076,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.16</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.17</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:#64748b;margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
