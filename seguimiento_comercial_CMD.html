@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.41   (APP_VERSION = 'pyv-comercial-5.4.41')
+  Versión actual: pyv-comercial-5.4.42   (APP_VERSION = 'pyv-comercial-5.4.42')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.42 (2026-07-04)
+    - Empleados multi-sede (;): login y menú leen siempre la hoja EMPLEADOS en vivo.
+    - Sesión se resincroniza al actualizar Sheets; alias RECTORIAS SEDES para orlys.solano y elena.gomez.
   pyv-comercial-5.4.41 (2026-07-04)
     - Selector «Vista del menú»: sedes por coordinador/subdirector desde sesión + hoja RECTORIAS SEDES y alias.
     - Fix orlys.solano, milena.azcarate y similares: ya no queda solo «Nacional» sin sedes en el desplegable.
@@ -235,11 +238,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.41">
-<meta name="build-id" content="pyv-comercial-5.4.41-20260704-1505">
+<meta name="app-version" content="pyv-comercial-5.4.42">
+<meta name="build-id" content="pyv-comercial-5.4.42-20260704-1525">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.41';
+window.APP_VERSION='pyv-comercial-5.4.42';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3809,7 +3812,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.41';
+var APP_VERSION = 'pyv-comercial-5.4.42';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3944,7 +3947,7 @@ var SEDE_EQUIVALENCIAS_COLOCACION = {
   'MANIZALES':'Manizales','ARMENIA':'Armenia','IBAGUE':'Ibagué','NEIVA':'Neiva',
   'PASTO':'Pasto','CUCUTA':'Cúcuta','VILLAVICENCIO':'Villavicencio',
   'BELLO VIRTUAL':'Bello-Virtual','BELLO-VIRTUAL':'Bello-Virtual',
-  'APARTADO':'Urabá','MONTERIA':'Montería','SINCELEJO':'Sincelejo',
+  'APARTADO':'Urabá','TERNERA':'Ternera','MANGA':'Manga','MONTERIA':'Montería','SINCELEJO':'Sincelejo',
   'VALLEDUPAR':'Valledupar','SANTA MARTA':'Santa Marta','RIOHACHA':'Riohacha',
   'TUNJA':'Tunja','YOPAL':'Yopal','LETICIA':'Leticia','MOCOA':'Mocoa',
   'QUIBDO':'Quibdó','FLORENCIA':'Florencia','POPAYAN':'Popayán','TUMACO':'Tumaco',
@@ -4061,42 +4064,95 @@ var _EMPLEADOS_FALLBACK = [{"correo": "yara.diaz@coopminutodedios.com", "nombre"
   console.log('[SCIC] Directorio: '+Object.keys(EMPLEADOS_BD).length+' usuarios');
 })();
 
-// 5. _cargarEmpleados — usa fallback instantáneo + Sheet en background
-function _cargarEmpleados(){
+// 5. _cargarEmpleados — hoja EMPLEADOS en vivo (multi-sede con ; o ,)
+function _empParseSedes(sedeStr){
+  if(typeof _mbsParseSedes==='function') return _mbsParseSedes(sedeStr);
+  if(typeof _menuParseSedes==='function') return _menuParseSedes(sedeStr);
+  if(!sedeStr) return [];
+  return String(sedeStr).split(/[;,]/).map(function(s){ return s.trim(); }).filter(Boolean);
+}
+window._empParseSedes=_empParseSedes;
+
+function _empCorreoSesion(){
+  return (navState&&navState.correoEjecutor)||(sesionActiva&&sesionActiva.correo)||'';
+}
+window._empCorreoSesion=_empCorreoSesion;
+
+function _empVivoDesdeBD(correo){
+  correo=String(correo||'').trim().toLowerCase();
+  if(!correo||!EMPLEADOS_BD) return null;
+  return EMPLEADOS_BD[correo]||null;
+}
+window._empVivoDesdeBD=_empVivoDesdeBD;
+
+function _sincronizarSesionDesdeEmpleados(){
+  var correo=_empCorreoSesion();
+  if(!correo) return false;
+  var emp=_empVivoDesdeBD(correo);
+  if(!emp) return false;
+  if(sesionActiva&&typeof sesionActiva==='object'){
+    sesionActiva.nombre=emp.nombre;
+    sesionActiva.cargo=emp.cargo;
+    sesionActiva.sede=emp.sede;
+    sesionActiva.cedula=emp.cedula;
+    sesionActiva.correo=correo;
+  }
+  if(navState&&typeof navState==='object'){
+    navState.nombreEjecutor=emp.nombre;
+    navState.correoEjecutor=correo;
+    navState.cargoEjecutor=emp.cargo;
+    navState.sedeEjecutor=emp.sede;
+    navState.cedulaEjecutor=emp.cedula;
+  }
+  return true;
+}
+window._sincronizarSesionDesdeEmpleados=_sincronizarSesionDesdeEmpleados;
+
+function _cargarEmpleados(forzar){
   if(!Object.keys(EMPLEADOS_BD).length){
     _EMPLEADOS_FALLBACK.forEach(function(emp){ EMPLEADOS_BD[emp.correo]=emp; });
   }
   var res=document.getElementById('login-resultado');
   var n=Object.keys(EMPLEADOS_BD).length;
   if(res&&n>0) res.innerHTML='<div style="text-align:center;padding:7px;color:rgba(255,255,255,.5);font-size:9px"><i class="ti ti-users" style="color:#4ade80;margin-right:3px"></i>'+n+' usuarios disponibles</div>';
-  try{
-    var cb='_eg_'+Date.now(), sc2=document.createElement('script');
-    window[cb]=function(data){
-      try{
-        if(!data||!data.table||!data.table.rows) return;
-        var cols=(data.table.cols||[]).map(function(c){return(c.label||c.id||'').trim();});
-        (data.table.rows||[]).forEach(function(row){
-          var v=(row.c||[]).map(function(c){return c?(c.v!==null&&c.v!==undefined?c.v:(c.f||'')):'';});
-          var correo='';
-          for(var ci=0;ci<cols.length;ci++){if(cols[ci].toUpperCase()==='CORREO'&&v[ci]){correo=String(v[ci]).trim().toLowerCase();break;}}
-          if(!correo) correo=String(v[0]||'').trim().toLowerCase();
-          if(!correo||correo.indexOf('@')<0) return;
-          function fld(nm,ix){for(var j=0;j<cols.length;j++)if(cols[j].toUpperCase()===nm&&v[j]!==undefined)return String(v[j]||'').trim();return String(v[ix]||'').trim();}
-          var _nac=fld('F.NACIMIENTO',6);
-          var _cum=(typeof _parseCumpleMMDD==='function')?_parseCumpleMMDD(_nac):'';
-          EMPLEADOS_BD[correo]={correo:correo,nombre:fld('NOMBRE COMPLETO',1),cargo:fld('CARGO',2),sede:fld('SEDE',3),cedula:fld('CEDULA',4),estado:fld('ESTADO',7)||'Activo',cumpleanos:_cum};
-        });
-        try{ EMPLEADOS_CUM=Object.keys(EMPLEADOS_BD).map(function(k){return EMPLEADOS_BD[k];}).filter(function(e){return e&&e.cumpleanos&&e.cumpleanos.length===5;}); }catch(e){}
-        try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
-        console.log('[SCIC] Sheet empleados actualizado: '+Object.keys(EMPLEADOS_BD).length+' · cumpleaños: '+((typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM)?EMPLEADOS_CUM.length:0));
-        delete window[cb];
-      }catch(e){delete window[cb];}
+  return new Promise(function(resolve){
+    var listo=function(){
+      try{ _sincronizarSesionDesdeEmpleados(); }catch(e){}
+      try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+      resolve(EMPLEADOS_BD);
     };
-    sc2.onerror=function(){delete window[cb];};
-    sc2.src='https://docs.google.com/spreadsheets/d/1dRf-Gvs-jp5WWsXo9TFgqDICuMCPNWYIiPqTKhTJDuM/gviz/tq?tqx=out:json;responseHandler:'+cb+'&sheet=EMPLEADOS&_='+Date.now();
-    document.head.appendChild(sc2);
-  }catch(e){}
-  return Promise.resolve(EMPLEADOS_BD);
+    try{
+      var cb='_eg_'+Date.now(), sc2=document.createElement('script'), tm;
+      window[cb]=function(data){
+        clearTimeout(tm);
+        try{
+          if(data&&data.table&&data.table.rows){
+            var cols=(data.table.cols||[]).map(function(c){return(c.label||c.id||'').trim();});
+            (data.table.rows||[]).forEach(function(row){
+              var v=(row.c||[]).map(function(c){return c?(c.v!==null&&c.v!==undefined?c.v:(c.f||'')):'';});
+              var correo='';
+              for(var ci=0;ci<cols.length;ci++){if(cols[ci].toUpperCase()==='CORREO'&&v[ci]){correo=String(v[ci]).trim().toLowerCase();break;}}
+              if(!correo) correo=String(v[0]||'').trim().toLowerCase();
+              if(!correo||correo.indexOf('@')<0) return;
+              function fld(nm,ix){for(var j=0;j<cols.length;j++)if(cols[j].toUpperCase()===nm&&v[j]!==undefined)return String(v[j]||'').trim();return String(v[ix]||'').trim();}
+              var _nac=fld('F.NACIMIENTO',6);
+              var _cum=(typeof _parseCumpleMMDD==='function')?_parseCumpleMMDD(_nac):'';
+              EMPLEADOS_BD[correo]={correo:correo,nombre:fld('NOMBRE COMPLETO',1),cargo:fld('CARGO',2),sede:fld('SEDE',3),cedula:fld('CEDULA',4),estado:fld('ESTADO',7)||'Activo',cumpleanos:_cum};
+            });
+            try{ EMPLEADOS_CUM=Object.keys(EMPLEADOS_BD).map(function(k){return EMPLEADOS_BD[k];}).filter(function(e){return e&&e.cumpleanos&&e.cumpleanos.length===5;}); }catch(e){}
+            try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
+            console.log('[SCIC] Sheet empleados actualizado: '+Object.keys(EMPLEADOS_BD).length+' · cumpleaños: '+((typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM)?EMPLEADOS_CUM.length:0));
+          }
+        }catch(e){ console.warn('[SCIC] empleados sheet:', e&&e.message); }
+        delete window[cb];
+        listo();
+      };
+      sc2.onerror=function(){ clearTimeout(tm); delete window[cb]; listo(); };
+      tm=setTimeout(function(){ delete window[cb]; listo(); }, forzar?20000:12000);
+      sc2.src='https://docs.google.com/spreadsheets/d/1dRf-Gvs-jp5WWsXo9TFgqDICuMCPNWYIiPqTKhTJDuM/gviz/tq?tqx=out:json;responseHandler='+cb+'&sheet=EMPLEADOS&_='+Date.now();
+      document.head.appendChild(sc2);
+    }catch(e){ listo(); }
+  });
 }
 window._cargarEmpleados=_cargarEmpleados;
 
@@ -4380,6 +4436,7 @@ function cargarDesdeSheetsCompleto(forzar){
     }
   };
   ps.push(_scicRefrescarDatosVivos(!!forzar));
+  intentar((typeof window._cargarEmpleados==='function')?window._cargarEmpleados:_cargarEmpleados,'empleados');
   intentar((typeof window._cargarHistoricoColocacion==='function')?window._cargarHistoricoColocacion:_cargarHistoricoColocacion,'coloc-hist');
   intentar((typeof window._cargarSIGEC==='function')?window._cargarSIGEC:_cargarSIGEC,'sigec-extra');
   intentar((typeof window._cargarGLPI==='function')?window._cargarGLPI:_cargarGLPI,'glpi');
@@ -6805,9 +6862,16 @@ https://minutodediosportal.com/login/
   }
   function actualizarMenuUsuario(){
     try{
-      var nombre=(typeof navState!=='undefined'&&navState.nombreEjecutor)||(window.sesionActiva&&sesionActiva.nombre)||'';
-      var cargo=(typeof navState!=='undefined'&&navState.cargoEjecutor)||(window.sesionActiva&&sesionActiva.cargo)||'';
-      var sede=(typeof navState!=='undefined'&&navState.sedeEjecutor)||(window.sesionActiva&&sesionActiva.sede)||'';
+      try{ if(typeof _sincronizarSesionDesdeEmpleados==='function') _sincronizarSesionDesdeEmpleados(); }catch(e){}
+      var correo=(typeof _empCorreoSesion==='function')?_empCorreoSesion():((navState&&navState.correoEjecutor)||(sesionActiva&&sesionActiva.correo)||'');
+      var emp=correo&&(typeof _empVivoDesdeBD==='function')?_empVivoDesdeBD(correo):null;
+      var nombre=(emp&&emp.nombre)||(navState&&navState.nombreEjecutor)||(sesionActiva&&sesionActiva.nombre)||'';
+      var cargo=(emp&&emp.cargo)||(navState&&navState.cargoEjecutor)||(sesionActiva&&sesionActiva.cargo)||'';
+      var sede=(emp&&emp.sede)||(navState&&navState.sedeEjecutor)||(sesionActiva&&sesionActiva.sede)||'';
+      if(typeof _menuEtiquetaSedesUsuario==='function'){
+        var lbl=_menuEtiquetaSedesUsuario();
+        if(lbl) sede=lbl;
+      }
       var mn=document.getElementById('menu-nombre'); if(mn) mn.textContent=nombre||'—';
       var mc=document.getElementById('menu-cargo-sede'); if(mc) mc.textContent=(cargo&&sede)?(cargo+' · '+sede):(cargo||sede||'—');
       var av=document.getElementById('menu-avatar');
@@ -7081,27 +7145,25 @@ function _parseCumpleMMDD(s){
           +'<small style="color:#94a3b8">('+Object.keys(EMPLEADOS_BD||{}).length+' usuarios en el directorio)</small></div></div>';
         return;
       }
+      var correo=emp.correo||(val.indexOf('@')>=0?val:val+'@coopminutodedios.com');
+      if(EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
       if(emp.estado&&emp.estado.toLowerCase().indexOf('inactiv')>=0){
         if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-user-off" style="color:#d97706;font-size:24px"></i>'
           +'<div style="font-size:12px;color:#d97706;font-weight:700;margin-top:8px">Usuario inactivo</div>'
           +'<div style="font-size:11px;color:#64748b;margin-top:4px">Contacta al administrador del sistema</div></div>';
         return;
       }
-      window._pendingEmp={correo:emp.correo||(val.indexOf('@')>=0?val:val+'@coopminutodedios.com'),emp:emp};
+      window._pendingEmp={correo:correo,emp:emp};
       _completarLogin();
     };
-    if(!Object.keys(EMPLEADOS_BD||{}).length){
-      if(res) res.innerHTML='<div style="text-align:center;padding:16px"><i class="ti ti-loader" style="font-size:24px;color:#003D45;animation:spin 1s linear infinite"></i>'
-        +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Conectando con el directorio...</div>'
-        +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Primera carga puede tomar hasta 15 segundos</div></div>';
-      if(btn){ btn.disabled=true; btn.style.opacity='0.7'; }
-      _cargarEmpleados().then(function(){
-        if(btn){ btn.disabled=false; btn.style.opacity='1'; }
-        intentar();
-      }).catch(function(){ if(btn){ btn.disabled=false; btn.style.opacity='1'; } });
-      return;
-    }
-    intentar();
+    if(res) res.innerHTML='<div style="text-align:center;padding:16px"><i class="ti ti-loader" style="font-size:24px;color:#003D45;animation:spin 1s linear infinite"></i>'
+      +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Actualizando directorio de empleados...</div>'
+      +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Sedes asignadas desde hoja EMPLEADOS</div></div>';
+    if(btn){ btn.disabled=true; btn.style.opacity='0.7'; }
+    _cargarEmpleados(true).then(function(){
+      if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+      intentar();
+    }).catch(function(){ if(btn){ btn.disabled=false; btn.style.opacity='1'; } intentar(); });
   };
 
   // Fusión: el modal de bienvenida ya no se muestra; su contenido se renderiza en el login.
@@ -7604,15 +7666,20 @@ function _parseCumpleMMDD(s){
     else if(typeof _mapaListaSedes==='function') _mapaListaSedes('');
   }
   function _menuSedeSesionRaw(){
-    var s=(typeof navState!=='undefined'&&navState.sedeEjecutor)||(window.sesionActiva&&sesionActiva.sede)||'';
-    if(!s){
-      var correo=(navState&&navState.correoEjecutor)||(sesionActiva&&sesionActiva.correo)||'';
-      if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) s=EMPLEADOS_BD[correo].sede||'';
+    var correo=(typeof _empCorreoSesion==='function')?_empCorreoSesion():((navState&&navState.correoEjecutor)||(sesionActiva&&sesionActiva.correo)||'');
+    if(correo){
+      var emp=(typeof _empVivoDesdeBD==='function')?_empVivoDesdeBD(correo):(EMPLEADOS_BD&&EMPLEADOS_BD[correo]);
+      if(emp&&emp.sede) return emp.sede;
     }
-    return s;
+    return (navState&&navState.sedeEjecutor)||(sesionActiva&&sesionActiva.sede)||'';
   }
   function _menuCargoSesion(){
-    return (typeof navState!=='undefined'&&navState.cargoEjecutor)||(window.sesionActiva&&sesionActiva.cargo)||'';
+    var correo=(typeof _empCorreoSesion==='function')?_empCorreoSesion():((navState&&navState.correoEjecutor)||(sesionActiva&&sesionActiva.correo)||'');
+    if(correo){
+      var emp=(typeof _empVivoDesdeBD==='function')?_empVivoDesdeBD(correo):(EMPLEADOS_BD&&EMPLEADOS_BD[correo]);
+      if(emp&&emp.cargo) return emp.cargo;
+    }
+    return (navState&&navState.cargoEjecutor)||(sesionActiva&&sesionActiva.cargo)||'';
   }
   function _menuExpandeRectoria(cargo, raw){
     var c=String(cargo||'').toLowerCase();
@@ -7675,13 +7742,15 @@ function _parseCumpleMMDD(s){
     }
     return norm;
   }
-  function _menuResolverSedesUsuario(){
-    var cargo=_menuCargoSesion();
-    var sedeRaw=_menuSedeSesionRaw();
+  function _menuResolverSedesUsuario(opts){
+    opts=opts||{};
+    var cargo=opts.cargo||_menuCargoSesion();
+    var sedeRaw=(opts.sede!=null)?opts.sede:_menuSedeSesionRaw();
     if(_menuEsRolNacional(cargo)) return { esNacional:true, sedes:null };
     var userSedesRaw=_menuParseSedes(sedeRaw);
     if(!userSedesRaw.length) return { esNacional:false, sedes:[] };
     _menuAsegurarMapaRectorias();
+    var multiSede=userSedesRaw.length>1;
     var out=[], seen={};
     function pushSede(s){
       var canon=_menuCanonizarSedeColoc(s);
@@ -7690,7 +7759,7 @@ function _parseCumpleMMDD(s){
       out.push(canon);
     }
     userSedesRaw.forEach(function(raw){
-      if(_menuExpandeRectoria(cargo, raw)){
+      if(!multiSede&&_menuExpandeRectoria(cargo, raw)){
         var rect=_menuResolverRectoriaDesdeSede(raw);
         if(rect){
           var lista=typeof _mapaListaSedes==='function'?_mapaListaSedes(rect):[];
@@ -7710,6 +7779,13 @@ function _parseCumpleMMDD(s){
     out.sort(function(a,b){ return a.localeCompare(b,'es'); });
     return { esNacional:false, sedes:out };
   }
+  function _menuEtiquetaSedesUsuario(){
+    var scope=_menuResolverSedesUsuario();
+    if(scope.esNacional) return 'Nacional';
+    if(scope.sedes&&scope.sedes.length) return scope.sedes.join(' · ');
+    return _menuSedeSesionRaw();
+  }
+  window._menuEtiquetaSedesUsuario=_menuEtiquetaSedesUsuario;
   window._menuResolverSedesUsuario=_menuResolverSedesUsuario;
 
   function poblarMenuAmbitoSedes(){
@@ -8043,6 +8119,7 @@ function _parseCumpleMMDD(s){
 
   function actualizarMenuKPIs(){
     try{
+      try{ if(typeof _sincronizarSesionDesdeEmpleados==='function') _sincronizarSesionDesdeEmpleados(); }catch(e){}
       try{ poblarMenuAmbitoSedes(); }catch(e){}
       var sedeAmb = _getMenuAmbitoSede();
       if(window._coloc_data && window._coloc_data.length) window._coloc_data = _normColocArray(window._coloc_data);
@@ -11197,26 +11274,37 @@ function _parseCumpleMMDD(s){
     var cont = document.getElementById('mbs-contenido');
     if(!cont) return;
     var esNacional = _mbsEsRolNacional(emp.cargo);
-    var sedesRaw = _mbsParseSedes(emp.sede);
+    var sedesCanon = [];
+    if(typeof _menuResolverSedesUsuario==='function'){
+      var scope=_menuResolverSedesUsuario({cargo:emp.cargo,sede:emp.sede});
+      if(scope.esNacional) esNacional=true;
+      else if(scope.sedes&&scope.sedes.length) sedesCanon=scope.sedes;
+    }
+    if(!sedesCanon.length) sedesCanon=_mbsParseSedes(emp.sede).map(function(s){ return _mbsResolverSedeColoc(s)||s; });
     var html = '';
-    if(esNacional || sedesRaw.some(function(s){ return _mbsNorm(s).indexOf('nacional')>=0; })){
+    if(esNacional || _mbsParseSedes(emp.sede).some(function(s){ return _mbsNorm(s).indexOf('nacional')>=0; })){
       document.getElementById('mbs-titulo').textContent = 'Panorama Nacional';
       document.getElementById('mbs-subtitulo').textContent = 'Vista ejecutiva de todo el canal comercial CMD';
       html = _mbsRenderNacional();
-    } else if(!sedesRaw.length){
+    } else if(!sedesCanon.length){
       html = '<div style="font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:20px">No se encontraron sedes asignadas en tu perfil. Contacta al administrador.</div>';
     } else {
       document.getElementById('mbs-titulo').textContent = 'Tus sedes · Estado actual';
-      document.getElementById('mbs-subtitulo').textContent = sedesRaw.length+' sede(s) según repositorio de empleados';
-      sedesRaw.forEach(function(s){
-        var coloc = _mbsResolverSedeColoc(s);
-        html += _mbsRenderBloqueSede(s, coloc);
+      document.getElementById('mbs-subtitulo').textContent = sedesCanon.length+' sede(s) según hoja EMPLEADOS y RECTORIAS SEDES';
+      sedesCanon.forEach(function(coloc){
+        var label=coloc;
+        _mbsParseSedes(emp.sede).forEach(function(raw){
+          if(_mbsResolverSedeColoc(raw)===coloc||_mbsNorm(raw)===_mbsNorm(coloc)) label=raw;
+        });
+        html += _mbsRenderBloqueSede(label, coloc);
       });
     }
     cont.innerHTML = html || '<div style="color:rgba(255,255,255,.45);font-size:11px;text-align:center">Sin datos disponibles aún. Presiona Continuar e intenta Actualizar en el menú.</div>';
   }
   window.mostrarModalBienvenidaSede = function(emp){
     if(!emp) return;
+    var correo=emp.correo||'';
+    if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
     var modal = document.getElementById('modal-bienvenida-sede');
     if(!modal) return;
     var ini = (emp.nombre||'').split(' ').filter(function(p){ return p.length>1; }).slice(0,2).map(function(p){ return p[0].toUpperCase(); }).join('');
@@ -11224,8 +11312,11 @@ function _parseCumpleMMDD(s){
     var nm = document.getElementById('mbs-nombre'); if(nm) nm.textContent = emp.nombre || '—';
     var cg = document.getElementById('mbs-cargo'); if(cg) cg.textContent = emp.cargo || '—';
     var sd = document.getElementById('mbs-sedes');
-    var sedesRaw = _mbsParseSedes(emp.sede);
-    if(sd) sd.textContent = _mbsEsRolNacional(emp.cargo) ? '🌎 Ámbito nacional' : ('📍 '+sedesRaw.join(' · '));
+    var sedesLbl = _mbsEsRolNacional(emp.cargo) ? '🌎 Ámbito nacional'
+      : ((typeof _menuResolverSedesUsuario==='function')
+        ? (function(){ var sc=_menuResolverSedesUsuario({cargo:emp.cargo,sede:emp.sede}); return sc.sedes&&sc.sedes.length ? ('📍 '+sc.sedes.join(' · ')) : ('📍 '+(_mbsParseSedes(emp.sede).join(' · ')||'—')); })()
+        : ('📍 '+_mbsParseSedes(emp.sede).join(' · ')));
+    if(sd) sd.textContent = sedesLbl;
     modal.style.display = 'block';
     var cont = document.getElementById('mbs-contenido');
     if(cont) cont.innerHTML = '<div style="text-align:center;padding:28px;color:rgba(255,255,255,.45);font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:22px"></i><div style="margin-top:10px">Cargando tu panorama…</div></div>';
@@ -11247,7 +11338,9 @@ function _parseCumpleMMDD(s){
     var _origLogin = window._completarLogin;
     if(typeof _origLogin === 'function'){
       window._completarLogin = function(){
+        var correo = window._pendingEmp && window._pendingEmp.correo;
         var emp = window._pendingEmp && window._pendingEmp.emp;
+        if(correo && EMPLEADOS_BD && EMPLEADOS_BD[correo]) emp = EMPLEADOS_BD[correo];
         _origLogin();
         if(emp){
           setTimeout(function(){
