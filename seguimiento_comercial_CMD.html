@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.40   (APP_VERSION = 'pyv-comercial-5.4.40')
+  Versión actual: pyv-comercial-5.4.41   (APP_VERSION = 'pyv-comercial-5.4.41')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.41 (2026-07-04)
+    - Selector «Vista del menú»: sedes por coordinador/subdirector desde sesión + hoja RECTORIAS SEDES y alias.
+    - Fix orlys.solano, milena.azcarate y similares: ya no queda solo «Nacional» sin sedes en el desplegable.
   pyv-comercial-5.4.40 (2026-07-04)
     - Fix menú desplegable: paneles ocultos por defecto (display:flex anulaba hidden).
   pyv-comercial-5.4.39 (2026-07-04)
@@ -232,11 +235,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.40">
-<meta name="build-id" content="pyv-comercial-5.4.40-20260704-1455">
+<meta name="app-version" content="pyv-comercial-5.4.41">
+<meta name="build-id" content="pyv-comercial-5.4.41-20260704-1505">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.40';
+window.APP_VERSION='pyv-comercial-5.4.41';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3806,7 +3809,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.40';
+var APP_VERSION = 'pyv-comercial-5.4.41';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3941,7 +3944,7 @@ var SEDE_EQUIVALENCIAS_COLOCACION = {
   'MANIZALES':'Manizales','ARMENIA':'Armenia','IBAGUE':'Ibagué','NEIVA':'Neiva',
   'PASTO':'Pasto','CUCUTA':'Cúcuta','VILLAVICENCIO':'Villavicencio',
   'BELLO VIRTUAL':'Bello-Virtual','BELLO-VIRTUAL':'Bello-Virtual',
-  'APARTADO':'Apartado','MONTERIA':'Montería','SINCELEJO':'Sincelejo',
+  'APARTADO':'Urabá','MONTERIA':'Montería','SINCELEJO':'Sincelejo',
   'VALLEDUPAR':'Valledupar','SANTA MARTA':'Santa Marta','RIOHACHA':'Riohacha',
   'TUNJA':'Tunja','YOPAL':'Yopal','LETICIA':'Leticia','MOCOA':'Mocoa',
   'QUIBDO':'Quibdó','FLORENCIA':'Florencia','POPAYAN':'Popayán','TUMACO':'Tumaco',
@@ -7596,22 +7599,132 @@ function _parseCumpleMMDD(s){
     return (v&&v!=='nacional')?v:null;
   }
 
+  function _menuAsegurarMapaRectorias(){
+    if(typeof _cartAsegurarMapaRectorias==='function') _cartAsegurarMapaRectorias();
+    else if(typeof _mapaListaSedes==='function') _mapaListaSedes('');
+  }
+  function _menuSedeSesionRaw(){
+    var s=(typeof navState!=='undefined'&&navState.sedeEjecutor)||(window.sesionActiva&&sesionActiva.sede)||'';
+    if(!s){
+      var correo=(navState&&navState.correoEjecutor)||(sesionActiva&&sesionActiva.correo)||'';
+      if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) s=EMPLEADOS_BD[correo].sede||'';
+    }
+    return s;
+  }
+  function _menuCargoSesion(){
+    return (typeof navState!=='undefined'&&navState.cargoEjecutor)||(window.sesionActiva&&sesionActiva.cargo)||'';
+  }
+  function _menuExpandeRectoria(cargo, raw){
+    var c=String(cargo||'').toLowerCase();
+    if(c.indexOf('subdirector')>=0) return true;
+    if(c.indexOf('director')>=0&&c.indexOf('nacional')<0&&c.indexOf('coordinador')<0) return true;
+    if(typeof _cmdIAResolverRectoria==='function'&&_cmdIAResolverRectoria(raw)) return true;
+    var rects=typeof _mapaListaRectorias==='function'?_mapaListaRectorias():[];
+    var nr=_menuNormSede(raw), i;
+    for(i=0;i<rects.length;i++){ if(_menuNormSede(rects[i])===nr) return true; }
+    return false;
+  }
+  function _menuResolverRectoriaDesdeSede(raw){
+    if(!raw) return null;
+    _menuAsegurarMapaRectorias();
+    var resolved=typeof _mbsResolverSedeColoc==='function'?_mbsResolverSedeColoc(raw):raw;
+    if(typeof _cartResolverRectoria==='function'){
+      var rect=_cartResolverRectoria(resolved);
+      if(rect&&rect!=='Sin rectoría'&&rect!=='Otras / Sin mapear') return rect;
+    }
+    if(typeof _cmdIAResolverRectoria==='function'){
+      var r2=_cmdIAResolverRectoria(raw);
+      if(r2) return r2;
+      if(resolved!==raw){ r2=_cmdIAResolverRectoria(resolved); if(r2) return r2; }
+    }
+    return null;
+  }
+  function _menuColocSedes(){
+    var s=[], seen={};
+    function add(n){ if(n&&!seen[n]){ seen[n]=1; s.push(n); } }
+    (window._coloc_data||[]).forEach(function(r){ add(r.sede); });
+    if(!s.length&&typeof _COLOC_FALLBACK!=='undefined'){
+      _COLOC_FALLBACK.forEach(function(r){ add(r.sede); });
+    }
+    Object.keys(window.PG_SEDE_RECTORIA||{}).forEach(add);
+    return s;
+  }
+  function _menuCanonizarSedeColoc(nombre){
+    if(!nombre) return null;
+    var norm=typeof normalizarSedeColocacion==='function'?normalizarSedeColocacion(nombre):nombre;
+    var coloc=_menuColocSedes(), i;
+    for(i=0;i<coloc.length;i++){
+      if(coloc[i]===norm||coloc[i]===nombre) return coloc[i];
+    }
+    for(i=0;i<coloc.length;i++){
+      if(_menuMatchSede(coloc[i],norm)||_menuMatchSede(coloc[i],nombre)) return coloc[i];
+    }
+    if(typeof buscarFilasColoc==='function'){
+      var filas=buscarFilasColoc([nombre,norm]);
+      if(filas.length&&filas[0].sede) return filas[0].sede;
+    }
+    if(typeof _mbsResolverSedeColoc==='function'){
+      var res=_mbsResolverSedeColoc(nombre);
+      if(res&&res!==nombre){
+        if(typeof buscarFilasColoc==='function'){
+          var f2=buscarFilasColoc([res]);
+          if(f2.length&&f2[0].sede) return f2[0].sede;
+        }
+        return res;
+      }
+    }
+    return norm;
+  }
+  function _menuResolverSedesUsuario(){
+    var cargo=_menuCargoSesion();
+    var sedeRaw=_menuSedeSesionRaw();
+    if(_menuEsRolNacional(cargo)) return { esNacional:true, sedes:null };
+    var userSedesRaw=_menuParseSedes(sedeRaw);
+    if(!userSedesRaw.length) return { esNacional:false, sedes:[] };
+    _menuAsegurarMapaRectorias();
+    var out=[], seen={};
+    function pushSede(s){
+      var canon=_menuCanonizarSedeColoc(s);
+      if(!canon||seen[canon]) return;
+      seen[canon]=1;
+      out.push(canon);
+    }
+    userSedesRaw.forEach(function(raw){
+      if(_menuExpandeRectoria(cargo, raw)){
+        var rect=_menuResolverRectoriaDesdeSede(raw);
+        if(rect){
+          var lista=typeof _mapaListaSedes==='function'?_mapaListaSedes(rect):[];
+          if(lista.length){ lista.forEach(pushSede); return; }
+        }
+      }
+      var resolved=typeof _mbsResolverSedeColoc==='function'?_mbsResolverSedeColoc(raw):raw;
+      pushSede(resolved||raw);
+    });
+    if(!out.length){
+      var coloc=_menuColocSedes();
+      userSedesRaw.forEach(function(raw){
+        coloc.forEach(function(cs){ if(_menuMatchSede(cs,raw)) pushSede(cs); });
+      });
+    }
+    if(!out.length) userSedesRaw.forEach(function(raw){ pushSede(raw); });
+    out.sort(function(a,b){ return a.localeCompare(b,'es'); });
+    return { esNacional:false, sedes:out };
+  }
+  window._menuResolverSedesUsuario=_menuResolverSedesUsuario;
+
   function poblarMenuAmbitoSedes(){
     var sel=document.getElementById('menu-ambito-sel');
     if(!sel) return;
     var prev=sel.value||'nacional';
+    var scope=_menuResolverSedesUsuario();
+    var esNacional=scope.esNacional;
     var sedes=[];
-    (window._coloc_data||[]).forEach(function(r){ if(r.sede&&sedes.indexOf(r.sede)<0) sedes.push(r.sede); });
-    sedes.sort(function(a,b){ return a.localeCompare(b,'es'); });
-    var cargo=(typeof navState!=='undefined'&&navState.cargoEjecutor)||'';
-    var esNacional=_menuEsRolNacional(cargo);
-    if(!esNacional){
-      var userSedes=_menuParseSedes((navState&&navState.sedeEjecutor)||'');
-      if(userSedes.length){
-        sedes=sedes.filter(function(s){
-          return userSedes.some(function(us){ return _menuMatchSede(s,us); });
-        });
-      }
+    if(esNacional){
+      (window._coloc_data||[]).forEach(function(r){ if(r.sede&&sedes.indexOf(r.sede)<0) sedes.push(r.sede); });
+      if(!sedes.length&&typeof _mapaListaSedes==='function') sedes=_mapaListaSedes('');
+      sedes.sort(function(a,b){ return a.localeCompare(b,'es'); });
+    } else {
+      sedes=scope.sedes||[];
     }
     sel.innerHTML='<option value="nacional">🇨🇴 Nacional (todas las sedes)</option>';
     sedes.forEach(function(s){
@@ -7622,6 +7735,7 @@ function _parseCumpleMMDD(s){
     });
     if(prev&&(prev==='nacional'||sedes.indexOf(prev)>=0)) sel.value=prev;
     else if(!esNacional&&sedes.length===1) sel.value=sedes[0];
+    else if(!esNacional&&sedes.length>1&&!sedes.some(function(s){ return s===prev; })) sel.value=sedes[0];
     else sel.value='nacional';
     var hint=document.getElementById('menu-ambito-hint');
     if(hint) hint.textContent=sel.value==='nacional'
