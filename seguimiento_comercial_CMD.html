@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.34   (APP_VERSION = 'pyv-comercial-5.4.34')
+  Versión actual: pyv-comercial-5.4.35   (APP_VERSION = 'pyv-comercial-5.4.35')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.35 (2026-07-04)
+    - Modal bienvenida: semáforos por sede (Solo SIGEC, Solo GLPI, SIGEC+GLPI) vs meta S2, estilo menú.
   pyv-comercial-5.4.34 (2026-07-04)
     - Informes Tasa/Pérdida: SIGEC fact. y GLPI aprob. muestran acumulado total a la fecha (no mes en curso).
   pyv-comercial-5.4.33 (2026-07-04)
@@ -217,11 +219,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.34">
-<meta name="build-id" content="pyv-comercial-5.4.34-20260704-0450">
-<title>SCIC pyv-comercial 5.4.34 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.35">
+<meta name="build-id" content="pyv-comercial-5.4.35-20260704-1315">
+<title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.34';
+window.APP_VERSION='pyv-comercial-5.4.35';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -962,7 +964,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.34</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.35</div>
 </div>
 
 
@@ -971,7 +973,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.34</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.35</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -3656,7 +3658,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.34';
+var APP_VERSION = 'pyv-comercial-5.4.35';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -10665,6 +10667,33 @@ function _parseCumpleMMDD(s){
     if(pct>=70) return '#fbbf24';
     return '#f87171';
   }
+  function _mbsSemLbl(pct){
+    if(pct>=90) return 'VERDE';
+    if(pct>=70) return 'AMARILLO';
+    return 'ROJO';
+  }
+  function _mbsRenderSemaforoCard(titulo, valor, meta){
+    var v=Number(valor)||0, m=Number(meta)||0;
+    var pct=m>0?Math.min(100,Math.round(v/m*100)):0;
+    var col=_mbsSemColor(pct);
+    var sem=m>0?_mbsSemLbl(pct):'—';
+    return '<div style="flex:1;min-width:100px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:10px 8px;text-align:center">'
+      +'<div style="font-size:8px;font-weight:700;color:rgba(255,255,255,.55);text-transform:uppercase;letter-spacing:.3px;margin-bottom:6px">'+titulo+'</div>'
+      +'<div style="width:54px;height:54px;margin:0 auto 6px;border-radius:50%;border:3px solid '+col+';display:flex;align-items:center;justify-content:center;background:'+col+'22">'
+      +'<div style="font-size:13px;font-weight:900;color:'+col+'">'+(m?pct+'%':'—')+'</div></div>'
+      +'<div style="height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;margin-bottom:5px"><div style="height:100%;width:'+(m?Math.min(100,pct):0)+'%;background:'+col+';border-radius:3px;transition:width .5s"></div></div>'
+      +'<div style="font-size:8px;font-weight:800;color:'+col+';margin-bottom:3px">'+sem+'</div>'
+      +'<div style="font-size:8px;color:rgba(255,255,255,.5);line-height:1.35">'+_mbsFmtN(v)+' / meta '+_mbsFmtN(Math.round(m))+'</div>'
+      +'</div>';
+  }
+  function _mbsRenderTrioSemaforos(sigFact, glpiApr, meta){
+    var comb=(Number(sigFact)||0)+(Number(glpiApr)||0);
+    return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 10px">'
+      +_mbsRenderSemaforoCard('Solo SIGEC', sigFact, meta)
+      +_mbsRenderSemaforoCard('Solo GLPI', glpiApr, meta)
+      +_mbsRenderSemaforoCard('SIGEC + GLPI', comb, meta)
+      +'</div>';
+  }
   function _mbsRenderBloqueSede(sedeLabel, sedeColoc){
     var html = '';
     if(typeof _ioConstruirContexto === 'function'){
@@ -10681,6 +10710,8 @@ function _parseCumpleMMDD(s){
       html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:8px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700">Colocado</div><div style="font-size:16px;font-weight:900;color:#4ade80">'+_mbsFmtN(ctx.acum)+'</div></div>';
       html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:8px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700">Cumplimiento</div><div style="font-size:16px;font-weight:900;color:'+_mbsSemColor(pct)+'">'+pct+'%</div></div>';
       html += '</div>';
+      html += '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Semáforos vs meta S2</div>';
+      html += _mbsRenderTrioSemaforos(ctx.sig.facturada||0, ctx.glpi.aprobada||0, ctx.meta||0);
       html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:10px;color:rgba(255,255,255,.65)">';
       html += '<div>📋 SIGEC: <b style="color:#fff">'+_mbsFmtN(ctx.sig.facturada||0)+'</b> fact. / '+_mbsFmtN(ctx.sig.radicadas||ctx.sig.total||0)+' rad.</div>';
       html += '<div>🎫 GLPI: <b style="color:#fff">'+_mbsFmtN(ctx.glpi.aprobada||0)+'</b> aprob. / '+_mbsFmtN(ctx.glpi.total||0)+' total</div>';
@@ -10707,6 +10738,8 @@ function _parseCumpleMMDD(s){
     html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:10px"><div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase">Cumplimiento</div><div style="font-size:18px;font-weight:900;color:'+_mbsSemColor(pct)+'">'+pct+'%</div></div>';
     html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:10px"><div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase">Brecha</div><div style="font-size:18px;font-weight:900;color:#f87171">'+_mbsFmtN(brecha)+'</div></div>';
     html += '</div>';
+    html += '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Semáforos nacionales vs meta S2</div>';
+    html += _mbsRenderTrioSemaforos(ctx.sig.facturada||0, ctx.glpi.aprobada||0, ctx.meta||0);
     html += '<div style="font-size:10px;color:rgba(255,255,255,.6);line-height:1.6">';
     html += '📋 SIGEC nacional: <b style="color:#fff">'+_mbsFmtN(ctx.sig.facturada||0)+'</b> facturadas · '+_mbsFmtN(ctx.sig.radicadas||ctx.sig.total||0)+' radicadas<br>';
     html += '🎫 GLPI: <b style="color:#fff">'+_mbsFmtN(ctx.glpi.aprobada||0)+'</b> aprobadas · '+_mbsFmtN(ctx.glpi.total||0)+' tickets<br>';
