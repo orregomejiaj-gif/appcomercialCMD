@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.32   (APP_VERSION = 'pyv-comercial-5.4.32')
+  Versión actual: pyv-comercial-5.4.33   (APP_VERSION = 'pyv-comercial-5.4.33')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.33 (2026-07-04)
+    - Tasa de pérdida corregida: (cerradas SIGEC + cerradas facturadas) − retomas GLPI recuperadas.
+    - Retomas GLPI por columna Categoría (EXCEPCIONES DE CRÉDITO); nuevos/renovaciones en Líneas Especiales.
+    - Menú SIGEC + informes Tasa/Pérdida y Retomas: 4 bloques (colocación, SIGEC, GLPI, suma).
   pyv-comercial-5.4.32 (2026-07-04)
     - Menú accesos rápidos: eliminados CogniPYV, IA Ejecutiva y MCM; se conserva SCIC Pulso.
   pyv-comercial-5.4.31 (2026-07-04)
@@ -211,11 +215,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.32">
-<meta name="build-id" content="pyv-comercial-5.4.32-20260704-0425">
-<title>SCIC pyv-comercial 5.4.32 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.33">
+<meta name="build-id" content="pyv-comercial-5.4.33-20260704-0450">
+<title>SCIC pyv-comercial 5.4.33 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.32';
+window.APP_VERSION='pyv-comercial-5.4.33';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -956,7 +960,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.32</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.33</div>
 </div>
 
 
@@ -965,7 +969,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.32</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.33</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -1414,6 +1418,13 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <span class="glpi-sep">·</span>
           <span id="menu-glpi-neg">—</span> negadas
         </div>
+        <div class="menu-sigec-perdida" id="menu-sigec-perdida-row">
+          <span>Retomas GLPI: <b id="menu-glpi-retomas">—</b></span>
+          <span class="glpi-sep">·</span>
+          <span>Pérdida neta: <b id="menu-perdida-neta">—</b></span>
+          <span class="glpi-sep">·</span>
+          <span>Tasa pérdida: <b id="menu-tasa-perdida">—</b></span>
+        </div>
       </div>
 
       <div class="menu-report-block menu-mcm-panel">
@@ -1686,6 +1697,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-sigec-bar>div{height:100%;border-radius:5px;background:var(--green);transition:width .8s ease}
 .menu-sigec-meta-row{display:flex;justify-content:space-between;font-size:10px;color:var(--text2);margin-top:10px;flex-wrap:wrap;gap:6px}
 .menu-sigec-glpi{margin-top:12px;font-size:10px;color:var(--text2);text-align:center;padding-top:10px;border-top:1px solid var(--border)}
+.menu-sigec-perdida{margin-top:8px;font-size:10px;color:var(--text2);text-align:center;padding:8px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:8px}
+.menu-sigec-perdida b{color:#b91c1c}
 .menu-mcm-panel .menu-mcm-hdr{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .menu-mcm-title{color:var(--dark);font-size:14px;font-weight:800}
 .menu-mcm-sub{color:var(--gray);font-size:10px;margin-top:4px}
@@ -3641,7 +3654,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.32';
+var APP_VERSION = 'pyv-comercial-5.4.33';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7344,6 +7357,13 @@ function _parseCumpleMMDD(s){
     el=document.getElementById('menu-glpi-apr'); if(el) el.textContent=fmtN(glpi.aprobada||0);
     el=document.getElementById('menu-glpi-abi'); if(el) el.textContent=fmtN(glpi.abierta||0);
     el=document.getElementById('menu-glpi-neg'); if(el) el.textContent=fmtN(glpi.negada||0);
+    if(typeof _ioContarGlpiCategorias==='function' && typeof _ioCalcPerdida==='function'){
+      var gCat=_ioContarGlpiCategorias(null);
+      var perd=_ioCalcPerdida(sig, gCat.retomasRecup);
+      el=document.getElementById('menu-glpi-retomas'); if(el) el.textContent=hayDatos?fmtN(perd.retomas):'—';
+      el=document.getElementById('menu-perdida-neta'); if(el) el.textContent=hayDatos?fmtN(perd.neta):'—';
+      el=document.getElementById('menu-tasa-perdida'); if(el) el.textContent=hayDatos?(perd.tasa+'%'):'—';
+    }
   }
 
   function _menuSemColor(sem){
@@ -8981,6 +9001,64 @@ function _parseCumpleMMDD(s){
   var MD_GLPI_COL_ESTADO = 3;
   var MD_GLPI_COL_FECHA = 1;
   var MD_GLPI_COL_SEDE = 8;
+  var MD_GLPI_COL_CATEGORIA = 4;
+
+  function _glpiLeerCategoria(row){
+    if(!row) return '';
+    var cols=row._cols||row._c||[];
+    return String(row['Categoría']||row.Categoria||row.categoria||_mdFldRow(row,['categor'],MD_GLPI_COL_CATEGORIA)||cols[MD_GLPI_COL_CATEGORIA]||'').trim();
+  }
+  function _glpiClasifCategoria(cat){
+    var u=String(cat||'').toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(u.indexOf('EXCEPCIONES DE CREDITO')>=0){
+      if(u.indexOf('COMFENALCO')>=0||u.indexOf('CREDITO DIRECTO')>=0) return 'retoma';
+      if(u.indexOf('RENOVACION')>=0) return 'retoma';
+      if(u.indexOf('NUEVO')>=0) return 'retoma';
+      return 'retoma';
+    }
+    if(u.indexOf('LINEAS ESPECIALES')>=0||u.indexOf('EDUCATIVO')>=0){
+      if(u.indexOf('RENOVACION')>=0) return 'renovacion';
+      if(u.indexOf('NUEVO')>=0) return 'nuevo';
+    }
+    return 'otro';
+  }
+  function _ioContarGlpiCategorias(sedesFiltro){
+    var r={nuevos:0,renovaciones:0,retomas:0,retomasRecup:0,otro:0,total:0};
+    (window._glpiRows||[]).forEach(function(row){
+      var cols=row._cols||[];
+      var s=String(row.Sede||row.sede||cols[MD_GLPI_COL_SEDE]||'').trim();
+      if(s&&!_ioMatchSedeList(s,sedesFiltro)) return;
+      if(!s&&!sedesFiltro) r.total++;
+      else if(s){ r.total++;
+        var cls=_glpiClasifCategoria(_glpiLeerCategoria(row));
+        if(cls==='nuevo') r.nuevos++;
+        else if(cls==='renovacion') r.renovaciones++;
+        else if(cls==='retoma'){
+          r.retomas++;
+          if(_mdEsAprobadaGlpi(row)) r.retomasRecup++;
+        } else r.otro++;
+      }
+    });
+    return r;
+  }
+  function _ioCalcPerdida(sig, retomasRecup){
+    var cerr=Number(sig&&sig.cerrada)||0;
+    var cerrFac=Number(sig&&sig.cerrada_fac)||0;
+    var recup=Number(retomasRecup)||0;
+    var bruta=cerr+cerrFac;
+    var neta=Math.max(0, bruta-recup);
+    var rad=Number(sig&&(sig.radicadas||sig.total))||0;
+    return {
+      cerradas:cerr, cerrada_fac:cerrFac, bruta:bruta,
+      retomas:recup, neta:neta,
+      tasa:rad>0?Math.round(neta/rad*1000)/10:0,
+      rad:rad
+    };
+  }
+  window._glpiLeerCategoria=_glpiLeerCategoria;
+  window._glpiClasifCategoria=_glpiClasifCategoria;
+  window._ioContarGlpiCategorias=_ioContarGlpiCategorias;
+  window._ioCalcPerdida=_ioCalcPerdida;
 
   function _mdDateKey(fecha){
     return fecha.getFullYear()+'-'+String(fecha.getMonth()+1).padStart(2,'0')+'-'+String(fecha.getDate()).padStart(2,'0');
@@ -9490,12 +9568,17 @@ function _parseCumpleMMDD(s){
     var colHoy=sedeUnica?(typeof _mdColSedeEnDia==='function'?_mdColSedeEnDia(colM,sedeUnica,hoyKey):0):_ioSumColHoy(colM,sedesFiltro,hoyKey);
     var colMes=mesAgg.total;
     var radMes=sedeUnica?(typeof _mdRadMesSede==='function'?_mdRadMesSede(rad,sedeUnica):0):_ioSumRadMes(rad,sedesFiltro);
+    var sigAgg=_ioAgregarSigec(sedesFiltro);
+    var glpiAgg=_ioAgregarGlpi(sedesFiltro);
+    var glpiCat=_ioContarGlpiCategorias(sedesFiltro);
     return {
       nivel:nivel, sel:sel, sedesFiltro:sedesFiltro, titulo:_ioTitulo(nivel,sel),
       coloc:coloc, meta:meta, acum:acum, ant:ant, metaV:metaV, acumV:acumV,
       pct:meta>0?Math.round(acum/meta*100):0,
       metaDiaria:metaDiaria, metaMes:metaMes, colHoy:colHoy, colMes:colMes, radMes:radMes,
-      sig:_ioAgregarSigec(sedesFiltro), glpi:_ioAgregarGlpi(sedesFiltro),
+      sig:sigAgg, glpi:glpiAgg,
+      glpiCat:glpiCat,
+      perdida:_ioCalcPerdida(sigAgg, glpiCat.retomasRecup),
       colocadoCombinado:mesAgg.total,
       sigMes:mesAgg.sig, glpiMes:mesAgg.glpi,
       empleados:_ioEmpleados(sedesFiltro), malla:_ioMalla(sedesFiltro),
@@ -9544,28 +9627,50 @@ function _parseCumpleMMDD(s){
   }
   function _ioRenderTasaAprobacion(ctx){
     var sig=ctx.sig||{};
-    var rad=sig.radicadas||sig.total||0;
+    var glpi=ctx.glpi||{};
+    var gCat=ctx.glpiCat||(typeof _ioContarGlpiCategorias==='function'?_ioContarGlpiCategorias(ctx.sedesFiltro):{});
+    var perd=ctx.perdida||(typeof _ioCalcPerdida==='function'?_ioCalcPerdida(sig,gCat.retomasRecup):{});
+    var rad=perd.rad||sig.radicadas||sig.total||0;
     var fact=sig.facturada||0;
-    var cerr=sig.cerrada||0;
-    var cerrFac=sig.cerrada_fac||0;
-    var conv=fact+cerrFac;
-    var perdida=cerr+cerrFac;
-    var tasaConv=rad>0?Math.round(conv/rad*1000)/10:0;
-    var tasaPerd=rad>0?Math.round(perdida/rad*1000)/10:0;
+    var colComb=ctx.colocadoCombinado||(ctx.sigMes||0)+(ctx.glpiMes||0);
     var tasaFact=rad>0?Math.round(fact/rad*1000)/10:0;
-    var html=_ioSec('📉 Tasa de aprobación y pérdida SIGEC','No el 100% de radicadas pasa a facturadas: parte queda cerrada o cerrada facturada');
+    var html='';
+
+    html+=_ioSec('1 · Colocación (SIGEC + GLPI)','Colocado combinado del período · criterio de cumplimiento');
     html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px;margin-bottom:10px">';
-    html+=_ioKpi('Radicadas',_ioFmtN(rad),'#6366f1','Base del embudo');
-    html+=_ioKpi('Facturadas',_ioFmtN(fact),'#16a34a',tasaFact+'% del total');
-    html+=_ioKpi('Cerradas',_ioFmtN(cerr),'#dc2626','Pérdida sin facturar');
-    html+=_ioKpi('Cerradas fac.',_ioFmtN(cerrFac),'#ca8a04','Recuperación parcial');
-    html+=_ioKpi('Tasa conversión',tasaConv+'%','#003D45','(fact.+cerr.fac.)÷rad.');
-    html+=_ioKpi('Tasa pérdida',tasaPerd+'%','#dc2626','(cerr.+cerr.fac.)÷rad.');
+    html+=_ioKpi('Colocado mes',_ioFmtN(colComb),'#003D45','SIGEC+GLPI');
+    html+=_ioKpi('SIGEC fact.',_ioFmtN(ctx.sigMes||0),'#16a34a','Mes en curso');
+    html+=_ioKpi('GLPI aprob.',_ioFmtN(ctx.glpiMes||0),'#0891b2','Mes en curso');
+    html+=_ioKpi('Meta S2',_ioFmtN(ctx.meta||0),'#6366f1',(ctx.pct||0)+'% cumpl.');
+    html+='</div>';
+
+    html+=_ioSec('2 · Información SIGEC','Estados del repositorio COLOCACION SIGEC');
+    html+=_ioRenderBloqueSigec(sig);
+
+    html+=_ioSec('3 · Información GLPI','Por categoría (columna Categoría) y estado');
+    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:6px;margin-bottom:8px">';
+    html+=_ioKpi('Aprobadas',_ioFmtN(glpi.aprobada),'#16a34a');
+    html+=_ioKpi('Abiertas',_ioFmtN(glpi.abierta),'#ca8a04');
+    html+=_ioKpi('Negadas',_ioFmtN(glpi.negada),'#dc2626');
+    html+=_ioKpi('Nuevos',_ioFmtN(gCat.nuevos),'#6366f1','EDUCATIVO › Líneas esp. › Nuevo');
+    html+=_ioKpi('Renovaciones',_ioFmtN(gCat.renovaciones),'#7c3aed','EDUCATIVO › Líneas esp. › Renov.');
+    html+=_ioKpi('Retomas',_ioFmtN(gCat.retomas),'#16a34a','EXCEPCIONES DE CRÉDITO');
+    html+=_ioKpi('Retomas recup.',_ioFmtN(gCat.retomasRecup),'#15803d','Aprobadas/facturadas');
+    html+='</div>';
+
+    html+=_ioSec('4 · Pérdida neta (SIGEC − retomas GLPI)','Fórmula: (cerradas + cerradas facturadas) − retomas recuperadas GLPI');
+    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px;margin-bottom:10px">';
+    html+=_ioKpi('Cerradas',_ioFmtN(perd.cerradas),'#dc2626','SIGEC');
+    html+=_ioKpi('Cerradas fac.',_ioFmtN(perd.cerrada_fac),'#ca8a04','SIGEC');
+    html+=_ioKpi('Pérdida bruta',_ioFmtN(perd.bruta),'#f97316','cerr. + cerr.fac.');
+    html+=_ioKpi('Retomas recup.',_ioFmtN(perd.retomas),'#16a34a','GLPI categoría retoma');
+    html+=_ioKpi('Pérdida neta',_ioFmtN(perd.neta),'#dc2626','bruta − retomas');
+    html+=_ioKpi('Tasa pérdida',perd.tasa+'%','#b91c1c','pérdida neta ÷ radicadas');
     html+='</div>';
     html+='<div style="padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:10px;color:#7f1d1d;line-height:1.5">'
-      +'De <b>'+_ioFmtN(rad)+'</b> radicadas, <b>'+_ioFmtN(fact)+'</b> llegaron a facturadas ('+tasaFact+'%). '
-      +'Pérdida acumulada (cerradas + cerradas facturadas): <b>'+_ioFmtN(perdida)+'</b> ('+tasaPerd+'%). '
-      +'Conversión neta reconocida: <b>'+tasaConv+'%</b>.</div>';
+      +'<b>'+_ioFmtN(perd.bruta)+'</b> (cerradas + cerradas facturadas SIGEC) − <b>'+_ioFmtN(perd.retomas)+'</b> retomas GLPI recuperadas = '
+      +'<b>'+_ioFmtN(perd.neta)+'</b> pérdida neta (<b>'+perd.tasa+'%</b> sobre '+_ioFmtN(rad)+' radicadas SIGEC). '
+      +'Facturadas SIGEC: <b>'+_ioFmtN(fact)+'</b> ('+tasaFact+'%).</div>';
     return html;
   }
   window._ioRenderHistorialDiario=_ioRenderHistorialDiario;
@@ -11907,7 +12012,7 @@ function _parseCumpleMMDD(s){
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
-  var IC_GLP = {TICKET:0,FC:1,CED:2,EST:3,FA:9,SED:8,TIPO:5};
+  var IC_GLP = {TICKET:0,FC:1,CED:2,EST:3,CAT:4,FA:9,SED:8,TIPO:5};
 
   function icFmt(n){ return (Number(n)||0).toLocaleString('es-CO'); }
   function icNum(v){
@@ -12151,8 +12256,8 @@ function _parseCumpleMMDD(s){
     'corte-dia':'Colocación reconocida con corte al día anterior 11:59 pm = SIGEC facturadas + GLPI aprobadas en ese período.',
     'tiempos':'Horas hábiles entre fecha de cargue y última actualización (o facturación). Meta 48h. Congelados se reportan aparte.',
     'pendientes':'Comparación por cédula: (SIGEC facturadas + GLPI aprobadas) vs BASE COLOCACIÓN total. Las que coinciden en base ya están desembolsadas. Las que no aparecen en base aún no están desembolsadas.',
-    'retomas':'Retomas facturadas SIGEC vs cerradas + cerradas facturadas. Diferencia indica recuperación neta vs pérdida.',
-    'tasa-aprob':'Tasa de conversión SIGEC: qué % de radicadas llega a facturadas vs cerradas/cerradas facturadas (pérdida del embudo).'
+    'retomas':'Retomas GLPI (categoría EXCEPCIONES DE CRÉDITO) vs pérdida SIGEC: (cerradas + cerradas facturadas) − retomas recuperadas.',
+    'tasa-aprob':'Tasa de pérdida: (cerradas SIGEC + cerradas facturadas) − retomas GLPI recuperadas. Incluye colocación, SIGEC, GLPI y suma combinada.'
   };
 
   function icRenderCoberturaUni(f){
@@ -12423,27 +12528,40 @@ function _parseCumpleMMDD(s){
     return '<div class="ic-explain">'+IC_DESCS['tasa-aprob']+'</div><div style="color:#94a3b8;padding:20px">Motor de informes no disponible</div>';
   }
 
+  function icContarGlpiCat(f){
+    if(typeof _ioContarGlpiCategorias==='function'){
+      var sedes=null;
+      if(f.nivel==='sede'&&f.sel) sedes=[f.sel];
+      else if(f.nivel==='rectoria'&&f.sel&&typeof _mapaListaSedes==='function') sedes=_mapaListaSedes(f.sel);
+      return _ioContarGlpiCategorias(sedes);
+    }
+    return {nuevos:0,renovaciones:0,retomas:0,retomasRecup:0,otro:0,total:0};
+  }
+
   function icRenderRetomas(f){
     var cong=icCongeladosSet();
-    var retFact=0, cerr=0, cerrFac=0, cerrCong=0;
+    var cerr=0, cerrFac=0, cerrCong=0;
     icFilasSigec(f).forEach(function(r){
       var cls=icClasifSigec(r);
       var c=r._cols||[];
       var tk=icStr(r.Ticket||c[0]);
       if(cls==='cerrada'){ cerr++; if(cong[tk]) cerrCong++; }
       if(cls==='cerrada_fac') cerrFac++;
-      if(cls==='facturada'&&icEsRetoma(r)) retFact++;
     });
-    var cerrTot=cerr+cerrFac;
-    var diff=retFact-cerrTot;
-    var tasaRec=(retFact+cerrTot)>0?Math.round(retFact/(retFact+cerrTot)*1000)/10:0;
-    var tasaPerd=cerrTot>0?Math.round(cerrTot/(retFact+cerrTot)*1000)/10:0;
+    var gCat=icContarGlpiCat(f);
+    var sig={cerrada:cerr,cerrada_fac:cerrFac,radicadas:0,total:0};
+    icFilasSigec(f).forEach(function(){ sig.total++; });
+    sig.radicadas=sig.total;
+    var perd=(typeof _ioCalcPerdida==='function')?_ioCalcPerdida(sig,gCat.retomasRecup):{bruta:cerr+cerrFac,retomas:gCat.retomasRecup,neta:Math.max(0,cerr+cerrFac-gCat.retomasRecup),tasa:0};
     var html='<div class="ic-explain">'+IC_DESCS['retomas']+'</div><div class="ic-kpi-grid">';
-    html+=icKpi('Retomas fact.',icFmt(retFact),'SIGEC facturada tipo retoma/recuperación','#16a34a');
-    html+=icKpi('Cerradas',icFmt(cerr),'Solicitudes cerradas','#dc2626');
-    html+=icKpi('Cerradas fac.',icFmt(cerrFac),'Cerradas facturadas','#ca8a04');
-    html+=icKpi('Diferencia',icFmt(diff),'Retomas − (cerradas+cerr.fac)','#6366f1');
-    html+=icKpi('Tasa recuperación',tasaRec+'%','Retomas / (retomas+cerradas)','#16a34a');
+    html+=icKpi('Cerradas SIGEC',icFmt(cerr),'Solicitudes cerradas','#dc2626');
+    html+=icKpi('Cerradas fac.',icFmt(cerrFac),'Cerradas facturadas SIGEC','#ca8a04');
+    html+=icKpi('Retomas GLPI',icFmt(gCat.retomas),'EXCEPCIONES DE CRÉDITO','#6366f1');
+    html+=icKpi('Retomas recup.',icFmt(gCat.retomasRecup),'GLPI aprobadas/facturadas','#16a34a');
+    html+=icKpi('Pérdida neta',icFmt(perd.neta),'(cerr.+cerr.fac.)−retomas','#dc2626');
+    html+=icKpi('Tasa pérdida',perd.tasa+'%','Pérdida neta ÷ radicadas','#b91c1c');
+    html+=icKpi('Nuevos GLPI',icFmt(gCat.nuevos),'Líneas especiales › Nuevo','#0891b2');
+    html+=icKpi('Renov. GLPI',icFmt(gCat.renovaciones),'Líneas especiales › Renov.','#7c3aed');
     html+=icKpi('Cerradas congeladas',icFmt(cerrCong),'Posible cierre por falta de gestión','#f97316');
     html+='</div>';
     return html;
@@ -12616,7 +12734,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.32 — accesos rápidos sin CogniPYV/IA/MCM');
+  console.log('[CMD] Informes Comerciales v5.4.33 — tasa pérdida SIGEC−retomas GLPI');
 })();
 
 </script>
