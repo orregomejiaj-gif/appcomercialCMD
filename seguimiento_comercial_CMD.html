@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.24   (APP_VERSION = 'pyv-comercial-5.4.24')
+  Versión actual: pyv-comercial-5.4.25   (APP_VERSION = 'pyv-comercial-5.4.25')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.25 (2026-07-04)
+    - Estado Operativo: misma carga de datos que Informes Comerciales (SIGEC/GLPI/base/enriquecimiento).
+    - Fix versión visible: meta/título/badge sincronizados con APP_VERSION (ya no queda en 5.4.23).
+    - Estado Operativo: timeout de respaldo para no quedar en «Cargando repositorios…» indefinido.
   pyv-comercial-5.4.24 (2026-07-04)
     - Cobertura UNI: fuente corregida → hoja INFORME DE MATRICULAS (Real Nuevos/Continuos/Total UNI).
     - Pendientes desembolso: cédulas únicas SIGEC+GLPI; carga SIGEC/base; KPIs aclarados.
@@ -188,12 +192,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.23">
-<meta name="build-id" content="pyv-comercial-5.4.23-20260704">
-<title>SCIC pyv-comercial 5.4.23 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.25">
+<meta name="build-id" content="pyv-comercial-5.4.25-20260704">
+<title>SCIC pyv-comercial 5.4.25 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.24';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.23';
+window.APP_VERSION='pyv-comercial-5.4.25';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -917,7 +920,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.23</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.25</div>
     <div id="turno-hdr-badge" onclick="abrirTurno()" style="display:none;cursor:pointer;background:rgba(255,255,255,.12);border-radius:6px;padding:3px 8px;margin-top:2px;align-items:center;gap:4px" title="Ver registro de turno">
       <span id="turno-hdr-icono" style="font-size:11px">⏰</span>
       <span id="turno-hdr-txt" style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8)">Sin turno</span>
@@ -1133,7 +1136,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.23</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.25</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:#64748b;margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -3583,7 +3586,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.24';
+var APP_VERSION = 'pyv-comercial-5.4.25';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4119,6 +4122,13 @@ function _scicRefrescarDatosVivos(forzar){
   }
   return Promise.all(ps);
 }
+function _scicSafeProm(v){
+  try{
+    if(v && typeof v.then==='function') return v.catch(function(){});
+    return Promise.resolve(v);
+  }catch(e){ return Promise.resolve(); }
+}
+window._scicSafeProm = _scicSafeProm;
 window._scicRefrescarDatosVivos = _scicRefrescarDatosVivos;
 
 function _scicPintarUltimaActualizacion(){
@@ -6287,8 +6297,8 @@ https://minutodediosportal.com/login/
   <div style="max-width:1100px;margin:20px auto;background:#fff;border-radius:20px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.3)">
     <div style="background:linear-gradient(135deg,#003D45,#00596B);padding:16px 20px;display:flex;justify-content:space-between;align-items:center">
       <div>
-        <div style="font-size:15px;font-weight:800;color:#fff">🔎 Consulta Dinámica</div>
-        <div style="font-size:11px;color:#FFD90099;margin-top:2px">Nacional · Por Rectoría · Por Sede</div>
+        <div style="font-size:15px;font-weight:800;color:#fff">📊 Estado Operativo</div>
+        <div style="font-size:11px;color:#FFD90099;margin-top:2px">Informe integral · Nacional · Rectoría · Sede</div>
       </div>
       <button onclick="document.getElementById('modal-consulta-dinamica').style.display='none'"
         style="background:#ffffff22;border:none;color:#fff;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:18px;line-height:1">✕</button>
@@ -6975,7 +6985,7 @@ function _parseCumpleMMDD(s){
     var raw = (typeof APP_VERSION!=='undefined' && APP_VERSION) ? APP_VERSION : (window.APP_VERSION||'pyv-comercial-5.4.12');
     var s = String(raw);
     var mProc = s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
-    var txt = window.APP_VERSION_LABEL || (mProc ? (mProc[1]+' '+mProc[2]) : (function(){
+    var txt = (mProc ? (mProc[1]+' '+mProc[2]) : (function(){
       var m = s.match(/(\d+\.\d+(?:\.\d+)?)/);
       return m ? ('SCIC v'+m[1]) : s;
     })());
@@ -8418,23 +8428,45 @@ function _parseCumpleMMDD(s){
 
   window.abrirConsultaDinamica = function(refresh){
     var modal = document.getElementById('modal-consulta-dinamica');
-    if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Consulta dinámica no disponible'); return; }
+    if(!modal){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Estado operativo no disponible'); return; }
     modal.style.display = 'block';
-    var cargarFull = function(){
+    var el = document.getElementById('cd-contenido');
+    var pintar = function(aviso){
       if(typeof _cartAsegurarMapaRectorias==='function') _cartAsegurarMapaRectorias();
       if(typeof cdCambiarNivel==='function') cdCambiarNivel();
-      var ps = [];
-      if(typeof cargarSigecContadoresMenu==='function') ps.push(cargarSigecContadoresMenu().catch(function(){}));
-      if(typeof _cargarGLPI==='function') ps.push(_cargarGLPI().catch(function(){}));
-      if(typeof _cargarMallaTurnos==='function') ps.push(_cargarMallaTurnos().catch(function(){}));
-      if(typeof _cargarCartera==='function') ps.push(_cargarCartera().catch(function(){}));
-      Promise.all(ps).then(function(){ if(typeof cdActualizar==='function') cdActualizar(); }).catch(function(){ if(typeof cdActualizar==='function') cdActualizar(); });
+      else if(typeof cdActualizar==='function') cdActualizar();
+      if(aviso && el){
+        var note = '<div style="font-size:10px;color:#b45309;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:8px 10px;margin-bottom:10px">'+aviso+'</div>';
+        if(el.innerHTML.indexOf(note)<0) el.innerHTML = note + el.innerHTML;
+      }
     };
-    if(typeof cargarDesdeSheetsCompleto==='function'){
-      var el=document.getElementById('cd-contenido');
-      if(el) el.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8">⏳ Cargando 8 repositorios desde Sheets…</div>';
-      cargarDesdeSheetsCompleto(true).then(cargarFull).catch(cargarFull);
-    } else { cargarFull(); }
+    var cargarDatos = function(){
+      var ps = [];
+      var safe = (typeof _scicSafeProm==='function') ? _scicSafeProm : function(v){ return Promise.resolve(v); };
+      if(typeof cargarDesdeSheetsCompleto==='function'){
+        ps.push(safe(cargarDesdeSheetsCompleto(true)));
+      } else if(typeof icCargarDatosInformes==='function'){
+        ps.push(safe(icCargarDatosInformes(true)));
+      } else if(typeof window._scicRefrescarDatosVivos==='function'){
+        ps.push(safe(window._scicRefrescarDatosVivos(true)));
+      }
+      if(typeof _cargarMallaTurnos==='function') ps.push(safe(_cargarMallaTurnos()));
+      if(typeof _cargarCartera==='function') ps.push(safe(_cargarCartera()));
+      if(typeof _cargarEmpleados==='function' && !Object.keys(EMPLEADOS_BD||{}).length) ps.push(safe(_cargarEmpleados()));
+      return Promise.all(ps);
+    };
+    if(el) el.innerHTML='<div style="text-align:center;padding:40px;color:#94a3b8">⏳ Cargando repositorios desde Sheets…</div>';
+    var listo = false;
+    var finalizar = function(aviso){
+      if(listo) return;
+      listo = true;
+      clearTimeout(timer);
+      pintar(aviso||'');
+    };
+    var timer = setTimeout(function(){
+      finalizar('Algunos repositorios tardaron en responder; se muestran los datos disponibles.');
+    }, 28000);
+    cargarDatos().then(function(){ finalizar(); }).catch(function(){ finalizar('Hubo errores al sincronizar; se muestran los datos disponibles.'); });
   };
 
   console.log('[SCIC v4.11.0] SIGEC 6 estados · Malla turnos · Consulta dinámica');
@@ -11790,9 +11822,9 @@ function _parseCumpleMMDD(s){
 })();
 </script>
 
-<!-- pyv-comercial-5.4.24: Informes Comerciales -->
+<!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.24 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.25 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -12468,7 +12500,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.24 — cobertura INFORME DE MATRICULAS + pendientes cédula única');
+  console.log('[CMD] Informes Comerciales v5.4.25 — Estado Operativo sincronizado + versión visible');
 })();
 
 </script>
