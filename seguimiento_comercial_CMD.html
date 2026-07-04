@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.39   (APP_VERSION = 'pyv-comercial-5.4.39')
+  Versión actual: pyv-comercial-5.4.40   (APP_VERSION = 'pyv-comercial-5.4.40')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.40 (2026-07-04)
+    - Fix menú desplegable: paneles ocultos por defecto (display:flex anulaba hidden).
   pyv-comercial-5.4.39 (2026-07-04)
     - Menú accesos rápidos: 4 botones desplegables (Operación, Gestión, Informes, Utilidades).
   pyv-comercial-5.4.38 (2026-07-04)
@@ -230,11 +232,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.39">
-<meta name="build-id" content="pyv-comercial-5.4.39-20260704-1450">
+<meta name="app-version" content="pyv-comercial-5.4.40">
+<meta name="build-id" content="pyv-comercial-5.4.40-20260704-1455">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.39';
+window.APP_VERSION='pyv-comercial-5.4.40';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1605,7 +1607,9 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-dd-gest{background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 3px 10px rgba(37,99,235,.35)}
 .menu-dd-inf{background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 3px 10px rgba(124,58,237,.35)}
 .menu-dd-util{background:linear-gradient(135deg,#ea580c,#f97316);box-shadow:0 3px 10px rgba(234,88,12,.35)}
-.menu-dd-panel{position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:200px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px;box-shadow:0 12px 32px rgba(0,61,69,.18);display:flex;flex-direction:column;gap:5px;z-index:200;animation:menuDdIn .18s ease}
+.menu-dd-panel{position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:200px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px;box-shadow:0 12px 32px rgba(0,61,69,.18);display:none;flex-direction:column;gap:5px;z-index:200}
+.menu-dd-panel:not([hidden]){display:flex;animation:menuDdIn .18s ease}
+.menu-dd-panel[hidden]{display:none !important}
 .menu-dd-panel-wide{min-width:220px}
 .menu-dd-panel .menu-qb{width:100%}
 @keyframes menuDdIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
@@ -1738,7 +1742,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;font-size:12px;color:#64748b;text-align:center;padding:20px}
 .menu-mapa-error{color:#dc2626;flex-direction:column}
 @media(max-width:900px){.menu-main-panel{padding:0 14px 16px}.menu-quick-grp-lbl{min-width:88px}.menu-quick-featured{grid-template-columns:repeat(2,1fr)}.menu-quick-dropdowns{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){.menu-quick-featured,.menu-quick-dropdowns{grid-template-columns:1fr}.menu-sem-trio{grid-template-columns:1fr}.menu-dd-panel{position:static;margin-top:6px;box-shadow:none;border:1px dashed var(--border)}}
+@media(max-width:520px){.menu-quick-featured,.menu-quick-dropdowns{grid-template-columns:1fr}.menu-sem-trio{grid-template-columns:1fr}.menu-dd-panel:not([hidden]){position:static;margin-top:6px;box-shadow:none;border:1px dashed var(--border)}}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
 .menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
@@ -3802,7 +3806,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.39';
+var APP_VERSION = 'pyv-comercial-5.4.40';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
