@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.45   (APP_VERSION = 'pyv-comercial-5.4.45')
+  Versión actual: pyv-comercial-5.4.46   (APP_VERSION = 'pyv-comercial-5.4.46')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.46 (2026-07-04)
+    - Fix login EMPLEADOS: fetch directo (reemplaza JSONP que fallaba) + consulta rápida por usuario.
+    - Caché en memoria solo desde Sheet (2 min); sedes nunca desde fallback embebido.
   pyv-comercial-5.4.45 (2026-07-04)
     - Sedes SIEMPRE desde hoja EMPLEADOS al login (sin caché de sedes en fallback ni sesión).
     - Multi-sede con ; reconocida (ej. juan.orrego: Bello;Virtual;itagui;rionegro).
@@ -249,11 +252,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.45">
-<meta name="build-id" content="pyv-comercial-5.4.45-20260704-1605">
+<meta name="app-version" content="pyv-comercial-5.4.46">
+<meta name="build-id" content="pyv-comercial-5.4.46-20260704-1615">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.45';
+window.APP_VERSION='pyv-comercial-5.4.46';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3811,7 +3814,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.45';
+var APP_VERSION = 'pyv-comercial-5.4.46';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4219,67 +4222,114 @@ function _sincronizarSesionDesdeEmpleados(){
 }
 window._sincronizarSesionDesdeEmpleados=_sincronizarSesionDesdeEmpleados;
 
-function _cargarEmpleados(forzar){
-  if(forzar) window._empleadosSheetOk=false;
-  if(!Object.keys(EMPLEADOS_BD).length){
-    _EMPLEADOS_FALLBACK.forEach(function(emp){
-      EMPLEADOS_BD[emp.correo]={correo:emp.correo,nombre:emp.nombre,cargo:emp.cargo||'',sede:'',cedula:emp.cedula,estado:emp.estado,cumple:emp.cumple,_sinSheet:true};
-    });
-  }
-  var res=document.getElementById('login-resultado');
-  var n=Object.keys(EMPLEADOS_BD).length;
-  if(res&&n>0&&!forzar) res.innerHTML='<div style="text-align:center;padding:7px;color:rgba(255,255,255,.5);font-size:9px"><i class="ti ti-users" style="color:#4ade80;margin-right:3px"></i>'+n+' usuarios · sedes desde Sheet</div>';
-  return new Promise(function(resolve){
-    var listo=function(ok){
-      try{ _sincronizarSesionDesdeEmpleados(); }catch(e){}
-      try{ if(typeof actualizarMenuKPIs==='function'&&sesionActiva) actualizarMenuKPIs(); }catch(e){}
-      resolve(EMPLEADOS_BD);
+var EMPLEADOS_SHEET_ID='1dRf-Gvs-jp5WWsXo9TFgqDICuMCPNWYIiPqTKhTJDuM';
+var EMPLEADOS_GVIZ_BASE='https://docs.google.com/spreadsheets/d/'+EMPLEADOS_SHEET_ID+'/gviz/tq?tqx=out:json&sheet=EMPLEADOS';
+var _empleadosInflight=null;
+var EMPLEADOS_SHEET_TTL_MS=120000;
+
+function _empParseGvizText(text){
+  var m=String(text||'').match(/setResponse\(([\s\S]*)\)\s*;?\s*$/);
+  if(!m) return null;
+  try{ return JSON.parse(m[1]); }catch(e){ return null; }
+}
+function _empProcesarFilasSheet(data){
+  if(!data||!data.table||!data.table.rows||!data.table.rows.length) return 0;
+  var cols=(data.table.cols||[]).map(function(c){return(c.label||c.id||'').trim();});
+  var n=0;
+  (data.table.rows||[]).forEach(function(row){
+    var v=(row.c||[]).map(function(c){return c?(c.v!==null&&c.v!==undefined?c.v:(c.f||'')):'';});
+    var correo='';
+    for(var ci=0;ci<cols.length;ci++){if(String(cols[ci]).toUpperCase().indexOf('CORREO')===0&&v[ci]){correo=String(v[ci]).trim().toLowerCase();break;}}
+    if(!correo) correo=String(v[0]||'').trim().toLowerCase();
+    if(!correo||correo.indexOf('@')<0) return;
+    var _nac=_empFldSheet(cols,v,'F.NACIMIENTO',6);
+    var _cum=(typeof _parseCumpleMMDD==='function')?_parseCumpleMMDD(_nac):'';
+    EMPLEADOS_BD[correo]={
+      correo:correo,
+      nombre:_empFldSheet(cols,v,'NOMBRE COMPLETO',1),
+      cargo:_empFldSheet(cols,v,'CARGO',2),
+      sede:_empFldSheet(cols,v,'SEDE',3),
+      cedula:_empFldSheet(cols,v,'CEDULA',4),
+      estado:_empFldSheet(cols,v,'ESTADO',7)||'Activo',
+      cumpleanos:_cum,
+      _fromSheet:true,
+      _sinSheet:false
     };
-    try{
-      var cb='_eg_'+Date.now(), sc2=document.createElement('script'), tm, sheetOk=false;
-      window[cb]=function(data){
-        clearTimeout(tm);
-        try{
-          if(data&&data.table&&data.table.rows&&data.table.rows.length){
-            var cols=(data.table.cols||[]).map(function(c){return(c.label||c.id||'').trim();});
-            (data.table.rows||[]).forEach(function(row){
-              var v=(row.c||[]).map(function(c){return c?(c.v!==null&&c.v!==undefined?c.v:(c.f||'')):'';});
-              var correo='';
-              for(var ci=0;ci<cols.length;ci++){if(String(cols[ci]).toUpperCase().indexOf('CORREO')===0&&v[ci]){correo=String(v[ci]).trim().toLowerCase();break;}}
-              if(!correo) correo=String(v[0]||'').trim().toLowerCase();
-              if(!correo||correo.indexOf('@')<0) return;
-              var _nac=_empFldSheet(cols,v,'F.NACIMIENTO',6);
-              var _cum=(typeof _parseCumpleMMDD==='function')?_parseCumpleMMDD(_nac):'';
-              EMPLEADOS_BD[correo]={
-                correo:correo,
-                nombre:_empFldSheet(cols,v,'NOMBRE COMPLETO',1),
-                cargo:_empFldSheet(cols,v,'CARGO',2),
-                sede:_empFldSheet(cols,v,'SEDE',3),
-                cedula:_empFldSheet(cols,v,'CEDULA',4),
-                estado:_empFldSheet(cols,v,'ESTADO',7)||'Activo',
-                cumpleanos:_cum,
-                _fromSheet:true,
-                _sinSheet:false
-              };
-            });
-            sheetOk=true;
-            window._empleadosSheetOk=true;
-            window._empleadosSheetTs=Date.now();
-            try{ EMPLEADOS_CUM=Object.keys(EMPLEADOS_BD).map(function(k){return EMPLEADOS_BD[k];}).filter(function(e){return e&&e.cumpleanos&&e.cumpleanos.length===5;}); }catch(e){}
-            try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
-            console.log('[SCIC] Sheet EMPLEADOS vivo: '+Object.keys(EMPLEADOS_BD).filter(function(k){return EMPLEADOS_BD[k]._fromSheet;}).length+' usuarios');
-          }
-        }catch(e){ console.warn('[SCIC] empleados sheet:', e&&e.message); }
-        delete window[cb];
-        listo(sheetOk);
-      };
-      sc2.onerror=function(){ clearTimeout(tm); delete window[cb]; listo(false); };
-      tm=setTimeout(function(){ delete window[cb]; listo(false); }, forzar?10000:12000);
-      sc2.src='https://docs.google.com/spreadsheets/d/1dRf-Gvs-jp5WWsXo9TFgqDICuMCPNWYIiPqTKhTJDuM/gviz/tq?tqx=out:json;responseHandler='+cb+'&sheet=EMPLEADOS&_='+Date.now();
-      document.head.appendChild(sc2);
-    }catch(e){ listo(false); }
+    n++;
+  });
+  if(n>0){
+    window._empleadosSheetOk=true;
+    window._empleadosSheetTs=Date.now();
+    try{ EMPLEADOS_CUM=Object.keys(EMPLEADOS_BD).map(function(k){return EMPLEADOS_BD[k];}).filter(function(e){return e&&e.cumpleanos&&e.cumpleanos.length===5;}); }catch(e){}
+    try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
+    console.log('[SCIC] Sheet EMPLEADOS: '+n+' filas');
+  }
+  return n;
+}
+function _empFetchSheet(tq){
+  var url=EMPLEADOS_GVIZ_BASE+(tq?('&tq='+encodeURIComponent(tq)):'')+'&_='+Date.now();
+  return fetch(url,{mode:'cors',cache:'no-store',credentials:'omit'}).then(function(r){
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    return r.text();
+  }).then(function(text){
+    var data=_empParseGvizText(text);
+    if(!data||!data.table) throw new Error('Respuesta vacía');
+    return data;
   });
 }
+function _empFetchSheetJsonp(tq){
+  return new Promise(function(resolve,reject){
+    try{
+      var cb='_eg_'+Date.now(), sc=document.createElement('script'), tm;
+      window[cb]=function(data){ clearTimeout(tm); delete window[cb]; try{sc.remove();}catch(e){} resolve(data); };
+      sc.onerror=function(){ clearTimeout(tm); delete window[cb]; try{sc.remove();}catch(e){} reject(new Error('JSONP error')); };
+      tm=setTimeout(function(){ delete window[cb]; try{sc.remove();}catch(e){} reject(new Error('timeout')); }, 12000);
+      sc.src=EMPLEADOS_GVIZ_BASE+(tq?('&tq='+encodeURIComponent(tq)):'')+'&tqx=out:json;responseHandler='+cb+'&_='+Date.now();
+      document.head.appendChild(sc);
+    }catch(e){ reject(e); }
+  });
+}
+function _empLeerSheet(tq){
+  return _empFetchSheet(tq).catch(function(){
+    return _empFetchSheetJsonp(tq);
+  });
+}
+function _cargarEmpleados(forzar){
+  if(!forzar&&window._empleadosSheetOk&&window._empleadosSheetTs&&(Date.now()-window._empleadosSheetTs)<EMPLEADOS_SHEET_TTL_MS){
+    return Promise.resolve(EMPLEADOS_BD);
+  }
+  if(_empleadosInflight) return _empleadosInflight;
+  _empleadosInflight=_empLeerSheet('').then(function(data){
+    _empProcesarFilasSheet(data);
+    return EMPLEADOS_BD;
+  }).catch(function(e){
+    console.warn('[SCIC] empleados sheet:', e&&e.message);
+    return EMPLEADOS_BD;
+  }).finally(function(){
+    _empleadosInflight=null;
+    try{ _sincronizarSesionDesdeEmpleados(); }catch(e){}
+    try{ if(typeof actualizarMenuKPIs==='function'&&sesionActiva) actualizarMenuKPIs(); }catch(e){}
+  });
+  return _empleadosInflight;
+}
+function _cargarEmpleadoPorUsuario(usuario){
+  var local=String(usuario||'').trim().toLowerCase().split('@')[0];
+  if(local.length<3) return Promise.resolve(null);
+  var correo=local+'@coopminutodedios.com';
+  if(window._empleadosSheetOk&&window._empleadosSheetTs&&(Date.now()-window._empleadosSheetTs)<EMPLEADOS_SHEET_TTL_MS
+    &&EMPLEADOS_BD[correo]&&EMPLEADOS_BD[correo]._fromSheet&&EMPLEADOS_BD[correo].sede){
+    return Promise.resolve(EMPLEADOS_BD[correo]);
+  }
+  var tq="select * where A contains '"+local.replace(/'/g,'')+"'";
+  return _empLeerSheet(tq).then(function(data){
+    var n=_empProcesarFilasSheet(data);
+    if(n>0&&EMPLEADOS_BD[correo]) return EMPLEADOS_BD[correo];
+    return _cargarEmpleados(true).then(function(){ return EMPLEADOS_BD[correo]||null; });
+  }).catch(function(){
+    return _cargarEmpleados(true).then(function(){ return EMPLEADOS_BD[correo]||null; });
+  });
+}
+window._cargarEmpleadoPorUsuario=_cargarEmpleadoPorUsuario;
 window._cargarEmpleados=_cargarEmpleados;
 
 // 6. Login — solo acceso con usuario exacto del repositorio
@@ -7247,6 +7297,9 @@ function _parseCumpleMMDD(s){
         +'<div><div style="font-size:18px;font-weight:800;color:#003D45;line-height:1.2">'+emp.nombre+'</div>'
         +'<div style="font-size:11px;color:#16a34a;font-weight:600;margin-top:2px">'+emp.cargo+'</div>'
         +'<div style="font-size:10px;color:#64748b;margin-top:2px"><i class="ti ti-map-pin" style="font-size:10px"></i> '+(typeof _empEtiquetaSedes==='function'?_empEtiquetaSedes(emp):emp.sede)+'</div></div></div>';
+      if((!emp._fromSheet||!emp.sede)&&typeof _cargarEmpleadoPorUsuario==='function'){
+        _cargarEmpleadoPorUsuario(val).then(function(fresh){ if(fresh&&fresh._fromSheet) buscarEmpleado(val); }).catch(function(){});
+      }
     } else {
       if(wrap) wrap.style.borderColor='var(--border)';
       if(btn){ btn.disabled=true; btn.style.cssText=btnBase+'background:#94a3b8;color:#fff;cursor:not-allowed;opacity:.7'; }
@@ -7261,23 +7314,20 @@ function _parseCumpleMMDD(s){
     if(val.length<3){ mostrarAlertaNav('Escribe al menos 3 caracteres — usa la parte antes del @'); return; }
     var res=document.getElementById('login-resultado');
     var btn=document.getElementById('login-btn');
-    var intentar=function(){
-      var emp=_resolverEmpleadoExacto(val);
+    var correo=(val.indexOf('@')>=0?val:val+'@coopminutodedios.com');
+    var intentar=function(emp){
       if(!emp){
         if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-user-x" style="color:#dc2626;font-size:24px"></i>'
           +'<div style="font-size:12px;color:#dc2626;font-weight:700;margin-top:8px">Usuario no encontrado</div>'
           +'<div style="font-size:11px;color:#64748b;margin-top:6px;line-height:1.7">Escribe solo la parte <strong>antes</strong> del @, coincidiendo exactamente.<br>'
-          +'<span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-family:monospace">nombre.apellido</span><br>'
-          +'<small style="color:#94a3b8">('+Object.keys(EMPLEADOS_BD||{}).length+' usuarios en el directorio)</small></div></div>';
+          +'<span style="background:#f1f5f9;padding:2px 8px;border-radius:4px;font-family:monospace">nombre.apellido</span></div></div>';
         if(btn){ btn.disabled=false; btn.style.opacity='1'; }
         return;
       }
-      var correo=emp.correo||(val.indexOf('@')>=0?val:val+'@coopminutodedios.com');
-      if(EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
       if(!emp._fromSheet||!emp.sede){
         if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-alert-triangle" style="color:#d97706;font-size:24px"></i>'
           +'<div style="font-size:12px;color:#d97706;font-weight:700;margin-top:8px">Sin sedes en hoja EMPLEADOS</div>'
-          +'<div style="font-size:11px;color:#64748b;margin-top:4px">No se pudo leer la columna SEDE para este usuario. Reintenta.</div></div>';
+          +'<div style="font-size:11px;color:#64748b;margin-top:4px">No se encontró la columna SEDE para este usuario. Reintenta.</div></div>';
         if(btn){ btn.disabled=false; btn.style.opacity='1'; }
         return;
       }
@@ -7293,21 +7343,17 @@ function _parseCumpleMMDD(s){
       if(btn){ btn.disabled=false; btn.style.opacity='1'; }
     };
     if(res) res.innerHTML='<div style="text-align:center;padding:16px"><i class="ti ti-loader" style="font-size:24px;color:#003D45;animation:spin 1s linear infinite"></i>'
-      +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Cargando sedes desde hoja EMPLEADOS…</div>'
-      +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Columna SEDE en vivo · sin caché local</div></div>';
+      +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Consultando sedes en EMPLEADOS…</div>'
+      +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Lectura directa del Sheet · sin datos embebidos</div></div>';
     if(btn){ btn.disabled=true; btn.style.opacity='0.7'; }
-    _cargarEmpleados(true).then(function(){
-      if(!window._empleadosSheetOk){
-        if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-cloud-off" style="color:#dc2626;font-size:24px"></i>'
-          +'<div style="font-size:12px;color:#dc2626;font-weight:700;margin-top:8px">No se pudo conectar con EMPLEADOS</div>'
-          +'<div style="font-size:11px;color:#64748b;margin-top:4px">Verifica tu conexión e intenta de nuevo.</div></div>';
-        if(btn){ btn.disabled=false; btn.style.opacity='1'; }
-        return;
-      }
-      intentar();
+    var cargar=(typeof _cargarEmpleadoPorUsuario==='function')?_cargarEmpleadoPorUsuario(val):_cargarEmpleados(true).then(function(){ return EMPLEADOS_BD[correo]||null; });
+    Promise.resolve(cargar).then(function(emp){
+      intentar(emp);
     }).catch(function(){
       if(btn){ btn.disabled=false; btn.style.opacity='1'; }
-      intentar();
+      if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-cloud-off" style="color:#dc2626;font-size:24px"></i>'
+        +'<div style="font-size:12px;color:#dc2626;font-weight:700;margin-top:8px">No se pudo conectar con EMPLEADOS</div>'
+        +'<div style="font-size:11px;color:#64748b;margin-top:4px">Verifica tu conexión e intenta de nuevo.</div></div>';
     });
   };
 
@@ -7358,7 +7404,7 @@ function _parseCumpleMMDD(s){
 
   // Render inicial + reintentos para datos asíncronos de Sheets.
   if(typeof _cargarEmpleados==='function'){
-    _cargarEmpleados(true).then(function(){
+    _cargarEmpleados(false).then(function(){
       try{
         var inp=document.getElementById('login-usuario');
         if(inp&&inp.value&&typeof buscarEmpleado==='function') buscarEmpleado(inp.value);
