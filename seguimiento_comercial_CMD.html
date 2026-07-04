@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.29   (APP_VERSION = 'pyv-comercial-5.4.29')
+  Versión actual: pyv-comercial-5.4.30   (APP_VERSION = 'pyv-comercial-5.4.30')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.30 (2026-07-04)
+    - Filtro de corte por fecha (menú + informes): calendario acotado al período activo S1/S2.
+    - Salud Comercial Nacional: SIGEC/GLPI al corte; enlace «Ver por sede →» (sin filtro sede en panel nacional).
+    - Informes: banner de corte + filtrado SIGEC/GLPI por fecha en todos los tabs.
   pyv-comercial-5.4.29 (2026-07-04)
     - Informes: cruce SIGEC fact.+GLPI aprob. vs BASE COLOCACIÓN (desembolsadas / sin desembolsar).
     - Deploy GitHub Pages: artefacto limpio + index.html + redespliegue forzado.
@@ -201,11 +205,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.29">
-<meta name="build-id" content="pyv-comercial-5.4.29-20260704-0325">
-<title>SCIC pyv-comercial 5.4.29 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.30">
+<meta name="build-id" content="pyv-comercial-5.4.30-20260704-0335">
+<title>SCIC pyv-comercial 5.4.30 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.29';
+window.APP_VERSION='pyv-comercial-5.4.30';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -946,7 +950,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.29</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.30</div>
 </div>
 
 
@@ -955,7 +959,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.29</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.30</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -1268,11 +1272,26 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     <div class="menu-main-panel">
     <div class="menu-nacional-panel">
 
+      <div class="cmd-corte-bar" id="menu-corte-bar">
+        <div class="cmd-corte-left">
+          <span class="cmd-corte-periodo" id="cmd-corte-periodo-lbl">—</span>
+          <span class="cmd-corte-lbl">Corte al día</span>
+          <input type="date" class="cmd-corte-input" id="cmd-corte-fecha-menu" title="Fecha de corte · dentro del período activo" onchange="cmdCorteOnChange(this)">
+          <button type="button" class="cmd-corte-btn" onclick="cmdCorteSetAyer()" title="Día anterior">Ayer</button>
+          <button type="button" class="cmd-corte-btn cmd-corte-btn-alt" onclick="cmdCorteSetOficial()" title="Corte oficial 11:59 pm día anterior">Corte oficial</button>
+        </div>
+        <div class="cmd-corte-right">
+          <span class="cmd-corte-hint" id="cmd-corte-hint">Vista al cierre del día seleccionado</span>
+          <button type="button" class="cmd-corte-link" onclick="cmdVerPorSede()" title="Abrir informes filtrados por sede">Ver por sede →</button>
+        </div>
+        <div class="cmd-corte-nota" id="cmd-corte-nota">SIGEC y GLPI se filtran por fecha. Colocación, cartera y matrículas usan el corte más reciente del Sheet.</div>
+      </div>
+
       <div class="menu-salud-panel" id="menu-salud-panel">
         <div class="menu-salud-hdr">
           <div>
             <div class="menu-salud-title">💚 Salud Comercial Nacional</div>
-            <div class="menu-salud-sub">Indicador integrado ISCIC · colocación · SIGEC · cartera · seguimientos</div>
+            <div class="menu-salud-sub">Indicador integrado ISCIC · colocación · SIGEC · cartera · seguimientos · <span id="menu-salud-corte-lbl">corte día anterior</span></div>
           </div>
           <div class="menu-salud-score-wrap">
             <div class="menu-salud-circle" id="menu-salud-circle">
@@ -1726,6 +1745,19 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-salud-dim-val{font-size:14px;font-weight:900;color:var(--dark);margin-top:2px}
 .menu-salud-dim-sub{font-size:8px;color:var(--text2);margin-top:2px}
 .menu-salud-loading{font-size:10px;color:var(--gray);grid-column:1/-1;text-align:center;padding:8px}
+.cmd-corte-bar{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 14px;margin-bottom:14px;padding:12px 16px;background:linear-gradient(135deg,#f8fafc,#fff);border:1px solid var(--border);border-radius:12px;border-left:4px solid var(--teal)}
+.cmd-corte-left,.cmd-corte-right{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.cmd-corte-periodo{font-size:10px;font-weight:800;color:var(--teal-d);background:var(--teal-l);padding:4px 10px;border-radius:6px;letter-spacing:.3px}
+.cmd-corte-lbl{font-size:9px;font-weight:700;color:var(--gray);text-transform:uppercase}
+.cmd-corte-input{padding:6px 8px;border:1.5px solid var(--border);border-radius:8px;font-size:11px;font-family:Ubuntu,sans-serif;min-width:130px}
+.cmd-corte-btn{padding:6px 10px;border:1px solid var(--border);border-radius:8px;background:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;color:var(--dark)}
+.cmd-corte-btn:hover{background:var(--teal-l);border-color:var(--teal)}
+.cmd-corte-btn-alt{background:var(--teal-l);border-color:rgba(0,61,69,.2)}
+.cmd-corte-hint{font-size:9px;color:var(--gray);max-width:280px;line-height:1.35}
+.cmd-corte-link{padding:6px 12px;border:none;border-radius:8px;background:var(--dark);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif}
+.cmd-corte-link:hover{background:#005a66}
+.cmd-corte-nota{font-size:9px;color:#94a3b8;width:100%;margin-top:2px;line-height:1.35}
+.ic-corte-banner{margin-bottom:10px}
 .cmd-ia-fab{position:fixed;bottom:22px;right:22px;z-index:12000;display:flex;align-items:center;gap:8px;padding:12px 16px;border:none;border-radius:999px;background:linear-gradient(135deg,var(--dark),#005a66);color:#fff;font-family:Ubuntu,sans-serif;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 8px 28px rgba(0,61,69,.35);transition:transform .2s,box-shadow .2s}
 .cmd-ia-fab:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,176,185,.35)}
 .cmd-ia-fab-icon{font-size:20px;line-height:1}
@@ -3625,7 +3657,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.29';
+var APP_VERSION = 'pyv-comercial-5.4.30';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6399,6 +6431,16 @@ https://minutodediosportal.com/login/
       </div>
       <div style="flex:1;display:flex;flex-direction:column;min-width:0">
         <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
+          <div class="cmd-corte-bar" style="width:100%;margin:0;padding:10px 12px;background:#f8fafc">
+            <div class="cmd-corte-left">
+              <span class="cmd-corte-periodo" id="ic-corte-periodo-lbl">—</span>
+              <span class="cmd-corte-lbl">Corte al día</span>
+              <input type="date" class="cmd-corte-input" id="cmd-corte-fecha-ic" onchange="cmdCorteOnChange(this)">
+              <button type="button" class="cmd-corte-btn" onclick="cmdCorteSetAyer()">Ayer</button>
+              <button type="button" class="cmd-corte-btn cmd-corte-btn-alt" onclick="cmdCorteSetOficial()">Corte oficial</button>
+            </div>
+            <div class="cmd-corte-hint" id="ic-corte-hint">Vista al cierre del día seleccionado</div>
+          </div>
           <div>
             <div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">NIVEL</div>
             <select id="ic-nivel" onchange="icCambiarNivel()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:120px">
@@ -10854,6 +10896,96 @@ function _parseCumpleMMDD(s){
   window.cmdIAPreguntaRapida = cmdIAPreguntaRapida;
   window.procesarConsultaCmdIA = procesarConsultaCmdIA;
 
+  /* ── Filtro de corte por fecha (menú + informes) ── */
+  (function(){
+    function fmtYMD(d){ var y=d.getFullYear(),m=('0'+(d.getMonth()+1)).slice(-2),day=('0'+d.getDate()).slice(-2); return y+'-'+m+'-'+day; }
+    function finDia(d){ var x=new Date(d); if(isNaN(x)) return null; x.setHours(23,59,59,999); return x; }
+    function ayerFin(){ var d=new Date(); d.setDate(d.getDate()-1); return finDia(d); }
+    function parseYMD(s){
+      if(!s) return null;
+      var p=String(s).split('-');
+      if(p.length<3) return null;
+      return finDia(new Date(+p[0],+p[1]-1,+p[2]));
+    }
+    function rango(){
+      if(typeof rangoPeriodoActivo==='function') return rangoPeriodoActivo(new Date());
+      var y=new Date().getFullYear();
+      return {periodo:'S2',inicio:new Date(y,4,1),fin:new Date(y,9,31)};
+    }
+    function clampFecha(d){
+      var rg=rango(), hoy=finDia(new Date()), max=d>rg.fin?rg.fin:(d>hoy?hoy:d);
+      if(max<rg.inicio) max=rg.inicio;
+      return finDia(max);
+    }
+    window.cmdCorteGet=function(){
+      return window._cmdCorteFecha||ayerFin();
+    };
+    window.cmdCorteLabel=function(){
+      return cmdCorteGet().toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    };
+    function syncInputs(ymd){
+      ['cmd-corte-fecha-menu','cmd-corte-fecha-ic'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(el) el.value=ymd;
+      });
+    }
+    function syncLabels(){
+      var rg=rango(), lbl=cmdCorteLabel(), per='26'+rg.periodo;
+      ['cmd-corte-periodo-lbl','ic-corte-periodo-lbl'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.textContent=per;
+      });
+      var hint='Vista al cierre del <b>'+lbl+'</b> (23:59)';
+      ['cmd-corte-hint','ic-corte-hint'].forEach(function(id){
+        var el=document.getElementById(id); if(el) el.innerHTML=hint;
+      });
+      var ms=document.getElementById('menu-salud-corte-lbl');
+      if(ms) ms.textContent='corte '+lbl;
+    }
+    window.cmdCorteInit=function(){
+      var rg=rango(), corte=clampFecha(ayerFin());
+      window._cmdCorteFecha=corte;
+      var min=fmtYMD(rg.inicio), max=fmtYMD(clampFecha(new Date()));
+      ['cmd-corte-fecha-menu','cmd-corte-fecha-ic'].forEach(function(id){
+        var el=document.getElementById(id);
+        if(!el) return;
+        el.min=min; el.max=max;
+      });
+      syncInputs(fmtYMD(corte));
+      syncLabels();
+    };
+    window.cmdCorteAplicar=function(){
+      syncLabels();
+      if(typeof renderSaludComercialCMD==='function') renderSaludComercialCMD();
+      if(typeof renderMenuMcmRadar==='function') renderMenuMcmRadar();
+      if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs();
+      var m=document.getElementById('modal-informes-comerciales');
+      if(m&&m.style.display!=='none'&&typeof icRenderInformeActivo==='function') icRenderInformeActivo();
+    };
+    window.cmdCorteOnChange=function(inp){
+      if(!inp||!inp.value) return;
+      var d=clampFecha(parseYMD(inp.value));
+      if(!d) return;
+      window._cmdCorteFecha=d;
+      syncInputs(fmtYMD(d));
+      cmdCorteAplicar();
+    };
+    window.cmdCorteSetAyer=function(){
+      window._cmdCorteFecha=clampFecha(ayerFin());
+      syncInputs(fmtYMD(window._cmdCorteFecha));
+      cmdCorteAplicar();
+    };
+    window.cmdCorteSetOficial=cmdCorteSetAyer;
+    window.cmdVerPorSede=function(){
+      if(typeof abrirInformesComerciales==='function') abrirInformesComerciales('cobertura-uni');
+      setTimeout(function(){
+        var n=document.getElementById('ic-nivel');
+        if(n){ n.value='sede'; if(typeof icCambiarNivel==='function') icCambiarNivel(); }
+      },250);
+    };
+    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',cmdCorteInit);
+    else setTimeout(cmdCorteInit,100);
+  })();
+
   function calcularSaludComercialCMD(){
     var dims = [], score = 0, w = 0;
     function add(lbl, val, sc, sem, peso, sub){
@@ -10872,19 +11004,34 @@ function _parseCumpleMMDD(s){
 
     var pctSig = 0;
     try{
-      var sig = typeof obtenerSigecNacional==='function' ? obtenerSigecNacional() : {};
-      var m = sig.meta||meta, f = sig.facturada||0;
-      pctSig = m>0 ? Math.round(f/m*100) : 0;
-      add('SIGEC fact.', pctSig+'%', Math.min(100,pctSig), pctSig>=90?'VERDE':pctSig>=70?'AMARILLO':'ROJO', 0.22, (f||0)+' facturadas');
+      var sig, metaCol=meta;
+      if(typeof cmdSigecGlpiAlCorte==='function'){
+        var al=cmdSigecGlpiAlCorte({nivel:'nacional'});
+        sig=al.sig||{};
+        metaCol=meta;
+      } else {
+        sig=typeof obtenerSigecNacional==='function'?obtenerSigecNacional():{};
+      }
+      var m=sig.meta||metaCol, f=sig.facturada||0;
+      pctSig=m>0?Math.round(f/m*100):0;
+      var subSig=(f||0)+' fact. al corte';
+      if(typeof cmdCorteGet==='function') subSig+=' · '+cmdCorteLabel();
+      add('SIGEC fact.', pctSig+'%', Math.min(100,pctSig), pctSig>=90?'VERDE':pctSig>=70?'AMARILLO':'ROJO', 0.22, subSig);
     }catch(e){ add('SIGEC fact.', '—', 50, 'AMARILLO', 0.22, ''); }
 
     var pctVerdes = Math.round(verdes/total*100);
     add('Sedes en verde', pctVerdes+'%', pctVerdes, pctVerdes>=60?'VERDE':pctVerdes>=40?'AMARILLO':'ROJO', 0.18, verdes+' de '+total);
 
     try{
-      var g = typeof obtenerGlpiNacional==='function' ? obtenerGlpiNacional() : {};
-      var pg = g.total>0 ? Math.round((g.aprobada||0)/g.total*100) : 0;
-      add('GLPI aprob.', pg+'%', Math.min(100,pg), pg>=54?'VERDE':pg>=40?'AMARILLO':'ROJO', 0.12, (g.aprobada||0)+' aprobadas');
+      var g;
+      if(typeof cmdSigecGlpiAlCorte==='function'){
+        g=(cmdSigecGlpiAlCorte({nivel:'nacional'}).glpi)||{};
+      } else {
+        g=typeof obtenerGlpiNacional==='function'?obtenerGlpiNacional():{};
+      }
+      var pg=g.total>0?Math.round((g.aprobada||0)/g.total*100):0;
+      var subG=(g.aprobada||0)+' aprob. al corte';
+      add('GLPI aprob.', pg+'%', Math.min(100,pg), pg>=54?'VERDE':pg>=40?'AMARILLO':'ROJO', 0.12, subG);
     }catch(e){ add('GLPI aprob.', '—', 50, 'AMARILLO', 0.12, ''); }
 
     var scCart = 70;
@@ -11950,11 +12097,78 @@ function _parseCumpleMMDD(s){
     }catch(e){ return 0; }
   }
   function icCorteAyer(){
+    if(typeof cmdCorteGet==='function') return cmdCorteGet();
     var d=new Date();
     d.setDate(d.getDate()-1);
     d.setHours(23,59,59,999);
     return d;
   }
+  function icCorteBannerHtml(extra){
+    var lbl=(typeof cmdCorteLabel==='function')?cmdCorteLabel():'día anterior';
+    var rg=(typeof rangoPeriodoActivo==='function')?rangoPeriodoActivo(new Date()):{periodo:'S2'};
+    return '<div class="ic-explain ic-corte-banner">📅 <b>Vista al cierre del '+lbl+'</b> (23:59) · Período 26'+rg.periodo
+      +'. SIGEC/GLPI filtrados por fecha. Colocación, cartera y matrículas: corte más reciente del Sheet.'
+      +(extra?(' '+extra):'')+'</div>';
+  }
+  function cmdFechaSigecRow(r){
+    var c=r._cols||[];
+    return icParseDate(r['Fecha de Facturación']||c[IC_SIG.FF])
+      || icParseDate(r['Fecha última actualización']||c[IC_SIG.FA])
+      || icParseDate(r['Fecha de Cargue']||c[IC_SIG.FC]);
+  }
+  function cmdFechaGlpiRow(r){
+    var c=r._cols||[];
+    return icParseDate(r['Fecha última actualización']||c[IC_GLP.FA])
+      || icParseDate(r['Fecha de Cargue']||c[IC_GLP.FC]);
+  }
+  function cmdSigecVisibleAlCorte(r,corte){
+    var c=r._cols||[];
+    var fc=icParseDate(r['Fecha de Cargue']||c[IC_SIG.FC]);
+    if(fc&&fc>corte) return false;
+    return true;
+  }
+  function cmdSigecFacturadaAlCorte(r,corte){
+    if(icClasifSigec(r)!=='facturada') return false;
+    var c=r._cols||[];
+    var ff=icParseDate(r['Fecha de Facturación']||c[IC_SIG.FF]);
+    return !!(ff&&ff<=corte);
+  }
+  function cmdGlpiAprobadaAlCorte(r,corte){
+    if(!icGlpiAprobada(r)) return false;
+    var fg=cmdFechaGlpiRow(r);
+    return !!(fg&&fg<=corte);
+  }
+  function cmdSigecGlpiAlCorte(filtro){
+    filtro=filtro||{nivel:'nacional'};
+    var corte=icCorteAyer();
+    var sig={facturada:0,cerrada_fac:0,cerrada:0,abierta:0,rechazada:0,pendiente_doc:0,pendiente:0,otro:0,total:0};
+    icFilasSigec(filtro).forEach(function(r){
+      if(!cmdSigecVisibleAlCorte(r,corte)) return;
+      sig.total++;
+      var cls=icClasifSigec(r);
+      if(cls==='facturada'&&cmdSigecFacturadaAlCorte(r,corte)) sig.facturada++;
+      else if(sig[cls]!=null) sig[cls]++;
+      else sig.otro++;
+    });
+    var g={aprobada:0,abierta:0,negada:0,otro:0,total:0};
+    icFilasGlpi(filtro).forEach(function(r){
+      var c=r._cols||[];
+      var fc=icParseDate(r['Fecha de Cargue']||c[IC_GLP.FC]);
+      if(fc&&fc>corte) return;
+      g.total++;
+      if(cmdGlpiAprobadaAlCorte(r,corte)) g.aprobada++;
+      else if(icGlpiAprobada(r)) return;
+      else {
+        var est=icStr(r.estado||r.Estado||c[IC_GLP.EST]).toLowerCase();
+        if(est.indexOf('neg')>=0) g.negada++;
+        else if(est.indexOf('abier')>=0||est.indexOf('proces')>=0) g.abierta++;
+        else g.otro++;
+      }
+    });
+    g.pct_aprobada=g.total>0?Math.round(g.aprobada/g.total*100):0;
+    return {sig:sig,glpi:g,corte:corte};
+  }
+  window.cmdSigecGlpiAlCorte=cmdSigecGlpiAlCorte;
   function icKpi(lbl,val,sub,col){
     return '<div class="ic-kpi" style="border-top-color:'+(col||'#003D45')+'"><div class="ic-kpi-lbl">'+lbl+'</div><div class="ic-kpi-val">'+val+'</div>'+(sub?'<div class="ic-kpi-sub">'+sub+'</div>':'')+'</div>';
   }
@@ -12043,26 +12257,38 @@ function _parseCumpleMMDD(s){
   function icFilasSigec(filtro){
     var rows=window._sigecRows||[];
     if(filtro.nivel==='sede'&&filtro.sel)
-      return rows.filter(function(r){ var c=r._cols||[]; return icMatchSede(r.Sede||c[IC_SIG.SED],filtro.sel); });
-    if(filtro.nivel==='rectoria'&&filtro.sel)
-      return rows.filter(function(r){
+      rows=rows.filter(function(r){ var c=r._cols||[]; return icMatchSede(r.Sede||c[IC_SIG.SED],filtro.sel); });
+    else if(filtro.nivel==='rectoria'&&filtro.sel)
+      rows=rows.filter(function(r){
         var c=r._cols||[], s=r.Sede||c[IC_SIG.SED];
         var rect=(window.PG_SEDE_RECTORIA||{})[s]||'';
         return icStr(rect)===icStr(filtro.sel);
       });
+    if(filtro.sinCorte!==true){
+      var corte=icCorteAyer();
+      rows=rows.filter(function(r){ return cmdSigecVisibleAlCorte(r,corte); });
+    }
     return rows;
   }
 
   function icFilasGlpi(filtro){
     var rows=window._glpiRows||[];
     if(filtro.nivel==='sede'&&filtro.sel)
-      return rows.filter(function(r){ var c=r._cols||[]; return icMatchSede(r.Sede||c[IC_GLP.SED],filtro.sel); });
-    if(filtro.nivel==='rectoria'&&filtro.sel)
-      return rows.filter(function(r){
+      rows=rows.filter(function(r){ var c=r._cols||[]; return icMatchSede(r.Sede||c[IC_GLP.SED],filtro.sel); });
+    else if(filtro.nivel==='rectoria'&&filtro.sel)
+      rows=rows.filter(function(r){
         var c=r._cols||[], s=r.Sede||c[IC_GLP.SED];
         var rect=(window.PG_SEDE_RECTORIA||{})[s]||'';
         return icStr(rect)===icStr(filtro.sel);
       });
+    if(filtro.sinCorte!==true){
+      var corte=icCorteAyer();
+      rows=rows.filter(function(r){
+        var c=r._cols||[];
+        var fc=icParseDate(r['Fecha de Cargue']||c[IC_GLP.FC]);
+        return !fc||fc<=corte;
+      });
+    }
     return rows;
   }
 
@@ -12122,7 +12348,7 @@ function _parseCumpleMMDD(s){
       realC+=r.real_continuos_uni||0;
     });
     var pct=realT>0?Math.round(acum/realT*1000)/10:0;
-    var html='<div class="ic-explain">'+IC_DESCS['cobertura-uni']+'</div>';
+    var html=icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['cobertura-uni']+'</div>';
     html+='<div class="ic-kpi-grid">';
     html+=icKpi('Colocado S2',icFmt(acum),'P Actual acum #','#16a34a');
     html+=icKpi('Real UNI total',icFmt(Math.round(realT)),'Total Real PARA LA UNIVERSIDAD','#6366f1');
@@ -12152,14 +12378,12 @@ function _parseCumpleMMDD(s){
       mat=m2?Math.round((m2.total_real||0)/Math.max(1,sedes.length)):0;
     }
     var sigF=0, glpA=0;
-    icFilasSigec(f).forEach(function(r){ if(icClasifSigec(r)==='facturada') sigF++; });
-    icFilasGlpi(f).forEach(function(r){
-      var c=r._cols||[], est=icStr(r.estado||r.Estado||c[IC_GLP.EST]).toLowerCase();
-      if(est.indexOf('factur')>=0||est.indexOf('aprob')>=0) glpA++;
-    });
+    var corte=icCorteAyer();
+    icFilasSigec(f).forEach(function(r){ if(cmdSigecFacturadaAlCorte(r,corte)) sigF++; });
+    icFilasGlpi(f).forEach(function(r){ if(cmdGlpiAprobadaAlCorte(r,corte)) glpA++; });
     var comb=sigF+glpA;
     var pct=mat>0?Math.round(comb/mat*1000)/10:0;
-    var html='<div class="ic-explain">'+IC_DESCS['cobertura-mat']+'</div><div class="ic-kpi-grid">';
+    var html=icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['cobertura-mat']+'</div><div class="ic-kpi-grid">';
     html+=icKpi('Matriculados',icFmt(mat),'Repositorio matrículas','#6366f1');
     html+=icKpi('SIGEC fact.',icFmt(sigF),'Estado facturada','#16a34a');
     html+=icKpi('GLPI aprob.',icFmt(glpA),'Estado aprobada/facturada','#0891b2');
@@ -12173,18 +12397,19 @@ function _parseCumpleMMDD(s){
     var agg={}, i;
     for(i=0;i<estados.length;i++){ agg[estados[i]]={nuevos:0,renov:0,total:0}; }
     var factN=0, factR=0;
+    var corte=icCorteAyer();
     icFilasSigec(f).forEach(function(r){
       var cls=icClasifSigec(r);
       if(!agg[cls]) agg[cls]={nuevos:0,renov:0,total:0};
       agg[cls].total++;
-      if(icEsNuevo(r)){ agg[cls].nuevos++; if(cls==='facturada') factN++; }
-      else { agg[cls].renov++; if(cls==='facturada') factR++; }
+      if(icEsNuevo(r)){ agg[cls].nuevos++; if(cls==='facturada'&&cmdSigecFacturadaAlCorte(r,corte)) factN++; }
+      else { agg[cls].renov++; if(cls==='facturada'&&cmdSigecFacturadaAlCorte(r,corte)) factR++; }
     });
     var col=icFilasColoc(f), realN=0, realC=0;
     col.forEach(function(r){ realN+=r.real_nuevos_uni||0; realC+=r.real_continuos_uni||0; });
     var cobN=realN>0?Math.round(factN/realN*1000)/10:0;
     var cobR=realC>0?Math.round(factR/realC*1000)/10:0;
-    var html='<div class="ic-explain">'+IC_DESCS['nuevos-renov']+'</div><div class="ic-kpi-grid">';
+    var html=icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['nuevos-renov']+'</div><div class="ic-kpi-grid">';
     html+=icKpi('Fact. nuevos',icFmt(factN),'÷ Real Nuevos UNI '+icFmt(Math.round(realN)),'#16a34a');
     html+=icKpi('Cob. nuevos',cobN+'%',icSemHtml(icSem(cobN,25,15)),'#003D45');
     html+=icKpi('Fact. renov.',icFmt(factR),'÷ Real Continuos UNI '+icFmt(Math.round(realC)),'#6366f1');
@@ -12205,20 +12430,15 @@ function _parseCumpleMMDD(s){
     var corte=icCorteAyer();
     var sigF=0, glpA=0;
     icFilasSigec(f).forEach(function(r){
-      if(icClasifSigec(r)!=='facturada') return;
-      var c=r._cols||[];
-      var ff=icParseDate(r['Fecha de Facturación']||c[IC_SIG.FF]);
-      if(ff&&ff<=corte) sigF++;
+      if(!cmdSigecFacturadaAlCorte(r,corte)) return;
+      sigF++;
     });
     icFilasGlpi(f).forEach(function(r){
-      var c=r._cols||[];
-      var est=icStr(r.estado||r.Estado||c[IC_GLP.EST]).toLowerCase();
-      if(est.indexOf('factur')<0&&est.indexOf('aprob')<0) return;
-      var fa=icParseDate(r['Fecha última actualización']||c[IC_GLP.FA])||icParseDate(c[IC_GLP.FC]);
-      if(fa&&fa<=corte) glpA++;
+      if(!cmdGlpiAprobadaAlCorte(r,corte)) return;
+      glpA++;
     });
     var total=sigF+glpA;
-    var html='<div class="ic-explain">'+IC_DESCS['corte-dia']+' Corte: <b>'+corte.toLocaleString('es-CO')+'</b></div><div class="ic-kpi-grid">';
+    var html=icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['corte-dia']+' Corte: <b>'+corte.toLocaleString('es-CO')+'</b></div><div class="ic-kpi-grid">';
     html+=icKpi('SIGEC fact.',icFmt(sigF),'Hasta corte día ant.','#16a34a');
     html+=icKpi('GLPI aprob.',icFmt(glpA),'Hasta corte día ant.','#0891b2');
     html+=icKpi('Colocación total',icFmt(total),'SIGEC fact. + GLPI aprob.','#003D45');
@@ -12247,7 +12467,7 @@ function _parseCumpleMMDD(s){
       else dentro++;
       if(hrs>48||esCong) det.push({tk:tk,sede:icStr(r.Sede||c[IC_SIG.SED]),hrs:hrs,cong:esCong,est:cls});
     });
-    var html='<div class="ic-explain">'+IC_DESCS['tiempos']+'</div><div class="ic-kpi-grid">';
+    var html=icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['tiempos']+'</div><div class="ic-kpi-grid">';
     html+=icKpi('Dentro 48h',icFmt(dentro),'En tiempo hábil','#16a34a');
     html+=icKpi('Fuera 48h',icFmt(fuera),'Sin congelar · requiere gestión','#dc2626');
     html+=icKpi('Atraso congelados',icFmt(congAtras),'Demora por estar congelados','#ca8a04');
@@ -12344,19 +12564,19 @@ function _parseCumpleMMDD(s){
       }
     }
     icFilasSigec(f).forEach(function(r){
-      if(icClasifSigec(r)!=='facturada') return;
+      if(!cmdSigecFacturadaAlCorte(r,icCorteAyer())) return;
       var c=r._cols||[];
       addAprobada(icCedulaSigec(r), icStr(r.Sede||c[IC_SIG.SED]), 'SIGEC', icStr(r.Ticket||c[IC_SIG.TICKET]));
     });
     icFilasGlpi(f).forEach(function(r){
-      if(!icGlpiAprobada(r)) return;
+      if(!cmdGlpiAprobadaAlCorte(r,icCorteAyer())) return;
       var c=r._cols||[];
       addAprobada(icCedulaGlpi(r), icStr(r.Sede||c[IC_GLP.SED]), 'GLPI', icStr(r.Ticket||c[IC_GLP.TICKET]));
     });
     var nAprob=Object.keys(aprobadasSet).length;
     var nCruz=Object.keys(cruzadasSet).length;
     var sigN=(window._sigecRows||[]).length;
-    var html='<div class="ic-explain">'+IC_DESCS['pendientes']+'</div><div class="ic-kpi-grid">';
+    var html=icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['pendientes']+'</div><div class="ic-kpi-grid">';
     html+=icKpi('SIGEC fact. + GLPI aprob.',icFmt(nAprob),'Cédulas únicas facturadas/aprobadas','#16a34a');
     html+=icKpi('Base COLOCACIÓN total',icFmt(baseTotal),'Registros en repositorio BASE COLOCACIÓN','#6366f1');
     html+=icKpi('Desembolsadas',icFmt(nCruz),'Coinciden en BASE COLOCACIÓN','#15803d');
@@ -12375,27 +12595,28 @@ function _parseCumpleMMDD(s){
   function icRenderTasaAprob(f){
     if(typeof _ioConstruirContexto==='function' && typeof _ioRenderTasaAprobacion==='function'){
       var ctx=_ioConstruirContexto(f.nivel||'nacional', f.sel||'');
-      return '<div class="ic-explain">'+IC_DESCS['tasa-aprob']+'</div>'+_ioRenderTasaAprobacion(ctx);
+      return icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['tasa-aprob']+'</div>'+_ioRenderTasaAprobacion(ctx);
     }
-    return '<div class="ic-explain">'+IC_DESCS['tasa-aprob']+'</div><div style="color:#94a3b8;padding:20px">Motor de informes no disponible</div>';
+    return icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['tasa-aprob']+'</div><div style="color:#94a3b8;padding:20px">Motor de informes no disponible</div>';
   }
 
   function icRenderRetomas(f){
     var cong=icCongeladosSet();
     var retFact=0, cerr=0, cerrFac=0, cerrCong=0;
+    var corte=icCorteAyer();
     icFilasSigec(f).forEach(function(r){
       var cls=icClasifSigec(r);
       var c=r._cols||[];
       var tk=icStr(r.Ticket||c[0]);
       if(cls==='cerrada'){ cerr++; if(cong[tk]) cerrCong++; }
       if(cls==='cerrada_fac') cerrFac++;
-      if(cls==='facturada'&&icEsRetoma(r)) retFact++;
+      if(cls==='facturada'&&icEsRetoma(r)&&cmdSigecFacturadaAlCorte(r,corte)) retFact++;
     });
     var cerrTot=cerr+cerrFac;
     var diff=retFact-cerrTot;
     var tasaRec=(retFact+cerrTot)>0?Math.round(retFact/(retFact+cerrTot)*1000)/10:0;
     var tasaPerd=cerrTot>0?Math.round(cerrTot/(retFact+cerrTot)*1000)/10:0;
-    var html='<div class="ic-explain">'+IC_DESCS['retomas']+'</div><div class="ic-kpi-grid">';
+    var html=icCorteBannerHtml()+'<div class="ic-explain">'+IC_DESCS['retomas']+'</div><div class="ic-kpi-grid">';
     html+=icKpi('Retomas fact.',icFmt(retFact),'SIGEC facturada tipo retoma/recuperación','#16a34a');
     html+=icKpi('Cerradas',icFmt(cerr),'Solicitudes cerradas','#dc2626');
     html+=icKpi('Cerradas fac.',icFmt(cerrFac),'Cerradas facturadas','#ca8a04');
@@ -12429,7 +12650,7 @@ function _parseCumpleMMDD(s){
     setTimeout(function(){
       try{
         el.innerHTML=fn(f);
-        if(fu) fu.textContent='Fuentes: P Actual · SIGEC · GLPI · Matrículas · Base Colocación · Congelados · '+new Date().toLocaleString('es-CO');
+        if(fu) fu.textContent='Corte: '+(typeof cmdCorteLabel==='function'?cmdCorteLabel():'—')+' · Fuentes: P Actual · SIGEC · GLPI · Matrículas · Base Colocación · '+new Date().toLocaleString('es-CO');
       }catch(e){
         el.innerHTML='<div style="color:#dc2626;padding:20px">Error: '+(e&&e.message||e)+'</div>';
       }
@@ -12470,6 +12691,7 @@ function _parseCumpleMMDD(s){
   window.abrirInformesComerciales=function(tab){
     var m=document.getElementById('modal-informes-comerciales');
     if(!m) return;
+    if(typeof cmdCorteInit==='function') cmdCorteInit();
     m.style.display='block';
     icCargarDatosInformes().then(function(){
       if(tab) icSeleccionarTab(tab);
@@ -12573,7 +12795,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.29 — deploy Pages + cruce pendientes');
+  console.log('[CMD] Informes Comerciales v5.4.30 — filtro corte fecha menú + informes');
 })();
 
 </script>
