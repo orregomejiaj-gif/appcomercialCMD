@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.23   (APP_VERSION = 'pyv-comercial-5.4.23')
+  Versión actual: pyv-comercial-5.4.24   (APP_VERSION = 'pyv-comercial-5.4.24')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.24 (2026-07-04)
+    - Cobertura UNI: fuente corregida → hoja INFORME DE MATRICULAS (Real Nuevos/Continuos/Total UNI).
+    - Pendientes desembolso: cédulas únicas SIGEC+GLPI; carga SIGEC/base; KPIs aclarados.
+    - Menú MCM: sin duplicar Cumplimiento S2 ni vs año anterior (ya están arriba).
   pyv-comercial-5.4.23 (2026-07-04)
     - Menú: sin guía lateral; informes a ancho completo; accesos rápidos más compactos.
     - Historial diario: GLPI facturada=cobertura; recarga SIGEC+GLPI en vivo; mes seleccionable.
@@ -188,7 +192,7 @@
 <meta name="build-id" content="pyv-comercial-5.4.23-20260704">
 <title>SCIC pyv-comercial 5.4.23 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.23';
+window.APP_VERSION='pyv-comercial-5.4.24';
 window.APP_VERSION_LABEL='pyv-comercial 5.4.23';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
@@ -3579,7 +3583,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.23';
+var APP_VERSION = 'pyv-comercial-5.4.24';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7345,24 +7349,13 @@ function _parseCumpleMMDD(s){
       if(typeof MCM_CUMPLIMIENTO!=='undefined' && MCM_CUMPLIMIENTO.nacional && col.length)
         cum = MCM_CUMPLIMIENTO.nacional();
     }catch(e){}
-    if(cum && (cum.meta_n||cum.acum_n)){
-      push('📈','Cumplimiento S2',(cum.pct_n||0)+'%','Ritmo '+(cum.ritmo_actual||0)+'/dh · nec '+(cum.ritmo_necesario||0),cum.semaforo,cum.va_a_cumplir?'#4ade80':'#f87171');
-    }else if(metaN){
-      var pctC = Math.round(acumN/metaN*100);
-      var semC = (typeof _semS2Pct==='function') ? _semS2Pct(pctC) : (pctC>=90?'VERDE':pctC>=70?'AMARILLO':'ROJO');
-      var diasTot = window._mtsDiasTotal || (typeof _DATA!=='undefined' && _DATA.dh_total) || 0;
-      var diasTra = window._mtsDiasTrans || (typeof _DATA!=='undefined' && _DATA.dh_trans) || 0;
-      if(!diasTot){
-        var d0=new Date('2026-05-01'), d1=new Date('2026-10-31'), hoy=new Date();
-        diasTot = Math.max(1, Math.floor((d1-d0)/864e5));
-        diasTra = Math.max(0, Math.floor((hoy-d0)/864e5));
-      }
-      var ritmoAct = diasTra>0 ? Math.round(acumN/diasTra*10)/10 : 0;
-      var ritmoNec = (diasTot-diasTra)>0 ? Math.round((metaN-acumN)/Math.max(1,diasTot-diasTra)*10)/10 : 0;
-      push('📈','Cumplimiento S2', pctC+'%', 'Ritmo '+ritmoAct+'/dh · nec '+ritmoNec, semC, ritmoAct>=ritmoNec?'#4ade80':'#f87171');
-    }
+    /* Cumplimiento S2 y vs año anterior ya están en paneles superiores del menú — no duplicar aquí */
 
-    var matReal = _mcmMatriculasTotal();
+    var matReal = 0;
+    try{
+      if(typeof icSumarRealUniversidad==='function') matReal=icSumarRealUniversidad();
+    }catch(e){}
+    if(!matReal) matReal=_mcmMatriculasTotal();
     var sig = (typeof obtenerSigecNacional==='function') ? obtenerSigecNacional() : {};
     var g = (typeof obtenerGlpiNacional==='function') ? obtenerGlpiNacional() : null;
     var realUni = 0;
@@ -7416,12 +7409,7 @@ function _parseCumpleMMDD(s){
       }
     }catch(e){}
 
-    try{
-      var varY = acumN - antN;
-      var pctY = antN>0 ? Math.round(varY/antN*100) : null;
-      var semY = _yoySem(pctY);
-      push('📊','vs Año anterior',pctY!=null?((pctY>=0?'+':'')+pctY+'%'):'—',_yoyFmtVar(varY)+' créd. · '+fmtN(acumN)+' vs '+fmtN(antN),semY.lbl,'#6366f1');
-    }catch(e){}
+    /* vs Año anterior: panel YoY dedicado arriba en el menú */
 
     try{
       var verdes=col.filter(function(r){return _getSemaforoColoc(r)==='VERDE';}).length;
@@ -11802,9 +11790,9 @@ function _parseCumpleMMDD(s){
 })();
 </script>
 
-<!-- pyv-comercial-5.4.23: Informes Comerciales -->
+<!-- pyv-comercial-5.4.24: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.23 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.24 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -11832,6 +11820,20 @@ function _parseCumpleMMDD(s){
     if(!a||!b) return false;
     var x=icStr(a).toLowerCase(), y=icStr(b).toLowerCase();
     return x===y||x.indexOf(y)>=0||y.indexOf(x)>=0;
+  }
+  function icNormSedeKey(s){
+    return icStr(s).toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/^(coa|co|cr|ct|cu|cs|cp)\s+/i,'')
+      .replace(/\s+/g,'')
+      .replace(/[^a-z0-9]/g,'');
+  }
+  function icMatchSedeMatricula(a,b){
+    if(icMatchSede(a,b)) return true;
+    var ka=icNormSedeKey(a), kb=icNormSedeKey(b);
+    if(!ka||!kb||ka.length<4||kb.length<4) return false;
+    if(ka===kb) return true;
+    return ka.indexOf(kb)>=0||kb.indexOf(ka)>=0;
   }
   function icFld(row, patterns, colIdx){
     if(!row) return '';
@@ -11892,12 +11894,13 @@ function _parseCumpleMMDD(s){
 
   function icColValUni(row, kind){
     var map={
-      nuevos:['REAL NUEVOS PARA LA UNIVERSIDAD','REAL NUEVOS','REAL NUEVO'],
-      continuos:['REAL CONTINUOS PARA LA UNIVERSIDAD','REAL CONTINUOS','REAL CONTINUO'],
-      total:['TOTAL REAL PARA LA UNIVERSIDAD','TOTAL REAL UNIVERSIDAD','TOTAL REAL']
+      nuevos:['REAL NUEVOS PARA LA UNIVERSIDAD','REAL NUEVOS  PARA LA UNIVERSIDAD','Real Nuevos  PARA LA UNIVERSIDAD','REAL NUEVOS','REAL NUEVO'],
+      continuos:['REAL CONTINUOS PARA LA UNIVERSIDAD','Real Continuos PARA LA UNIVERSIDAD','REAL CONTINUOS','REAL CONTINUO'],
+      total:['TOTAL REAL PARA LA UNIVERSIDAD','Total Real PARA LA UNIVERSIDAD','TOTAL REAL UNIVERSIDAD','TOTAL REAL']
     };
+    var idxMap={nuevos:1,continuos:3,total:5};
     var pats=map[kind]||map.total;
-    return icNum(icFld(row,pats,null));
+    return icNum(icFld(row,pats,idxMap[kind]));
   }
 
   window.icEnriquecerColocUniversidad=function(){
@@ -11905,22 +11908,30 @@ function _parseCumpleMMDD(s){
       if(typeof _leerHoja!=='function'||typeof SHEETS_HOJAS==='undefined'){
         icFallbackMatriculaEnColoc(); resolve(); return;
       }
-      _leerHoja(SHEETS_HOJAS.colocacion,1).then(function(rows){
-        var map={};
+      var hojaMat=SHEETS_HOJAS.matriculas||'INFORME DE MATRICULAS';
+      _leerHoja(hojaMat,1).then(function(rows){
+        var lista=[];
         (rows||[]).forEach(function(row){
           var cols=row._cols||[];
           var sedeRaw=icStr(row['SEDE']||row['Sede']||cols[0]);
           if(!sedeRaw||sedeRaw.length<3) return;
           var up=sedeRaw.toUpperCase();
           if(up.indexOf('TOTAL')>=0||up==='SEDE'||up==='META') return;
-          var sede=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(sedeRaw):sedeRaw;
           var rn=icColValUni(row,'nuevos'), rc=icColValUni(row,'continuos'), rt=icColValUni(row,'total');
           if(!rt) rt=rn+rc;
-          map[sede]={real_nuevos_uni:rn,real_continuos_uni:rc,real_total_uni:rt};
+          if(!rt&&!rn&&!rc) return;
+          lista.push({sedeMat:sedeRaw,real_nuevos_uni:rn,real_continuos_uni:rc,real_total_uni:rt});
         });
         (window._coloc_data||[]).forEach(function(r){
-          var e=map[r.sede];
-          if(e) Object.assign(r,e);
+          var e=null, i;
+          for(i=0;i<lista.length;i++){
+            if(icMatchSedeMatricula(r.sede,lista[i].sedeMat)){ e=lista[i]; break; }
+          }
+          if(e){
+            r.real_nuevos_uni=e.real_nuevos_uni;
+            r.real_continuos_uni=e.real_continuos_uni;
+            r.real_total_uni=e.real_total_uni;
+          }
         });
         icFallbackMatriculaEnColoc();
         resolve();
@@ -12023,12 +12034,12 @@ function _parseCumpleMMDD(s){
   }
 
   var IC_DESCS={
-    'cobertura-uni':'Cobertura = créditos colocados (P Actual acum #) ÷ Total Real PARA LA UNIVERSIDAD del informe de colocación.',
+    'cobertura-uni':'Cobertura = créditos colocados (P Actual acum #) ÷ Total Real PARA LA UNIVERSIDAD (hoja INFORME DE MATRICULAS).',
     'cobertura-mat':'Cobertura matrículas = (SIGEC facturadas + GLPI aprobadas) ÷ total matriculados UNIMINUTO.',
     'nuevos-renov':'Nuevos y renovaciones desde COLOCACION SIGEC por estado. Cobertura nuevos = facturados nuevos ÷ Real Nuevos UNI; renovación = facturados renov ÷ Real Continuos UNI.',
     'corte-dia':'Colocación reconocida con corte al día anterior 11:59 pm = SIGEC facturadas + GLPI aprobadas en ese período.',
     'tiempos':'Horas hábiles entre fecha de cargue y última actualización (o facturación). Meta 48h. Congelados se reportan aparte.',
-    'pendientes':'Cédulas aprobadas en SIGEC/GLPI que NO aparecen en BASE COLOCACIÓN = pendientes de desembolso. Coincidencia = colocado reconocido.',
+    'pendientes':'Cruce por cédula única: SIGEC facturadas + GLPI aprobadas vs BASE COLOCACIÓN. Cruzadas = ya desembolsadas. Pendientes = aprobadas sin registro en base.',
     'retomas':'Retomas facturadas SIGEC vs cerradas + cerradas facturadas. Diferencia indica recuperación neta vs pérdida.',
     'tasa-aprob':'Tasa de conversión SIGEC: qué % de radicadas llega a facturadas vs cerradas/cerradas facturadas (pérdida del embudo).'
   };
@@ -12185,42 +12196,71 @@ function _parseCumpleMMDD(s){
 
   function icBaseCedulas(){
     var set={};
-    (window._baseColocFilas||[]).forEach(function(r){ var c=icNormCed(r.cedula); if(c) set[c]=true; });
+    (window._baseColocFilas||[]).forEach(function(r){ var c=icNormCed(r.cedula); if(c&&c.length>=5) set[c]=true; });
     if(!Object.keys(set).length){
       (window._baseColocData||[]).forEach(function(s){
-        (s.ccs||[]).forEach(function(c){ var n=icNormCed(c); if(n) set[n]=true; });
+        (s.ccs||[]).forEach(function(c){ var n=icNormCed(c); if(n&&n.length>=5) set[n]=true; });
       });
     }
     return set;
   }
 
+  function icCedulaSigec(row){
+    var c=row._cols||[];
+    return icNormCed(row['Cedula asociado']||row['Cédula asociado']||row['Identificacion']||row['Identificación']||c[IC_SIG.CED]);
+  }
+  function icCedulaGlpi(row){
+    var c=row._cols||[];
+    return icNormCed(row['Cédula asociado']||row['Cedula asociado']||row['Identificacion']||c[IC_GLP.CED]);
+  }
+  function icGlpiAprobada(row){
+    var c=row._cols||[];
+    var est=icStr(row.estado||row.Estado||c[IC_GLP.EST]).toLowerCase();
+    if(typeof _glpiEstadoNorm==='function'){
+      var n=_glpiEstadoNorm(est);
+      return n==='aprobada'||n==='facturada';
+    }
+    return est.indexOf('factur')>=0||est.indexOf('aprob')>=0;
+  }
+
   function icRenderPendientes(f){
     var base=icBaseCedulas();
-    var aprobadas=[], pendientes=[], desembolsadas=0;
-    function proc(ced,sede,origen,tk){
+    var baseTotal=window._baseColoc_total||Object.keys(base).length;
+    var aprobadasSet={}, cruzadasSet={}, pendientes=[];
+    function addAprobada(ced,sede,origen,tk){
       var n=icNormCed(ced); if(!n||n.length<5) return;
-      if(base[n]){ desembolsadas++; return; }
-      pendientes.push({ced:n,sede:sede,origen:origen,tk:tk});
+      aprobadasSet[n]=aprobadasSet[n]||{ced:n,sede:sede,origen:origen,tk:tk};
+      if(base[n]){
+        cruzadasSet[n]=true;
+      }else if(!pendientes.some(function(p){ return p.ced===n; })){
+        pendientes.push({ced:n,sede:sede,origen:origen,tk:tk});
+      }
     }
     icFilasSigec(f).forEach(function(r){
       if(icClasifSigec(r)!=='facturada') return;
       var c=r._cols||[];
-      proc(r['Cedula asociado']||r['Cédula asociado']||c[IC_SIG.CED], icStr(r.Sede||c[IC_SIG.SED]), 'SIGEC', icStr(r.Ticket||c[0]));
+      addAprobada(icCedulaSigec(r), icStr(r.Sede||c[IC_SIG.SED]), 'SIGEC', icStr(r.Ticket||c[IC_SIG.TICKET]));
     });
     icFilasGlpi(f).forEach(function(r){
+      if(!icGlpiAprobada(r)) return;
       var c=r._cols||[];
-      var est=icStr(r.estado||c[IC_GLP.EST]).toLowerCase();
-      if(est.indexOf('factur')<0&&est.indexOf('aprob')<0) return;
-      proc(r['Cédula asociado']||c[IC_GLP.CED], icStr(r.Sede||c[IC_GLP.SED]), 'GLPI', icStr(r.Ticket||c[0]));
+      addAprobada(icCedulaGlpi(r), icStr(r.Sede||c[IC_GLP.SED]), 'GLPI', icStr(r.Ticket||c[IC_GLP.TICKET]));
     });
+    var nAprob=Object.keys(aprobadasSet).length;
+    var nCruz=Object.keys(cruzadasSet).length;
+    var nBase=Object.keys(base).length;
+    var sigN=(window._sigecRows||[]).length;
     var html='<div class="ic-explain">'+IC_DESCS['pendientes']+'</div><div class="ic-kpi-grid">';
-    html+=icKpi('Desembolsadas',icFmt(desembolsadas),'Cédula en BASE COLOCACIÓN','#16a34a');
+    html+=icKpi('Base colocación',icFmt(nBase),'Cédulas únicas en BASE COLOCACIÓN','#6366f1');
+    html+=icKpi('Desembolsos base',icFmt(baseTotal),'Registros/radicados en base','#0891b2');
+    html+=icKpi('Aprobadas SIGEC+GLPI',icFmt(nAprob),'Cédulas únicas fact./aprob.','#16a34a');
+    html+=icKpi('Cruzadas con base',icFmt(nCruz),'Aprobadas que SÍ están en base','#15803d');
     html+=icKpi('Pendientes',icFmt(pendientes.length),'Aprobadas sin cruce en base','#dc2626');
-    html+=icKpi('Base cédulas',icFmt(Object.keys(base).length),'BASE COLOCACIÓN','#6366f1');
+    if(!sigN) html+=icKpi('SIGEC','Sin datos','Recargue con Actualizar','#ca8a04');
     html+='</div>';
-    html+=icSec('Pendientes de desembolso','Aprobadas SIGEC/GLPI sin match en base');
+    html+=icSec('Pendientes de desembolso','Cédulas aprobadas/facturadas en SIGEC o GLPI que no aparecen en BASE COLOCACIÓN');
     html+='<div style="overflow:auto;max-height:340px"><table class="ic-tbl"><thead><tr><th>Cédula</th><th>Sede</th><th>Origen</th><th>Ticket</th></tr></thead><tbody>';
-    pendientes.slice(0,100).forEach(function(p){
+    pendientes.sort(function(a,b){ return a.origen.localeCompare(b.origen); }).slice(0,100).forEach(function(p){
       html+='<tr><td>'+p.ced+'</td><td>'+p.sede+'</td><td>'+p.origen+'</td><td>'+p.tk+'</td></tr>';
     });
     html+='</tbody></table></div>';
@@ -12339,23 +12379,33 @@ function _parseCumpleMMDD(s){
 
   function icCargarDatosInformes(forzar){
     var ps=[];
-    if(typeof window._scicRefrescarDatosVivos==='function'&&forzar) ps.push(window._scicRefrescarDatosVivos(true).catch(function(){}));
-    else if(typeof cargarDesdeSheetsCompleto==='function'&&forzar) ps.push(cargarDesdeSheetsCompleto(true).catch(function(){}));
+    if(forzar) window._baseColocFilas=null;
+    if(typeof window._scicRefrescarDatosVivos==='function'){
+      ps.push(window._scicRefrescarDatosVivos(!!forzar).catch(function(){}));
+    }else if(typeof cargarDesdeSheetsCompleto==='function'&&forzar){
+      ps.push(cargarDesdeSheetsCompleto(true).catch(function(){}));
+    }
+    if(typeof _leerHojaSigecColocacion==='function'&&(!(window._sigecRows||[]).length||forzar))
+      ps.push(_leerHojaSigecColocacion().catch(function(){}));
+    if(typeof _leerHojaGlpiColocacion==='function'&&(!(window._glpiRows||[]).length||forzar))
+      ps.push(_leerHojaGlpiColocacion().catch(function(){}));
+    if(typeof _cargarBaseColoc==='function'&&(!(window._baseColoc_total>0)||forzar))
+      ps.push(_cargarBaseColoc().catch(function(){}));
     ps.push(window.icEnriquecerColocUniversidad());
-    ps.push(icCargarBaseFilas());
+    ps.push(icCargarBaseFilas(forzar));
     ps.push(icCargarCongeladosRaw());
     return Promise.all(ps);
   }
 
-  function icCargarBaseFilas(){
-    if(window._baseColocFilas&&window._baseColocFilas.length) return Promise.resolve();
+  function icCargarBaseFilas(forzar){
+    if(!forzar&&window._baseColocFilas&&window._baseColocFilas.length) return Promise.resolve();
     if(typeof _leerHoja!=='function'||typeof SHEETS_HOJAS==='undefined') return Promise.resolve();
     return _leerHoja(SHEETS_HOJAS.baseColoc).then(function(rows){
       window._baseColocFilas=(rows||[]).map(function(row){
         var c=row._cols||[];
         return {
-          cedula: icStr(row.Identificacion||row['Identificación']||c[6]),
-          sede: (typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(icStr(row.Sede||c[13])):icStr(row.Sede||c[13]),
+          cedula: icStr(row.Identificacion||row['Identificación']||row['G']||c[6]),
+          sede: (typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(icStr(row.Sede||row['N']||c[13])):icStr(row.Sede||c[13]),
           radicado: icStr(row.Radicado||c[0])
         };
       }).filter(function(r){ return r.cedula; });
@@ -12418,7 +12468,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.23 — historial GLPI facturada + layout ancho');
+  console.log('[CMD] Informes Comerciales v5.4.24 — cobertura INFORME DE MATRICULAS + pendientes cédula única');
 })();
 
 </script>
