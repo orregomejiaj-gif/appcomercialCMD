@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.28   (APP_VERSION = 'pyv-comercial-5.4.28')
+  Versión actual: pyv-comercial-5.4.29   (APP_VERSION = 'pyv-comercial-5.4.29')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.29 (2026-07-04)
+    - Informes: cruce SIGEC fact.+GLPI aprob. vs BASE COLOCACIÓN (desembolsadas / sin desembolsar).
+    - Deploy GitHub Pages: artefacto limpio + index.html + redespliegue forzado.
   pyv-comercial-5.4.28 (2026-07-04)
     - Menú: eliminados textos de bienvenida (AHORA/AYER y «Centro integral…»).
     - SCIC: encabezado + pestañas fijos al hacer scroll (sticky).
@@ -198,11 +201,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.28">
-<meta name="build-id" content="pyv-comercial-5.4.28-20260704">
-<title>SCIC pyv-comercial 5.4.28 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.29">
+<meta name="build-id" content="pyv-comercial-5.4.29-20260704-0325">
+<title>SCIC pyv-comercial 5.4.29 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.28';
+window.APP_VERSION='pyv-comercial-5.4.29';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -943,7 +946,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.28</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.29</div>
 </div>
 
 
@@ -952,7 +955,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.28</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.29</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -3622,7 +3625,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.28';
+var APP_VERSION = 'pyv-comercial-5.4.29';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -12570,7 +12573,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.28 — cruce pendientes vs BASE COLOCACIÓN');
+  console.log('[CMD] Informes Comerciales v5.4.29 — deploy Pages + cruce pendientes');
 })();
 
 </script>

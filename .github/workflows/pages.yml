@@ -3,6 +3,7 @@ name: Deploy GitHub Pages
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -11,7 +12,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -21,9 +22,27 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Prepare site artifact
+        run: |
+          mkdir -p _site
+          cp seguimiento_comercial_CMD.html _site/
+          cp -f .nojekyll _site/.nojekyll 2>/dev/null || touch _site/.nojekyll
+          printf '%s\n' '<!DOCTYPE html>' '<html lang="es">' '<head>' \
+            '<meta charset="UTF-8">' \
+            '<meta http-equiv="refresh" content="0;url=seguimiento_comercial_CMD.html">' \
+            '<title>CMD PYV Comercial</title>' \
+            '</head>' '<body>' \
+            '<p><a href="seguimiento_comercial_CMD.html">Abrir PYV Comercial CMD</a></p>' \
+            '</body>' '</html>' > _site/index.html
+          ls -la _site
+
       - uses: actions/configure-pages@v5
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: .
-      - id: deployment
+          path: _site
+
+      - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
