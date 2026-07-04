@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.17   (APP_VERSION = 'pyv-comercial-5.4.17')
+  Versión actual: pyv-comercial-5.4.18   (APP_VERSION = 'pyv-comercial-5.4.18')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.18 (2026-07-04)
+    - Proxy IA: Gemini (gratis) primero, Claude como respaldo; accion "ia" en SCIC AI CENTER.
   pyv-comercial-5.4.17 (2026-07-04)
     - SCIC_IA_PROXY_URL enlazado a Apps Script desplegado (Claude API en SCIC AI CENTER).
   pyv-comercial-5.4.16 (2026-07-03)
@@ -164,12 +166,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.17">
-<meta name="build-id" content="pyv-comercial-5.4.17-20260704">
-<title>SCIC pyv-comercial 5.4.17 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.18">
+<meta name="build-id" content="pyv-comercial-5.4.18-20260704">
+<title>SCIC pyv-comercial 5.4.18 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.17';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.17';
+window.APP_VERSION='pyv-comercial-5.4.18';
+window.APP_VERSION_LABEL='pyv-comercial 5.4.18';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1076,7 +1078,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.17</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.18</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:#64748b;margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -3570,7 +3572,7 @@ var _DATA = {
 // ════════════════════════════════════════════════════════════
 var SCIC_PROXY_URL = ''; // Proxy Apps Script deshabilitado (devolvía error). Se usa gviz directo sobre los sheets compartidos.
 // Ejemplo: var SCIC_PROXY_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
-// Proxy IA Claude — desplegar backend/SCIC_IA_PROXY.gs en Apps Script y pegar URL aquí.
+// Proxy IA — Apps Script: Gemini (gratis) + Claude (respaldo). Ver backend/README.md
 var SCIC_IA_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwA2EReltq108f9Hf--Pj1aaEPN5pZJcKQjtsu9m6rFVKzUPEAbpIxBe8lHqwV7O6KMIw/exec';
 
 
@@ -10247,8 +10249,7 @@ function _parseCumpleMMDD(s){
 
   var _origAbrirSCIC = window.abrirSCIC;
 
-  /* SCIC IA: Claude API no es invocable desde el navegador (CORS + API key).
-     Usamos análisis local MCM; proxy opcional vía SCIC_IA_PROXY_URL. */
+  /* SCIC IA: proxy Apps Script — Gemini gratis primero, Claude respaldo, luego MCM local. */
   function _scicExtraerCtxDePrompt(prompt){
     if(!prompt) return null;
     var i = prompt.indexOf('{');
@@ -10339,13 +10340,21 @@ function _parseCumpleMMDD(s){
             method: 'POST',
             mode: 'cors',
             headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ accion: 'ia_claude', system: system, prompt: userPrompt })
+            body: JSON.stringify({ accion: 'ia', system: system, prompt: userPrompt })
           });
           if(resp.ok){
             var data = await resp.json();
             var txt = data.text || data.respuesta || data.response;
             if(!txt && data.content && data.content[0]) txt = data.content[0].text;
-            if(txt) return txt;
+            if(txt){
+              if(data.provider) console.log('[SCIC IA] Respuesta vía', data.provider, data.model||'');
+              return txt;
+            }
+          } else {
+            try{
+              var errBody = await resp.json();
+              console.warn('[SCIC IA] Proxy', resp.status, errBody.error||errBody);
+            }catch(e2){}
           }
         }catch(e){ console.warn('[SCIC IA] Proxy error:', e && e.message); }
       }
