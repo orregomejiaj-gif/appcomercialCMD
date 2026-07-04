@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.21   (APP_VERSION = 'pyv-comercial-5.4.21')
+  Versión actual: pyv-comercial-5.4.22   (APP_VERSION = 'pyv-comercial-5.4.22')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,11 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.22 (2026-07-04)
+    - Accesos rápidos: todos los módulos en botones compactos; sidebar sin duplicados.
+    - IA renombrada a CogniPYV (sin marca Gemini en menú).
+    - Historial diario: colocados por fecha con radicación GLPI (mes/día/año/hora).
+    - Nuevo informe tasa de aprobación y pérdida SIGEC (facturadas vs cerradas).
   pyv-comercial-5.4.21 (2026-07-04)
     - Cobertura corregida: colocado P Actual vs Total Real PARA LA UNIVERSIDAD.
     - Hub Informes Comerciales: nuevos/renovación, corte día anterior, tiempos, pendientes, retomas.
@@ -176,12 +181,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.21">
-<meta name="build-id" content="pyv-comercial-5.4.21-20260704">
-<title>SCIC pyv-comercial 5.4.21 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.22">
+<meta name="build-id" content="pyv-comercial-5.4.22-20260704">
+<title>SCIC pyv-comercial 5.4.22 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.21';
-window.APP_VERSION_LABEL='pyv-comercial 5.4.21';
+window.APP_VERSION='pyv-comercial-5.4.22';
+window.APP_VERSION_LABEL='pyv-comercial 5.4.22';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -754,7 +759,7 @@ window._cargarTop5 = window._cargarTop5 || function(){
           <div style="text-align:center;padding:28px;color:rgba(255,255,255,.45);font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:22px"></i><div style="margin-top:10px">Cargando tu panorama…</div></div>
         </div>
         <div style="display:flex;gap:10px;flex-wrap:wrap">
-          <button type="button" onclick="abrirAsistenteGeminiIA()" style="flex:1;min-width:140px;padding:12px;background:linear-gradient(135deg,rgba(200,151,30,.25),rgba(0,61,69,.4));color:#FFD900;border:2px solid rgba(200,151,30,.5);border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;font-family:Ubuntu,sans-serif">✨ Preguntar a Gemini IA</button>
+          <button type="button" onclick="abrirCogniPYV()" style="flex:1;min-width:140px;padding:12px;background:linear-gradient(135deg,rgba(200,151,30,.25),rgba(0,61,69,.4));color:#FFD900;border:2px solid rgba(200,151,30,.5);border-radius:12px;font-size:12px;font-weight:800;cursor:pointer;font-family:Ubuntu,sans-serif">✨ Consultar CogniPYV</button>
           <button type="button" onclick="cerrarModalBienvenidaSede()" style="flex:1;min-width:140px;padding:12px;background:linear-gradient(135deg,#FFD900,#f59e0b);color:#001f24;border:none;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:Ubuntu,sans-serif">Continuar al menú →</button>
         </div>
       </div>
@@ -905,7 +910,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.21</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.22</div>
     <div id="turno-hdr-badge" onclick="abrirTurno()" style="display:none;cursor:pointer;background:rgba(255,255,255,.12);border-radius:6px;padding:3px 8px;margin-top:2px;align-items:center;gap:4px" title="Ver registro de turno">
       <span id="turno-hdr-icono" style="font-size:11px">⏰</span>
       <span id="turno-hdr-txt" style="font-size:9px;font-weight:700;color:rgba(255,255,255,.8)">Sin turno</span>
@@ -1121,7 +1126,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div>
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.21</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.22</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:#64748b;margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -1148,42 +1153,57 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
   <div class="menu-quick-bar">
     <div class="menu-quick-title">⚡ Accesos rápidos</div>
-    <div class="menu-quick-grid">
-      <button type="button" onclick="abrirAsistenteGeminiIA()" class="menu-quick-btn menu-quick-gemini" title="Asistente con inteligencia Gemini — preguntas en lenguaje natural">
-        <span class="menu-quick-icon">✨</span>
-        <span class="menu-quick-lbl">Asistente Gemini IA</span>
-        <span class="menu-quick-desc">Pregunta por sede, rectoría o estado nacional</span>
-      </button>
-      <button type="button" onclick="toggleCmdIAPanel(true)" class="menu-quick-btn menu-quick-ia" title="Panel flotante CMD IA">
-        <span class="menu-quick-icon">🤖</span>
-        <span class="menu-quick-lbl">CMD IA Rápido</span>
-        <span class="menu-quick-desc">Chat flotante sin salir del menú</span>
-      </button>
-      <button type="button" onclick="abrirSCIC('pulso')" class="menu-quick-btn menu-quick-scic">
-        <span class="menu-quick-icon">🧠</span>
-        <span class="menu-quick-lbl">SCIC Pulso</span>
-        <span class="menu-quick-desc">ISCIC nacional y sedes críticas</span>
-      </button>
-      <button type="button" onclick="abrirConsultaDinamica()" class="menu-quick-btn menu-quick-ops">
-        <span class="menu-quick-icon">📊</span>
-        <span class="menu-quick-lbl">Estado Operativo</span>
-        <span class="menu-quick-desc">Informe integral por sede</span>
-      </button>
-      <button type="button" onclick="abrirMetasDiarias()" class="menu-quick-btn menu-quick-meta">
-        <span class="menu-quick-icon">🏆</span>
-        <span class="menu-quick-lbl">Cumplimiento</span>
-        <span class="menu-quick-desc">Metas, SIGEC y cartera</span>
-      </button>
-      <button type="button" onclick="abrirModalSeguimiento()" class="menu-quick-btn menu-quick-seg">
-        <span class="menu-quick-icon">📋</span>
-        <span class="menu-quick-lbl">Seguimiento</span>
-        <span class="menu-quick-desc">Registrar visita comercial</span>
-      </button>
-      <button type="button" onclick="abrirInformesComerciales('cobertura-uni')" class="menu-quick-btn menu-quick-cob">
-        <span class="menu-quick-icon">🎓</span>
-        <span class="menu-quick-lbl">Informes Cobertura</span>
-        <span class="menu-quick-desc">Colocado vs Real PARA LA UNIVERSIDAD</span>
-      </button>
+    <div class="menu-quick-group">
+      <div class="menu-quick-grp-lbl">🟢 Operación en vivo</div>
+      <div class="menu-quick-grid">
+        <button type="button" onclick="abrirModalSeguimiento()" class="menu-quick-btn menu-quick-seg" title="Registrar seguimiento comercial"><span class="menu-quick-icon">📋</span><span class="menu-quick-lbl">Seguimiento</span></button>
+        <button type="button" onclick="abrirHistorialSeguimientos()" class="menu-quick-btn menu-quick-amber" title="Historial de seguimientos"><span class="menu-quick-icon">📜</span><span class="menu-quick-lbl">Historial</span></button>
+        <button type="button" onclick="abrirMallaTurnos()" class="menu-quick-btn menu-quick-sky" title="Malla y turnos del día"><span class="menu-quick-icon">📅</span><span class="menu-quick-lbl">Malla Hoy</span></button>
+        <button type="button" onclick="abrirConsultaDinamica()" class="menu-quick-btn menu-quick-ops" title="Estado operativo integral"><span class="menu-quick-icon">📊</span><span class="menu-quick-lbl">Estado Operativo</span></button>
+      </div>
+    </div>
+    <div class="menu-quick-group">
+      <div class="menu-quick-grp-lbl">📊 Gestión comercial</div>
+      <div class="menu-quick-grid">
+        <button type="button" onclick="abrirHubSpotActividad()" class="menu-quick-btn menu-quick-orange" title="Actividad HubSpot"><span class="menu-quick-icon">📈</span><span class="menu-quick-lbl">Actividad</span></button>
+        <button type="button" onclick="abrirPipelineGerencial()" class="menu-quick-btn menu-quick-blue" title="Pipeline de leads"><span class="menu-quick-icon">🎯</span><span class="menu-quick-lbl">Leads</span></button>
+        <button type="button" onclick="abrirMetasDiarias()" class="menu-quick-btn menu-quick-meta" title="Cumplimiento y metas"><span class="menu-quick-icon">🏆</span><span class="menu-quick-lbl">Cumplimiento</span></button>
+        <button type="button" onclick="abrirEstadoCartera()" class="menu-quick-btn menu-quick-red" title="Estado de cartera"><span class="menu-quick-icon">💰</span><span class="menu-quick-lbl">Cartera</span></button>
+        <button type="button" onclick="abrirBrujulaAcademica()" class="menu-quick-btn menu-quick-indigo" title="Brújula académica UNIMINUTO"><span class="menu-quick-icon">🧭</span><span class="menu-quick-lbl">Brújula</span></button>
+      </div>
+    </div>
+    <div class="menu-quick-group">
+      <div class="menu-quick-grp-lbl">📑 Informes comerciales</div>
+      <div class="menu-quick-grid">
+        <button type="button" onclick="abrirInformesComerciales('cobertura-uni')" class="menu-quick-btn menu-quick-cob" title="Cobertura universidad"><span class="menu-quick-icon">🎓</span><span class="menu-quick-lbl">Cob. UNI</span></button>
+        <button type="button" onclick="abrirInformesComerciales('cobertura-mat')" class="menu-quick-btn menu-quick-blue" title="Cobertura matrículas"><span class="menu-quick-icon">📚</span><span class="menu-quick-lbl">Cob. Mat.</span></button>
+        <button type="button" onclick="abrirInformesComerciales('nuevos-renov')" class="menu-quick-btn menu-quick-teal" title="Nuevos vs renovación"><span class="menu-quick-icon">🆕</span><span class="menu-quick-lbl">Nuevos/Renov</span></button>
+        <button type="button" onclick="abrirInformesComerciales('corte-dia')" class="menu-quick-btn menu-quick-gold" title="Colocación corte día anterior"><span class="menu-quick-icon">📅</span><span class="menu-quick-lbl">Corte Día</span></button>
+        <button type="button" onclick="abrirInformesComerciales('tiempos')" class="menu-quick-btn menu-quick-sky" title="Tiempos radicación"><span class="menu-quick-icon">⏱️</span><span class="menu-quick-lbl">Tiempos</span></button>
+        <button type="button" onclick="abrirInformesComerciales('pendientes')" class="menu-quick-btn menu-quick-amber" title="Pendientes desembolso"><span class="menu-quick-icon">⏳</span><span class="menu-quick-lbl">Pendientes</span></button>
+        <button type="button" onclick="abrirInformesComerciales('retomas')" class="menu-quick-btn menu-quick-purple" title="Retomas y recuperación"><span class="menu-quick-icon">🔄</span><span class="menu-quick-lbl">Retomas</span></button>
+        <button type="button" onclick="abrirInformesComerciales('tasa-aprob')" class="menu-quick-btn menu-quick-red" title="Tasa aprobación y pérdida SIGEC"><span class="menu-quick-icon">📉</span><span class="menu-quick-lbl">Tasa/Pérdida</span></button>
+        <button type="button" onclick="abrirInformesComerciales()" class="menu-quick-btn menu-quick-green" title="Panel completo de informes"><span class="menu-quick-icon">📑</span><span class="menu-quick-lbl">Panel Informes</span></button>
+      </div>
+    </div>
+    <div class="menu-quick-group">
+      <div class="menu-quick-grp-lbl">🧠 Inteligencia CogniPYV</div>
+      <div class="menu-quick-grid">
+        <button type="button" onclick="abrirCogniPYV()" class="menu-quick-btn menu-quick-cogni" title="Motor cognitivo ejecutivo CMD"><span class="menu-quick-icon">✨</span><span class="menu-quick-lbl">CogniPYV</span></button>
+        <button type="button" onclick="toggleCmdIAPanel(true)" class="menu-quick-btn menu-quick-ia" title="Chat flotante CMD"><span class="menu-quick-icon">💬</span><span class="menu-quick-lbl">Chat CMD</span></button>
+        <button type="button" onclick="abrirSCIC('ia')" class="menu-quick-btn menu-quick-gold" title="IA ejecutiva SCIC"><span class="menu-quick-icon">⚡</span><span class="menu-quick-lbl">IA Ejecutiva</span></button>
+        <button type="button" onclick="abrirSCIC('pulso')" class="menu-quick-btn menu-quick-scic" title="ISCIC nacional"><span class="menu-quick-icon">🧠</span><span class="menu-quick-lbl">SCIC Pulso</span></button>
+        <button type="button" onclick="abrirSCIC('mcm')" class="menu-quick-btn menu-quick-teal" title="MCM completo"><span class="menu-quick-icon">🎯</span><span class="menu-quick-lbl">MCM</span></button>
+      </div>
+    </div>
+    <div class="menu-quick-group">
+      <div class="menu-quick-grp-lbl">🛠 Herramientas</div>
+      <div class="menu-quick-grid">
+        <button type="button" onclick="abrirCentroHerramientasPYV()" class="menu-quick-btn menu-quick-lime" title="Herramientas PYV"><span class="menu-quick-icon">🛠️</span><span class="menu-quick-lbl">Herramientas</span></button>
+        <button type="button" onclick="abrirDirectorio()" class="menu-quick-btn menu-quick-cyan" title="Directorio empleados"><span class="menu-quick-icon">📇</span><span class="menu-quick-lbl">Directorio</span></button>
+        <button type="button" onclick="abrirCumpleanos()" class="menu-quick-btn menu-quick-pink" title="Cumpleaños del mes"><span class="menu-quick-icon">🎂</span><span class="menu-quick-lbl">Cumpleaños</span></button>
+        <button type="button" onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-quick-btn menu-quick-violet" title="Agendar reunión"><span class="menu-quick-icon">📆</span><span class="menu-quick-lbl">Agendar</span></button>
+      </div>
     </div>
   </div>
 
@@ -1356,72 +1376,24 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div class="menu-footer">© 2024–2026 Cooperativa Minuto de Dios · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía</div>
     </div>
     </div>
-    <aside class="menu-sidebar">
-      <div class="menu-sidebar-title">🧭 Módulos y herramientas</div>
-      <div class="menu-modules">
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-live">🟢 Operación en Vivo</span><span class="menu-mod-note">Tiempo real</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirModalSeguimiento()" class="menu-card menu-card-teal"><div class="menu-card-icon">📋</div><div class="menu-card-body"><div class="menu-card-title">Seguimiento</div><div class="menu-card-desc">Registrar y evaluar seguimientos de coordinador o asesor por sede.</div></div></button>
-            <button onclick="abrirHistorialSeguimientos()" class="menu-card menu-card-amber"><div class="menu-card-icon">📜</div><div class="menu-card-body"><div class="menu-card-title">Historial</div><div class="menu-card-desc">Consultar seguimientos anteriores filtrados por sede y período.</div></div></button>
-            <button onclick="abrirMallaTurnos()" class="menu-card menu-card-sky"><div class="menu-card-icon">📅</div><div class="menu-card-body"><div class="menu-card-title">Malla Hoy</div><div class="menu-card-desc">Ver turnos y cobertura operativa del día en cada sede.</div></div></button>
-            <button onclick="abrirConsultaDinamica()" class="menu-card menu-card-green"><div class="menu-card-icon">📊</div><div class="menu-card-body"><div class="menu-card-title">Estado Operativo</div><div class="menu-card-desc">Informe integral: nacional, rectoría y sede · 8 repositorios.</div></div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📊 Gestión Comercial</span><span class="menu-mod-note">Día vencido</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirHubSpotActividad()" class="menu-card menu-card-orange"><div class="menu-card-icon">📈</div><div class="menu-card-body"><div class="menu-card-title">Actividad Comercial</div><div class="menu-card-desc">Productividad HubSpot: llamadas, reuniones y tareas por asesor.</div></div></button>
-            <button onclick="abrirPipelineGerencial()" class="menu-card menu-card-blue"><div class="menu-card-icon">🎯</div><div class="menu-card-body"><div class="menu-card-title">Leads</div><div class="menu-card-desc">Pipeline de leads y embudo comercial por rectoría.</div></div></button>
-            <button onclick="abrirMetasDiarias()" class="menu-card menu-card-gold"><div class="menu-card-icon">🏆</div><div class="menu-card-body"><div class="menu-card-title">Cumplimiento</div><div class="menu-card-desc">Metas, SIGEC, GLPI, cartera y desglose por sede.</div></div></button>
-            <button onclick="abrirEstadoCartera()" class="menu-card menu-card-red"><div class="menu-card-icon">💰</div><div class="menu-card-body"><div class="menu-card-title">Cartera</div><div class="menu-card-desc">Estado Cygnus y SAP: recaudo, mora y rodada por sede.</div></div></button>
-            <button onclick="abrirBrujulaAcademica()" class="menu-card menu-card-indigo"><div class="menu-card-icon">🧭</div><div class="menu-card-body"><div class="menu-card-title">Brújula Académica</div><div class="menu-card-desc">Calendario UNIMINUTO y ritmo de colocación S1/S2.</div></div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-gestion">📑 Informes Comerciales</span><span class="menu-mod-note">Cobertura · SIGEC</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirInformesComerciales('cobertura-uni')" class="menu-card menu-card-indigo"><div class="menu-card-icon">🎓</div><div class="menu-card-body"><div class="menu-card-title">Cobertura Universidad</div><div class="menu-card-desc">Colocado P Actual ÷ Total Real PARA LA UNIVERSIDAD.</div></div></button>
-            <button onclick="abrirInformesComerciales('cobertura-mat')" class="menu-card menu-card-blue"><div class="menu-card-icon">📚</div><div class="menu-card-body"><div class="menu-card-title">Cobertura Matrículas</div><div class="menu-card-desc">Matriculados vs SIGEC facturadas + GLPI aprobadas.</div></div></button>
-            <button onclick="abrirInformesComerciales('nuevos-renov')" class="menu-card menu-card-teal"><div class="menu-card-icon">🆕</div><div class="menu-card-body"><div class="menu-card-title">Nuevos vs Renovación</div><div class="menu-card-desc">Desglose SIGEC por estado y cobertura nuevos/continuos.</div></div></button>
-            <button onclick="abrirInformesComerciales('corte-dia')" class="menu-card menu-card-gold"><div class="menu-card-icon">📅</div><div class="menu-card-body"><div class="menu-card-title">Colocación Corte</div><div class="menu-card-desc">SIGEC facturadas + GLPI aprobadas al día anterior 11:59 pm.</div></div></button>
-            <button onclick="abrirInformesComerciales('tiempos')" class="menu-card menu-card-sky"><div class="menu-card-icon">⏱️</div><div class="menu-card-body"><div class="menu-card-title">Tiempos Radicación</div><div class="menu-card-desc">48h hábiles · congelados vs fuera de tiempo.</div></div></button>
-            <button onclick="abrirInformesComerciales('pendientes')" class="menu-card menu-card-amber"><div class="menu-card-icon">⏳</div><div class="menu-card-body"><div class="menu-card-title">Pendientes Desembolso</div><div class="menu-card-desc">Aprobadas SIGEC/GLPI sin cruce en base colocación.</div></div></button>
-            <button onclick="abrirInformesComerciales('retomas')" class="menu-card menu-card-purple"><div class="menu-card-icon">🔄</div><div class="menu-card-body"><div class="menu-card-title">Retomas</div><div class="menu-card-desc">Recuperación vs pérdida: retomas fact. − cerradas.</div></div></button>
-            <button onclick="abrirInformesComerciales()" class="menu-card menu-card-green"><div class="menu-card-icon">📑</div><div class="menu-card-body"><div class="menu-card-title">Panel Completo</div><div class="menu-card-desc">Abrir hub con todos los informes comerciales.</div></div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-intel">✨ Inteligencia · Gemini IA</span><span class="menu-mod-note">Análisis</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirAsistenteGeminiIA()" class="menu-card menu-card-gemini" title="Motor Gemini vía proxy Apps Script"><div class="menu-card-icon">✨</div><div class="menu-card-body"><div class="menu-card-title">Asistente Gemini IA</div><div class="menu-card-desc">AI CENTER: análisis ejecutivo, comité y preguntas con Gemini.</div></div></button>
-            <button onclick="abrirSCIC('ia')" class="menu-card menu-card-gold"><div class="menu-card-icon">⚡</div><div class="menu-card-body"><div class="menu-card-title">IA Ejecutiva</div><div class="menu-card-desc">Preguntas al motor cognitivo SCIC con datos en vivo.</div></div></button>
-            <button onclick="abrirSCIC('pulso')" class="menu-card menu-card-purple"><div class="menu-card-icon">🧠</div><div class="menu-card-body"><div class="menu-card-title">SCIC Pulso</div><div class="menu-card-desc">ISCIC nacional, sedes críticas y narrativa ejecutiva.</div></div></button>
-            <button onclick="abrirSCIC('mcm')" class="menu-card menu-card-teal"><div class="menu-card-icon">🎯</div><div class="menu-card-body"><div class="menu-card-title">MCM Completo</div><div class="menu-card-desc">Cobertura, cumplimiento, conversión SIGEC y GLPI.</div></div></button>
-          </div>
-        </div>
-        <div class="menu-module">
-          <div class="menu-module-hdr"><span class="menu-mod-badge menu-mod-tools">🛠 Herramientas del Colaborador</span></div>
-          <div class="menu-grid menu-grid-modules">
-            <button onclick="abrirCentroHerramientasPYV()" class="menu-card menu-card-lime"><div class="menu-card-icon">🛠️</div><div class="menu-card-body"><div class="menu-card-title">Herramientas PYV</div><div class="menu-card-desc">Simuladores, fragmentos, Crediplus y utilidades del asesor.</div></div></button>
-            <button onclick="abrirDirectorio()" class="menu-card menu-card-cyan"><div class="menu-card-icon">📇</div><div class="menu-card-body"><div class="menu-card-title">Directorio</div><div class="menu-card-desc">Buscar colaboradores por nombre, cargo o sede.</div></div></button>
-            <button onclick="abrirCumpleanos()" class="menu-card menu-card-pink"><div class="menu-card-icon">🎂</div><div class="menu-card-body"><div class="menu-card-title">Cumpleaños</div><div class="menu-card-desc">Cumpleaños del mes del equipo comercial CMD.</div></div></button>
-            <button onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-card menu-card-violet"><div class="menu-card-icon">📆</div><div class="menu-card-body"><div class="menu-card-title">Agendar</div><div class="menu-card-desc">Calendario HubSpot para reuniones comerciales.</div></div></button>
-          </div>
-        </div>
+    <aside class="menu-sidebar menu-sidebar-compact">
+      <div class="menu-sidebar-title">🧭 Guía rápida</div>
+      <div class="menu-sidebar-hint">
+        <p>Todos los módulos están en <b>⚡ Accesos rápidos</b> arriba. Usa los grupos por color para operación, gestión, informes, CogniPYV y herramientas.</p>
+        <p style="margin-top:10px;font-size:9px;color:var(--gray)">El panel central muestra salud comercial, colocación S2, comparativo año anterior, SIGEC/GLPI y radar MCM en tiempo real.</p>
       </div>
     </aside>
   </div>
 
-  <button type="button" class="cmd-ia-fab" id="cmd-ia-fab" onclick="toggleCmdIAPanel()" title="Asistente Gemini / CMD IA — preguntas por sede o nacional">
+  <button type="button" class="cmd-ia-fab" id="cmd-ia-fab" onclick="toggleCmdIAPanel()" title="CogniPYV — consultas por sede o nacional">
     <span class="cmd-ia-fab-icon">✨</span>
-    <span class="cmd-ia-fab-lbl">Gemini IA</span>
+    <span class="cmd-ia-fab-lbl">CogniPYV</span>
   </button>
   <div class="cmd-ia-panel" id="cmd-ia-panel" style="display:none">
     <div class="cmd-ia-panel-hdr">
       <div>
-        <div class="cmd-ia-panel-title">✨ Asistente Gemini · CMD</div>
-        <div class="cmd-ia-panel-sub">Pregunta por sede, rectoría o estado nacional · motor Gemini + datos en vivo</div>
+        <div class="cmd-ia-panel-title">✨ CogniPYV · CMD</div>
+        <div class="cmd-ia-panel-sub">Motor cognitivo ejecutivo · preguntas por sede, rectoría o estado nacional</div>
       </div>
       <button type="button" class="cmd-ia-close" onclick="toggleCmdIAPanel(false)">✕</button>
     </div>
@@ -1485,23 +1457,43 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-orange{border-color:rgba(0,176,185,.25)} .menu-kpi-orange .menu-kpi-val{color:var(--teal)}
 .menu-kpi-red{border-color:rgba(239,68,68,.25)} .menu-kpi-red .menu-kpi-val{color:var(--red)}
 .menu-layout{display:flex;gap:0;min-height:calc(100vh - 180px);align-items:stretch}
-.menu-quick-bar{background:var(--white);border-bottom:2px solid var(--teal-l);padding:16px 22px 18px;box-shadow:0 2px 8px rgba(0,61,69,.04)}
-.menu-quick-title{font-size:11px;font-weight:800;color:var(--dark);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-.menu-quick-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(168px,1fr));gap:10px}
-.menu-quick-btn{display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:14px 16px;border-radius:14px;border:2px solid var(--border);background:var(--white);cursor:pointer;font-family:Ubuntu,sans-serif;text-align:left;transition:transform .15s,box-shadow .15s,border-color .15s;min-height:88px}
-.menu-quick-btn:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,61,69,.12);border-color:var(--teal)}
-.menu-quick-icon{font-size:22px;line-height:1}
-.menu-quick-lbl{font-size:12px;font-weight:800;color:var(--dark);line-height:1.2}
-.menu-quick-desc{font-size:9px;color:var(--gray);line-height:1.35;font-weight:600}
-.menu-quick-gemini{background:linear-gradient(135deg,rgba(200,151,30,.12),rgba(0,61,69,.06));border-color:rgba(200,151,30,.45)}
-.menu-quick-gemini .menu-quick-lbl{color:#92400e}
-.menu-quick-gemini:hover{border-color:#C8971E;box-shadow:0 8px 22px rgba(200,151,30,.2)}
+.menu-quick-bar{background:var(--white);border-bottom:2px solid var(--teal-l);padding:12px 18px 14px;box-shadow:0 2px 8px rgba(0,61,69,.04)}
+.menu-quick-title{font-size:11px;font-weight:800;color:var(--dark);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.menu-quick-group{margin-bottom:10px}
+.menu-quick-group:last-child{margin-bottom:0}
+.menu-quick-grp-lbl{font-size:9px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.menu-quick-grid{display:flex;flex-wrap:wrap;gap:5px}
+.menu-quick-btn{display:inline-flex;flex-direction:row;align-items:center;gap:5px;padding:5px 9px;border-radius:8px;border:1px solid var(--border);background:var(--white);cursor:pointer;font-family:Ubuntu,sans-serif;text-align:left;transition:transform .12s,box-shadow .12s,border-color .12s;min-height:auto}
+.menu-quick-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,61,69,.1);border-color:var(--teal)}
+.menu-quick-icon{font-size:13px;line-height:1;flex-shrink:0}
+.menu-quick-lbl{font-size:10px;font-weight:700;color:var(--dark);line-height:1.2;white-space:nowrap}
+.menu-quick-desc{display:none}
+.menu-quick-cogni{background:linear-gradient(135deg,rgba(200,151,30,.12),rgba(0,61,69,.06));border-color:rgba(200,151,30,.45)}
+.menu-quick-cogni .menu-quick-lbl{color:#92400e}
+.menu-quick-cogni:hover{border-color:#C8971E;box-shadow:0 4px 12px rgba(200,151,30,.18)}
 .menu-quick-ia{background:var(--teal-l);border-color:rgba(0,176,185,.35)}
 .menu-quick-scic{background:rgba(0,61,69,.04)}
 .menu-quick-ops{background:rgba(174,201,0,.08);border-color:rgba(174,201,0,.3)}
 .menu-quick-meta{background:rgba(255,217,0,.1);border-color:rgba(255,217,0,.4)}
 .menu-quick-seg{background:rgba(0,176,185,.06)}
 .menu-quick-cob{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.3)}
+.menu-quick-amber{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.3)}
+.menu-quick-sky{background:rgba(14,165,233,.08);border-color:rgba(14,165,233,.3)}
+.menu-quick-orange{background:rgba(249,115,22,.08);border-color:rgba(249,115,22,.3)}
+.menu-quick-blue{background:rgba(59,130,246,.08);border-color:rgba(59,130,246,.3)}
+.menu-quick-red{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.3)}
+.menu-quick-indigo{background:rgba(99,102,241,.08);border-color:rgba(99,102,241,.3)}
+.menu-quick-teal{background:rgba(20,184,166,.08);border-color:rgba(20,184,166,.3)}
+.menu-quick-gold{background:rgba(255,217,0,.12);border-color:rgba(255,217,0,.4)}
+.menu-quick-purple{background:rgba(168,85,247,.08);border-color:rgba(168,85,247,.3)}
+.menu-quick-green{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.3)}
+.menu-quick-lime{background:rgba(174,201,0,.1);border-color:rgba(174,201,0,.35)}
+.menu-quick-cyan{background:rgba(6,182,212,.08);border-color:rgba(6,182,212,.3)}
+.menu-quick-pink{background:rgba(236,72,153,.08);border-color:rgba(236,72,153,.3)}
+.menu-quick-violet{background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.3)}
+.menu-sidebar-compact{width:min(280px,28vw)}
+.menu-sidebar-hint{font-size:10px;color:var(--text2);line-height:1.55;padding:8px 4px}
+.menu-sidebar-hint b{color:var(--dark)}
 .ic-tab{display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:#334155;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;line-height:1.3;transition:.15s}
 .ic-tab:hover{background:#e0f2fe;border-color:#bae6fd;color:#003D45}
 .ic-tab.active{background:#003D45;color:#FFD900;border-color:#003D45}
@@ -1558,8 +1550,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-ley-verde{background:#86efac}.menu-ley-amarillo{background:#fde68a}.menu-ley-rojo{background:#fca5a5}.menu-ley-gris{background:#e2e8f0}
 .menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;font-size:12px;color:#64748b;text-align:center;padding:20px}
 .menu-mapa-error{color:#dc2626;flex-direction:column}
-@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-left:none;border-top:1px solid var(--border);padding:18px 16px 24px}.menu-sidebar .menu-grid-modules{grid-template-columns:repeat(2,1fr);gap:12px}.menu-sidebar .menu-card{min-height:88px;padding:12px 14px}.menu-quick-grid{grid-template-columns:repeat(2,1fr)}}
-@media(max-width:520px){.menu-quick-grid,.menu-sidebar .menu-grid-modules{grid-template-columns:1fr}}
+@media(max-width:900px){.menu-layout{flex-direction:column}.menu-sidebar{width:100%;max-height:none;position:relative;border-left:none;border-top:1px solid var(--border);padding:14px 16px 18px}.menu-sidebar-compact{width:100%}}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
 .menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
@@ -3592,7 +3583,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.21';
+var APP_VERSION = 'pyv-comercial-5.4.22';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6346,6 +6337,7 @@ https://minutodediosportal.com/login/
         <button type="button" class="ic-tab" data-ic="tiempos" onclick="icSeleccionarTab('tiempos')">⏱️ Tiempos Radicación</button>
         <button type="button" class="ic-tab" data-ic="pendientes" onclick="icSeleccionarTab('pendientes')">⏳ Pendientes Desembolso</button>
         <button type="button" class="ic-tab" data-ic="retomas" onclick="icSeleccionarTab('retomas')">🔄 Retomas</button>
+        <button type="button" class="ic-tab" data-ic="tasa-aprob" onclick="icSeleccionarTab('tasa-aprob')">📉 Tasa/Pérdida</button>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;min-width:0">
         <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
@@ -8881,9 +8873,17 @@ function _parseCumpleMMDD(s){
     var cols = row._cols || row._c || [];
     return _mdParseGvizDate(cols[SIGEC_COL_FECHA_FACT]) || _mdParseGvizDate(cols[SIGEC_COL_FECHA_CARGUE]);
   }
-  function _mdFechaColocGlpi(row){
+  function _mdFechaRadicGlpi(row){
     var cols = row._cols || row._c || [];
-    return _mdParseGvizDate(row['Fecha de Cargue'] || cols[MD_GLPI_COL_FECHA]);
+    var keys = Object.keys(row || {});
+    for(var i=0;i<keys.length;i++){
+      var k = keys[i].toLowerCase();
+      if(k.indexOf('radic')>=0 && row[keys[i]]) return _mdParseGvizDate(row[keys[i]]);
+    }
+    return _mdParseGvizDate(row['Fecha de Radicación'] || row['Fecha de Radicacion'] || row['Fecha de radicación'] || row['Fecha de Cargue'] || cols[MD_GLPI_COL_FECHA]);
+  }
+  function _mdFechaColocGlpi(row){
+    return _mdFechaRadicGlpi(row);
   }
   function _mdFmtN(n){ return Number(n||0).toLocaleString('es-CO'); }
   function _mdFmtFecha(d){
@@ -8892,13 +8892,27 @@ function _parseCumpleMMDD(s){
   }
   function _mdParseGvizDate(v){
     if(v==null||v==='') return null;
-    if(typeof v==='string' && v.indexOf('Date(')>=0){
-      var p = v.replace(/Date\(|\)/g,'').split(',').map(function(x){ return parseInt(x,10)||0; });
-      if(p.length>=3) return new Date(p[0], p[1], p[2]);
+    if(v instanceof Date && !isNaN(v.getTime())) return v;
+    if(typeof v==='number' && !isNaN(v)){
+      var dn=new Date(v); if(!isNaN(dn.getTime())) return dn;
     }
-    if(v instanceof Date) return v;
-    var d = new Date(v);
-    return isNaN(d.getTime()) ? null : d;
+    if(typeof v==='string'){
+      var s=String(v).trim();
+      if(s.indexOf('Date(')>=0){
+        var p=s.replace(/Date\(|\)/g,'').split(',').map(function(x){ return parseInt(x,10)||0; });
+        if(p.length>=3) return new Date(p[0], p[1], p[2], p[3]||0, p[4]||0, p[5]||0);
+      }
+      var m=s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})(?:[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+      if(m){
+        var mes=+m[1]-1, dia=+m[2], anio=+m[3];
+        if(anio<100) anio+=2000;
+        return new Date(anio, mes, dia, +(m[4]||0), +(m[5]||0), +(m[6]||0));
+      }
+      var d2=new Date(s);
+      if(!isNaN(d2.getTime())) return d2;
+    }
+    var d3=new Date(v);
+    return isNaN(d3.getTime())?null:d3;
   }
   function _mdEsHabil(d){
     var dow = d.getDay();
@@ -8938,25 +8952,33 @@ function _parseCumpleMMDD(s){
     });
     return map;
   }
-  function _mdConstruirRadicaciones(rows, y, m){
+  function _mdConstruirRadicaciones(sigRows, glpiRows, y, m){
     var porDia = {}, porSedeDia = {}, porSedeMes = {};
-    (rows||[]).forEach(function(row){
-      var cols = row._cols || row._c || [];
-      var fecha = _mdParseGvizDate(cols[SIGEC_COL_FECHA_CARGUE]);
+    function agregar(fecha, sedeRaw){
       if(!fecha || fecha.getFullYear()!==y || fecha.getMonth()!==m) return;
-      var sedeRaw = String(cols[MD_SIGEC_COL_SEDE]||row.Sede||'').trim();
       if(!sedeRaw) return;
       var dk = _mdDateKey(fecha);
       porDia[dk] = (porDia[dk]||0)+1;
-      var sk = sedeRaw;
-      var k = sk+'|'+dk;
+      var k = sedeRaw+'|'+dk;
       porSedeDia[k] = (porSedeDia[k]||0)+1;
-      porSedeMes[sk] = (porSedeMes[sk]||0)+1;
+      porSedeMes[sedeRaw] = (porSedeMes[sedeRaw]||0)+1;
+    }
+    (sigRows||[]).forEach(function(row){
+      var cols = row._cols || row._c || [];
+      var fecha = _mdParseGvizDate(cols[SIGEC_COL_FECHA_CARGUE]);
+      var sedeRaw = String(cols[MD_SIGEC_COL_SEDE]||row.Sede||'').trim();
+      agregar(fecha, sedeRaw);
+    });
+    (glpiRows||[]).forEach(function(row){
+      var cols = row._cols || row._c || [];
+      var fecha = _mdFechaRadicGlpi(row);
+      var sedeRaw = String(row.Sede || cols[MD_GLPI_COL_SEDE] || '').trim();
+      agregar(fecha, sedeRaw);
     });
     return {porDia:porDia, porSedeDia:porSedeDia, porSedeMes:porSedeMes};
   }
   function _mdConstruirColocado(sigRows, glpiRows, y, m){
-    var map = {porDia:{}, porSedeDia:{}, porSedeMes:{}, porSedeMesSig:{}, porSedeMesGlpi:{}};
+    var map = {porDia:{}, porSedeDia:{}, porSedeMes:{}, porSedeMesSig:{}, porSedeMesGlpi:{}, porDiaSig:{}, porDiaGlpi:{}, porSedeDiaSig:{}, porSedeDiaGlpi:{}};
     var sigMes=0, glpiMes=0;
     (sigRows||[]).forEach(function(row){
       if(!_mdEsFacturadaSigec(row)) return;
@@ -8986,8 +9008,16 @@ function _parseCumpleMMDD(s){
     map.porDia[dk] = (map.porDia[dk]||0)+n;
     map.porSedeDia[sedeRaw+'|'+dk] = (map.porSedeDia[sedeRaw+'|'+dk]||0)+n;
     map.porSedeMes[sedeRaw] = (map.porSedeMes[sedeRaw]||0)+n;
-    if(fuente==='sig') map.porSedeMesSig[sedeRaw] = (map.porSedeMesSig[sedeRaw]||0)+n;
-    if(fuente==='glpi') map.porSedeMesGlpi[sedeRaw] = (map.porSedeMesGlpi[sedeRaw]||0)+n;
+    if(fuente==='sig'){
+      map.porDiaSig[dk]=(map.porDiaSig[dk]||0)+n;
+      map.porSedeDiaSig[sedeRaw+'|'+dk]=(map.porSedeDiaSig[sedeRaw+'|'+dk]||0)+n;
+      map.porSedeMesSig[sedeRaw] = (map.porSedeMesSig[sedeRaw]||0)+n;
+    }
+    if(fuente==='glpi'){
+      map.porDiaGlpi[dk]=(map.porDiaGlpi[dk]||0)+n;
+      map.porSedeDiaGlpi[sedeRaw+'|'+dk]=(map.porSedeDiaGlpi[sedeRaw+'|'+dk]||0)+n;
+      map.porSedeMesGlpi[sedeRaw] = (map.porSedeMesGlpi[sedeRaw]||0)+n;
+    }
   }
   function _mdCountMesSedeFuente(data, colocSede, fuenteKey){
     if(!colocSede){
@@ -9019,6 +9049,18 @@ function _parseCumpleMMDD(s){
     var n=0;
     Object.keys(data.porSedeMes||{}).forEach(function(sk){
       if(_mdMatchSede(sk, colocSede)) n+=data.porSedeMes[sk];
+    });
+    return n;
+  }
+  function _mdCountFuenteEnDia(data, colocSede, dk, fuente){
+    var porDiaKey = fuente==='sig' ? 'porDiaSig' : 'porDiaGlpi';
+    var porSedeKey = fuente==='sig' ? 'porSedeDiaSig' : 'porSedeDiaGlpi';
+    if(!colocSede) return (data[porDiaKey]||{})[dk]||0;
+    var n=0;
+    Object.keys(data[porSedeKey]||{}).forEach(function(k){
+      var p=k.split('|'), sede=p[0], dia=p[1];
+      if(dia!==dk) return;
+      if(_mdMatchSede(sede, colocSede)) n+=data[porSedeKey][k];
     });
     return n;
   }
@@ -9283,7 +9325,7 @@ function _parseCumpleMMDD(s){
     var diasHab=(typeof _mdDiasHabilesMes==='function')?_mdDiasHabilesMes(y,m):22;
     var metaDiaria=diasHab>0?meta/diasHab:0;
     var metaMes=meta;
-    var rad=(typeof _mdConstruirRadicaciones==='function')?_mdConstruirRadicaciones(window._sigecRows||[],y,m):{porDia:{},porSedeMes:{}};
+    var rad=(typeof _mdConstruirRadicaciones==='function')?_mdConstruirRadicaciones(window._sigecRows||[],window._glpiRows||[],y,m):{porDia:{},porSedeMes:{}};
     var colM=(typeof _mdConstruirColocado==='function')?_mdConstruirColocado(window._sigecRows||[],window._glpiRows||[],y,m):{porDia:{},sigMes:0,glpiMes:0};
     var sedeUnica=(nivel==='sede'&&sel)?sel:'';
     var hoyKey=(typeof _mdDateKey==='function')?_mdDateKey(hoy):'';
@@ -9304,6 +9346,63 @@ function _parseCumpleMMDD(s){
       seguimientos:_ioSeguimientos(sedesFiltro), cartera:_ioCartera(sedesFiltro)
     };
   }
+  function _ioRenderHistorialDiario(ctx){
+    if(typeof _mdListaDiasHabiles!=='function') return '';
+    var hoy=new Date(), y=hoy.getFullYear(), mo=hoy.getMonth();
+    var dias=_mdListaDiasHabiles(y,mo,hoy.getDate());
+    var sedeSel=(ctx.nivel==='sede'&&ctx.sel)?ctx.sel:'';
+    var colM=(typeof _mdConstruirColocado==='function')?_mdConstruirColocado(window._sigecRows||[],window._glpiRows||[],y,mo):{};
+    var rad=(typeof _mdConstruirRadicaciones==='function')?_mdConstruirRadicaciones(window._sigecRows||[],window._glpiRows||[],y,mo):{};
+    var html=_ioSec('📅 Historial diario del mes','Cumplimiento meta de colocación por día hábil · colocado = SIGEC fact. + GLPI aprob. por fecha radicación GLPI');
+    html+='<div style="overflow-x:auto;max-height:300px;border:1px solid #e2e8f0;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#003D45;color:#fff;position:sticky;top:0">'
+      +'<th style="padding:6px 8px">Fecha</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Colocado</th><th style="padding:6px 8px;text-align:right">SIGEC</th><th style="padding:6px 8px;text-align:right">GLPI</th><th style="padding:6px 8px;text-align:right">Radic.</th><th style="padding:6px 8px;text-align:center">Estado</th></tr></thead><tbody>';
+    dias.slice().reverse().forEach(function(d,i){
+      var dk=(typeof _mdDateKey==='function')?_mdDateKey(d):'';
+      var colD=(typeof _mdColSedeEnDia==='function')?_mdColSedeEnDia(colM,sedeSel,dk):0;
+      var radD=(typeof _mdRadSedeEnDia==='function')?_mdRadSedeEnDia(rad,sedeSel,dk):0;
+      var sigD=(typeof _mdCountFuenteEnDia==='function')?_mdCountFuenteEnDia(colM,sedeSel,dk,'sig'):0;
+      var glpD=(typeof _mdCountFuenteEnDia==='function')?_mdCountFuenteEnDia(colM,sedeSel,dk,'glpi'):0;
+      var cumple=colD>=ctx.metaDiaria;
+      html+='<tr style="background:'+(i%2?'#fff':'#f8fafc')+'"><td style="padding:5px 8px">'+d.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'})+'</td>'
+        +'<td style="padding:5px 8px;text-align:right">'+ctx.metaDiaria.toFixed(1)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+(colD>0?(cumple?'#16a34a':'#dc2626'):'#94a3b8')+'">'+_ioFmtN(colD)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#16a34a">'+_ioFmtN(sigD)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#0891b2">'+_ioFmtN(glpD)+'</td>'
+        +'<td style="padding:5px 8px;text-align:right;color:#6366f1">'+_ioFmtN(radD)+'</td>'
+        +'<td style="padding:5px 8px;text-align:center">'+(typeof _mdSemHtml==='function'?_mdSemHtml(cumple):(cumple?'✅':'❌'))+'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+    html+='<div style="font-size:9px;color:#94a3b8;margin-top:6px">Fecha GLPI: columna radicación (mes/día/año/hora) · Colocado por día según facturación SIGEC + aprobación GLPI en esa fecha.</div>';
+    return html;
+  }
+  function _ioRenderTasaAprobacion(ctx){
+    var sig=ctx.sig||{};
+    var rad=sig.radicadas||sig.total||0;
+    var fact=sig.facturada||0;
+    var cerr=sig.cerrada||0;
+    var cerrFac=sig.cerrada_fac||0;
+    var conv=fact+cerrFac;
+    var perdida=cerr+cerrFac;
+    var tasaConv=rad>0?Math.round(conv/rad*1000)/10:0;
+    var tasaPerd=rad>0?Math.round(perdida/rad*1000)/10:0;
+    var tasaFact=rad>0?Math.round(fact/rad*1000)/10:0;
+    var html=_ioSec('📉 Tasa de aprobación y pérdida SIGEC','No el 100% de radicadas pasa a facturadas: parte queda cerrada o cerrada facturada');
+    html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px;margin-bottom:10px">';
+    html+=_ioKpi('Radicadas',_ioFmtN(rad),'#6366f1','Base del embudo');
+    html+=_ioKpi('Facturadas',_ioFmtN(fact),'#16a34a',tasaFact+'% del total');
+    html+=_ioKpi('Cerradas',_ioFmtN(cerr),'#dc2626','Pérdida sin facturar');
+    html+=_ioKpi('Cerradas fac.',_ioFmtN(cerrFac),'#ca8a04','Recuperación parcial');
+    html+=_ioKpi('Tasa conversión',tasaConv+'%','#003D45','(fact.+cerr.fac.)÷rad.');
+    html+=_ioKpi('Tasa pérdida',tasaPerd+'%','#dc2626','(cerr.+cerr.fac.)÷rad.');
+    html+='</div>';
+    html+='<div style="padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:10px;color:#7f1d1d;line-height:1.5">'
+      +'De <b>'+_ioFmtN(rad)+'</b> radicadas, <b>'+_ioFmtN(fact)+'</b> llegaron a facturadas ('+tasaFact+'%). '
+      +'Pérdida acumulada (cerradas + cerradas facturadas): <b>'+_ioFmtN(perdida)+'</b> ('+tasaPerd+'%). '
+      +'Conversión neta reconocida: <b>'+tasaConv+'%</b>.</div>';
+    return html;
+  }
+  window._ioRenderHistorialDiario=_ioRenderHistorialDiario;
+  window._ioRenderTasaAprobacion=_ioRenderTasaAprobacion;
   function _ioRenderBloqueSigec(sig){
     var html='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:6px">';
     [['Radicadas',sig.radicadas,'#6366f1'],['Facturadas',sig.facturada,'#16a34a'],['Cerr. fac.',sig.cerrada_fac,'#a78bfa'],
@@ -9474,27 +9573,11 @@ function _parseCumpleMMDD(s){
       html+=_ioKpi('Filas malla',_ioFmtN(ctx.malla.filas),'#64748b');
       html+='</div>';
     }
-    if(opts.incluirHistorial&&typeof _mdListaDiasHabiles==='function'){
-      var hoy=new Date(), y=hoy.getFullYear(), mo=hoy.getMonth();
-      var dias=_mdListaDiasHabiles(y,mo,hoy.getDate());
-      var sedeSel=(ctx.nivel==='sede'&&ctx.sel)?ctx.sel:'';
-      var colM=(typeof _mdConstruirColocado==='function')?_mdConstruirColocado(window._sigecRows||[],window._glpiRows||[],y,mo):{};
-      var rad=(typeof _mdConstruirRadicaciones==='function')?_mdConstruirRadicaciones(window._sigecRows||[],y,mo):{};
-      html+=_ioSec('📅 Historial diario del mes','Cumplimiento meta de colocación por día hábil');
-      html+='<div style="overflow-x:auto;max-height:280px;border:1px solid #e2e8f0;border-radius:10px"><table style="width:100%;border-collapse:collapse;font-size:10px"><thead><tr style="background:#003D45;color:#fff;position:sticky;top:0">'
-        +'<th style="padding:6px 8px">Fecha</th><th style="padding:6px 8px;text-align:right">Meta</th><th style="padding:6px 8px;text-align:right">Colocado</th><th style="padding:6px 8px;text-align:right">Radic.</th><th style="padding:6px 8px;text-align:center">Estado</th></tr></thead><tbody>';
-      dias.slice().reverse().forEach(function(d,i){
-        var dk=(typeof _mdDateKey==='function')?_mdDateKey(d):'';
-        var colD=(typeof _mdColSedeEnDia==='function')?_mdColSedeEnDia(colM,sedeSel,dk):0;
-        var radD=(typeof _mdRadSedeEnDia==='function')?_mdRadSedeEnDia(rad,sedeSel,dk):0;
-        var cumple=colD>=ctx.metaDiaria;
-        html+='<tr style="background:'+(i%2?'#fff':'#f8fafc')+'"><td style="padding:5px 8px">'+d.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short'})+'</td>'
-          +'<td style="padding:5px 8px;text-align:right">'+ctx.metaDiaria.toFixed(1)+'</td>'
-          +'<td style="padding:5px 8px;text-align:right;font-weight:700;color:'+(cumple?'#16a34a':'#dc2626')+'">'+_ioFmtN(colD)+'</td>'
-          +'<td style="padding:5px 8px;text-align:right;color:#6366f1">'+_ioFmtN(radD)+'</td>'
-          +'<td style="padding:5px 8px;text-align:center">'+(typeof _mdSemHtml==='function'?_mdSemHtml(cumple):(cumple?'✅':'❌'))+'</td></tr>';
-      });
-      html+='</tbody></table></div>';
+    if(opts.incluirHistorial&&typeof _ioRenderHistorialDiario==='function'){
+      html+=_ioRenderHistorialDiario(ctx);
+    }
+    if(opts.incluirTasaAprob!==false && typeof _ioRenderTasaAprobacion==='function'){
+      html+=_ioRenderTasaAprobacion(ctx);
     }
     html+=_ioRenderDrillTable(ctx, opts.prefix||'cd', modo);
     html+='<div style="font-size:9px;color:#94a3b8;margin-top:12px;text-align:center;padding-top:8px;border-top:1px solid #e5e7eb">'
@@ -10208,9 +10291,9 @@ function _parseCumpleMMDD(s){
       guia:'Es el panel más completo de indicadores operativos. Combina colocación, radicaciones, facturación y aprobaciones GLPI.'
     },
     ia:{
-      titulo:'IA Ejecutiva (Gemini)',
-      desc:'Haz preguntas en lenguaje natural al motor cognitivo. Usa datos en vivo de los 8 repositorios vía proxy Gemini.',
-      guia:'Ejemplos: «¿Cómo está Bello?», «Estado nacional S2», «Riesgos en cartera». Si Gemini no responde, hay análisis local MCM.'
+      titulo:'IA Ejecutiva · CogniPYV',
+      desc:'Preguntas en lenguaje natural al motor cognitivo CMD. Usa datos en vivo de los 8 repositorios.',
+      guia:'Ejemplos: «¿Cómo está Bello?», «Estado nacional S2», «Riesgos en cartera». Incluye historial diario y tasa de pérdida SIGEC.'
     },
     tendencias:{
       titulo:'Tendencias',
@@ -10238,9 +10321,9 @@ function _parseCumpleMMDD(s){
       guia:'Genera un plan de trabajo ordenado. Cada acción indica prioridad y área afectada (colocación, SIGEC, etc.).'
     },
     aicenter:{
-      titulo:'AI CENTER · Gemini',
-      desc:'Hub central de inteligencia artificial ejecutiva CMD: análisis profundo, informe de comité y consultas Gemini.',
-      guia:'Este es el botón principal de Gemini IA. Analizar, Comité y otras funciones usan el proxy Apps Script con GEMINI_API_KEY.'
+      titulo:'AI CENTER · CogniPYV',
+      desc:'Hub central de inteligencia ejecutiva CMD: análisis profundo, informe de comité y consultas cognitivas.',
+      guia:'Motor principal CogniPYV. Analizar, Comité y consultas usan datos en vivo + historial diario del mes.'
     }
   };
 
@@ -10258,13 +10341,14 @@ function _parseCumpleMMDD(s){
   }
   window._scicRenderTabDesc = _scicRenderTabDesc;
 
-  window.abrirAsistenteGeminiIA = function(){
+  window.abrirCogniPYV = function(){
     try{
       if(typeof cerrarModalBienvenidaSede === 'function') cerrarModalBienvenidaSede();
       if(typeof abrirSCIC === 'function') abrirSCIC('aicenter');
       else if(typeof toggleCmdIAPanel === 'function') toggleCmdIAPanel(true);
-    }catch(e){ console.warn('[SCIC] abrirAsistenteGeminiIA:', e&&e.message); }
+    }catch(e){ console.warn('[SCIC] abrirCogniPYV:', e&&e.message); }
   };
+  window.abrirAsistenteGeminiIA = window.abrirCogniPYV;
 
   function _mbsNorm(s){
     return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').trim();
@@ -10550,7 +10634,7 @@ function _parseCumpleMMDD(s){
     if(typeof _ioRenderInforme!=='function') return 'Cargando motor de informes…';
     var ctx=_ioConstruirContexto(nivel, sel||'');
     var modo=nivel==='nacional'?'operativo':'cumplimiento';
-    return _ioRenderInforme(ctx, {modo:modo, prefix:'cd', incluirHistorial:nivel!=='nacional'});
+    return _ioRenderInforme(ctx, {modo:modo, prefix:'cd', incluirHistorial:true, incluirTasaAprob:true});
   }
   function procesarConsultaCmdIA(pregunta){
     var q = String(pregunta||'').trim();
@@ -10717,7 +10801,7 @@ function _parseCumpleMMDD(s){
     var nl = ctx.nivel || 'NACIONAL';
     var titulo = ctx.sede || ctx.rectoria || 'Nacional';
     lines.push('📊 Análisis SCIC · Motor cognitivo local (MCM)');
-    lines.push('ℹ️ Gemini no respondió o el proxy no está configurado. Este informe usa indicadores en vivo de Sheets (motor MCM).');
+    lines.push('ℹ️ CogniPYV no respondió o el proxy no está configurado. Este informe usa indicadores en vivo de Sheets (motor MCM).');
     lines.push('');
     lines.push('━━ 1) ESTADO ACTUAL ━━');
     if(nl === 'SEDE' || ctx.sede){
@@ -11622,9 +11706,9 @@ function _parseCumpleMMDD(s){
 })();
 </script>
 
-<!-- pyv-comercial-5.4.21: Informes Comerciales -->
+<!-- pyv-comercial-5.4.22: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.21 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.22 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -11849,7 +11933,8 @@ function _parseCumpleMMDD(s){
     'corte-dia':'Colocación reconocida con corte al día anterior 11:59 pm = SIGEC facturadas + GLPI aprobadas en ese período.',
     'tiempos':'Horas hábiles entre fecha de cargue y última actualización (o facturación). Meta 48h. Congelados se reportan aparte.',
     'pendientes':'Cédulas aprobadas en SIGEC/GLPI que NO aparecen en BASE COLOCACIÓN = pendientes de desembolso. Coincidencia = colocado reconocido.',
-    'retomas':'Tasa recuperación: retomas facturadas SIGEC vs cerradas + cerradas facturadas. Diferencia indica recuperación neta vs pérdida.'
+    'retomas':'Retomas facturadas SIGEC vs cerradas + cerradas facturadas. Diferencia indica recuperación neta vs pérdida.',
+    'tasa-aprob':'Tasa de conversión SIGEC: qué % de radicadas llega a facturadas vs cerradas/cerradas facturadas (pérdida del embudo).'
   };
 
   function icRenderCoberturaUni(f){
@@ -12046,6 +12131,14 @@ function _parseCumpleMMDD(s){
     return html;
   }
 
+  function icRenderTasaAprob(f){
+    if(typeof _ioConstruirContexto==='function' && typeof _ioRenderTasaAprobacion==='function'){
+      var ctx=_ioConstruirContexto(f.nivel||'nacional', f.sel||'');
+      return '<div class="ic-explain">'+IC_DESCS['tasa-aprob']+'</div>'+_ioRenderTasaAprobacion(ctx);
+    }
+    return '<div class="ic-explain">'+IC_DESCS['tasa-aprob']+'</div><div style="color:#94a3b8;padding:20px">Motor de informes no disponible</div>';
+  }
+
   function icRenderRetomas(f){
     var cong=icCongeladosSet();
     var retFact=0, cerr=0, cerrFac=0, cerrCong=0;
@@ -12079,7 +12172,8 @@ function _parseCumpleMMDD(s){
     'corte-dia':icRenderCorteDia,
     'tiempos':icRenderTiempos,
     'pendientes':icRenderPendientes,
-    'retomas':icRenderRetomas
+    'retomas':icRenderRetomas,
+    'tasa-aprob':icRenderTasaAprob
   };
 
   window.icRenderInformeActivo=function(){
@@ -12228,7 +12322,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.21 — cobertura universidad + 7 informes');
+  console.log('[CMD] Informes Comerciales v5.4.22 — CogniPYV + historial diario + tasa pérdida');
 })();
 
 </script>
