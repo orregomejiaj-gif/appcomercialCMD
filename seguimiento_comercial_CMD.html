@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.33   (APP_VERSION = 'pyv-comercial-5.4.33')
+  Versión actual: pyv-comercial-5.4.34   (APP_VERSION = 'pyv-comercial-5.4.34')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.34 (2026-07-04)
+    - Informes Tasa/Pérdida: SIGEC fact. y GLPI aprob. muestran acumulado total a la fecha (no mes en curso).
   pyv-comercial-5.4.33 (2026-07-04)
     - Tasa de pérdida corregida: (cerradas SIGEC + cerradas facturadas) − retomas GLPI recuperadas.
     - Retomas GLPI por columna Categoría (EXCEPCIONES DE CRÉDITO); nuevos/renovaciones en Líneas Especiales.
@@ -215,11 +217,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.33">
-<meta name="build-id" content="pyv-comercial-5.4.33-20260704-0450">
-<title>SCIC pyv-comercial 5.4.33 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.34">
+<meta name="build-id" content="pyv-comercial-5.4.34-20260704-0450">
+<title>SCIC pyv-comercial 5.4.34 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.33';
+window.APP_VERSION='pyv-comercial-5.4.34';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -960,7 +962,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.33</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.34</div>
 </div>
 
 
@@ -969,7 +971,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.33</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.34</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
@@ -3654,7 +3656,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.33';
+var APP_VERSION = 'pyv-comercial-5.4.34';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -9579,7 +9581,8 @@ function _parseCumpleMMDD(s){
       sig:sigAgg, glpi:glpiAgg,
       glpiCat:glpiCat,
       perdida:_ioCalcPerdida(sigAgg, glpiCat.retomasRecup),
-      colocadoCombinado:mesAgg.total,
+      colocadoCombinado:(sigAgg.facturada||0)+(glpiAgg.aprobada||0),
+      sigAcum:sigAgg.facturada||0, glpiAcum:glpiAgg.aprobada||0,
       sigMes:mesAgg.sig, glpiMes:mesAgg.glpi,
       empleados:_ioEmpleados(sedesFiltro), malla:_ioMalla(sedesFiltro),
       leads:_ioLeads(sedesFiltro), matriculas:_ioMatriculas(sedesFiltro),
@@ -9632,15 +9635,16 @@ function _parseCumpleMMDD(s){
     var perd=ctx.perdida||(typeof _ioCalcPerdida==='function'?_ioCalcPerdida(sig,gCat.retomasRecup):{});
     var rad=perd.rad||sig.radicadas||sig.total||0;
     var fact=sig.facturada||0;
-    var colComb=ctx.colocadoCombinado||(ctx.sigMes||0)+(ctx.glpiMes||0);
+    var glpiApr=glpi.aprobada||0;
+    var colComb=(fact+glpiApr)||ctx.colocadoCombinado||0;
     var tasaFact=rad>0?Math.round(fact/rad*1000)/10:0;
     var html='';
 
-    html+=_ioSec('1 · Colocación (SIGEC + GLPI)','Colocado combinado del período · criterio de cumplimiento');
+    html+=_ioSec('1 · Colocación (SIGEC + GLPI)','Colocado acumulado a la fecha · SIGEC facturadas + GLPI aprobadas');
     html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(115px,1fr));gap:8px;margin-bottom:10px">';
-    html+=_ioKpi('Colocado mes',_ioFmtN(colComb),'#003D45','SIGEC+GLPI');
-    html+=_ioKpi('SIGEC fact.',_ioFmtN(ctx.sigMes||0),'#16a34a','Mes en curso');
-    html+=_ioKpi('GLPI aprob.',_ioFmtN(ctx.glpiMes||0),'#0891b2','Mes en curso');
+    html+=_ioKpi('Colocado acum.',_ioFmtN(colComb),'#003D45','SIGEC+GLPI');
+    html+=_ioKpi('SIGEC fact.',_ioFmtN(fact),'#16a34a','Acumulado a la fecha');
+    html+=_ioKpi('GLPI aprob.',_ioFmtN(glpiApr),'#0891b2','Acumulado a la fecha');
     html+=_ioKpi('Meta S2',_ioFmtN(ctx.meta||0),'#6366f1',(ctx.pct||0)+'% cumpl.');
     html+='</div>';
 
