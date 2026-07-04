@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.35   (APP_VERSION = 'pyv-comercial-5.4.35')
+  Versión actual: pyv-comercial-5.4.36   (APP_VERSION = 'pyv-comercial-5.4.36')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.36 (2026-07-04)
+    - Menú: semáforos Solo SIGEC / Solo GLPI / SIGEC+GLPI vs meta S2 (nacional y por sede).
+    - Selector «Vista del menú» para filtrar KPIs y semáforos por sede individual.
+    - Accesos rápidos rediseñados: fila destacada + matriz por categorías, botones más llamativos.
   pyv-comercial-5.4.35 (2026-07-04)
     - Modal bienvenida: semáforos por sede (Solo SIGEC, Solo GLPI, SIGEC+GLPI) vs meta S2, estilo menú.
   pyv-comercial-5.4.34 (2026-07-04)
@@ -219,11 +223,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.35">
-<meta name="build-id" content="pyv-comercial-5.4.35-20260704-1315">
+<meta name="app-version" content="pyv-comercial-5.4.36">
+<meta name="build-id" content="pyv-comercial-5.4.36-20260704-1330">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.35';
+window.APP_VERSION='pyv-comercial-5.4.36';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1228,53 +1232,55 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 <div id="etapa-menu" class="menu-shell" style="display:none">
 
   <div class="menu-quick-bar">
-    <div class="menu-quick-title">⚡ Accesos rápidos</div>
-    <div class="menu-quick-group">
-      <div class="menu-quick-grp-lbl">🟢 Operación en vivo</div>
-      <div class="menu-quick-grid">
-        <button type="button" onclick="abrirModalSeguimiento()" class="menu-quick-btn menu-quick-seg" title="Registrar seguimiento comercial"><span class="menu-quick-icon">📋</span><span class="menu-quick-lbl">Seguimiento</span></button>
-        <button type="button" onclick="abrirHistorialSeguimientos()" class="menu-quick-btn menu-quick-amber" title="Historial de seguimientos"><span class="menu-quick-icon">📜</span><span class="menu-quick-lbl">Historial</span></button>
-        <button type="button" onclick="abrirMallaTurnos()" class="menu-quick-btn menu-quick-sky" title="Malla y turnos del día"><span class="menu-quick-icon">📅</span><span class="menu-quick-lbl">Malla Hoy</span></button>
-        <button type="button" onclick="abrirConsultaDinamica()" class="menu-quick-btn menu-quick-ops" title="Estado operativo integral"><span class="menu-quick-icon">📊</span><span class="menu-quick-lbl">Estado Operativo</span></button>
-      </div>
+    <div class="menu-quick-head">
+      <div class="menu-quick-title">⚡ Accesos rápidos</div>
+      <div class="menu-quick-hint">Atajos principales · clic para abrir</div>
     </div>
-    <div class="menu-quick-group">
-      <div class="menu-quick-grp-lbl">📊 Gestión comercial</div>
-      <div class="menu-quick-grid">
-        <button type="button" onclick="abrirHubSpotActividad()" class="menu-quick-btn menu-quick-orange" title="Actividad HubSpot"><span class="menu-quick-icon">📈</span><span class="menu-quick-lbl">Actividad</span></button>
-        <button type="button" onclick="abrirPipelineGerencial()" class="menu-quick-btn menu-quick-blue" title="Pipeline de leads"><span class="menu-quick-icon">🎯</span><span class="menu-quick-lbl">Leads</span></button>
-        <button type="button" onclick="abrirMetasDiarias()" class="menu-quick-btn menu-quick-meta" title="Cumplimiento y metas"><span class="menu-quick-icon">🏆</span><span class="menu-quick-lbl">Cumplimiento</span></button>
-        <button type="button" onclick="abrirEstadoCartera()" class="menu-quick-btn menu-quick-red" title="Estado de cartera"><span class="menu-quick-icon">💰</span><span class="menu-quick-lbl">Cartera</span></button>
-        <button type="button" onclick="abrirBrujulaAcademica()" class="menu-quick-btn menu-quick-indigo" title="Brújula académica UNIMINUTO"><span class="menu-quick-icon">🧭</span><span class="menu-quick-lbl">Brújula</span></button>
-      </div>
+    <div class="menu-quick-featured">
+      <button type="button" onclick="abrirConsultaDinamica()" class="menu-qf menu-qf-ops" title="Estado operativo integral"><span class="menu-qf-icon">📊</span><span class="menu-qf-lbl">Estado Operativo</span></button>
+      <button type="button" onclick="abrirMetasDiarias()" class="menu-qf menu-qf-meta" title="Cumplimiento y metas diarias"><span class="menu-qf-icon">🏆</span><span class="menu-qf-lbl">Cumplimiento</span></button>
+      <button type="button" onclick="abrirInformesComerciales()" class="menu-qf menu-qf-informes" title="Panel completo de informes"><span class="menu-qf-icon">📑</span><span class="menu-qf-lbl">Panel Informes</span></button>
+      <button type="button" onclick="abrirSCIC('pulso')" class="menu-qf menu-qf-scic" title="ISCIC nacional"><span class="menu-qf-icon">🧠</span><span class="menu-qf-lbl">SCIC Pulso</span></button>
     </div>
-    <div class="menu-quick-group">
-      <div class="menu-quick-grp-lbl">📑 Informes comerciales</div>
-      <div class="menu-quick-grid">
-        <button type="button" onclick="abrirInformesComerciales('cobertura-uni')" class="menu-quick-btn menu-quick-cob" title="Cobertura universidad"><span class="menu-quick-icon">🎓</span><span class="menu-quick-lbl">Cob. UNI</span></button>
-        <button type="button" onclick="abrirInformesComerciales('cobertura-mat')" class="menu-quick-btn menu-quick-blue" title="Cobertura matrículas"><span class="menu-quick-icon">📚</span><span class="menu-quick-lbl">Cob. Mat.</span></button>
-        <button type="button" onclick="abrirInformesComerciales('nuevos-renov')" class="menu-quick-btn menu-quick-teal" title="Nuevos vs renovación"><span class="menu-quick-icon">🆕</span><span class="menu-quick-lbl">Nuevos/Renov</span></button>
-        <button type="button" onclick="abrirInformesComerciales('corte-dia')" class="menu-quick-btn menu-quick-gold" title="Colocación corte día anterior"><span class="menu-quick-icon">📅</span><span class="menu-quick-lbl">Corte Día</span></button>
-        <button type="button" onclick="abrirInformesComerciales('tiempos')" class="menu-quick-btn menu-quick-sky" title="Tiempos radicación"><span class="menu-quick-icon">⏱️</span><span class="menu-quick-lbl">Tiempos</span></button>
-        <button type="button" onclick="abrirInformesComerciales('pendientes')" class="menu-quick-btn menu-quick-amber" title="Pendientes desembolso"><span class="menu-quick-icon">⏳</span><span class="menu-quick-lbl">Pendientes</span></button>
-        <button type="button" onclick="abrirInformesComerciales('retomas')" class="menu-quick-btn menu-quick-purple" title="Retomas y recuperación"><span class="menu-quick-icon">🔄</span><span class="menu-quick-lbl">Retomas</span></button>
-        <button type="button" onclick="abrirInformesComerciales('tasa-aprob')" class="menu-quick-btn menu-quick-red" title="Tasa aprobación y pérdida SIGEC"><span class="menu-quick-icon">📉</span><span class="menu-quick-lbl">Tasa/Pérdida</span></button>
-        <button type="button" onclick="abrirInformesComerciales()" class="menu-quick-btn menu-quick-green" title="Panel completo de informes"><span class="menu-quick-icon">📑</span><span class="menu-quick-lbl">Panel Informes</span></button>
+    <div class="menu-quick-matrix">
+      <div class="menu-qm-col">
+        <div class="menu-qm-lbl">🟢 Operación</div>
+        <div class="menu-qm-btns">
+          <button type="button" onclick="abrirModalSeguimiento()" class="menu-qb menu-qb-seg" title="Seguimiento comercial"><span>📋</span> Seguimiento</button>
+          <button type="button" onclick="abrirHistorialSeguimientos()" class="menu-qb menu-qb-amber" title="Historial"><span>📜</span> Historial</button>
+          <button type="button" onclick="abrirMallaTurnos()" class="menu-qb menu-qb-sky" title="Malla hoy"><span>📅</span> Malla</button>
+        </div>
       </div>
-    </div>
-    <div class="menu-quick-group">
-      <div class="menu-quick-grp-lbl">🧠 SCIC</div>
-      <div class="menu-quick-grid">
-        <button type="button" onclick="abrirSCIC('pulso')" class="menu-quick-btn menu-quick-scic" title="ISCIC nacional"><span class="menu-quick-icon">🧠</span><span class="menu-quick-lbl">SCIC Pulso</span></button>
+      <div class="menu-qm-col">
+        <div class="menu-qm-lbl">📊 Gestión</div>
+        <div class="menu-qm-btns">
+          <button type="button" onclick="abrirPipelineGerencial()" class="menu-qb menu-qb-blue" title="Leads"><span>🎯</span> Leads</button>
+          <button type="button" onclick="abrirEstadoCartera()" class="menu-qb menu-qb-red" title="Cartera"><span>💰</span> Cartera</button>
+          <button type="button" onclick="abrirHubSpotActividad()" class="menu-qb menu-qb-orange" title="HubSpot"><span>📈</span> Actividad</button>
+          <button type="button" onclick="abrirBrujulaAcademica()" class="menu-qb menu-qb-indigo" title="Brújula"><span>🧭</span> Brújula</button>
+        </div>
       </div>
-    </div>
-    <div class="menu-quick-group">
-      <div class="menu-quick-grp-lbl">🛠 Herramientas</div>
-      <div class="menu-quick-grid">
-        <button type="button" onclick="abrirCentroHerramientasPYV()" class="menu-quick-btn menu-quick-lime" title="Herramientas PYV"><span class="menu-quick-icon">🛠️</span><span class="menu-quick-lbl">Herramientas</span></button>
-        <button type="button" onclick="abrirDirectorio()" class="menu-quick-btn menu-quick-cyan" title="Directorio empleados"><span class="menu-quick-icon">📇</span><span class="menu-quick-lbl">Directorio</span></button>
-        <button type="button" onclick="abrirCumpleanos()" class="menu-quick-btn menu-quick-pink" title="Cumpleaños del mes"><span class="menu-quick-icon">🎂</span><span class="menu-quick-lbl">Cumpleaños</span></button>
-        <button type="button" onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-quick-btn menu-quick-violet" title="Agendar reunión"><span class="menu-quick-icon">📆</span><span class="menu-quick-lbl">Agendar</span></button>
+      <div class="menu-qm-col menu-qm-col-wide">
+        <div class="menu-qm-lbl">📑 Informes</div>
+        <div class="menu-qm-btns">
+          <button type="button" onclick="abrirInformesComerciales('cobertura-uni')" class="menu-qb menu-qb-cob" title="Cobertura UNI"><span>🎓</span> Cob. UNI</button>
+          <button type="button" onclick="abrirInformesComerciales('cobertura-mat')" class="menu-qb menu-qb-blue" title="Cobertura matrículas"><span>📚</span> Cob. Mat.</button>
+          <button type="button" onclick="abrirInformesComerciales('pendientes')" class="menu-qb menu-qb-amber" title="Pendientes"><span>⏳</span> Pendientes</button>
+          <button type="button" onclick="abrirInformesComerciales('tasa-aprob')" class="menu-qb menu-qb-red" title="Tasa pérdida"><span>📉</span> Tasa/Pérd.</button>
+          <button type="button" onclick="abrirInformesComerciales('retomas')" class="menu-qb menu-qb-purple" title="Retomas"><span>🔄</span> Retomas</button>
+          <button type="button" onclick="abrirInformesComerciales('corte-dia')" class="menu-qb menu-qb-gold" title="Corte día"><span>📅</span> Corte</button>
+          <button type="button" onclick="abrirInformesComerciales('nuevos-renov')" class="menu-qb menu-qb-teal" title="Nuevos/Renov"><span>🆕</span> N/R</button>
+          <button type="button" onclick="abrirInformesComerciales('tiempos')" class="menu-qb menu-qb-sky" title="Tiempos"><span>⏱️</span> Tiempos</button>
+        </div>
+      </div>
+      <div class="menu-qm-col">
+        <div class="menu-qm-lbl">🛠 Utilidades</div>
+        <div class="menu-qm-btns">
+          <button type="button" onclick="abrirDirectorio()" class="menu-qb menu-qb-cyan" title="Directorio"><span>📇</span> Directorio</button>
+          <button type="button" onclick="abrirCumpleanos()" class="menu-qb menu-qb-pink" title="Cumpleaños"><span>🎂</span> Cumpleaños</button>
+          <button type="button" onclick="abrirCentroHerramientasPYV()" class="menu-qb menu-qb-lime" title="Herramientas"><span>🛠️</span> Herramientas</button>
+          <button type="button" onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-qb menu-qb-violet" title="Agendar"><span>📆</span> Agendar</button>
+        </div>
       </div>
     </div>
   </div>
@@ -1286,6 +1292,14 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div class="cmd-corte-bar" id="menu-corte-bar">
         <span class="cmd-corte-hint" id="cmd-corte-hint">Vista al cierre del día anterior (23:59)</span>
         <button type="button" class="cmd-corte-link" onclick="cmdVerPorSede()" title="Abrir informes filtrados por sede">Ver por sede →</button>
+      </div>
+
+      <div class="menu-ambito-bar">
+        <label class="menu-ambito-lbl" for="menu-ambito-sel">Vista del menú</label>
+        <select id="menu-ambito-sel" class="menu-ambito-sel" onchange="onMenuAmbitoChange()">
+          <option value="nacional">🇨🇴 Nacional (todas las sedes)</option>
+        </select>
+        <span class="menu-ambito-hint" id="menu-ambito-hint">Semáforos SIGEC · GLPI · combinado vs meta</span>
       </div>
 
       <div class="menu-salud-panel" id="menu-salud-panel">
@@ -1429,6 +1443,10 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <span class="glpi-sep">·</span>
           <span>Tasa pérdida: <b id="menu-tasa-perdida">—</b></span>
         </div>
+        <div class="menu-sem-trio-wrap">
+          <div class="menu-sem-trio-lbl" id="menu-sem-trio-lbl">Semáforos vs meta S2</div>
+          <div class="menu-sem-trio" id="menu-sem-trio"></div>
+        </div>
       </div>
 
       <div class="menu-report-block menu-mcm-panel">
@@ -1525,8 +1543,55 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-kpi-orange{border-color:rgba(0,176,185,.25)} .menu-kpi-orange .menu-kpi-val{color:var(--teal)}
 .menu-kpi-red{border-color:rgba(239,68,68,.25)} .menu-kpi-red .menu-kpi-val{color:var(--red)}
 .menu-layout{display:block;min-height:calc(100vh - 140px)}
-.menu-quick-bar{background:var(--white);border-bottom:2px solid var(--teal-l);padding:6px 22px 8px;box-shadow:0 2px 8px rgba(0,61,69,.04)}
-.menu-quick-title{font-size:10px;font-weight:800;color:var(--dark);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.menu-quick-bar{background:var(--white);border-bottom:2px solid var(--teal-l);padding:10px 22px 12px;box-shadow:0 2px 8px rgba(0,61,69,.04)}
+.menu-quick-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.menu-quick-title{font-size:11px;font-weight:800;color:var(--dark);display:flex;align-items:center;gap:6px;margin:0}
+.menu-quick-hint{font-size:9px;color:var(--gray);font-weight:600}
+.menu-quick-featured{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.menu-qf{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:10px 12px;border:none;border-radius:12px;cursor:pointer;font-family:Ubuntu,sans-serif;text-align:left;transition:transform .15s,box-shadow .15s;min-height:56px}
+.menu-qf:hover{transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.menu-qf-icon{font-size:18px;line-height:1}
+.menu-qf-lbl{font-size:11px;font-weight:800;color:#fff;line-height:1.2}
+.menu-qf-ops{background:linear-gradient(135deg,#0d9488,#14b8a6);box-shadow:0 3px 10px rgba(13,148,136,.35)}
+.menu-qf-meta{background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 3px 10px rgba(37,99,235,.35)}
+.menu-qf-informes{background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 3px 10px rgba(124,58,237,.35)}
+.menu-qf-scic{background:linear-gradient(135deg,#ea580c,#f97316);box-shadow:0 3px 10px rgba(234,88,12,.35)}
+.menu-quick-matrix{display:grid;grid-template-columns:1fr 1fr 1.4fr 1fr;gap:8px;align-items:start}
+.menu-qm-col{display:flex;flex-direction:column;gap:5px}
+.menu-qm-lbl{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);padding:0 2px 3px;border-bottom:2px solid var(--border)}
+.menu-qm-btns{display:flex;flex-direction:column;gap:4px}
+.menu-qb{display:flex;align-items:center;gap:6px;padding:7px 9px;border:1px solid transparent;border-radius:9px;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;transition:all .12s;text-align:left;width:100%;background:var(--white)}
+.menu-qb:hover{transform:translateX(2px);filter:brightness(1.04);box-shadow:0 2px 8px rgba(0,61,69,.1)}
+.menu-qb-seg{background:linear-gradient(135deg,#ecfdf5,#d1fae5);color:#047857;border-color:#6ee7b7}
+.menu-qb-amber{background:linear-gradient(135deg,#fffbeb,#fef3c7);color:#b45309;border-color:#fbbf24}
+.menu-qb-sky{background:linear-gradient(135deg,#f0f9ff,#e0f2fe);color:#0369a1;border-color:#7dd3fc}
+.menu-qb-blue{background:linear-gradient(135deg,#eff6ff,#dbeafe);color:#1d4ed8;border-color:#93c5fd}
+.menu-qb-red{background:linear-gradient(135deg,#fef2f2,#fee2e2);color:#b91c1c;border-color:#f87171}
+.menu-qb-orange{background:linear-gradient(135deg,#fff7ed,#ffedd5);color:#c2410c;border-color:#fdba74}
+.menu-qb-indigo{background:linear-gradient(135deg,#eef2ff,#e0e7ff);color:#4338ca;border-color:#a5b4fc}
+.menu-qb-cob{background:linear-gradient(135deg,#f5f3ff,#ede9fe);color:#6d28d9;border-color:#c4b5fd}
+.menu-qb-purple{background:linear-gradient(135deg,#faf5ff,#f3e8ff);color:#7e22ce;border-color:#d8b4fe}
+.menu-qb-gold{background:linear-gradient(135deg,#fefce8,#fef9c3);color:#a16207;border-color:#fde047}
+.menu-qb-teal{background:linear-gradient(135deg,#f0fdfa,#ccfbf1);color:#0f766e;border-color:#5eead4}
+.menu-qb-cyan{background:linear-gradient(135deg,#ecfeff,#cffafe);color:#0e7490;border-color:#67e8f9}
+.menu-qb-pink{background:linear-gradient(135deg,#fdf2f8,#fce7f3);color:#be185d;border-color:#f9a8d4}
+.menu-qb-lime{background:linear-gradient(135deg,#f7fee7,#ecfccb);color:#4d7c0f;border-color:#bef264}
+.menu-qb-violet{background:linear-gradient(135deg,#f5f3ff,#ede9fe);color:#6d28d9;border-color:#c4b5fd}
+.menu-ambito-bar{display:flex;align-items:center;gap:10px;padding:8px 12px;margin-bottom:10px;background:linear-gradient(135deg,#f0f9ff,#e0f2fe);border:1px solid #7dd3fc;border-radius:10px;flex-wrap:wrap}
+.menu-ambito-lbl{font-size:11px;font-weight:700;color:#0369a1;flex-shrink:0}
+.menu-ambito-sel{flex:1;min-width:180px;padding:6px 10px;border:1px solid #7dd3fc;border-radius:8px;font-size:12px;font-weight:600;background:#fff;color:#0c4a6e;font-family:Ubuntu,sans-serif}
+.menu-ambito-hint{font-size:9px;color:#0369a1;font-weight:600;opacity:.85}
+.menu-sem-trio-wrap{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+.menu-sem-trio-lbl{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);margin-bottom:8px}
+.menu-sem-trio{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.menu-sem-card{border-radius:10px;padding:10px 8px;text-align:center;border:2px solid transparent}
+.menu-sem-card .msc-tit{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.4px;opacity:.85;margin-bottom:4px}
+.menu-sem-card .msc-val{font-size:20px;font-weight:900;line-height:1}
+.menu-sem-card .msc-meta{font-size:9px;margin-top:4px;opacity:.8}
+.menu-sem-card .msc-pct{font-size:10px;font-weight:800;margin-top:3px}
+.menu-sem-card.msc-verde{background:linear-gradient(135deg,#ecfdf5,#d1fae5);border-color:#34d399;color:#047857}
+.menu-sem-card.msc-amarillo{background:linear-gradient(135deg,#fffbeb,#fef3c7);border-color:#fbbf24;color:#b45309}
+.menu-sem-card.msc-rojo{background:linear-gradient(135deg,#fef2f2,#fee2e2);border-color:#f87171;color:#b91c1c}
 .menu-quick-group{display:flex;align-items:center;gap:6px;margin-bottom:3px;flex-wrap:wrap}
 .menu-quick-group:last-child{margin-bottom:0}
 .menu-quick-grp-lbl{font-size:8px;font-weight:800;color:var(--gray);text-transform:uppercase;letter-spacing:.35px;min-width:108px;flex-shrink:0;margin:0}
@@ -1619,7 +1684,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-ley-verde{background:#86efac}.menu-ley-amarillo{background:#fde68a}.menu-ley-rojo{background:#fca5a5}.menu-ley-gris{background:#e2e8f0}
 .menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;font-size:12px;color:#64748b;text-align:center;padding:20px}
 .menu-mapa-error{color:#dc2626;flex-direction:column}
-@media(max-width:900px){.menu-main-panel{padding:0 14px 16px}.menu-quick-grp-lbl{min-width:88px}}
+@media(max-width:900px){.menu-main-panel{padding:0 14px 16px}.menu-quick-grp-lbl{min-width:88px}.menu-quick-featured{grid-template-columns:repeat(2,1fr)}.menu-quick-matrix{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.menu-quick-featured,.menu-quick-matrix{grid-template-columns:1fr}.menu-sem-trio{grid-template-columns:1fr}}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
 .menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
@@ -3658,7 +3724,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.35';
+var APP_VERSION = 'pyv-comercial-5.4.36';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7336,7 +7402,54 @@ function _parseCumpleMMDD(s){
     return g;
   }
 
-  function renderMenuSigecSemaforo(metaN, sig, glpi){
+  function _menuNormSede(s){
+    return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+  }
+  function _menuMatchSede(a,b){
+    if(!a||!b) return false;
+    var x=_menuNormSede(a), y=_menuNormSede(b);
+    return x===y || x.indexOf(y)>=0 || y.indexOf(x)>=0;
+  }
+  function _menuEsRolNacional(cargo){
+    if(typeof _mbsEsRolNacional==='function') return _mbsEsRolNacional(cargo);
+    var c=String(cargo||'').toLowerCase();
+    return c.indexOf('director nacional')>=0 || c.indexOf('nacional comercial')>=0
+      || c.indexOf('gerente general')>=0 || (c.indexOf('nacional')>=0 && (c.indexOf('director')>=0 || c.indexOf('gerente')>=0));
+  }
+  function _menuParseSedes(s){
+    if(typeof _mbsParseSedes==='function') return _mbsParseSedes(s);
+    if(!s) return [];
+    return String(s).split(/[;,]/).map(function(x){ return x.trim(); }).filter(Boolean);
+  }
+  function _menuSigecSede(sede){
+    var sig={facturada:0,cerrada_fac:0,cerrada:0,abierta:0,rechazada:0,pendiente_doc:0,total:0};
+    (window._sigecRows||[]).forEach(function(row){
+      var cols=row._cols||row._c||[];
+      var s=row.Sede||cols[30]||'';
+      if(sede&&!_menuMatchSede(s,sede)) return;
+      sig.total++;
+      var est=(typeof leerEstadoSigec==='function')?leerEstadoSigec(row):String(cols[15]||'').trim();
+      var cls=(typeof clasificarEstadoSigec==='function')?clasificarEstadoSigec(est):'';
+      if(cls&&sig[cls]!=null) sig[cls]++;
+    });
+    return sig;
+  }
+  function _menuGlpiSede(sede){
+    var g={aprobada:0,abierta:0,negada:0,total:0};
+    (window._glpiRows||[]).forEach(function(row){
+      var cols=row._cols||[];
+      var s=row.Sede||row.sede||cols[30]||'';
+      if(sede&&s&&!_menuMatchSede(s,sede)) return;
+      g.total++;
+      var est=String(row.estado||row.Estado||cols[3]||'').toLowerCase();
+      if(est.indexOf('factur')>=0||est.indexOf('aprob')>=0||est.indexOf('cerrada fac')>=0) g.aprobada++;
+      else if(est.indexOf('negad')>=0) g.negada++;
+      else if(est.indexOf('abiert')>=0) g.abierta++;
+    });
+    return g;
+  }
+
+  function renderMenuSigecSemaforo(metaN, sig, glpi, sedeAmb){
     var fact = Number(sig.facturada) || 0;
     var meta = Number(metaN) || 0;
     if(!meta && typeof _DATA !== 'undefined' && _DATA.meta_s2) meta = _DATA.meta_s2;
@@ -7356,19 +7469,94 @@ function _parseCumpleMMDD(s){
     el=document.getElementById('menu-sigec-circle'); if(el){ el.style.borderColor = meta ? colSig : 'rgba(255,255,255,.2)'; el.style.background = meta ? (colSig+'18') : 'rgba(255,255,255,.04)'; }
     el=document.getElementById('menu-sigec-bar-fill'); if(el){ el.style.width = meta ? (Math.min(100,pctSig)+'%') : '0%'; el.style.background = colSig; }
     el=document.getElementById('menu-sigec-bar-pct'); if(el) el.textContent = meta ? (pctSig+'%') : '—';
-    el=document.getElementById('menu-sig-meta-txt'); if(el) el.textContent = meta ? ('Meta nacional: '+fmtN(meta)) : 'Meta nacional: —';
+    var metaLbl = sedeAmb ? ('Meta sede: '+fmtN(meta)) : ('Meta nacional: '+fmtN(meta));
+    el=document.getElementById('menu-sig-meta-txt'); if(el) el.textContent = meta ? metaLbl : (sedeAmb?'Meta sede: —':'Meta nacional: —');
     el=document.getElementById('menu-sig-fact-txt'); if(el) el.textContent = hayDatos ? ('Facturadas SIGEC: '+fmtN(fact)+' ('+pctSig+'% meta)') : 'Facturadas SIGEC: cargando…';
     el=document.getElementById('menu-glpi-apr'); if(el) el.textContent=fmtN(glpi.aprobada||0);
     el=document.getElementById('menu-glpi-abi'); if(el) el.textContent=fmtN(glpi.abierta||0);
     el=document.getElementById('menu-glpi-neg'); if(el) el.textContent=fmtN(glpi.negada||0);
     if(typeof _ioContarGlpiCategorias==='function' && typeof _ioCalcPerdida==='function'){
-      var gCat=_ioContarGlpiCategorias(null);
+      var gCat=_ioContarGlpiCategorias(sedeAmb?[sedeAmb]:null);
       var perd=_ioCalcPerdida(sig, gCat.retomasRecup);
       el=document.getElementById('menu-glpi-retomas'); if(el) el.textContent=hayDatos?fmtN(perd.retomas):'—';
       el=document.getElementById('menu-perdida-neta'); if(el) el.textContent=hayDatos?fmtN(perd.neta):'—';
       el=document.getElementById('menu-tasa-perdida'); if(el) el.textContent=hayDatos?(perd.tasa+'%'):'—';
     }
+    renderMenuSemTrio(fact, glpi.aprobada||0, meta, sedeAmb||'');
   }
+
+  function renderMenuSemTrio(sigFact, glpiApr, meta, sedeAmb){
+    var wrap = document.getElementById('menu-sem-trio');
+    var lbl = document.getElementById('menu-sem-trio-lbl');
+    if(!wrap) return;
+    if(lbl) lbl.textContent = sedeAmb ? ('Semáforos '+sedeAmb+' vs meta S2') : 'Semáforos nacionales vs meta S2';
+    function card(titulo, valor, metaVal){
+      var v=Number(valor)||0, m=Number(metaVal)||0;
+      var pct=m>0?Math.min(100,Math.round(v/m*100)):0;
+      var cls=pct>=90?'msc-verde':pct>=70?'msc-amarillo':'msc-rojo';
+      var sem=m>0?(pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO'):'—';
+      return '<div class="menu-sem-card '+cls+'">'
+        +'<div class="msc-tit">'+titulo+'</div>'
+        +'<div class="msc-val">'+(m?pct+'%':'—')+'</div>'
+        +'<div class="msc-pct">'+sem+'</div>'
+        +'<div class="msc-meta">'+fmtN(v)+' / '+fmtN(Math.round(m))+'</div>'
+        +'</div>';
+    }
+    var comb=(Number(sigFact)||0)+(Number(glpiApr)||0);
+    wrap.innerHTML=card('Solo SIGEC',sigFact,meta)+card('Solo GLPI',glpiApr,meta)+card('SIGEC + GLPI',comb,meta);
+  }
+  window.renderMenuSemTrio=renderMenuSemTrio;
+
+  function _getMenuAmbitoSede(){
+    var sel=document.getElementById('menu-ambito-sel');
+    if(!sel) return null;
+    var v=sel.value;
+    return (v&&v!=='nacional')?v:null;
+  }
+
+  function poblarMenuAmbitoSedes(){
+    var sel=document.getElementById('menu-ambito-sel');
+    if(!sel) return;
+    var prev=sel.value||'nacional';
+    var sedes=[];
+    (window._coloc_data||[]).forEach(function(r){ if(r.sede&&sedes.indexOf(r.sede)<0) sedes.push(r.sede); });
+    sedes.sort(function(a,b){ return a.localeCompare(b,'es'); });
+    var cargo=(typeof navState!=='undefined'&&navState.cargoEjecutor)||'';
+    var esNacional=_menuEsRolNacional(cargo);
+    if(!esNacional){
+      var userSedes=_menuParseSedes((navState&&navState.sedeEjecutor)||'');
+      if(userSedes.length){
+        sedes=sedes.filter(function(s){
+          return userSedes.some(function(us){ return _menuMatchSede(s,us); });
+        });
+      }
+    }
+    sel.innerHTML='<option value="nacional">🇨🇴 Nacional (todas las sedes)</option>';
+    sedes.forEach(function(s){
+      var opt=document.createElement('option');
+      opt.value=s;
+      opt.textContent='📍 '+s;
+      sel.appendChild(opt);
+    });
+    if(prev&&(prev==='nacional'||sedes.indexOf(prev)>=0)) sel.value=prev;
+    else if(!esNacional&&sedes.length===1) sel.value=sedes[0];
+    else sel.value='nacional';
+    var hint=document.getElementById('menu-ambito-hint');
+    if(hint) hint.textContent=sel.value==='nacional'
+      ?'Semáforos SIGEC · GLPI · combinado vs meta nacional'
+      :('Vista sede · semáforos vs meta '+sel.value);
+  }
+  window.poblarMenuAmbitoSedes=poblarMenuAmbitoSedes;
+
+  function onMenuAmbitoChange(){
+    var hint=document.getElementById('menu-ambito-hint');
+    var sel=document.getElementById('menu-ambito-sel');
+    if(hint&&sel) hint.textContent=sel.value==='nacional'
+      ?'Semáforos SIGEC · GLPI · combinado vs meta nacional'
+      :('Vista sede · semáforos vs meta '+sel.value);
+    if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs();
+  }
+  window.onMenuAmbitoChange=onMenuAmbitoChange;
 
   function _menuSemColor(sem){
     var s=String(sem||'').toUpperCase();
@@ -7573,8 +7761,9 @@ function _parseCumpleMMDD(s){
       +'<span class="menu-yoy-row-val" style="color:'+sem.col+'">'+_yoyFmtVar(vn)+(pct!=null?' ('+(pct>=0?'+':'')+pct+'%)':'')+'</span>'
       +'</div>';
   }
-  function renderMenuVsAnterior(){
+  function renderMenuVsAnterior(sedeFiltro){
     var col = (window._coloc_data||[]).filter(function(r){ return r&&r.sede&&(r.acum_n||r.ant_n); });
+    if(sedeFiltro && typeof buscarFilasColoc==='function') col = buscarFilasColoc([sedeFiltro]);
     var acum=0, ant=0, varN=0;
     col.forEach(function(r){
       acum += r.acum_n||0;
@@ -7629,14 +7818,17 @@ function _parseCumpleMMDD(s){
 
   function actualizarMenuKPIs(){
     try{
+      try{ poblarMenuAmbitoSedes(); }catch(e){}
+      var sedeAmb = _getMenuAmbitoSede();
       if(window._coloc_data && window._coloc_data.length) window._coloc_data = _normColocArray(window._coloc_data);
       var col = window._coloc_data || (_DATA&&_DATA.coloc) || [];
+      if(sedeAmb && typeof buscarFilasColoc==='function') col = buscarFilasColoc([sedeAmb]);
       var metaN=0, acumN=0;
       col.forEach(function(r){ metaN+=r.meta_n||0; acumN+=r.acum_n||0; });
-      if(!metaN && window._mtsMetaN) metaN = window._mtsMetaN;
-      if(!metaN && _DATA && _DATA.meta_s2) metaN = _DATA.meta_s2;
-      if(!acumN && window._mtsEjecN) acumN = window._mtsEjecN;
-      if(!acumN && _DATA && _DATA.acum_s2) acumN = _DATA.acum_s2;
+      if(!metaN && window._mtsMetaN && !sedeAmb) metaN = window._mtsMetaN;
+      if(!metaN && _DATA && _DATA.meta_s2 && !sedeAmb) metaN = _DATA.meta_s2;
+      if(!acumN && window._mtsEjecN && !sedeAmb) acumN = window._mtsEjecN;
+      if(!acumN && _DATA && _DATA.acum_s2 && !sedeAmb) acumN = _DATA.acum_s2;
 
       var diasTot = window._mtsDiasTotal || (_DATA&&_DATA.dh_total) || 0;
       var diasTra = window._mtsDiasTrans || (_DATA&&_DATA.dh_trans) || 0;
@@ -7647,9 +7839,30 @@ function _parseCumpleMMDD(s){
       var sem = _semS2Pct(pct);
       var colSem = _semS2Color(pct);
 
-      var sig = obtenerSigecNacional();
-      var glpi = obtenerGlpiNacional();
+      var sig, glpi;
+      if(sedeAmb){
+        if(typeof _ioAgregarSigec==='function'){
+          sig=_ioAgregarSigec([sedeAmb]);
+          glpi=(typeof _ioAgregarGlpi==='function')?_ioAgregarGlpi([sedeAmb]):_menuGlpiSede(sedeAmb);
+        } else {
+          sig=_menuSigecSede(sedeAmb);
+          glpi=_menuGlpiSede(sedeAmb);
+        }
+      } else {
+        sig=obtenerSigecNacional();
+        glpi=obtenerGlpiNacional();
+      }
       var el;
+      el=document.getElementById('menu-nacional-title');
+      if(el) el.innerHTML = sedeAmb
+        ? '<i class="ti ti-chart-dots"></i> Estado · '+sedeAmb+' · Colocación S2'
+        : '<i class="ti ti-chart-dots"></i> Estado Nacional · Colocación S2';
+      el=document.getElementById('menu-salud-title');
+      if(el) el.textContent = sedeAmb ? ('💚 Salud Comercial · '+sedeAmb) : '💚 Salud Comercial Nacional';
+      var sigTitle=document.querySelector('.menu-sigec-title');
+      if(sigTitle) sigTitle.innerHTML = sedeAmb
+        ? '<i class="ti ti-traffic-lights"></i> Cómo vamos según SIGEC · '+sedeAmb
+        : '<i class="ti ti-traffic-lights"></i> Cómo vamos según SIGEC';
       el=document.getElementById('menu-kpi-sigec'); if(el) el.textContent=(sig.facturada||sig.total)?fmtN(sig.facturada||0):'—';
       el=document.getElementById('menu-kpi-glpi'); if(el) el.textContent=(glpi.total||glpi.aprobada)?fmtN(glpi.aprobada||0):'—';
       var ld = (_DATA&&_DATA.leads) || {};
@@ -7672,7 +7885,7 @@ function _parseCumpleMMDD(s){
       el=document.getElementById('menu-nac-fecha'); if(el) el.textContent=hoy.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
       el=document.getElementById('menu-nac-meta'); if(el) el.textContent=metaN?fmtN(metaN):'—';
       el=document.getElementById('menu-nac-acum'); if(el) el.textContent=acumN?fmtN(acumN):'—';
-      el=document.getElementById('menu-nac-pct-txt'); if(el) el.textContent=metaN?(pct+'% de la meta nacional'):'—';
+      el=document.getElementById('menu-nac-pct-txt'); if(el) el.textContent=metaN?((sedeAmb?'':'')+pct+'% de la meta'+(sedeAmb?' '+sedeAmb:' nacional')):'—';
       el=document.getElementById('menu-nac-deber'); if(el) el.textContent=metaN?fmtN(Math.round(deb)):'—';
       el=document.getElementById('menu-nac-dh'); if(el) el.textContent=diasTot?(diasTra+' de '+diasTot+' días hábiles transcurridos'):'— días hábiles';
       el=document.getElementById('menu-nac-brecha'); if(el){ el.textContent=metaN?brechaTxt:'—'; el.style.color=brechaCol; }
@@ -7684,8 +7897,8 @@ function _parseCumpleMMDD(s){
         ? ('Proyección de cierre: '+fmtN(proy)+' créditos ('+proyPct+'% meta) · Ritmo actual: '+(diasTra>0?(acumN/diasTra).toFixed(1):'—')+'/dh · Necesario: '+(Math.max(0,diasTot-diasTra)>0?((metaN-acumN)/Math.max(1,diasTot-diasTra)).toFixed(1):'—')+'/dh')
         : 'Proyección de cierre: —';
 
-      renderMenuSigecSemaforo(metaN, sig, glpi);
-      renderMenuVsAnterior();
+      renderMenuSigecSemaforo(metaN, sig, glpi, sedeAmb);
+      renderMenuVsAnterior(sedeAmb);
       renderMenuMcmRadar();
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
