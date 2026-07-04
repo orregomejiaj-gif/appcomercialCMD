@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.44   (APP_VERSION = 'pyv-comercial-5.4.44')
+  Versión actual: pyv-comercial-5.4.45   (APP_VERSION = 'pyv-comercial-5.4.45')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.45 (2026-07-04)
+    - Sedes SIEMPRE desde hoja EMPLEADOS al login (sin caché de sedes en fallback ni sesión).
+    - Multi-sede con ; reconocida (ej. juan.orrego: Bello;Virtual;itagui;rionegro).
+    - Login espera Sheet antes de entrar; directorio se refresca al abrir la app.
   pyv-comercial-5.4.44 (2026-07-04)
     - Login inmediato: ya no espera la hoja EMPLEADOS antes de entrar; Sheets se refresca en segundo plano.
     - Sedes unificadas para todos los usuarios (mismo criterio que juan.orrego): hoja EMPLEADOS + alias, sin expandir rectoría.
@@ -245,11 +249,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.44">
-<meta name="build-id" content="pyv-comercial-5.4.44-20260704-1550">
+<meta name="app-version" content="pyv-comercial-5.4.45">
+<meta name="build-id" content="pyv-comercial-5.4.45-20260704-1605">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.44';
+window.APP_VERSION='pyv-comercial-5.4.45';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3807,7 +3811,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.44';
+var APP_VERSION = 'pyv-comercial-5.4.45';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4041,12 +4045,14 @@ var _REPOS_OFICIALES = {
   hubspot:      '1uPPXzpv6iNcmVeMpzhWzX5sycxS8xj_u9z9FiELlhTE'
 };
 
-// 3. guardarLS
+// 3. guardarLS — no persistir sedes (siempre desde Sheet EMPLEADOS)
 function guardarLS(){
   try{
-    localStorage.setItem('cmd_scic_sesion', JSON.stringify({
-      sesion: sesionActiva||null, ts: Date.now()
-    }));
+    var s=null;
+    if(sesionActiva&&typeof sesionActiva==='object'){
+      s={correo:sesionActiva.correo,nombre:sesionActiva.nombre,cargo:sesionActiva.cargo,cedula:sesionActiva.cedula};
+    }
+    localStorage.setItem('cmd_scic_sesion', JSON.stringify({ sesion:s, ts: Date.now() }));
   }catch(e){}
 }
 
@@ -4054,9 +4060,18 @@ function guardarLS(){
 var _EMPLEADOS_FALLBACK = [{"correo": "yara.diaz@coopminutodedios.com", "nombre": "Diaz Julio Yara Liney", "cargo": "Asesor Comercial", "sede": "Apartado", "cedula": "1045517843", "estado": "Activo", "cumple": ""}, {"correo": "orlys.solano@coopminutodedios.com", "nombre": "Solano Hoyos Orlydes", "cargo": "Coordinador Comercial", "sede": "Apartado", "cedula": "39428775", "estado": "Activo", "cumple": ""}, {"correo": "marlen.vergara@coopminutodedios.com", "nombre": "Vergara Rios Marlen Daniela", "cargo": "Asesor Comercial", "sede": "Apartado", "cedula": "1028008923", "estado": "Activo", "cumple": ""}, {"correo": "skarleen.lopez@coopminutodedios.com", "nombre": "Lopez Tapia Skarleen Carolina", "cargo": "Asesor Comercial", "sede": "Barranquilla", "cedula": "1045717577", "estado": "Activo", "cumple": ""}, {"correo": "karen.nino@coopminutodedios.com", "nombre": "Niño Campo Karen Dayana", "cargo": "Asesor Comercial", "sede": "Barranquilla", "cedula": "1129491124", "estado": "Activo", "cumple": ""}, {"correo": "nathalia.cardona@coopminutodedios.com", "nombre": "Cardona Osorio Nathalia", "cargo": "Asesor Comercial", "sede": "Bello", "cedula": "1214730347", "estado": "Activo", "cumple": ""}, {"correo": "jonathan.colmenares@coopminutodedios.com", "nombre": "Colmenares Deossa Jonathan Manuel", "cargo": "Asesor Comercial", "sede": "Bello", "cedula": "1007029650", "estado": "Activo", "cumple": ""}, {"correo": "juan.orrego@coopminutodedios.com", "nombre": "Orrego Mejia Juan Bernardo", "cargo": "Coordinador Comercial", "sede": "Bello-Virtual", "cedula": "1038213114", "estado": "Activo", "cumple": ""}, {"correo": "isabel.patino@coopminutodedios.com", "nombre": "Patiño Mahecha Isabel", "cargo": "Asesor Comercial", "sede": "Bello", "cedula": "1128283569", "estado": "Activo", "cumple": ""}, {"correo": "angie.ariza@coopminutodedios.com", "nombre": "Ariza Benitez Angie Katherine", "cargo": "Formadora Comercial", "sede": "Bogota", "cedula": "1012451627", "estado": "Activo", "cumple": ""}, {"correo": "milena.azcarate@coopminutodedios.com", "nombre": "Azcarate Ossa Alba Milena", "cargo": "Subdirectora Comercial", "sede": "Bogota", "cedula": "52068575", "estado": "Activo", "cumple": ""}, {"correo": "laura.beltran@coopminutodedios.com", "nombre": "Beltran Castro Laura Daniela", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1030700208", "estado": "Activo", "cumple": ""}, {"correo": "diego.carranza@coopminutodedios.com", "nombre": "Carranza Palomino Diego Alejandro", "cargo": "Analista Comercial", "sede": "Bogota", "cedula": "1014302498", "estado": "Activo", "cumple": ""}, {"correo": "jean.castano@coopminutodedios.com", "nombre": "Castaño Ruiz Jean Poul.", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1024488608", "estado": "Activo", "cumple": ""}, {"correo": "alexander.castro@coopminutodedios.com", "nombre": "Castro Ardila Alexander", "cargo": "Director Consumo", "sede": "Bogota", "cedula": "1121824817", "estado": "Activo", "cumple": ""}, {"correo": "hamilton.chavez@coopminutodedios.com", "nombre": "Chaves Vargas Hamilton Steek", "cargo": "Asesor Consumo", "sede": "Bogota", "cedula": "1023303517", "estado": "Activo", "cumple": ""}, {"correo": "jorge.cruz@coopminutodedios.com", "nombre": "Cruz Mateus Jorge Eliecer", "cargo": "Asesor Comercial", "sede": "Virtual", "cedula": "80157133", "estado": "Activo", "cumple": ""}, {"correo": "paula.gonzalez@coopminutodedios.com", "nombre": "Gonzalez Martinez Paula Daniela", "cargo": "Asesor Consumo", "sede": "Bogota", "cedula": "1000366224", "estado": "Activo", "cumple": ""}, {"correo": "lisbeth.martinez@coopminutodedios.com", "nombre": "Martinez Lopez Lisbeth Gabriela", "cargo": "Analista Comercial", "sede": "Bogota", "cedula": "1007912303", "estado": "Activo", "cumple": ""}, {"correo": "johan.nino@coopminutodedios.com", "nombre": "Niño Perez Johan Alberto", "cargo": "Aprendiz Comercial", "sede": "Bogota", "cedula": "1018491134", "estado": "Activo", "cumple": ""}, {"correo": "analistadeconsumo@coopminutodedios.com", "nombre": "Quintero Barreto Yeferson Daniel", "cargo": "Analista Consumo", "sede": "Bogota", "cedula": "1007391887", "estado": "Activo", "cumple": ""}, {"correo": "yailin.rangel@coopminutodedios.com", "nombre": "Rangel Gonzalez Yailin Vanessa", "cargo": "Asesor Comercial", "sede": "Virtual", "cedula": "1004506762", "estado": "Activo", "cumple": ""}, {"correo": "john.rengifo@coopminutodedios.com", "nombre": "Rengifo Onatra John Henry", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1012385396", "estado": "Activo", "cumple": ""}, {"correo": "maria.rios@coopminutodedios.com", "nombre": "Rios Diaz Maria Fernanda", "cargo": "Asesor Consumo", "sede": "Bogota", "cedula": "1010228713", "estado": "Activo", "cumple": ""}, {"correo": "carolina.tapiero@coopminutodedios.com", "nombre": "Tapiero Tapiero Carolina", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1105062267", "estado": "Activo", "cumple": ""}, {"correo": "juleidy.vanegas@coopminutodedios.com", "nombre": "Vanegas Gaitan Juleidy", "cargo": "Asesor Consumo", "sede": "Bogota", "cedula": "1030541536", "estado": "Activo", "cumple": ""}, {"correo": "tatiana.vega@coopminutodedios.com", "nombre": "Vega Mendez Leidy Tatiana", "cargo": "Asesor Comercial", "sede": "Virtual", "cedula": "1122732330", "estado": "Activo", "cumple": ""}, {"correo": "yesid.villamil@coopminutodedios.com", "nombre": "Villamil Avendaño Yesid Alexander", "cargo": "Asesor Comercial", "sede": "Bogota", "cedula": "1053326578", "estado": "Activo", "cumple": ""}, {"correo": "durley.figueroa@coopminutodedios.com", "nombre": "Figueroa Merchan Durley Eduardo", "cargo": "Asesor Comercial", "sede": "Bogota Sur", "cedula": "1000214243", "estado": "Activo", "cumple": ""}, {"correo": "rony.hernandez@coopminutodedios.com", "nombre": "Hernandez Barrios Rony Duvan", "cargo": "Asesor Comercial", "sede": "Bogota Sur", "cedula": "1012445595", "estado": "Activo", "cumple": ""}, {"correo": "adriana.poveda@coopminutodedios.com", "nombre": "Poveda Sanchez Adriana", "cargo": "Coordinador Consumo", "sede": "Bogota Sur", "cedula": "52075506", "estado": "Activo", "cumple": ""}, {"correo": "sandra.cuevas@coopminutodedios.com", "nombre": "Cuevas Rodriguez Sandra", "cargo": "Coordinador Comercial", "sede": "Bucaramanga", "cedula": "52322601", "estado": "Activo", "cumple": ""}, {"correo": "stefany.paez@coopminutodedios.com", "nombre": "Paez Sandoval Stefany Andrea", "cargo": "Asesor Comercial", "sede": "Bucaramanga", "cedula": "1102371757", "estado": "Activo", "cumple": ""}, {"correo": "diego.zapata@coopminutodedios.com", "nombre": "Zapata Montañez Diego Andres", "cargo": "Asesor Comercial", "sede": "Bucaramanga", "cedula": "80858873", "estado": "Activo", "cumple": ""}, {"correo": "luisa.arrunategui@coopminutodedios.com", "nombre": "Arrunategui Ortiz Luisa Fernanda", "cargo": "Asesor Comercial", "sede": "Buenaventura", "cedula": "1144144537", "estado": "Activo", "cumple": ""}, {"correo": "yineth.moreno@coopminutodedios.com", "nombre": "Moreno Gonzalez Yineth", "cargo": "Asesor Comercial", "sede": "Buenaventura", "cedula": "1143931785", "estado": "Activo", "cumple": ""}, {"correo": "luis.latorre@coopminutodedios.com", "nombre": "Latorre Molina Luis Felipe", "cargo": "Asesor Comercial", "sede": "Buga", "cedula": "1115079132", "estado": "Activo", "cumple": ""}, {"correo": "sebastian.melo@coopminutodedios.com", "nombre": "Melo Quitian Sebastian", "cargo": "Asesor Comercial", "sede": "Buga", "cedula": "1115087538", "estado": "Activo", "cumple": ""}, {"correo": "paola.rodriguez@coopminutodedios.com", "nombre": "Rodriguez Claros Paola Andrea", "cargo": "Coordinador Comercial", "sede": "Cali Umd", "cedula": "1107042489", "estado": "Activo", "cumple": ""}, {"correo": "maryuri.jaramillo@coopminutodedios.com", "nombre": "Jaramillo Santos Maryuri", "cargo": "Asesor Comercial", "sede": "Cali Unicatolica", "cedula": "1112105257", "estado": "Activo", "cumple": ""}, {"correo": "yury.perez@coopminutodedios.com", "nombre": "Perez Restrepo Yury Marcela", "cargo": "Analista Lider", "sede": "Cali Unicatolica", "cedula": "1144143492", "estado": "Activo", "cumple": ""}, {"correo": "marlady.taborda@coopminutodedios.com", "nombre": "Taborda Cruz Marlady Indira", "cargo": "Asesor Comercial", "sede": "Cali Unicatolica", "cedula": "1059709826", "estado": "Activo", "cumple": ""}, {"correo": "belkis.lopez@coopminutodedios.com", "nombre": "Lopez Gil Belkis Del Socorro", "cargo": "Asesor Comercial", "sede": "Cartagena - Manga Utb", "cedula": "55245945", "estado": "Activo", "cumple": ""}, {"correo": "nathalia.herrera@coopminutodedios.com", "nombre": "Herrera Jaramillo Nathalia", "cargo": "Asesor Comercial", "sede": "Chinchina", "cedula": "1054987814", "estado": "Activo", "cumple": ""}, {"correo": "andrea.alvarado@coopminutodedios.com", "nombre": "Alvarado Niño Andrea Milena", "cargo": "Asesor Comercial", "sede": "Cucuta", "cedula": "37395349", "estado": "Activo", "cumple": ""}, {"correo": "astrid.ochoa@coopminutodedios.com", "nombre": "Ochoa Ochoa Astrid Carolina", "cargo": "Coordinador Comercial", "sede": "Cucuta", "cedula": "1093768319", "estado": "Activo", "cumple": ""}, {"correo": "yessica.jaramillo@coopminutodedios.com", "nombre": "Jaramillo Ortiz Yessica Maryuris", "cargo": "Asesor Comercial", "sede": "El Bagre", "cedula": "1007578461", "estado": "Activo", "cumple": ""}, {"correo": "laura.murcia@coopminutodedios.com", "nombre": "Murcia Cruz Laura Stepfany", "cargo": "Asesor Comercial", "sede": "Facatativa", "cedula": "1070963567", "estado": "Activo", "cumple": ""}, {"correo": "rafael.agudelo@coopminutodedios.com", "nombre": "Agudelo Agudelo Rafael Ernesto", "cargo": "Asesor Comercial", "sede": "Funza", "cedula": "1073521512", "estado": "Activo", "cumple": ""}, {"correo": "yennifer.trochez@coopminutodedios.com", "nombre": "Trochez Calderon Yennifer", "cargo": "Asesor Comercial", "sede": "Garzon", "cedula": "1080937514", "estado": "Activo", "cumple": ""}, {"correo": "deisy.barco@coopminutodedios.com", "nombre": "Barco Salcedo Deyci Alejandra", "cargo": "Coordinador Comercial", "sede": "Girardot", "cedula": "1070594436", "estado": "Activo", "cumple": ""}, {"correo": "jose.marquez@coopminutodedios.com", "nombre": "Marquez Bazurto Jose Luis", "cargo": "Asesor Comercial", "sede": "Girardot", "cedula": "1070621430", "estado": "Activo", "cumple": ""}, {"correo": "luisa.zabala@coopminutodedios.com", "nombre": "Zabala Barrios Luisa Fernanda", "cargo": "Asesor Comercial", "sede": "Girardot", "cedula": "1070599056", "estado": "Activo", "cumple": ""}, {"correo": "daniela.barreto@coopminutodedios.com", "nombre": "Barreto Riaños Daniela Camila", "cargo": "Asesor Comercial", "sede": "Ibague", "cedula": "1110589407", "estado": "Activo", "cumple": ""}, {"correo": "danny.franco@coopminutodedios.com", "nombre": "Franco Aranda Danny Alejandro", "cargo": "Asesor Comercial", "sede": "Ibague", "cedula": "1110558509", "estado": "Activo", "cumple": ""}, {"correo": "andrea.gaitan@coopminutodedios.com", "nombre": "Gaitan Ospina Andrea Del Pilar", "cargo": "Coordinador Comercial", "sede": "Ibague", "cedula": "1110466579", "estado": "Activo", "cumple": ""}, {"correo": "daniel.jimenez@coopminutodedios.com", "nombre": "Jimenez Calderon Jose Daniel", "cargo": "Asesor Comercial", "sede": "Ibague", "cedula": "1110547060", "estado": "Activo", "cumple": ""}, {"correo": "jennifer.marin@coopminutodedios.com", "nombre": "Marin Agredo Jennifer Paola", "cargo": "Asesor Comercial", "sede": "La Dorada", "cedula": "1054550704", "estado": "Activo", "cumple": ""}, {"correo": "yenny.alfonso@coopminutodedios.com", "nombre": "Alfonso Bolaños Yenny Adriana", "cargo": "Coordinador Comercial", "sede": "Lerida", "cedula": "1109382766", "estado": "Activo", "cumple": ""}, {"correo": "angie.contreras@coopminutodedios.com", "nombre": "Contreras Ortiz Angie Daniela", "cargo": "Asesor Comercial", "sede": "Lerida", "cedula": "1109387558", "estado": "Activo", "cumple": ""}, {"correo": "julie.salgar@coopminutodedios.com", "nombre": "Salgar Vanessa", "cargo": "Directora Comercial", "sede": "Nacional", "cedula": "", "estado": "Activo", "cumple": ""}, {"correo": "nidia.betancourt@coopminutodedios.com", "nombre": "Betancourt Vasquez Nidia Constanza", "cargo": "Asesor Comercial", "sede": "Neiva", "cedula": "1075228339", "estado": "Activo", "cumple": ""}, {"correo": "yuly.perdomo@coopminutodedios.com", "nombre": "Perdomo Barreto Yuly Paola", "cargo": "Analista Lider", "sede": "Neiva", "cedula": "1003688392", "estado": "Activo", "cumple": ""}, {"correo": "yanid.ruiz@coopminutodedios.com", "nombre": "Ruiz Pedroza Yanid", "cargo": "Asesor Comercial", "sede": "Neiva", "cedula": "1075257719", "estado": "Activo", "cumple": ""}, {"correo": "juan.gonzalez@coopminutodedios.com", "nombre": "Gonzalez Villadiego Juan Jose", "cargo": "Asesor Comercial", "sede": "Otras Ies", "cedula": "1014264134", "estado": "Activo", "cumple": ""}, {"correo": "lucero.figueroa@coopminutodedios.com", "nombre": "Figueroa Escobar Lucero Alcira", "cargo": "Asesor Comercial", "sede": "Pasto", "cedula": "59795865", "estado": "Activo", "cumple": ""}, {"correo": "erwin.guerrero@coopminutodedios.com", "nombre": "Guerrero Acosta Erwin Marcelo", "cargo": "Asesor Comercial", "sede": "Pasto", "cedula": "1085260668", "estado": "Activo", "cumple": ""}, {"correo": "diana.miranda@coopminutodedios.com", "nombre": "Miranda Delgado Diana Marcela", "cargo": "Coordinador Comercial", "sede": "Pasto", "cedula": "1085290920", "estado": "Activo", "cumple": ""}, {"correo": "coor.comercialp@coopminutodedios.com", "nombre": "Castellanos Mora Alix Marcela", "cargo": "Coordinador Comercial", "sede": "Pereira", "cedula": "27601125", "estado": "Activo", "cumple": ""}, {"correo": "nathaly.jimenez@coopminutodedios.com", "nombre": "Jimenez Vergara Nathaly", "cargo": "Asesor Comercial", "sede": "Pereira", "cedula": "1088345694", "estado": "Activo", "cumple": ""}, {"correo": "luisa.medina@coopminutodedios.com", "nombre": "Medina Cuellar Luisa Fernanda", "cargo": "Asesor Comercial", "sede": "Pitalito", "cedula": "1080935402", "estado": "Activo", "cumple": ""}, {"correo": "martha.agredo@coopminutodedios.com", "nombre": "Agredo Fernandez Martha Isabel", "cargo": "Coordinador Comercial", "sede": "Popayan", "cedula": "34564609", "estado": "Activo", "cumple": ""}, {"correo": "maryi.guzman@coopminutodedios.com", "nombre": "Lebaza Guzman Maryi Lizeth", "cargo": "Asesor Comercial", "sede": "Popayan", "cedula": "1061797825", "estado": "Activo", "cumple": ""}, {"correo": "cristian.rivera@coopminutodedios.com", "nombre": "Rivera Ruiz Cristian Fernando", "cargo": "Asesor Comercial", "sede": "Popayan", "cedula": "1061768026", "estado": "Activo", "cumple": ""}, {"correo": "yennifer.ochoa@coopminutodedios.com", "nombre": "Ochoa De Avila Yennifer", "cargo": "Asesor Comercial", "sede": "Rafael Nuñez", "cedula": "1050954773", "estado": "Activo", "cumple": ""}, {"correo": "jairo.rodriguez@coopminutodedios.com", "nombre": "Rodriguez Ducuara Jairo Antonio", "cargo": "Asesor Rol Seguimiento", "sede": "Virtual", "cedula": "1022983549", "estado": "Activo", "cumple": ""}, {"correo": "geraldine.bermudez@coopminutodedios.com", "nombre": "Bermudez Buitrago Geraldine", "cargo": "Asesor Comercial", "sede": "Santa Marta", "cedula": "1006526927", "estado": "Activo", "cumple": ""}, {"correo": "paola.jordan@coopminutodedios.com", "nombre": "Jordan Medina Paola Andrea", "cargo": "Asesor Comercial", "sede": "Santander De Quilichao", "cedula": "1061434195", "estado": "Activo", "cumple": ""}, {"correo": "karoline.borrero@coopminutodedios.com", "nombre": "Borrero Quiroga Karoline Natalia", "cargo": "Asesor Comercial", "sede": "Soacha", "cedula": "1003749864", "estado": "Activo", "cumple": ""}, {"correo": "nalleivy.cardona@coopminutodedios.com", "nombre": "Cardona Sarmiento Nalleivy", "cargo": "Coordinador Comercial", "sede": "Soacha", "cedula": "41960743", "estado": "Activo", "cumple": ""}, {"correo": "jennifer.reyes@coopminutodedios.com", "nombre": "Reyes Leyton Jennifer", "cargo": "Asesor Comercial", "sede": "Soacha", "cedula": "1018500235", "estado": "Activo", "cumple": ""}, {"correo": "janeire.tovar@coopminutodedios.com", "nombre": "Tovar Monterrosa Janeire Mahut", "cargo": "Analista Comercial", "sede": "Tecnologico Comfenalco", "cedula": "45529947", "estado": "Activo", "cumple": ""}, {"correo": "elena.gomez@coopminutodedios.com", "nombre": "Gomez Franco Elena", "cargo": "Subdirectora Comercial", "sede": "Ternera", "cedula": "45515216", "estado": "Activo", "cumple": ""}, {"correo": "marly.malvaceda@coopminutodedios.com", "nombre": "Malvaceda Diaz Marly", "cargo": "Asesor Comercial", "sede": "Ternera", "cedula": "1143338801", "estado": "Activo", "cumple": ""}, {"correo": "valentina.hernandez@coopminutodedios.com", "nombre": "Hernandez Cajigas Valentina", "cargo": "Asesor Comercial", "sede": "Unicatolica", "cedula": "1112497152", "estado": "Activo", "cumple": ""}, {"correo": "juan.bonilla@coopminutodedios.com", "nombre": "Bonilla Gonzalez Juan David", "cargo": "Asesor Comercial", "sede": "Villavicencio", "cedula": "1122508114", "estado": "Activo", "cumple": ""}, {"correo": "davey.figueredo@coopminutodedios.com", "nombre": "Figueredo Diaz Davey Lorena", "cargo": "Asesor Comercial", "sede": "Villavicencio", "cedula": "1121878028", "estado": "Activo", "cumple": ""}, {"correo": "leidy.hincapie@coopminutodedios.com", "nombre": "Hincapie Bonilla Leidy Liliana", "cargo": "Coordinador Comercial", "sede": "Villavicencio", "cedula": "40187244", "estado": "Activo", "cumple": ""}, {"correo": "yesika.triana@coopminutodedios.com", "nombre": "Triana Molina Yesika Daniela", "cargo": "Asesor Comercial", "sede": "Villavicencio", "cedula": "1121932623", "estado": "Activo", "cumple": ""}, {"correo": "laura.velasquez@coopminutodedios.com", "nombre": "Velasquez Oliveros Laura Daniela", "cargo": "Asesor Comercial", "sede": "Villavicencio", "cedula": "1121908369", "estado": "Activo", "cumple": ""}, {"correo": "juan.hernandez@coopminutodedios.com", "nombre": "Hernandez Lozano Juan Camilo", "cargo": "Asesor Comercial", "sede": "Villeta", "cedula": "1193091594", "estado": "Activo", "cumple": ""}, {"correo": "lady.arevalo@coopminutodedios.com", "nombre": "Arevalo Pachon Lady Tatiana", "cargo": "Coordinador Comercial", "sede": "Zipaquira", "cedula": "1075663825", "estado": "Activo", "cumple": ""}, {"correo": "leidy.suarez@coopminutodedios.com", "nombre": "Suarez Garavito Leidy Nataly", "cargo": "Asesor Comercial", "sede": "Zipaquira", "cedula": "1075675568", "estado": "Activo", "cumple": ""}];
 (function(){
   _EMPLEADOS_FALLBACK.forEach(function(emp){
-    EMPLEADOS_BD[emp.correo] = emp;
+    EMPLEADOS_BD[emp.correo]={
+      correo:emp.correo,
+      nombre:emp.nombre,
+      cargo:emp.cargo||'',
+      sede:'',
+      cedula:emp.cedula,
+      estado:emp.estado,
+      cumple:emp.cumple,
+      _sinSheet:true
+    };
   });
-  console.log('[SCIC] Directorio: '+Object.keys(EMPLEADOS_BD).length+' usuarios');
+  console.log('[SCIC] Directorio: '+Object.keys(EMPLEADOS_BD).length+' usuarios (sedes solo desde Sheet)');
 })();
 
 // 5. _cargarEmpleados — hoja EMPLEADOS en vivo (multi-sede con ; o ,)
@@ -4111,6 +4126,27 @@ function _empResolverSedesDesdeSheet(emp){
 }
 window._empResolverSedesDesdeSheet=_empResolverSedesDesdeSheet;
 
+function _empEtiquetaSedes(emp){
+  if(!emp) return '—';
+  var pack=_empResolverSedesDesdeSheet(emp);
+  if(pack.esNacional) return 'Nacional';
+  if(pack.items&&pack.items.length) return pack.items.map(function(it){ return it.label; }).join(' · ');
+  if(emp._fromSheet&&emp.sede) return String(emp.sede).replace(/[;,]/g,' · ');
+  if(emp._sinSheet) return 'Cargando sedes desde Sheet…';
+  return emp.sede||'—';
+}
+window._empEtiquetaSedes=_empEtiquetaSedes;
+
+function _empFldSheet(cols, v, nm, ix){
+  nm=String(nm||'').toUpperCase();
+  for(var j=0;j<cols.length;j++){
+    var cj=String(cols[j]||'').toUpperCase();
+    if((cj===nm||cj.indexOf(nm)===0)&&v[j]!==undefined&&v[j]!==null) return String(v[j]||'').trim();
+  }
+  return String(v[ix]||'').trim();
+}
+window._empFldSheet=_empFldSheet;
+
 function _empAplicarEmpleadoSesion(emp){
   if(!emp) return;
   var correo=String(emp.correo||'').trim().toLowerCase();
@@ -4131,7 +4167,7 @@ function _empAplicarEmpleadoSesion(emp){
   }
   try{ _sincronizarSesionDesdeEmpleados(); }catch(e){}
   var i=document.getElementById('menu-cargo-sede');
-  if(i) i.textContent=(emp.cargo||'—')+' · '+(emp.sede||'—');
+  if(i) i.textContent=(emp.cargo||'—')+' · '+_empEtiquetaSedes(emp);
   try{ if(typeof actualizarMenuKPIs==='function'&&sesionActiva) actualizarMenuKPIs(); }catch(e){}
   try{ if(typeof window._mbsActualizarSiAbierta==='function') window._mbsActualizarSiAbierta(emp); }catch(e){}
 }
@@ -4184,49 +4220,64 @@ function _sincronizarSesionDesdeEmpleados(){
 window._sincronizarSesionDesdeEmpleados=_sincronizarSesionDesdeEmpleados;
 
 function _cargarEmpleados(forzar){
+  if(forzar) window._empleadosSheetOk=false;
   if(!Object.keys(EMPLEADOS_BD).length){
-    _EMPLEADOS_FALLBACK.forEach(function(emp){ EMPLEADOS_BD[emp.correo]=emp; });
+    _EMPLEADOS_FALLBACK.forEach(function(emp){
+      EMPLEADOS_BD[emp.correo]={correo:emp.correo,nombre:emp.nombre,cargo:emp.cargo||'',sede:'',cedula:emp.cedula,estado:emp.estado,cumple:emp.cumple,_sinSheet:true};
+    });
   }
   var res=document.getElementById('login-resultado');
   var n=Object.keys(EMPLEADOS_BD).length;
-  if(res&&n>0) res.innerHTML='<div style="text-align:center;padding:7px;color:rgba(255,255,255,.5);font-size:9px"><i class="ti ti-users" style="color:#4ade80;margin-right:3px"></i>'+n+' usuarios disponibles</div>';
+  if(res&&n>0&&!forzar) res.innerHTML='<div style="text-align:center;padding:7px;color:rgba(255,255,255,.5);font-size:9px"><i class="ti ti-users" style="color:#4ade80;margin-right:3px"></i>'+n+' usuarios · sedes desde Sheet</div>';
   return new Promise(function(resolve){
-    var listo=function(){
+    var listo=function(ok){
       try{ _sincronizarSesionDesdeEmpleados(); }catch(e){}
       try{ if(typeof actualizarMenuKPIs==='function'&&sesionActiva) actualizarMenuKPIs(); }catch(e){}
       resolve(EMPLEADOS_BD);
     };
     try{
-      var cb='_eg_'+Date.now(), sc2=document.createElement('script'), tm;
+      var cb='_eg_'+Date.now(), sc2=document.createElement('script'), tm, sheetOk=false;
       window[cb]=function(data){
         clearTimeout(tm);
         try{
-          if(data&&data.table&&data.table.rows){
+          if(data&&data.table&&data.table.rows&&data.table.rows.length){
             var cols=(data.table.cols||[]).map(function(c){return(c.label||c.id||'').trim();});
             (data.table.rows||[]).forEach(function(row){
               var v=(row.c||[]).map(function(c){return c?(c.v!==null&&c.v!==undefined?c.v:(c.f||'')):'';});
               var correo='';
-              for(var ci=0;ci<cols.length;ci++){if(cols[ci].toUpperCase()==='CORREO'&&v[ci]){correo=String(v[ci]).trim().toLowerCase();break;}}
+              for(var ci=0;ci<cols.length;ci++){if(String(cols[ci]).toUpperCase().indexOf('CORREO')===0&&v[ci]){correo=String(v[ci]).trim().toLowerCase();break;}}
               if(!correo) correo=String(v[0]||'').trim().toLowerCase();
               if(!correo||correo.indexOf('@')<0) return;
-              function fld(nm,ix){for(var j=0;j<cols.length;j++)if(cols[j].toUpperCase()===nm&&v[j]!==undefined)return String(v[j]||'').trim();return String(v[ix]||'').trim();}
-              var _nac=fld('F.NACIMIENTO',6);
+              var _nac=_empFldSheet(cols,v,'F.NACIMIENTO',6);
               var _cum=(typeof _parseCumpleMMDD==='function')?_parseCumpleMMDD(_nac):'';
-              EMPLEADOS_BD[correo]={correo:correo,nombre:fld('NOMBRE COMPLETO',1),cargo:fld('CARGO',2),sede:fld('SEDE',3),cedula:fld('CEDULA',4),estado:fld('ESTADO',7)||'Activo',cumpleanos:_cum};
+              EMPLEADOS_BD[correo]={
+                correo:correo,
+                nombre:_empFldSheet(cols,v,'NOMBRE COMPLETO',1),
+                cargo:_empFldSheet(cols,v,'CARGO',2),
+                sede:_empFldSheet(cols,v,'SEDE',3),
+                cedula:_empFldSheet(cols,v,'CEDULA',4),
+                estado:_empFldSheet(cols,v,'ESTADO',7)||'Activo',
+                cumpleanos:_cum,
+                _fromSheet:true,
+                _sinSheet:false
+              };
             });
+            sheetOk=true;
+            window._empleadosSheetOk=true;
+            window._empleadosSheetTs=Date.now();
             try{ EMPLEADOS_CUM=Object.keys(EMPLEADOS_BD).map(function(k){return EMPLEADOS_BD[k];}).filter(function(e){return e&&e.cumpleanos&&e.cumpleanos.length===5;}); }catch(e){}
             try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
-            console.log('[SCIC] Sheet empleados actualizado: '+Object.keys(EMPLEADOS_BD).length+' · cumpleaños: '+((typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM)?EMPLEADOS_CUM.length:0));
+            console.log('[SCIC] Sheet EMPLEADOS vivo: '+Object.keys(EMPLEADOS_BD).filter(function(k){return EMPLEADOS_BD[k]._fromSheet;}).length+' usuarios');
           }
         }catch(e){ console.warn('[SCIC] empleados sheet:', e&&e.message); }
         delete window[cb];
-        listo();
+        listo(sheetOk);
       };
-      sc2.onerror=function(){ clearTimeout(tm); delete window[cb]; listo(); };
-      tm=setTimeout(function(){ delete window[cb]; listo(); }, forzar?8000:12000);
+      sc2.onerror=function(){ clearTimeout(tm); delete window[cb]; listo(false); };
+      tm=setTimeout(function(){ delete window[cb]; listo(false); }, forzar?10000:12000);
       sc2.src='https://docs.google.com/spreadsheets/d/1dRf-Gvs-jp5WWsXo9TFgqDICuMCPNWYIiPqTKhTJDuM/gviz/tq?tqx=out:json;responseHandler='+cb+'&sheet=EMPLEADOS&_='+Date.now();
       document.head.appendChild(sc2);
-    }catch(e){ listo(); }
+    }catch(e){ listo(false); }
   });
 }
 window._cargarEmpleados=_cargarEmpleados;
@@ -7195,7 +7246,7 @@ function _parseCumpleMMDD(s){
         +'<div style="width:48px;height:48px;background:#003D45;border-radius:10px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;color:#C8971E;flex-shrink:0">'+ini+'</div>'
         +'<div><div style="font-size:18px;font-weight:800;color:#003D45;line-height:1.2">'+emp.nombre+'</div>'
         +'<div style="font-size:11px;color:#16a34a;font-weight:600;margin-top:2px">'+emp.cargo+'</div>'
-        +'<div style="font-size:10px;color:#64748b;margin-top:2px"><i class="ti ti-map-pin" style="font-size:10px"></i> '+emp.sede+'</div></div></div>';
+        +'<div style="font-size:10px;color:#64748b;margin-top:2px"><i class="ti ti-map-pin" style="font-size:10px"></i> '+(typeof _empEtiquetaSedes==='function'?_empEtiquetaSedes(emp):emp.sede)+'</div></div></div>';
     } else {
       if(wrap) wrap.style.borderColor='var(--border)';
       if(btn){ btn.disabled=true; btn.style.cssText=btnBase+'background:#94a3b8;color:#fff;cursor:not-allowed;opacity:.7'; }
@@ -7223,6 +7274,13 @@ function _parseCumpleMMDD(s){
       }
       var correo=emp.correo||(val.indexOf('@')>=0?val:val+'@coopminutodedios.com');
       if(EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
+      if(!emp._fromSheet||!emp.sede){
+        if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-alert-triangle" style="color:#d97706;font-size:24px"></i>'
+          +'<div style="font-size:12px;color:#d97706;font-weight:700;margin-top:8px">Sin sedes en hoja EMPLEADOS</div>'
+          +'<div style="font-size:11px;color:#64748b;margin-top:4px">No se pudo leer la columna SEDE para este usuario. Reintenta.</div></div>';
+        if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+        return;
+      }
       if(emp.estado&&emp.estado.toLowerCase().indexOf('inactiv')>=0){
         if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-user-off" style="color:#d97706;font-size:24px"></i>'
           +'<div style="font-size:12px;color:#d97706;font-weight:700;margin-top:8px">Usuario inactivo</div>'
@@ -7233,22 +7291,24 @@ function _parseCumpleMMDD(s){
       window._pendingEmp={correo:correo,emp:emp};
       _completarLogin();
       if(btn){ btn.disabled=false; btn.style.opacity='1'; }
-      if(typeof _empRefrescarDesdeSheet==='function'){
-        _empRefrescarDesdeSheet(correo);
-      }
     };
-    var previo=_resolverEmpleadoExacto(val);
-    if(previo){
-      intentar();
-      return;
-    }
     if(res) res.innerHTML='<div style="text-align:center;padding:16px"><i class="ti ti-loader" style="font-size:24px;color:#003D45;animation:spin 1s linear infinite"></i>'
-      +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Consultando hoja EMPLEADOS…</div>'
-      +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Solo la primera vez o si el usuario no está en caché local</div></div>';
+      +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Cargando sedes desde hoja EMPLEADOS…</div>'
+      +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">Columna SEDE en vivo · sin caché local</div></div>';
     if(btn){ btn.disabled=true; btn.style.opacity='0.7'; }
     _cargarEmpleados(true).then(function(){
+      if(!window._empleadosSheetOk){
+        if(res) res.innerHTML='<div style="text-align:center;padding:14px"><i class="ti ti-cloud-off" style="color:#dc2626;font-size:24px"></i>'
+          +'<div style="font-size:12px;color:#dc2626;font-weight:700;margin-top:8px">No se pudo conectar con EMPLEADOS</div>'
+          +'<div style="font-size:11px;color:#64748b;margin-top:4px">Verifica tu conexión e intenta de nuevo.</div></div>';
+        if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+        return;
+      }
       intentar();
-    }).catch(function(){ intentar(); });
+    }).catch(function(){
+      if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+      intentar();
+    });
   };
 
   // Fusión: el modal de bienvenida ya no se muestra; su contenido se renderiza en el login.
@@ -7297,6 +7357,14 @@ function _parseCumpleMMDD(s){
   }
 
   // Render inicial + reintentos para datos asíncronos de Sheets.
+  if(typeof _cargarEmpleados==='function'){
+    _cargarEmpleados(true).then(function(){
+      try{
+        var inp=document.getElementById('login-usuario');
+        if(inp&&inp.value&&typeof buscarEmpleado==='function') buscarEmpleado(inp.value);
+      }catch(e){}
+    }).catch(function(){});
+  }
   setTimeout(function(){ try{_lgiCargarCumple();}catch(e){} }, 600);
   setTimeout(function(){ try{ if(!(typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM&&EMPLEADOS_CUM.length)) _lgiCargarCumple(true); }catch(e){} }, 5000);
   [200,800,2000,4000,7000,11000].forEach(function(ms){ setTimeout(function(){
@@ -11354,7 +11422,7 @@ function _parseCumpleMMDD(s){
     var sd = document.getElementById('mbs-sedes');
     var pack = _mbsSedesParaBienvenida(emp);
     var sedesLbl = pack.esNacional ? '🌎 Ámbito nacional'
-      : (pack.items.length ? ('📍 '+pack.items.map(function(it){ return it.label; }).join(' · ')) : ('📍 '+((typeof _empParseSedes==='function'?_empParseSedes(emp.sede):_mbsParseSedes(emp.sede)).join(' · ')||'—')));
+      : ('📍 '+(typeof _empEtiquetaSedes==='function'?_empEtiquetaSedes(emp):(pack.items.length?pack.items.map(function(it){return it.label;}).join(' · '):'—')));
     if(sd) sd.textContent = sedesLbl;
     modal.style.display = 'block';
     var cont = document.getElementById('mbs-contenido');
@@ -11362,7 +11430,7 @@ function _parseCumpleMMDD(s){
       if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
       var p = _mbsSedesParaBienvenida(emp);
       var lbl = p.esNacional ? '🌎 Ámbito nacional'
-        : (p.items.length ? ('📍 '+p.items.map(function(it){ return it.label; }).join(' · ')) : ('📍 '+((typeof _empParseSedes==='function'?_empParseSedes(emp.sede):_mbsParseSedes(emp.sede)).join(' · ')||'—')));
+        : ('📍 '+(typeof _empEtiquetaSedes==='function'?_empEtiquetaSedes(emp):(p.items.length?p.items.map(function(it){return it.label;}).join(' · '):'—')));
       if(sd) sd.textContent = lbl;
       _mbsRenderContenido(emp);
     };
@@ -11398,6 +11466,7 @@ function _parseCumpleMMDD(s){
         if(correo && EMPLEADOS_BD && EMPLEADOS_BD[correo]) emp = EMPLEADOS_BD[correo];
         _origLogin();
         if(emp){
+          try{ if(typeof _empAplicarEmpleadoSesion==='function') _empAplicarEmpleadoSesion(emp); }catch(e){}
           try{ if(typeof mostrarModalBienvenidaSede === 'function') mostrarModalBienvenidaSede(emp); }catch(e){}
         }
       };
