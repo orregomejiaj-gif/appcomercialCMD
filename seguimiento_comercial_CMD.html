@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.38   (APP_VERSION = 'pyv-comercial-5.4.38')
+  Versión actual: pyv-comercial-5.4.39   (APP_VERSION = 'pyv-comercial-5.4.39')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.39 (2026-07-04)
+    - Menú accesos rápidos: 4 botones desplegables (Operación, Gestión, Informes, Utilidades).
   pyv-comercial-5.4.38 (2026-07-04)
     - Seguimientos: selector de meses con checkboxes (uno o varios); ya no queda pegado en Mayo.
     - MESES_IDX inicializado; atajos Todo S2 / May→hoy; mes actual por defecto.
@@ -228,11 +230,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.38">
-<meta name="build-id" content="pyv-comercial-5.4.38-20260704-1440">
+<meta name="app-version" content="pyv-comercial-5.4.39">
+<meta name="build-id" content="pyv-comercial-5.4.39-20260704-1450">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.38';
+window.APP_VERSION='pyv-comercial-5.4.39';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1252,7 +1254,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
   <div class="menu-quick-bar">
     <div class="menu-quick-head">
       <div class="menu-quick-title">⚡ Accesos rápidos</div>
-      <div class="menu-quick-hint">Atajos principales · clic para abrir</div>
+      <div class="menu-quick-hint">Destacados directos · categorías desplegables abajo</div>
     </div>
     <div class="menu-quick-featured">
       <button type="button" onclick="abrirConsultaDinamica()" class="menu-qf menu-qf-ops" title="Estado operativo integral"><span class="menu-qf-icon">📊</span><span class="menu-qf-lbl">Estado Operativo</span></button>
@@ -1260,44 +1262,60 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button type="button" onclick="abrirInformesComerciales()" class="menu-qf menu-qf-informes" title="Panel completo de informes"><span class="menu-qf-icon">📑</span><span class="menu-qf-lbl">Panel Informes</span></button>
       <button type="button" onclick="abrirSCIC('pulso')" class="menu-qf menu-qf-scic" title="ISCIC nacional"><span class="menu-qf-icon">🧠</span><span class="menu-qf-lbl">SCIC Pulso</span></button>
     </div>
-    <div class="menu-quick-matrix">
-      <div class="menu-qm-col">
-        <div class="menu-qm-lbl">🟢 Operación</div>
-        <div class="menu-qm-btns">
-          <button type="button" onclick="abrirModalSeguimiento()" class="menu-qb menu-qb-seg" title="Seguimiento comercial"><span>📋</span> Seguimiento</button>
-          <button type="button" onclick="abrirHistorialSeguimientos()" class="menu-qb menu-qb-amber" title="Historial"><span>📜</span> Historial</button>
-          <button type="button" onclick="abrirMallaTurnos()" class="menu-qb menu-qb-sky" title="Malla hoy"><span>📅</span> Malla</button>
+    <div class="menu-quick-dropdowns">
+      <div class="menu-dd" data-dd="operacion">
+        <button type="button" class="menu-dd-toggle menu-dd-oper" onclick="menuToggleDropdown('operacion',event)" aria-expanded="false" aria-controls="menu-dd-operacion">
+          <span class="menu-dd-ico">🟢</span>
+          <span class="menu-dd-txt">Operación</span>
+          <span class="menu-dd-chevron">▾</span>
+        </button>
+        <div class="menu-dd-panel" id="menu-dd-operacion" hidden>
+          <button type="button" onclick="menuDdAction('operacion');abrirModalSeguimiento()" class="menu-qb menu-qb-seg"><span>📋</span> Seguimiento</button>
+          <button type="button" onclick="menuDdAction('operacion');abrirHistorialSeguimientos()" class="menu-qb menu-qb-amber"><span>📜</span> Historial</button>
+          <button type="button" onclick="menuDdAction('operacion');abrirMallaTurnos()" class="menu-qb menu-qb-sky"><span>📅</span> Malla</button>
         </div>
       </div>
-      <div class="menu-qm-col">
-        <div class="menu-qm-lbl">📊 Gestión</div>
-        <div class="menu-qm-btns">
-          <button type="button" onclick="abrirPipelineGerencial()" class="menu-qb menu-qb-blue" title="Leads"><span>🎯</span> Leads</button>
-          <button type="button" onclick="abrirEstadoCartera()" class="menu-qb menu-qb-red" title="Cartera"><span>💰</span> Cartera</button>
-          <button type="button" onclick="abrirHubSpotActividad()" class="menu-qb menu-qb-orange" title="HubSpot"><span>📈</span> Actividad</button>
-          <button type="button" onclick="abrirBrujulaAcademica()" class="menu-qb menu-qb-indigo" title="Brújula"><span>🧭</span> Brújula</button>
+      <div class="menu-dd" data-dd="gestion">
+        <button type="button" class="menu-dd-toggle menu-dd-gest" onclick="menuToggleDropdown('gestion',event)" aria-expanded="false" aria-controls="menu-dd-gestion">
+          <span class="menu-dd-ico">📊</span>
+          <span class="menu-dd-txt">Gestión</span>
+          <span class="menu-dd-chevron">▾</span>
+        </button>
+        <div class="menu-dd-panel" id="menu-dd-gestion" hidden>
+          <button type="button" onclick="menuDdAction('gestion');abrirPipelineGerencial()" class="menu-qb menu-qb-blue"><span>🎯</span> Leads</button>
+          <button type="button" onclick="menuDdAction('gestion');abrirEstadoCartera()" class="menu-qb menu-qb-red"><span>💰</span> Cartera</button>
+          <button type="button" onclick="menuDdAction('gestion');abrirHubSpotActividad()" class="menu-qb menu-qb-orange"><span>📈</span> Actividad</button>
+          <button type="button" onclick="menuDdAction('gestion');abrirBrujulaAcademica()" class="menu-qb menu-qb-indigo"><span>🧭</span> Brújula</button>
         </div>
       </div>
-      <div class="menu-qm-col menu-qm-col-wide">
-        <div class="menu-qm-lbl">📑 Informes</div>
-        <div class="menu-qm-btns">
-          <button type="button" onclick="abrirInformesComerciales('cobertura-uni')" class="menu-qb menu-qb-cob" title="Cobertura UNI"><span>🎓</span> Cob. UNI</button>
-          <button type="button" onclick="abrirInformesComerciales('cobertura-mat')" class="menu-qb menu-qb-blue" title="Cobertura matrículas"><span>📚</span> Cob. Mat.</button>
-          <button type="button" onclick="abrirInformesComerciales('pendientes')" class="menu-qb menu-qb-amber" title="Pendientes"><span>⏳</span> Pendientes</button>
-          <button type="button" onclick="abrirInformesComerciales('tasa-aprob')" class="menu-qb menu-qb-red" title="Tasa pérdida"><span>📉</span> Tasa/Pérd.</button>
-          <button type="button" onclick="abrirInformesComerciales('retomas')" class="menu-qb menu-qb-purple" title="Retomas"><span>🔄</span> Retomas</button>
-          <button type="button" onclick="abrirInformesComerciales('corte-dia')" class="menu-qb menu-qb-gold" title="Corte día"><span>📅</span> Corte</button>
-          <button type="button" onclick="abrirInformesComerciales('nuevos-renov')" class="menu-qb menu-qb-teal" title="Nuevos/Renov"><span>🆕</span> N/R</button>
-          <button type="button" onclick="abrirInformesComerciales('tiempos')" class="menu-qb menu-qb-sky" title="Tiempos"><span>⏱️</span> Tiempos</button>
+      <div class="menu-dd" data-dd="informes">
+        <button type="button" class="menu-dd-toggle menu-dd-inf" onclick="menuToggleDropdown('informes',event)" aria-expanded="false" aria-controls="menu-dd-informes">
+          <span class="menu-dd-ico">📑</span>
+          <span class="menu-dd-txt">Informes</span>
+          <span class="menu-dd-chevron">▾</span>
+        </button>
+        <div class="menu-dd-panel menu-dd-panel-wide" id="menu-dd-informes" hidden>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('cobertura-uni')" class="menu-qb menu-qb-cob"><span>🎓</span> Cob. UNI</button>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('cobertura-mat')" class="menu-qb menu-qb-blue"><span>📚</span> Cob. Mat.</button>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('pendientes')" class="menu-qb menu-qb-amber"><span>⏳</span> Pendientes</button>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('tasa-aprob')" class="menu-qb menu-qb-red"><span>📉</span> Tasa/Pérd.</button>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('retomas')" class="menu-qb menu-qb-purple"><span>🔄</span> Retomas</button>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('corte-dia')" class="menu-qb menu-qb-gold"><span>📅</span> Corte</button>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('nuevos-renov')" class="menu-qb menu-qb-teal"><span>🆕</span> N/R</button>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('tiempos')" class="menu-qb menu-qb-sky"><span>⏱️</span> Tiempos</button>
         </div>
       </div>
-      <div class="menu-qm-col">
-        <div class="menu-qm-lbl">🛠 Utilidades</div>
-        <div class="menu-qm-btns">
-          <button type="button" onclick="abrirDirectorio()" class="menu-qb menu-qb-cyan" title="Directorio"><span>📇</span> Directorio</button>
-          <button type="button" onclick="abrirCumpleanos()" class="menu-qb menu-qb-pink" title="Cumpleaños"><span>🎂</span> Cumpleaños</button>
-          <button type="button" onclick="abrirCentroHerramientasPYV()" class="menu-qb menu-qb-lime" title="Herramientas"><span>🛠️</span> Herramientas</button>
-          <button type="button" onclick="window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-qb menu-qb-violet" title="Agendar"><span>📆</span> Agendar</button>
+      <div class="menu-dd" data-dd="utilidades">
+        <button type="button" class="menu-dd-toggle menu-dd-util" onclick="menuToggleDropdown('utilidades',event)" aria-expanded="false" aria-controls="menu-dd-utilidades">
+          <span class="menu-dd-ico">🛠</span>
+          <span class="menu-dd-txt">Utilidades</span>
+          <span class="menu-dd-chevron">▾</span>
+        </button>
+        <div class="menu-dd-panel" id="menu-dd-utilidades" hidden>
+          <button type="button" onclick="menuDdAction('utilidades');abrirDirectorio()" class="menu-qb menu-qb-cyan"><span>📇</span> Directorio</button>
+          <button type="button" onclick="menuDdAction('utilidades');abrirCumpleanos()" class="menu-qb menu-qb-pink"><span>🎂</span> Cumpleaños</button>
+          <button type="button" onclick="menuDdAction('utilidades');abrirCentroHerramientasPYV()" class="menu-qb menu-qb-lime"><span>🛠️</span> Herramientas</button>
+          <button type="button" onclick="menuDdAction('utilidades');window.open('https://app.hubspot.com/meetings/48684571/','_blank')" class="menu-qb menu-qb-violet"><span>📆</span> Agendar</button>
         </div>
       </div>
     </div>
@@ -1574,6 +1592,23 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-qf-meta{background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 3px 10px rgba(37,99,235,.35)}
 .menu-qf-informes{background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 3px 10px rgba(124,58,237,.35)}
 .menu-qf-scic{background:linear-gradient(135deg,#ea580c,#f97316);box-shadow:0 3px 10px rgba(234,88,12,.35)}
+.menu-quick-dropdowns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative;z-index:50}
+.menu-dd{position:relative}
+.menu-dd-toggle{display:flex;align-items:center;gap:8px;width:100%;padding:11px 14px;border:none;border-radius:12px;cursor:pointer;font-family:Ubuntu,sans-serif;text-align:left;transition:transform .15s,box-shadow .15s,filter .15s}
+.menu-dd-toggle:hover{transform:translateY(-1px);filter:brightness(1.05);box-shadow:0 6px 16px rgba(0,0,0,.12)}
+.menu-dd-toggle[aria-expanded=true]{box-shadow:0 4px 14px rgba(0,0,0,.15)}
+.menu-dd-toggle[aria-expanded=true] .menu-dd-chevron{transform:rotate(180deg)}
+.menu-dd-ico{font-size:16px;line-height:1}
+.menu-dd-txt{flex:1;font-size:12px;font-weight:800;color:#fff}
+.menu-dd-chevron{font-size:11px;color:rgba(255,255,255,.85);transition:transform .2s}
+.menu-dd-oper{background:linear-gradient(135deg,#059669,#10b981);box-shadow:0 3px 10px rgba(5,150,105,.35)}
+.menu-dd-gest{background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 3px 10px rgba(37,99,235,.35)}
+.menu-dd-inf{background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 3px 10px rgba(124,58,237,.35)}
+.menu-dd-util{background:linear-gradient(135deg,#ea580c,#f97316);box-shadow:0 3px 10px rgba(234,88,12,.35)}
+.menu-dd-panel{position:absolute;top:calc(100% + 6px);left:0;right:0;min-width:200px;background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px;box-shadow:0 12px 32px rgba(0,61,69,.18);display:flex;flex-direction:column;gap:5px;z-index:200;animation:menuDdIn .18s ease}
+.menu-dd-panel-wide{min-width:220px}
+.menu-dd-panel .menu-qb{width:100%}
+@keyframes menuDdIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
 .menu-quick-matrix{display:grid;grid-template-columns:1fr 1fr 1.4fr 1fr;gap:8px;align-items:start}
 .menu-qm-col{display:flex;flex-direction:column;gap:5px}
 .menu-qm-lbl{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:var(--gray);padding:0 2px 3px;border-bottom:2px solid var(--border)}
@@ -1702,8 +1737,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-ley-verde{background:#86efac}.menu-ley-amarillo{background:#fde68a}.menu-ley-rojo{background:#fca5a5}.menu-ley-gris{background:#e2e8f0}
 .menu-mapa-loading,.menu-mapa-error{display:flex;align-items:center;justify-content:center;height:100%;min-height:300px;font-size:12px;color:#64748b;text-align:center;padding:20px}
 .menu-mapa-error{color:#dc2626;flex-direction:column}
-@media(max-width:900px){.menu-main-panel{padding:0 14px 16px}.menu-quick-grp-lbl{min-width:88px}.menu-quick-featured{grid-template-columns:repeat(2,1fr)}.menu-quick-matrix{grid-template-columns:1fr 1fr}}
-@media(max-width:520px){.menu-quick-featured,.menu-quick-matrix{grid-template-columns:1fr}.menu-sem-trio{grid-template-columns:1fr}}
+@media(max-width:900px){.menu-main-panel{padding:0 14px 16px}.menu-quick-grp-lbl{min-width:88px}.menu-quick-featured{grid-template-columns:repeat(2,1fr)}.menu-quick-dropdowns{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.menu-quick-featured,.menu-quick-dropdowns{grid-template-columns:1fr}.menu-sem-trio{grid-template-columns:1fr}.menu-dd-panel{position:static;margin-top:6px;box-shadow:none;border:1px dashed var(--border)}}
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
 .menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
@@ -3767,7 +3802,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.38';
+var APP_VERSION = 'pyv-comercial-5.4.39';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7600,6 +7635,35 @@ function _parseCumpleMMDD(s){
     if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs();
   }
   window.onMenuAmbitoChange=onMenuAmbitoChange;
+
+  window.menuCloseAllDropdowns = function(){
+    document.querySelectorAll('.menu-dd-panel').forEach(function(p){ p.hidden = true; });
+    document.querySelectorAll('.menu-dd-toggle').forEach(function(b){ b.setAttribute('aria-expanded','false'); });
+    document.querySelectorAll('.menu-dd').forEach(function(d){ d.classList.remove('menu-dd-open'); });
+  };
+  window.menuToggleDropdown = function(id, ev){
+    if(ev) ev.stopPropagation();
+    var panel = document.getElementById('menu-dd-' + id);
+    var wrap = document.querySelector('.menu-dd[data-dd="'+id+'"]');
+    var btn = wrap ? wrap.querySelector('.menu-dd-toggle') : null;
+    if(!panel || !btn) return;
+    var abrir = panel.hidden;
+    menuCloseAllDropdowns();
+    if(abrir){
+      panel.hidden = false;
+      btn.setAttribute('aria-expanded','true');
+      if(wrap) wrap.classList.add('menu-dd-open');
+    }
+  };
+  window.menuDdAction = function(id){
+    menuCloseAllDropdowns();
+  };
+  document.addEventListener('click', function(e){
+    if(!e.target.closest('.menu-dd')) menuCloseAllDropdowns();
+  });
+  document.addEventListener('keydown', function(e){
+    if(e.key==='Escape') menuCloseAllDropdowns();
+  });
 
   function _menuSemColor(sem){
     var s=String(sem||'').toUpperCase();
