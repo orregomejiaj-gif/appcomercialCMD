@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.50   (APP_VERSION = 'pyv-comercial-5.4.50')
+  Versión actual: pyv-comercial-5.4.51   (APP_VERSION = 'pyv-comercial-5.4.51')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,11 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.51 (2026-07-05)
+    - Salud Comercial: título cambia con «Ver mis sedes» (id menu-salud-title corregido).
+    - Menú: Seguimiento → Acompañamiento; Historial → Historial Acompañamientos.
+    - Proyectos Especiales (ATENEA, Fondo Más Profesional): flujo activo con meta en $.
+    - Login: panel colocación · SIGEC · GLPI al corte día anterior + deberíamos según informe.
   pyv-comercial-5.4.50 (2026-07-05)
     - Hotfix crítico: error de sintaxis en _menuFiltrarColoc rompía toda la app (login, sedes, KPIs).
   pyv-comercial-5.4.49 (2026-07-05)
@@ -263,11 +268,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.50">
-<meta name="build-id" content="pyv-comercial-5.4.50-20260705-2325">
+<meta name="app-version" content="pyv-comercial-5.4.51">
+<meta name="build-id" content="pyv-comercial-5.4.51-20260705-2345">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.50';
+window.APP_VERSION='pyv-comercial-5.4.51';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -930,7 +935,7 @@ window._cargarTop5 = window._cargarTop5 || function(){
       <div style="background:linear-gradient(135deg,#003D45,#005a66);padding:18px 24px;display:flex;align-items:center;justify-content:space-between">
         <div>
           <div style="color:#FFD900;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px">Proceso PYV · Cooperativa Minuto de Dios</div>
-          <div style="color:#fff;font-size:17px;font-weight:800">📋 Historial de Seguimientos Comerciales</div>
+          <div style="color:#fff;font-size:17px;font-weight:800">📋 Historial de Acompañamientos Comerciales</div>
           <div style="color:rgba(255,255,255,.6);font-size:10px;margin-top:2px">Repo seguimientos · Semáforo por sede (máx. 15 días) · Filtros por período, sede y ejecutor</div>
         </div>
         <div style="display:flex;gap:8px">
@@ -977,7 +982,7 @@ window._cargarTop5 = window._cargarTop5 || function(){
       <div style="padding:16px 20px">
         <div id="hist-seg-loading" style="text-align:center;padding:40px;color:#94a3b8">
           <div style="font-size:32px;margin-bottom:10px">📊</div>
-          Cargando historial de seguimientos desde el Sheet...
+          Cargando historial de acompañamientos desde el Sheet...
         </div>
         <div id="hist-seg-contenido" style="display:none"></div>
       </div>
@@ -1265,6 +1270,33 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
             <div style="color:rgba(255,255,255,.2);font-size:7px" id="lgi-ejec">— colocados</div>
           </div>
         </div>
+        <!-- Colocación · SIGEC · GLPI (corte día anterior) -->
+        <div id="lgi-sigec-glpi" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px;margin-bottom:7px">
+          <div style="color:rgba(255,255,255,.4);font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📊 Colocación · SIGEC · GLPI · corte día anterior</div>
+          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px">
+            <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
+              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">Colocados</div>
+              <div style="font-size:14px;font-weight:900;color:#4ade80" id="lgi-coloc-vamos">—</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-coloc-deb">deb: —</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
+              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">SIGEC</div>
+              <div style="font-size:14px;font-weight:900;color:#60a5fa" id="lgi-sigec-vamos">—</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-sigec-deb">deb: —</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
+              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">GLPI</div>
+              <div style="font-size:14px;font-weight:900;color:#a78bfa" id="lgi-glpi-vamos">—</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-glpi-deb">deb: —</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
+              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">SIGEC+GLPI</div>
+              <div style="font-size:14px;font-weight:900;color:#fbbf24" id="lgi-comb-vamos">—</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-comb-deb">deb: —</div>
+            </div>
+          </div>
+          <div style="font-size:9px;color:rgba(255,255,255,.45);text-align:center;line-height:1.45" id="lgi-sigglpi-debemos">Según informe de colocación (SIGEC+GLPI): deberíamos llevar —</div>
+        </div>
         <!-- Proyección / estado de gestión del canal -->
         <div id="lgi-proyeccion" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:12px;margin-bottom:7px;min-height:54px">
           <div style="font-size:11px;color:rgba(255,255,255,.4);text-align:center">Calculando proyección de cierre…</div>
@@ -1303,8 +1335,8 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <span class="menu-dd-chevron">▾</span>
         </button>
         <div class="menu-dd-panel" id="menu-dd-operacion" hidden>
-          <button type="button" onclick="menuDdAction('operacion');abrirModalSeguimiento()" class="menu-qb menu-qb-seg"><span>📋</span> Seguimiento</button>
-          <button type="button" onclick="menuDdAction('operacion');abrirHistorialSeguimientos()" class="menu-qb menu-qb-amber"><span>📜</span> Historial</button>
+          <button type="button" onclick="menuDdAction('operacion');abrirModalSeguimiento()" class="menu-qb menu-qb-seg"><span>📋</span> Acompañamiento</button>
+          <button type="button" onclick="menuDdAction('operacion');abrirHistorialSeguimientos()" class="menu-qb menu-qb-amber"><span>📜</span> Historial Acompañamientos</button>
           <button type="button" onclick="menuDdAction('operacion');abrirMallaTurnos()" class="menu-qb menu-qb-sky"><span>📅</span> Malla</button>
         </div>
       </div>
@@ -1366,7 +1398,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div class="menu-salud-panel" id="menu-salud-panel">
         <div class="menu-salud-hdr">
           <div>
-            <div class="menu-salud-title">💚 Salud Comercial Nacional</div>
+            <div class="menu-salud-title" id="menu-salud-title">💚 Salud Comercial Nacional</div>
             <div class="menu-salud-sub">Indicador integrado ISCIC · colocación · SIGEC · cartera · seguimientos · <span id="menu-salud-corte-lbl">corte día anterior</span></div>
           </div>
           <div class="menu-salud-score-wrap">
@@ -3076,7 +3108,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <div class="card-hdr" style="background:var(--dark)"><div class="cico" style="background:rgba(255,217,0,.15)"><i class="ti ti-notes" style="color:var(--yellow)"></i></div><h2 style="color:#fff">Observaciones y Plan de Acción</h2></div>
       <div class="field"><label>Observaciones generales del proyecto</label><textarea id="proy_observaciones" rows="3" placeholder="Contexto, situaciones relevantes, avances del proyecto..."></textarea></div>
       <div class="field"><label>Pendientes y próximos pasos</label><textarea id="proy_pendientes" rows="2" placeholder="Pendientes con fecha límite..."></textarea></div>
-      <button class="btn btn-primary" onclick="guardarSeguimientoProyectos()"><i class="ti ti-device-floppy"></i> Guardar seguimiento del proyecto</button>
+      <button class="btn btn-primary" onclick="guardarSeguimientoProyectos()"><i class="ti ti-device-floppy"></i> Guardar acompañamiento del proyecto</button>
     </div>
 
   </div>
@@ -3827,7 +3859,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.50';
+var APP_VERSION = 'pyv-comercial-5.4.51';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6246,8 +6278,8 @@ document.addEventListener('DOMContentLoaded', function(){
 <div id="modal-seguimiento" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.65);z-index:99998;align-items:center;justify-content:center;padding:20px">
 <div style="background:#fff;border-radius:20px;max-width:500px;width:100%;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)">
   <div style="background:linear-gradient(135deg,#003D45,#005a66);padding:20px 24px">
-    <div style="color:#FFD900;font-size:16px;font-weight:800"><i class="ti ti-clipboard-data"></i> Tipo de Seguimiento</div>
-    <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:3px">Selecciona el seguimiento que vas a realizar</div>
+    <div style="color:#FFD900;font-size:16px;font-weight:800"><i class="ti ti-clipboard-data"></i> Tipo de Acompañamiento</div>
+    <div style="color:rgba(255,255,255,.6);font-size:11px;margin-top:3px">Selecciona el acompañamiento que vas a realizar</div>
   </div>
   <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
     <!-- Coordinacion -->
@@ -6776,7 +6808,7 @@ https://minutodediosportal.com/login/
         <i class="ti ti-history" style="font-size:14px"></i> Coloc.
       </button>
       <button onclick="abrirHistorialSeguimientos()" style="padding:8px 12px;border:1.5px solid #7c3aed;border-radius:8px;background:#f5f3ff;cursor:pointer;font-size:12px;display:flex;align-items:center;gap:5px;color:#7c3aed;font-weight:700">
-        <i class="ti ti-clipboard-list" style="font-size:14px"></i> Seguim.
+        <i class="ti ti-clipboard-list" style="font-size:14px"></i> Acomp.
       </button>
     </div>
 
@@ -7341,12 +7373,38 @@ function _parseCumpleMMDD(s){
     }catch(e){}
   }
 
+  function renderLoginSigecGlpi(metaN,ejecN,debemos){
+    try{
+      var sig=(typeof obtenerSigecNacional==='function')?obtenerSigecNacional():{facturada:0};
+      var glpi=(typeof obtenerGlpiNacional==='function')?obtenerGlpiNacional():{aprobada:0};
+      var sigFact=Number(sig.facturada)||0;
+      var glpiApr=Number(glpi.aprobada)||0;
+      var comb=sigFact+glpiApr;
+      var deb=Math.round(Number(debemos)||0);
+      setTxt('lgi-coloc-vamos',ejecN?fmt(ejecN):'—');
+      setTxt('lgi-coloc-deb','deb: '+(deb?fmt(deb):'—'));
+      setTxt('lgi-sigec-vamos',sigFact?fmt(sigFact):'—');
+      setTxt('lgi-sigec-deb','deb: '+(deb?fmt(deb):'—'));
+      setTxt('lgi-glpi-vamos',glpiApr?fmt(glpiApr):'—');
+      setTxt('lgi-glpi-deb','deb: '+(deb?fmt(deb):'—'));
+      setTxt('lgi-comb-vamos',comb?fmt(comb):'—');
+      setTxt('lgi-comb-deb','deb: '+(deb?fmt(deb):'—'));
+      var pctComb=deb>0?Math.round(comb/deb*100):0;
+      var msg=metaN
+        ?('Según informe de colocación (SIGEC+GLPI) hasta ayer: deberíamos llevar <strong style="color:#FFD900">'+fmt(deb)+'</strong> · vamos <strong style="color:#4ade80">'+fmt(comb)+'</strong> ('+pctComb+'%)')
+        :'Cargando meta del período…';
+      var el=document.getElementById('lgi-sigglpi-debemos');
+      if(el) el.innerHTML=msg;
+    }catch(e){ console.warn('[SCIC] renderLoginSigecGlpi:',e&&e.message); }
+  }
+
   function renderLoginDashboard(){
     try{
       var metaN=window._mtsMetaN||0, ejecN=window._mtsEjecN||0;
       var pctN=window._mtsPctN|| (metaN?Math.round(ejecN/metaN*100):0);
       var diasTot=window._mtsDiasTotal||0, diasTra=window._mtsDiasTrans||0;
       var diasRest=Math.max(0,diasTot-diasTra), debemos=window._mtsDebemos||0;
+      if(!debemos&&metaN&&diasTot>0) debemos=Math.round(metaN/diasTot*diasTra);
       var per=(typeof periodoActivoPorFecha==='function')?periodoActivoPorFecha(new Date()):'';
       setTxt('lgi-periodo-label',(per?('Período '+per+' · '):'')+'Cooperativa Minuto de Dios');
       setTxt('lgi-dias-trans',diasTra||'—');
@@ -7375,6 +7433,7 @@ function _parseCumpleMMDD(s){
       setTxt('lgi-asesores',asesores||total||'—');
       setTxt('lgi-asesores-sub',asesores?'asesores activos':(total?'en directorio':'activos'));
       renderLoginProyeccion(metaN,ejecN,debemos,diasTot,diasTra);
+      renderLoginSigecGlpi(metaN,ejecN,debemos);
       if(!(typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM&&EMPLEADOS_CUM.length)){ _lgiCargarCumple(); }
       renderLoginCumple();
     }catch(err){ console.warn('[SCIC] renderLoginDashboard:', err&&err.message); }
@@ -7511,7 +7570,7 @@ function _parseCumpleMMDD(s){
   if(typeof window.abrirHerramientasPYV!=='function'){
     window.abrirHerramientasPYV=function(t){ try{ if(typeof abrirHerramientas==='function') return abrirHerramientas(t||'frag'); }catch(e){ console.warn('[SCIC] abrirHerramientasPYV:',e&&e.message); } };
   }
-  // - "Proyectos Especiales" en el selector de seguimiento no tenía iniciador.
+  // - "Proyectos Especiales" en el selector de acompañamiento.
   if(typeof window.iniciarSeguimientoProyectos!=='function'){
     window.iniciarSeguimientoProyectos=function(){
       try{
@@ -7525,6 +7584,120 @@ function _parseCumpleMMDD(s){
         if(typeof activateSheet==='function')activateSheet('h1',document.querySelector('.tab[onclick*="h1"]'));
       }catch(e){ console.warn('[SCIC] iniciarSeguimientoProyectos:',e&&e.message); }
     };
+  }
+
+  // Proyectos Especiales: cálculos, IES y guardado (meta en $ — ATENEA / Fondo Más Profesional)
+  window.calcProyecto=function(){
+    try{
+      function gv(id){var el=document.getElementById(id);return el?parseFloat(el.value)||0:0;}
+      function set(id,v){var el=document.getElementById(id);if(el)el.textContent=v;}
+      var sel=document.getElementById('proy_nombre');
+      var metaInp=document.getElementById('proy_meta_millones');
+      if(sel&&sel.value&&metaInp&&!metaInp.value) metaInp.value='5000';
+      var ln=gv('proy_leads_call')+gv('proy_leads_mercadeo')+gv('proy_leads_actividad')+gv('proy_leads_bd');
+      set('proy-val-leads-nuevos',ln);
+      set('proy-val-leads-total',ln+gv('proy_leads_continuos'));
+      var metaM=gv('proy_meta_millones')||5000;
+      var desemb=gv('proy_valor_desemb');
+      var pctCol=metaM>0?Math.round(desemb/metaM*100):0;
+      set('proy-val-pct-coloc',metaM?(pctCol+'%'):'—');
+      var rad=gv('proy_sol_rad'),apro=gv('proy_sol_apro');
+      set('proy-val-conv',rad>0?(Math.round(apro/rad*100)+'%'):'—');
+      var ap=gv('proy_act_plan'),ae=gv('proy_act_ejec');
+      set('proy-val-pct-act',ap>0?(Math.round(ae/ap*100)+'%'):'—');
+      var semEl=document.getElementById('proy-semaforo-coloc');
+      if(semEl){
+        if(!desemb){semEl.textContent='📊 Ingresa el valor desembolsado para ver el semáforo';semEl.style.background='#f8fafc';semEl.style.color='var(--text2)';}
+        else{
+          var txt=pctCol>=90?'VERDE':pctCol>=70?'AMARILLO':'ROJO';
+          semEl.style.background=pctCol>=90?'#dcfce7':pctCol>=70?'#fef9c3':'#fee2e2';
+          semEl.style.color='#1e293b';
+          semEl.innerHTML='<strong>'+txt+'</strong> · $'+desemb.toLocaleString('es-CO')+'M de $'+metaM.toLocaleString('es-CO')+'M meta ('+pctCol+'%)';
+        }
+      }
+      function kpiRes(elId,val,meta,inv){
+        var el=document.getElementById(elId);if(!el)return;
+        if(typeof semHtml==='function') el.innerHTML=semHtml(val,meta,inv);
+        else if(val&&meta){var p=inv?100*(2-val/meta):val/meta*100;el.textContent=Math.round(p)+'% de meta';}
+        else el.textContent='—';
+      }
+      kpiRes('proy-res-tgestion',gv('proy_t_gestion'),3,true);
+      kpiRes('proy-res-trespuesta',gv('proy_t_respuesta'),72,true);
+      kpiRes('proy-res-csat',gv('proy_csat'),85,false);
+      kpiRes('proy-res-nps',gv('proy_nps'),70,false);
+      kpiRes('proy-res-snc',gv('proy_snc_total'),0,true);
+      kpiRes('proy-res-pqrs',gv('proy_pqrs_rec'),0,true);
+    }catch(e){console.warn('[SCIC] calcProyecto:',e&&e.message);}
+  };
+
+  window.agregarIES=function(){
+    var list=document.getElementById('proy-ies-list');
+    if(!list)return;
+    var row=document.createElement('div');
+    row.className='grid3';
+    row.style.marginBottom='6px';
+    row.innerHTML='<input type="text" placeholder="Nombre IES" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-family:Ubuntu,sans-serif">'
+      +'<select style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-family:Ubuntu,sans-serif"><option>Pendiente</option><option>En trámite</option><option>Firmado</option><option>Vigente</option></select>'
+      +'<input type="text" placeholder="Observación" style="padding:6px 8px;border:1.5px solid var(--border);border-radius:6px;font-size:11px;font-family:Ubuntu,sans-serif">';
+    list.appendChild(row);
+  };
+
+  window.guardarSeguimientoProyectos=function(){
+    try{
+      var nombre=(document.getElementById('proy_nombre')||{}).value||'';
+      if(!nombre){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Selecciona el proyecto: ATENEA o Fondo Más Profesional'); return; }
+      function gv(id){var el=document.getElementById(id);return el?parseFloat(el.value)||0:0;}
+      function gt(id){var el=document.getElementById(id);return el?(el.value||'').trim():'';}
+      var data={
+        tipo:'proyectos', proyecto:nombre,
+        fecha:gt('proy_fecha'), coordinador:gt('proy_coordinador'), ejecutor:gt('proy_ejecutor'),
+        meta_millones:gv('proy_meta_millones')||5000, valor_desemb:gv('proy_valor_desemb'),
+        leads_call:gv('proy_leads_call'), leads_mercadeo:gv('proy_leads_mercadeo'),
+        leads_actividad:gv('proy_leads_actividad'), leads_bd:gv('proy_leads_bd'),
+        leads_continuos:gv('proy_leads_continuos'), leads_susceptibles:gv('proy_leads_susceptibles'),
+        sol_rad_nuevos:gv('proy_sol_rad_nuevos'), sol_rad_continuos:gv('proy_sol_rad_continuos'),
+        sol_rad:gv('proy_sol_rad'), sol_apro:gv('proy_sol_apro'),
+        sol_abiertas:gv('proy_sol_abiertas'), sol_cerr:gv('proy_sol_cerr'), sol_recup:gv('proy_sol_recup'),
+        t_gestion:gv('proy_t_gestion'), t_respuesta:gv('proy_t_respuesta'),
+        csat:gv('proy_csat'), nps:gv('proy_nps'),
+        act_plan:gv('proy_act_plan'), act_ejec:gv('proy_act_ejec'),
+        capacitaciones:gv('proy_capacitaciones'), asistentes:gv('proy_asistentes'),
+        snc_total:gv('proy_snc_total'), pqrs_rec:gv('proy_pqrs_rec'),
+        observaciones:gt('proy_observaciones'), pendientes:gt('proy_pendientes')
+      };
+      if(typeof state==='object'&&state) state.seguimiento=data;
+      if(typeof navState==='object'&&navState){ navState.h1Guardada=true; navState.modoSeleccionado='proyectos'; }
+      if(typeof applyNavState==='function') applyNavState();
+      if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Acompañamiento del proyecto guardado. Puedes pasar a la Hoja 3.');
+      if(typeof irAHoja==='function') setTimeout(function(){ irAHoja('h3'); },1200);
+    }catch(e){ console.warn('[SCIC] guardarSeguimientoProyectos:',e&&e.message); }
+  };
+
+  // setMode: mostrar panel Proyectos Especiales y renombrar títulos a Acompañamiento
+  if(typeof setMode==='function'){
+    var _origSetMode=setMode;
+    setMode=function(m){
+      _origSetMode(m);
+      function disp(id,v){var el=document.getElementById(id);if(el)el.style.display=v;}
+      if(m==='proyectos'){
+        disp('seg-coord','none');disp('seg-asesor','none');disp('seg-proyectos','block');
+        disp('campos-coord','none');disp('campos-asesor','none');
+        disp('campo-sede-coord','none');disp('campo-sede-asesor','none');
+        disp('card-metas-coord','none');disp('card-metas-asesor','none');
+        var ht=document.getElementById('hdr-title');
+        if(ht) ht.textContent='Acompañamiento — Proyectos Especiales';
+        var pf=document.getElementById('proy_fecha');
+        if(pf&&!pf.value) pf.value=new Date().toISOString().slice(0,10);
+        var pe=document.getElementById('proy_ejecutor');
+        if(pe&&!pe.value&&typeof navState==='object'&&navState&&navState.nombreEjecutor) pe.value=navState.nombreEjecutor;
+        if(typeof calcProyecto==='function') calcProyecto();
+      } else {
+        disp('seg-proyectos','none');
+        var ht=document.getElementById('hdr-title');
+        if(ht) ht.textContent=m==='coord'?'Acompañamiento Comercial — Coordinación':'Acompañamiento Comercial — Asesor';
+      }
+    };
+    window.setMode=setMode;
   }
 
   // Render inicial + reintentos para datos asíncronos de Sheets.
@@ -12073,6 +12246,9 @@ function _parseCumpleMMDD(s){
   function renderSaludComercialCMD(){
     var vista=(typeof _getMenuAmbitoVista==='function')?_getMenuAmbitoVista():{esNacional:true,sedes:[]};
     var sedesFiltro=vista.esNacional?null:vista.sedes;
+    var ambitoLbl=vista.esNacional?null:vista.etiqueta;
+    var titleEl=document.getElementById('menu-salud-title');
+    if(titleEl) titleEl.textContent=ambitoLbl?('💚 Salud Comercial · '+ambitoLbl):'💚 Salud Comercial Nacional';
     var s = calcularSaludComercialCMD(sedesFiltro);
     var pctEl = document.getElementById('menu-salud-pct');
     var semEl = document.getElementById('menu-salud-sem');
@@ -12485,7 +12661,7 @@ function _parseCumpleMMDD(s){
     var lista = typeof window._histSeguimientosFiltrados==='function' ? window._histSeguimientosFiltrados() : (window._histSeguimientos||[]);
     if(!lista.length){ if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Sin registros para exportar con el filtro actual'); return; }
     var doc = new window.jspdf.jsPDF({orientation:'landscape'});
-    var y = _cmdPdfHeader(doc, 'Historial de Seguimientos', lista.length+' registros (filtro activo)');
+    var y = _cmdPdfHeader(doc, 'Historial de Acompañamientos', lista.length+' registros (filtro activo)');
     doc.setFontSize(7);
     lista.slice().reverse().forEach(function(s){
       y = _cmdPdfCheckPage(doc, y, 6);
