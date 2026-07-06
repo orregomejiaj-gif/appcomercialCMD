@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.56   (APP_VERSION = 'pyv-comercial-5.4.56')
+  Versión actual: pyv-comercial-5.4.57   (APP_VERSION = 'pyv-comercial-5.4.57')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.57 (2026-07-06)
+    - Snapshot: quitados botones duplicados Guardar/Corte histórico del menú; solo icono archivo en encabezado.
   pyv-comercial-5.4.56 (2026-07-06)
     - Snapshot: solo manual (sin auto 23:00 ni SharePoint automático). Botón «Guardar corte» descarga .json.gz + IndexedDB.
     - SharePoint: subida manual del archivo a carpeta juan_orrego (sin Azure AD).
@@ -283,11 +285,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.56">
-<meta name="build-id" content="pyv-comercial-5.4.56-20260706-1430">
+<meta name="app-version" content="pyv-comercial-5.4.57">
+<meta name="build-id" content="pyv-comercial-5.4.57-20260706-1455">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.56';
+window.APP_VERSION='pyv-comercial-5.4.57';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1069,7 +1071,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <div id="menu-cargo-sede">—</div>
         </div>
         <div id="menu-avatar" class="menu-avatar">JO</div>
-        <button onclick="abrirModalCorteHistorico()" class="menu-logout" title="Abrir corte histórico guardado" id="btn-menu-historico"><i class="ti ti-archive"></i></button>
+        <button onclick="abrirModalCorteHistorico()" class="menu-logout" title="Cortes históricos: guardar o abrir snapshot del día" id="btn-menu-historico"><i class="ti ti-archive"></i></button>
         <button onclick="cargarDesdeSheetsCompleto(true)" class="menu-logout" title="Actualizar datos desde Google Sheets" id="btn-menu-refresh"><i class="ti ti-refresh"></i></button>
         <button onclick="cerrarSesion()" class="menu-logout" title="Cerrar sesión"><i class="ti ti-logout"></i></button>
       </div>
@@ -1347,8 +1349,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button type="button" onclick="abrirMetasDiarias()" class="menu-qf menu-qf-meta" title="Cumplimiento y metas diarias"><span class="menu-qf-icon">🏆</span><span class="menu-qf-lbl">Cumplimiento</span></button>
       <button type="button" onclick="abrirInformesComerciales()" class="menu-qf menu-qf-informes" title="Panel completo de informes"><span class="menu-qf-icon">📑</span><span class="menu-qf-lbl">Panel Informes</span></button>
       <button type="button" onclick="abrirSCIC('pulso')" class="menu-qf menu-qf-scic" title="ISCIC nacional"><span class="menu-qf-icon">🧠</span><span class="menu-qf-lbl">SCIC Pulso</span></button>
-      <button type="button" onclick="cmdGuardarSnapshotManual()" class="menu-qf menu-qf-hist" title="Guardar corte del día (JSON + descarga)"><span class="menu-qf-icon">💾</span><span class="menu-qf-lbl">Guardar corte</span></button>
-      <button type="button" onclick="abrirModalCorteHistorico()" class="menu-qf menu-qf-hist" title="Abrir corte guardado"><span class="menu-qf-icon">📦</span><span class="menu-qf-lbl">Corte histórico</span></button>
     </div>
     <div class="menu-quick-dropdowns">
       <div class="menu-dd" data-dd="operacion">
@@ -3895,7 +3895,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.56';
+var APP_VERSION = 'pyv-comercial-5.4.57';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -5428,7 +5428,7 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
     var el = document.getElementById('snap-catalogo-lista');
     if(!el) return;
     if(!lista || !lista.length){
-      el.innerHTML = '<div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px">Sin cortes guardados en este navegador.<br>Usa <strong>Guardar corte</strong> para crear el primero.</div>';
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px">Sin cortes guardados en este navegador.<br>Usa el botón <strong>archivo</strong> del encabezado → Guardar corte de hoy.</div>';
       return;
     }
     var html = '';
