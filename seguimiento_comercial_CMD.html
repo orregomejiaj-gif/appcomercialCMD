@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.57   (APP_VERSION = 'pyv-comercial-5.4.57')
+  Versión actual: pyv-comercial-5.4.58   (APP_VERSION = 'pyv-comercial-5.4.58')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.58 (2026-07-06)
+    - Snapshot: eliminada copia IndexedDB del navegador; solo descarga .json.gz y carga manual desde archivo/carpeta.
   pyv-comercial-5.4.57 (2026-07-06)
     - Snapshot: quitados botones duplicados Guardar/Corte histórico del menú; solo icono archivo en encabezado.
   pyv-comercial-5.4.56 (2026-07-06)
@@ -285,11 +287,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.57">
-<meta name="build-id" content="pyv-comercial-5.4.57-20260706-1455">
+<meta name="app-version" content="pyv-comercial-5.4.58">
+<meta name="build-id" content="pyv-comercial-5.4.58-20260706-1505">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.57';
+window.APP_VERSION='pyv-comercial-5.4.58';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1827,11 +1829,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .cmd-snapshot-banner button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:4px 10px;font-size:9px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif}
 .menu-qf-hist{background:linear-gradient(135deg,#fff7ed,#ffedd5);border-color:#fdba74;color:#c2410c}
 .menu-qf-hist .menu-qf-icon{filter:none}
-#modal-corte-historico .snap-cat-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;background:#fff;cursor:pointer;transition:.15s}
-#modal-corte-historico .snap-cat-item:hover{border-color:#f97316;background:#fff7ed}
-#modal-corte-historico .snap-cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-#modal-corte-historico .snap-cmp-card{border:1px solid #e5e7eb;border-radius:10px;padding:12px;background:#f8fafc}
-#modal-corte-historico .snap-cmp-diff{margin-top:12px;padding:12px;background:#fef3c7;border-radius:10px;border:1px solid #fde047;font-size:11px}
 #btn-menu-refresh:disabled,#btn-menu-historico:disabled{opacity:.35;cursor:not-allowed}
 .menu-hz-dv{background:var(--teal-l);color:var(--teal-d);border:1px solid rgba(0,176,185,.3)}
 .menu-modules{margin-top:16px;display:flex;flex-direction:column;gap:14px}
@@ -3895,7 +3892,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.57';
+var APP_VERSION = 'pyv-comercial-5.4.58';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4804,15 +4801,12 @@ function _scicPintarUltimaActualizacion(){
 window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
 
 // ════════════════════════════════════════════════════════════
-// SNAPSHOT DIARIO CMD — guardado auto 23:00 + modo histórico
+// SNAPSHOT DIARIO CMD — guardado manual + modo histórico
 // ════════════════════════════════════════════════════════════
 (function(){
   var SCHEMA = 'cmd-snapshot';
   var SCHEMA_VERSION = 1;
-  var DB_NAME = 'cmd_snapshots_v1';
-  var DB_STORE = 'snapshots';
   var TZ = 'America/Bogota';
-  var _dbPromise = null;
 
   window._modoSnapshot = window._modoSnapshot || { activo: false, fecha_corte: null };
 
@@ -4833,59 +4827,6 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
 
   function _snapClone(v){
     try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; }
-  }
-
-  function _snapAbrirDB(){
-    if(_dbPromise) return _dbPromise;
-    _dbPromise = new Promise(function(resolve, reject){
-      if(!window.indexedDB){ reject(new Error('IndexedDB no disponible')); return; }
-      var req = indexedDB.open(DB_NAME, 1);
-      req.onupgradeneeded = function(ev){
-        var db = ev.target.result;
-        if(!db.objectStoreNames.contains(DB_STORE)){
-          db.createObjectStore(DB_STORE, { keyPath: 'fecha_corte' });
-        }
-      };
-      req.onsuccess = function(ev){ resolve(ev.target.result); };
-      req.onerror = function(){ reject(req.error || new Error('IndexedDB error')); };
-    });
-    return _dbPromise;
-  }
-
-  function _snapIdbPut(rec){
-    return _snapAbrirDB().then(function(db){
-      return new Promise(function(resolve, reject){
-        var tx = db.transaction(DB_STORE, 'readwrite');
-        tx.objectStore(DB_STORE).put(rec);
-        tx.oncomplete = function(){ resolve(rec); };
-        tx.onerror = function(){ reject(tx.error); };
-      });
-    });
-  }
-
-  function _snapIdbGet(fecha){
-    return _snapAbrirDB().then(function(db){
-      return new Promise(function(resolve, reject){
-        var tx = db.transaction(DB_STORE, 'readonly');
-        var req = tx.objectStore(DB_STORE).get(fecha);
-        req.onsuccess = function(){ resolve(req.result || null); };
-        req.onerror = function(){ reject(req.error); };
-      });
-    });
-  }
-
-  function _snapIdbList(){
-    return _snapAbrirDB().then(function(db){
-      return new Promise(function(resolve, reject){
-        var tx = db.transaction(DB_STORE, 'readonly');
-        var req = tx.objectStore(DB_STORE).getAll();
-        req.onsuccess = function(){
-          var arr = (req.result || []).sort(function(a,b){ return (b.fecha_corte||'').localeCompare(a.fecha_corte||''); });
-          resolve(arr);
-        };
-        req.onerror = function(){ reject(req.error); };
-      });
-    });
   }
 
   function _snapGzipText(str){
@@ -5246,19 +5187,9 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
       return _snapGzipText(json).then(function(gz){
         return _snapSha256(json).then(function(chk){
           if(snap.meta.checksum !== chk) snap.meta.checksum = chk;
-          var rec = {
-            fecha_corte: snap.fecha_corte,
-            generado_en: snap.generado_en,
-            app_version: snap.app_version,
-            compressed: gz.compressed,
-            payload: gz.data,
-            meta: snap.meta
-          };
-          return _snapIdbPut(rec).then(function(){
-            try{ localStorage.setItem('cmd_snapshot_ultima_fecha', snap.fecha_corte); }catch(e){}
-            if(opts.descargar !== false) _snapDescargarGz(snap.fecha_corte, gz.data);
-            return snap;
-          });
+          try{ localStorage.setItem('cmd_snapshot_ultima_fecha', snap.fecha_corte); }catch(e){}
+          if(opts.descargar !== false) _snapDescargarGz(snap.fecha_corte, gz.data);
+          return snap;
         });
       });
     });
@@ -5277,17 +5208,11 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
     var btn = document.getElementById('snap-btn-guardar');
     if(btn){ btn.disabled = true; btn.textContent = 'Guardando…'; }
     return cmdGuardarSnapshotDiario(fecha, { descargar: true, forzar: true }).then(function(snap){
-      var sp = (typeof SNAPSHOT_SHAREPOINT_FOLDER !== 'undefined') ? SNAPSHOT_SHAREPOINT_FOLDER : '';
       var msg = '✅ Corte guardado: ' + (snap && snap.fecha_corte) + '\n\n';
       msg += '· Archivo descargado: CMD_snapshot_' + fecha + '.json.gz\n';
-      msg += '· Copia local en este navegador (IndexedDB)\n';
-      if(sp) msg += '\nSube el archivo manualmente a SharePoint si lo necesitas.';
+      msg += '\nMueve el archivo manualmente a la carpeta de SharePoint si lo necesitas.';
       alert(msg);
-      return _snapIdbList().then(function(lista){
-        _snapRenderCatalogo(lista);
-        _snapPoblarSelects(lista);
-        return snap;
-      });
+      return snap;
     }).catch(function(e){
       alert('No se pudo guardar: ' + (e && e.message ? e.message : e));
       return null;
@@ -5296,19 +5221,6 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
     });
   }
   window.cmdGuardarSnapshotManual = cmdGuardarSnapshotManual;
-
-  function cmdCargarSnapshotPorFecha(fecha){
-    return _snapIdbGet(fecha).then(function(rec){
-      if(!rec) return Promise.reject(new Error('No hay snapshot para ' + fecha));
-      return _snapGunzipToText(rec.payload, rec.compressed !== false).then(function(txt){
-        var snap = JSON.parse(txt);
-        return cmdAplicarSnapshot(snap).then(function(){
-          cmdActivarModoSnapshot(fecha);
-          return snap;
-        });
-      });
-    });
-  }
 
   function cmdCargarSnapshotDesdeObjeto(snap){
     return cmdAplicarSnapshot(snap).then(function(){
@@ -5356,124 +5268,11 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
   }
   window.cmdCargarSnapshotArchivo = cmdCargarSnapshotArchivo;
 
-  function _snapFmtN(n){ return (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('es-CO'); }
-
-  function _snapResumenKPIs(snap){
-    var op = (snap && snap.operacion) || {};
-    var col = (op.colocacion && op.colocacion.coloc_data) || [];
-    var acum = 0, meta = 0;
-    col.forEach(function(r){ acum += (+r.acum_n||0); meta += (+r.meta_n||0); });
-    var sg = (op.sigec_glpi && op.sigec_glpi.sigec_rows) || [];
-    var glp = (op.sigec_glpi && op.sigec_glpi.glpi_rows) || [];
-    var cart = (op.cartera && op.cartera.cart_data) || {};
-    var mora = 0;
-    if(cart.ciDistCyg && cart.ciDistCyg.total>0 && cart.ciDistCyg.mora!=null){
-      mora = Math.round((cart.ciDistCyg.mora / cart.ciDistCyg.total) * 1000) / 10;
-    }
-    return { acum_n: acum, meta_n: meta, pct: meta>0?Math.round(acum/meta*1000)/10:0, sigec: sg.length, glpi: glp.length, mora: mora };
-  }
-
-  function cmdEjecutarComparacionSnapshots(){
-    var fa = (document.getElementById('snap-cmp-a')||{}).value;
-    var fb = (document.getElementById('snap-cmp-b')||{}).value;
-    var out = document.getElementById('snap-cmp-resultado');
-    if(!fa || !fb){ if(out) out.innerHTML='<div class="snap-cmp-diff">Selecciona dos fechas.</div>'; return; }
-    if(fa === fb){ if(out) out.innerHTML='<div class="snap-cmp-diff">Elige fechas distintas.</div>'; return; }
-    Promise.all([_snapIdbGet(fa), _snapIdbGet(fb)]).then(function(recs){
-      return Promise.all(recs.map(function(rec, i){
-        if(!rec) throw new Error('Falta snapshot ' + (i?fb:fa));
-        return _snapGunzipToText(rec.payload, rec.compressed !== false).then(function(t){ return JSON.parse(t); });
-      }));
-    }).then(function(snaps){
-      var ka = _snapResumenKPIs(snaps[0]);
-      var kb = _snapResumenKPIs(snaps[1]);
-      var html = '<div class="snap-cmp-grid">';
-      html += '<div class="snap-cmp-card"><div style="font-weight:800;margin-bottom:8px">'+fa+'</div>';
-      html += '<div>Coloc. acum: <b>'+_snapFmtN(ka.acum_n)+'</b> / '+_snapFmtN(ka.meta_n)+' ('+ka.pct+'%)</div>';
-      html += '<div>SIGEC: '+_snapFmtN(ka.sigec)+' · GLPI: '+_snapFmtN(ka.glpi)+'</div>';
-      html += '<div>Mora Cygnus: '+ka.mora+'%</div></div>';
-      html += '<div class="snap-cmp-card"><div style="font-weight:800;margin-bottom:8px">'+fb+'</div>';
-      html += '<div>Coloc. acum: <b>'+_snapFmtN(kb.acum_n)+'</b> / '+_snapFmtN(kb.meta_n)+' ('+kb.pct+'%)</div>';
-      html += '<div>SIGEC: '+_snapFmtN(kb.sigec)+' · GLPI: '+_snapFmtN(kb.glpi)+'</div>';
-      html += '<div>Mora Cygnus: '+kb.mora+'%</div></div></div>';
-      html += '<div class="snap-cmp-diff"><strong>Δ '+fa+' → '+fb+'</strong><br>';
-      html += 'Colocación: <b>'+((kb.acum_n-ka.acum_n)>=0?'+':'')+_snapFmtN(kb.acum_n-ka.acum_n)+'</b> créditos · ';
-      html += 'Cumplimiento: <b>'+((kb.pct-ka.pct)>=0?'+':'')+(Math.round((kb.pct-ka.pct)*10)/10)+'</b> pp · ';
-      html += 'SIGEC: <b>'+((kb.sigec-ka.sigec)>=0?'+':'')+_snapFmtN(kb.sigec-ka.sigec)+'</b> filas · ';
-      html += 'Mora: <b>'+((kb.mora-ka.mora)>=0?'+':'')+(Math.round((kb.mora-ka.mora)*10)/10)+'</b> pp</div>';
-      if(out) out.innerHTML = html;
-    }).catch(function(e){
-      if(out) out.innerHTML='<div class="snap-cmp-diff">Error: '+(e&&e.message||e)+'</div>';
-    });
-  }
-  window.cmdEjecutarComparacionSnapshots = cmdEjecutarComparacionSnapshots;
-
-  function _snapPoblarSelects(lista){
-    var selA = document.getElementById('snap-cmp-a');
-    var selB = document.getElementById('snap-cmp-b');
-    [selA, selB].forEach(function(sel){
-      if(!sel) return;
-      sel.innerHTML = '';
-      (lista||[]).forEach(function(it, idx){
-        var o = document.createElement('option');
-        o.value = it.fecha_corte;
-        o.textContent = it.fecha_corte + ' · ' + (it.generado_en||'').slice(0,16) + ' · v' + (it.app_version||'?').replace('pyv-comercial-','');
-        sel.appendChild(o);
-      });
-      if(sel.options.length>1) sel.selectedIndex = sel===selB ? 0 : 1;
-    });
-  }
-
-  function _snapRenderCatalogo(lista){
-    var el = document.getElementById('snap-catalogo-lista');
-    if(!el) return;
-    if(!lista || !lista.length){
-      el.innerHTML = '<div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px">Sin cortes guardados en este navegador.<br>Usa el botón <strong>archivo</strong> del encabezado → Guardar corte de hoy.</div>';
-      return;
-    }
-    var html = '';
-    lista.forEach(function(it){
-      var m = it.meta || {};
-      html += '<div class="snap-cat-item" onclick="cmdAbrirSnapshotFecha(\''+it.fecha_corte+'\')">';
-      html += '<div><div style="font-weight:800;font-size:13px;color:#c2410c">'+it.fecha_corte+'</div>';
-      html += '<div style="font-size:10px;color:#64748b;margin-top:2px">'+((it.generado_en||'').replace('T',' ').slice(0,19))+' · '+_snapFmtN(m.sedes_coloc)+' sedes · SIGEC '+_snapFmtN(m.filas_sigec)+'</div></div>';
-      html += '<span style="font-size:10px;font-weight:700;color:#ea580c">Abrir →</span></div>';
-    });
-    el.innerHTML = html;
-  }
-
-  function cmdAbrirSnapshotFecha(fecha){
-    cmdCargarSnapshotPorFecha(fecha).then(function(){
-      cerrarModalCorteHistorico();
-      if(typeof mostrarMenuPrincipal === 'function') mostrarMenuPrincipal();
-    }).catch(function(e){ alert('No se pudo abrir: ' + (e&&e.message||e)); });
-  }
-  window.cmdAbrirSnapshotFecha = cmdAbrirSnapshotFecha;
-
-  function cmdSnapTab(tab){
-    var pa = document.getElementById('snap-panel-abrir');
-    var pc = document.getElementById('snap-panel-cmp');
-    var ta = document.getElementById('snap-tab-abrir');
-    var tc = document.getElementById('snap-tab-cmp');
-    if(pa) pa.style.display = tab==='cmp' ? 'none' : 'block';
-    if(pc) pc.style.display = tab==='cmp' ? 'block' : 'none';
-    if(ta){ ta.style.borderColor = tab==='abrir'?'#f97316':'#e5e7eb'; ta.style.background = tab==='abrir'?'#fff7ed':'#f8fafc'; }
-    if(tc){ tc.style.borderColor = tab==='cmp'?'#f97316':'#e5e7eb'; tc.style.background = tab==='cmp'?'#fff7ed':'#f8fafc'; }
-  }
-  window.cmdSnapTab = cmdSnapTab;
-
   function abrirModalCorteHistorico(){
     if(typeof _openModal === 'function' && !_openModal('modal-corte-historico', 999996, 'block')){
       var m = document.getElementById('modal-corte-historico');
       if(m) m.style.display = 'block';
     }
-    cmdSnapTab('abrir');
-    _snapIdbList().then(function(lista){
-      _snapRenderCatalogo(lista);
-      _snapPoblarSelects(lista);
-    }).catch(function(){
-      _snapRenderCatalogo([]);
-    });
   }
   window.abrirModalCorteHistorico = abrirModalCorteHistorico;
 
@@ -7146,33 +6945,19 @@ document.addEventListener('DOMContentLoaded', function(){
   <div style="background:linear-gradient(135deg,#9a3412,#c2410c);padding:18px 22px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <div style="color:#fed7aa;font-size:14px;font-weight:800"><i class="ti ti-archive"></i> Corte histórico CMD</div>
-      <div style="color:rgba(255,255,255,.75);font-size:11px;margin-top:3px">Guardado manual · IndexedDB local + descarga .json.gz</div>
+      <div style="color:rgba(255,255,255,.75);font-size:11px;margin-top:3px">Descarga .json.gz y carga manual desde carpeta</div>
     </div>
     <button type="button" onclick="cerrarModalCorteHistorico()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:Ubuntu,sans-serif">✕</button>
   </div>
   <div style="padding:16px 20px">
     <div style="margin-bottom:14px;padding:12px;background:#fff7ed;border:1px solid #fdba74;border-radius:12px">
       <button type="button" id="snap-btn-guardar" onclick="cmdGuardarSnapshotManual()" style="width:100%;padding:12px;border:none;border-radius:10px;background:linear-gradient(135deg,#c2410c,#ea580c);color:#fff;font-weight:800;font-size:13px;cursor:pointer;font-family:Ubuntu,sans-serif">💾 Guardar corte de hoy</button>
-      <div style="font-size:10px;color:#9a3412;margin-top:8px;text-align:center">Descarga <code style="font-size:9px">CMD_snapshot_YYYY-MM-DD.json.gz</code> y guárdalo en <a href="https://coopminutodedios-my.sharepoint.com/:f:/p/juan_orrego/IgAt8-dt3RRVQ5pZNHU8fGWLAZXjmssy_xF1ydJlTwiQFZM?e=fyzMfR" target="_blank" rel="noopener" style="color:#c2410c">SharePoint juan_orrego</a> si lo necesitas.</div>
+      <div style="font-size:10px;color:#9a3412;margin-top:8px;text-align:center">Descarga <code style="font-size:9px">CMD_snapshot_YYYY-MM-DD.json.gz</code> y muévelo a <a href="https://coopminutodedios-my.sharepoint.com/:f:/p/juan_orrego/IgAt8-dt3RRVQ5pZNHU8fGWLAZXjmssy_xF1ydJlTwiQFZM?e=fyzMfR" target="_blank" rel="noopener" style="color:#c2410c">SharePoint juan_orrego</a>.</div>
     </div>
-    <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid #e5e7eb;padding-bottom:10px">
-      <button type="button" id="snap-tab-abrir" onclick="cmdSnapTab('abrir')" style="flex:1;padding:8px;border-radius:8px;border:2px solid #f97316;background:#fff7ed;color:#c2410c;font-weight:800;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif">📦 Abrir corte</button>
-      <button type="button" id="snap-tab-cmp" onclick="cmdSnapTab('cmp')" style="flex:1;padding:8px;border-radius:8px;border:2px solid #e5e7eb;background:#f8fafc;color:#64748b;font-weight:700;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif">📊 Comparar fechas</button>
-      <button type="button" onclick="document.getElementById('snap-file-ext').click()" style="padding:8px 12px;border-radius:8px;border:2px solid #e5e7eb;background:#fff;color:#475569;font-weight:700;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif" title="Cargar .json o .json.gz externo">📁 Archivo</button>
+    <div style="padding:12px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:12px">
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Abre un corte guardado en <strong>modo histórico</strong> (solo lectura, sin Sheets). Selecciona el archivo desde tu carpeta local o SharePoint.</div>
+      <button type="button" onclick="document.getElementById('snap-file-ext').click()" style="width:100%;padding:12px;border:2px solid #f97316;border-radius:10px;background:#fff7ed;color:#c2410c;font-weight:800;font-size:13px;cursor:pointer;font-family:Ubuntu,sans-serif">📁 Abrir archivo de corte (.json / .json.gz)</button>
       <input type="file" id="snap-file-ext" accept=".json,.gz,application/json,application/gzip" style="display:none" onchange="cmdCargarSnapshotArchivo(event)">
-    </div>
-    <div id="snap-panel-abrir">
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Selecciona un corte guardado en este navegador para abrir la app en <strong>modo histórico</strong> (sin Sheets).</div>
-      <div id="snap-catalogo-lista"><div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px">Cargando catálogo…</div></div>
-    </div>
-    <div id="snap-panel-cmp" style="display:none">
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Compara dos cortes guardados (colocación, SIGEC, GLPI, cartera).</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
-        <div><label style="font-size:10px;font-weight:700;color:#64748b">Fecha A (anterior)</label><select id="snap-cmp-a" style="width:100%;margin-top:4px;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif"></select></div>
-        <div><label style="font-size:10px;font-weight:700;color:#64748b">Fecha B (reciente)</label><select id="snap-cmp-b" style="width:100%;margin-top:4px;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif"></select></div>
-      </div>
-      <button type="button" onclick="cmdEjecutarComparacionSnapshots()" style="width:100%;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#c2410c,#ea580c);color:#fff;font-weight:800;font-size:12px;cursor:pointer;font-family:Ubuntu,sans-serif">Comparar cortes</button>
-      <div id="snap-cmp-resultado"></div>
     </div>
   </div>
 </div>
