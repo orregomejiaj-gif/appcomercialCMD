@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.54   (APP_VERSION = 'pyv-comercial-5.4.54')
+  Versión actual: pyv-comercial-5.4.55   (APP_VERSION = 'pyv-comercial-5.4.55')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.55 (2026-07-06)
+    - Snapshot diario: respaldo automático en SharePoint (carpeta juan_orrego) vía proxy Apps Script o Graph/MSAL.
+    - backend/CMD_SNAPSHOT_SHAREPOINT.gs para subida desatendida a las 23:00 con Microsoft Graph.
   pyv-comercial-5.4.54 (2026-07-06)
     - Snapshot diario automático a las 23:00 (Colombia): JSON completo en IndexedDB + respaldo .json.gz.
     - Modo histórico: botón «Corte histórico» (accesos rápidos) abre la app solo con datos del snapshot.
@@ -277,11 +280,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.54">
-<meta name="build-id" content="pyv-comercial-5.4.54-20260706-0110">
+<meta name="app-version" content="pyv-comercial-5.4.55">
+<meta name="build-id" content="pyv-comercial-5.4.55-20260706-0130">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.54';
+window.APP_VERSION='pyv-comercial-5.4.55';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3888,7 +3891,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.54';
+var APP_VERSION = 'pyv-comercial-5.4.55';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4012,6 +4015,14 @@ var SCIC_PROXY_URL = ''; // Proxy Apps Script deshabilitado (devolvía error). S
 // Proxy IA — Apps Script solo Gemini (gratis). Ver backend/README.md
 var SCIC_IA_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwA2EReltq108f9Hf--Pj1aaEPN5pZJcKQjtsu9m6rFVKzUPEAbpIxBe8lHqwV7O6KMIw/exec';
 
+// Snapshot diario → SharePoint (carpeta juan_orrego). Ver backend/CMD_SNAPSHOT_SHAREPOINT.gs
+var SNAPSHOT_SHAREPOINT = window.SNAPSHOT_SHAREPOINT || {
+  enabled: true,
+  folderShareUrl: 'https://coopminutodedios-my.sharepoint.com/:f:/p/juan_orrego/IgAt8-dt3RRVQ5pZNHU8fGWLAZXjmssy_xF1ydJlTwiQFZM?e=fyzMfR',
+  proxyUrl: '', // Pegar URL /exec tras desplegar CMD_SNAPSHOT_SHAREPOINT.gs (recomendado 23:00)
+  msClientId: '', // Opcional: Azure AD SPA para subida directa desde navegador
+  tenantId: 'coopminutodedios.onmicrosoft.com'
+};
 
 // Equivalencias de nombres de sede entre fuentes
 var SEDE_EQUIVALENCIAS_COLOCACION = {
@@ -4809,10 +4820,9 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
 
   window._modoSnapshot = window._modoSnapshot || { activo: false, fecha_corte: null };
 
-  var SNAPSHOT_CLOUD = window.SNAPSHOT_CLOUD || {
-    enabled: false,
-    uploadUrl: ''
-  };
+  var SNAPSHOT_SP = (typeof SNAPSHOT_SHAREPOINT !== 'undefined') ? SNAPSHOT_SHAREPOINT : (window.SNAPSHOT_SHAREPOINT || { enabled: false });
+  var _msalApp = null;
+  var _msalLoading = null;
 
   function _snapFechaColombia(d){
     try{
@@ -5253,21 +5263,151 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
     return btoa(s);
   }
 
-  function _snapSubirNube(fecha, buf, meta){
-    if(!SNAPSHOT_CLOUD.enabled || !SNAPSHOT_CLOUD.uploadUrl) return Promise.resolve();
-    var body = JSON.stringify({
-      fecha_corte: fecha,
-      app_version: meta.app_version || '',
-      checksum: (meta.checksum || ''),
-      generado_en: meta.generado_en || '',
-      payload_b64: _snapArrayBufToB64(buf)
+  function _snapEncodeShareUrl(sharingUrl){
+    var base64 = btoa(unescape(encodeURIComponent(String(sharingUrl))));
+    return 'u!' + base64.replace(/=+$/,'').replace(/\//g,'_').replace(/\+/g,'-');
+  }
+
+  function _snapCargarMsal(){
+    if(window.msal && window.msal.PublicClientApplication) return Promise.resolve(window.msal);
+    if(_msalLoading) return _msalLoading;
+    _msalLoading = new Promise(function(resolve, reject){
+      var s = document.createElement('script');
+      s.src = 'https://alcdn.msauth.net/browser/2.38.4/js/msal-browser.min.js';
+      s.async = true;
+      s.onload = function(){ resolve(window.msal); };
+      s.onerror = function(){ reject(new Error('No se pudo cargar MSAL')); };
+      document.head.appendChild(s);
     });
-    return fetch(SNAPSHOT_CLOUD.uploadUrl, {
+    return _msalLoading;
+  }
+
+  function _snapGetMsalApp(){
+    if(_msalApp) return _msalApp;
+    if(!SNAPSHOT_SP.msClientId) return null;
+    return _snapCargarMsal().then(function(msal){
+      if(_msalApp) return _msalApp;
+      _msalApp = new msal.PublicClientApplication({
+        auth: {
+          clientId: SNAPSHOT_SP.msClientId,
+          authority: 'https://login.microsoftonline.com/' + encodeURIComponent(SNAPSHOT_SP.tenantId || 'organizations'),
+          redirectUri: window.location.href.split('#')[0].split('?')[0]
+        },
+        cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false }
+      });
+      return _msalApp;
+    });
+  }
+
+  function _snapObtenerTokenGraph(interactive){
+    if(!SNAPSHOT_SP.msClientId) return Promise.reject(new Error('msClientId no configurado'));
+    var scopes = ['Files.ReadWrite.All'];
+    return _snapGetMsalApp().then(function(pca){
+      var accounts = pca.getAllAccounts();
+      if(accounts.length){
+        return pca.acquireTokenSilent({ scopes: scopes, account: accounts[0] }).catch(function(){
+          if(!interactive) return Promise.reject(new Error('Sin sesión Microsoft activa'));
+          return pca.acquireTokenPopup({ scopes: scopes });
+        });
+      }
+      if(!interactive) return Promise.reject(new Error('Sin cuenta Microsoft'));
+      return pca.loginPopup({ scopes: scopes });
+    }).then(function(res){
+      return res.accessToken;
+    });
+  }
+
+  function _snapResolverCarpetaGraph(token){
+    var shareId = _snapEncodeShareUrl(SNAPSHOT_SP.folderShareUrl);
+    return fetch('https://graph.microsoft.com/v1.0/shares/' + encodeURIComponent(shareId) + '/driveItem', {
+      headers: { Authorization: 'Bearer ' + token }
+    }).then(function(r){
+      return r.json().then(function(j){
+        if(!r.ok) throw new Error((j.error && j.error.message) || ('Graph shares ' + r.status));
+        if(!j.id || !j.parentReference || !j.parentReference.driveId) throw new Error('Carpeta SharePoint sin driveId');
+        return { driveId: j.parentReference.driveId, itemId: j.id };
+      });
+    });
+  }
+
+  function _snapSubirGraphDirect(token, filename, buf){
+    return _snapResolverCarpetaGraph(token).then(function(folder){
+      var url = 'https://graph.microsoft.com/v1.0/drives/' + encodeURIComponent(folder.driveId) +
+        '/items/' + encodeURIComponent(folder.itemId) + ':/' + encodeURIComponent(filename) + ':/content';
+      return fetch(url, {
+        method: 'PUT',
+        headers: {
+          Authorization: 'Bearer ' + token,
+          'Content-Type': 'application/gzip'
+        },
+        body: buf
+      }).then(function(r){
+        return r.json().then(function(j){
+          if(!r.ok) throw new Error((j.error && j.error.message) || ('Graph upload ' + r.status));
+          return j;
+        });
+      });
+    });
+  }
+
+  function _snapSubirProxySharePoint(fecha, filename, buf, meta){
+    if(!SNAPSHOT_SP.proxyUrl) return Promise.reject(new Error('proxyUrl no configurado'));
+    var body = JSON.stringify({
+      accion: 'snapshot',
+      fecha_corte: fecha,
+      filename: filename,
+      payload_b64: _snapArrayBufToB64(buf),
+      checksum: (meta && meta.checksum) || '',
+      generado_en: (meta && meta.generado_en) || '',
+      app_version: (meta && meta.app_version) || ''
+    });
+    return fetch(SNAPSHOT_SP.proxyUrl, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: body,
       mode: 'cors'
-    }).catch(function(e){ console.warn('[SNAPSHOT] nube:', e); });
+    }).then(function(r){
+      return r.json().then(function(j){
+        if(!r.ok || !j.ok) throw new Error(j.error || ('Proxy ' + r.status));
+        return j;
+      });
+    });
+  }
+
+  function _snapSubirSharePoint(fecha, buf, meta){
+    if(!SNAPSHOT_SP.enabled || !SNAPSHOT_SP.folderShareUrl) return Promise.resolve(null);
+    var filename = 'CMD_snapshot_' + fecha + '.json.gz';
+    var chain = Promise.resolve(null);
+
+    if(SNAPSHOT_SP.proxyUrl){
+      chain = chain.then(function(){
+        return _snapSubirProxySharePoint(fecha, filename, buf, meta).then(function(res){
+          console.log('[SNAPSHOT] SharePoint vía proxy OK', fecha, res.webUrl || '');
+          try{ localStorage.setItem('cmd_snapshot_sp_' + fecha, '1'); }catch(e){}
+          return res;
+        });
+      });
+    } else if(SNAPSHOT_SP.msClientId){
+      chain = chain.then(function(){
+        return _snapObtenerTokenGraph(false).catch(function(){
+          return _snapObtenerTokenGraph(true);
+        }).then(function(token){
+          return _snapSubirGraphDirect(token, filename, buf);
+        }).then(function(res){
+          console.log('[SNAPSHOT] SharePoint vía Graph OK', fecha, res.webUrl || '');
+          try{ localStorage.setItem('cmd_snapshot_sp_' + fecha, '1'); }catch(e){}
+          return res;
+        });
+      });
+    } else {
+      console.warn('[SNAPSHOT] SharePoint: configura SNAPSHOT_SHAREPOINT.proxyUrl o msClientId (ver backend/CMD_SNAPSHOT_SHAREPOINT.gs)');
+      return Promise.resolve(null);
+    }
+
+    return chain.catch(function(e){
+      console.warn('[SNAPSHOT] SharePoint:', e && e.message);
+      return null;
+    });
   }
 
   function cmdGuardarSnapshotDiario(fechaCorte, opts){
@@ -5292,7 +5432,7 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
             try{ localStorage.setItem('cmd_snapshot_ultima_fecha', snap.fecha_corte); }catch(e){}
             try{ localStorage.setItem('cmd_snapshot_guardado_' + snap.fecha_corte, '1'); }catch(e){}
             if(opts.descargar) _snapDescargarGz(snap.fecha_corte, gz.data);
-            return _snapSubirNube(snap.fecha_corte, gz.data, snap.meta).then(function(){ return snap; });
+            return _snapSubirSharePoint(snap.fecha_corte, gz.data, snap.meta).then(function(){ return snap; });
           });
         });
       });
@@ -5438,7 +5578,9 @@ window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
       var m = it.meta || {};
       html += '<div class="snap-cat-item" onclick="cmdAbrirSnapshotFecha(\''+it.fecha_corte+'\')">';
       html += '<div><div style="font-weight:800;font-size:13px;color:#c2410c">'+it.fecha_corte+'</div>';
-      html += '<div style="font-size:10px;color:#64748b;margin-top:2px">'+((it.generado_en||'').replace('T',' ').slice(0,19))+' · '+_snapFmtN(m.sedes_coloc)+' sedes · SIGEC '+_snapFmtN(m.filas_sigec)+'</div></div>';
+      html += '<div style="font-size:10px;color:#64748b;margin-top:2px">'+((it.generado_en||'').replace('T',' ').slice(0,19))+' · '+_snapFmtN(m.sedes_coloc)+' sedes · SIGEC '+_snapFmtN(m.filas_sigec);
+      try{ if(localStorage.getItem('cmd_snapshot_sp_'+it.fecha_corte)) html += ' · ☁️ SharePoint'; }catch(e){}
+      html += '</div></div>';
       html += '<span style="font-size:10px;font-weight:700;color:#ea580c">Abrir →</span></div>';
     });
     el.innerHTML = html;
@@ -7184,7 +7326,7 @@ document.addEventListener('DOMContentLoaded', function(){
   <div style="background:linear-gradient(135deg,#9a3412,#c2410c);padding:18px 22px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <div style="color:#fed7aa;font-size:14px;font-weight:800"><i class="ti ti-archive"></i> Corte histórico CMD</div>
-      <div style="color:rgba(255,255,255,.75);font-size:11px;margin-top:3px">Snapshots automáticos diarios (23:00) · IndexedDB local</div>
+      <div style="color:rgba(255,255,255,.75);font-size:11px;margin-top:3px">Snapshots automáticos 23:00 · IndexedDB + SharePoint</div>
     </div>
     <button type="button" onclick="cerrarModalCorteHistorico()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:Ubuntu,sans-serif">✕</button>
   </div>
@@ -7196,7 +7338,7 @@ document.addEventListener('DOMContentLoaded', function(){
       <input type="file" id="snap-file-ext" accept=".json,.gz,application/json,application/gzip" style="display:none" onchange="cmdCargarSnapshotArchivo(event)">
     </div>
     <div id="snap-panel-abrir">
-      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Selecciona una fecha guardada en este navegador. La app entrará en <strong>modo histórico</strong> (sin Sheets).</div>
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Selecciona una fecha guardada en este navegador. Respaldo en SharePoint: carpeta <a href="https://coopminutodedios-my.sharepoint.com/:f:/p/juan_orrego/IgAt8-dt3RRVQ5pZNHU8fGWLAZXjmssy_xF1ydJlTwiQFZM?e=fyzMfR" target="_blank" rel="noopener" style="color:#c2410c">juan_orrego</a>.</div>
       <div id="snap-catalogo-lista"><div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px">Cargando catálogo…</div></div>
     </div>
     <div id="snap-panel-cmp" style="display:none">
