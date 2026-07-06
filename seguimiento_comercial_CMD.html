@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.53   (APP_VERSION = 'pyv-comercial-5.4.53')
+  Versión actual: pyv-comercial-5.4.54   (APP_VERSION = 'pyv-comercial-5.4.54')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.54 (2026-07-06)
+    - Snapshot diario automático a las 23:00 (Colombia): JSON completo en IndexedDB + respaldo .json.gz.
+    - Modo histórico: botón «Corte histórico» (accesos rápidos) abre la app solo con datos del snapshot.
+    - Catálogo local, checksum SHA-256, comparador entre dos fechas, bloqueo de Sheets en modo histórico.
   pyv-comercial-5.4.53 (2026-07-06)
     - Renombre completo UI: textos restantes Seguimiento → Acompañamiento (formularios, actas, comparativo, exports).
   pyv-comercial-5.4.52 (2026-07-06)
@@ -273,11 +277,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.53">
-<meta name="build-id" content="pyv-comercial-5.4.53-20260706-0040">
+<meta name="app-version" content="pyv-comercial-5.4.54">
+<meta name="build-id" content="pyv-comercial-5.4.54-20260706-0110">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.53';
+window.APP_VERSION='pyv-comercial-5.4.54';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1043,8 +1047,13 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.35</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
-            <span class="menu-hz menu-hz-live">🟢 Operación en vivo · actualización continua</span>
+            <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
+            <span class="menu-hz menu-hz-hist" id="menu-hz-hist-badge" style="display:none">🕐 Modo histórico · solo lectura</span>
             <span class="menu-hz menu-hz-dv">📊 Información comercial · corte día anterior</span>
+          </div>
+          <div class="cmd-snapshot-banner" id="cmd-snapshot-banner">
+            <span id="cmd-snapshot-banner-txt">Modo histórico — Corte — · Solo lectura</span>
+            <button type="button" onclick="cmdSalirModoHistorico()">↩ Volver a operación en vivo</button>
           </div>
         </div>
       </div>
@@ -1054,6 +1063,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <div id="menu-cargo-sede">—</div>
         </div>
         <div id="menu-avatar" class="menu-avatar">JO</div>
+        <button onclick="abrirModalCorteHistorico()" class="menu-logout" title="Abrir corte histórico guardado" id="btn-menu-historico"><i class="ti ti-archive"></i></button>
         <button onclick="cargarDesdeSheetsCompleto(true)" class="menu-logout" title="Actualizar datos desde Google Sheets" id="btn-menu-refresh"><i class="ti ti-refresh"></i></button>
         <button onclick="cerrarSesion()" class="menu-logout" title="Cerrar sesión"><i class="ti ti-logout"></i></button>
       </div>
@@ -1331,6 +1341,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button type="button" onclick="abrirMetasDiarias()" class="menu-qf menu-qf-meta" title="Cumplimiento y metas diarias"><span class="menu-qf-icon">🏆</span><span class="menu-qf-lbl">Cumplimiento</span></button>
       <button type="button" onclick="abrirInformesComerciales()" class="menu-qf menu-qf-informes" title="Panel completo de informes"><span class="menu-qf-icon">📑</span><span class="menu-qf-lbl">Panel Informes</span></button>
       <button type="button" onclick="abrirSCIC('pulso')" class="menu-qf menu-qf-scic" title="ISCIC nacional"><span class="menu-qf-icon">🧠</span><span class="menu-qf-lbl">SCIC Pulso</span></button>
+      <button type="button" onclick="abrirModalCorteHistorico()" class="menu-qf menu-qf-hist" title="Consultar snapshot diario guardado"><span class="menu-qf-icon">📦</span><span class="menu-qf-lbl">Corte histórico</span></button>
     </div>
     <div class="menu-quick-dropdowns">
       <div class="menu-dd" data-dd="operacion">
@@ -1802,6 +1813,19 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-horizon-badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
 .menu-hz{font-size:8px;font-weight:700;padding:3px 8px;border-radius:6px;letter-spacing:.2px}
 .menu-hz-live{background:rgba(174,201,0,.15);color:#5a6a00;border:1px solid rgba(174,201,0,.35)}
+.menu-hz-hist{background:rgba(251,146,60,.18);color:#c2410c;border:1px solid rgba(251,146,60,.45);animation:cmdHistPulse 2.5s ease-in-out infinite}
+@keyframes cmdHistPulse{0%,100%{opacity:1}50%{opacity:.75}}
+.cmd-snapshot-banner{display:none;margin-top:6px;padding:8px 12px;background:linear-gradient(90deg,rgba(251,146,60,.2),rgba(234,88,12,.12));border:1px solid rgba(251,146,60,.45);border-radius:8px;font-size:10px;font-weight:700;color:#fed7aa;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.cmd-snapshot-banner.visible{display:flex}
+.cmd-snapshot-banner button{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:6px;padding:4px 10px;font-size:9px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif}
+.menu-qf-hist{background:linear-gradient(135deg,#fff7ed,#ffedd5);border-color:#fdba74;color:#c2410c}
+.menu-qf-hist .menu-qf-icon{filter:none}
+#modal-corte-historico .snap-cat-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;border:1px solid #e5e7eb;border-radius:10px;margin-bottom:8px;background:#fff;cursor:pointer;transition:.15s}
+#modal-corte-historico .snap-cat-item:hover{border-color:#f97316;background:#fff7ed}
+#modal-corte-historico .snap-cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+#modal-corte-historico .snap-cmp-card{border:1px solid #e5e7eb;border-radius:10px;padding:12px;background:#f8fafc}
+#modal-corte-historico .snap-cmp-diff{margin-top:12px;padding:12px;background:#fef3c7;border-radius:10px;border:1px solid #fde047;font-size:11px}
+#btn-menu-refresh:disabled,#btn-menu-historico:disabled{opacity:.35;cursor:not-allowed}
 .menu-hz-dv{background:var(--teal-l);color:var(--teal-d);border:1px solid rgba(0,176,185,.3)}
 .menu-modules{margin-top:16px;display:flex;flex-direction:column;gap:14px}
 .menu-module{background:var(--white);border:1px solid var(--border);border-radius:14px;padding:12px 12px 10px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
@@ -3864,7 +3888,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.53';
+var APP_VERSION = 'pyv-comercial-5.4.54';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4699,6 +4723,9 @@ if(typeof _cargarMemoriaSheet==='function') window._cargarMemoriaSheet=_cargarMe
 
 // Refresco en vivo de colocación + SIGEC (sin caché en memoria)
 function _scicRefrescarDatosVivos(forzar){
+  if(typeof cmdEsModoSnapshot==='function' && cmdEsModoSnapshot()){
+    return Promise.resolve();
+  }
   if(forzar){
     window._coloc_data = [];
     window._sigecRows = [];
@@ -4751,6 +4778,12 @@ window._scicRefrescarDatosVivos = _scicRefrescarDatosVivos;
 function _scicPintarUltimaActualizacion(){
   var el = document.getElementById('menu-ultima-actualizacion');
   if(!el) return;
+  if(typeof cmdEsModoSnapshot==='function' && cmdEsModoSnapshot()){
+    var fc = (window._modoSnapshot && window._modoSnapshot.fecha_corte) || '—';
+    el.textContent = '🕐 Modo histórico · corte ' + fc + ' · sin conexión a Sheets';
+    try{ if(typeof window._snapPintarModoUI==='function') window._snapPintarModoUI(); }catch(e){}
+    return;
+  }
   if(!window._sheetsUltimaCarga){
     el.textContent = 'Sincronizando con Sheets…';
     return;
@@ -4762,8 +4795,745 @@ function _scicPintarUltimaActualizacion(){
 }
 window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
 
+// ════════════════════════════════════════════════════════════
+// SNAPSHOT DIARIO CMD — guardado auto 23:00 + modo histórico
+// ════════════════════════════════════════════════════════════
+(function(){
+  var SCHEMA = 'cmd-snapshot';
+  var SCHEMA_VERSION = 1;
+  var DB_NAME = 'cmd_snapshots_v1';
+  var DB_STORE = 'snapshots';
+  var TZ = 'America/Bogota';
+  var FUENTES_MIN = 12;
+  var _dbPromise = null;
+
+  window._modoSnapshot = window._modoSnapshot || { activo: false, fecha_corte: null };
+
+  var SNAPSHOT_CLOUD = window.SNAPSHOT_CLOUD || {
+    enabled: false,
+    uploadUrl: ''
+  };
+
+  function _snapFechaColombia(d){
+    try{
+      return new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d || new Date());
+    }catch(e){
+      var x = d || new Date();
+      return x.getFullYear() + '-' + String(x.getMonth()+1).padStart(2,'0') + '-' + String(x.getDate()).padStart(2,'0');
+    }
+  }
+
+  function _snapHoraColombia(){
+    try{
+      var p = new Intl.DateTimeFormat('en-GB', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).formatToParts(new Date());
+      var h = 0, m = 0;
+      p.forEach(function(pt){ if(pt.type==='hour') h = parseInt(pt.value,10); if(pt.type==='minute') m = parseInt(pt.value,10); });
+      return { h: h, m: m };
+    }catch(e){ return { h: new Date().getHours(), m: new Date().getMinutes() }; }
+  }
+
+  function _snapIsoColombia(){
+    try{
+      return new Date().toLocaleString('sv-SE', { timeZone: TZ }).replace(' ', 'T') + '-05:00';
+    }catch(e){ return new Date().toISOString(); }
+  }
+
+  function _snapClone(v){
+    try{ return JSON.parse(JSON.stringify(v)); }catch(e){ return v; }
+  }
+
+  function _snapAbrirDB(){
+    if(_dbPromise) return _dbPromise;
+    _dbPromise = new Promise(function(resolve, reject){
+      if(!window.indexedDB){ reject(new Error('IndexedDB no disponible')); return; }
+      var req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = function(ev){
+        var db = ev.target.result;
+        if(!db.objectStoreNames.contains(DB_STORE)){
+          db.createObjectStore(DB_STORE, { keyPath: 'fecha_corte' });
+        }
+      };
+      req.onsuccess = function(ev){ resolve(ev.target.result); };
+      req.onerror = function(){ reject(req.error || new Error('IndexedDB error')); };
+    });
+    return _dbPromise;
+  }
+
+  function _snapIdbPut(rec){
+    return _snapAbrirDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(DB_STORE, 'readwrite');
+        tx.objectStore(DB_STORE).put(rec);
+        tx.oncomplete = function(){ resolve(rec); };
+        tx.onerror = function(){ reject(tx.error); };
+      });
+    });
+  }
+
+  function _snapIdbGet(fecha){
+    return _snapAbrirDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(DB_STORE, 'readonly');
+        var req = tx.objectStore(DB_STORE).get(fecha);
+        req.onsuccess = function(){ resolve(req.result || null); };
+        req.onerror = function(){ reject(req.error); };
+      });
+    });
+  }
+
+  function _snapIdbList(){
+    return _snapAbrirDB().then(function(db){
+      return new Promise(function(resolve, reject){
+        var tx = db.transaction(DB_STORE, 'readonly');
+        var req = tx.objectStore(DB_STORE).getAll();
+        req.onsuccess = function(){
+          var arr = (req.result || []).sort(function(a,b){ return (b.fecha_corte||'').localeCompare(a.fecha_corte||''); });
+          resolve(arr);
+        };
+        req.onerror = function(){ reject(req.error); };
+      });
+    });
+  }
+
+  function _snapGzipText(str){
+    if(typeof CompressionStream === 'undefined'){
+      return Promise.resolve({ compressed: false, data: new TextEncoder().encode(str) });
+    }
+    var stream = new Blob([str]).stream().pipeThrough(new CompressionStream('gzip'));
+    return new Response(stream).arrayBuffer().then(function(buf){
+      return { compressed: true, data: buf };
+    });
+  }
+
+  function _snapGunzipToText(buf, compressed){
+    if(!compressed){
+      return Promise.resolve(new TextDecoder().decode(buf));
+    }
+    if(typeof DecompressionStream === 'undefined'){
+      return Promise.reject(new Error('Navegador sin soporte gzip'));
+    }
+    var stream = new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));
+    return new Response(stream).text();
+  }
+
+  function _snapSha256(str){
+    if(!window.crypto || !crypto.subtle){
+      var h = 0;
+      for(var i=0;i<str.length;i++){ h = ((h<<5)-h) + str.charCodeAt(i); h |= 0; }
+      return Promise.resolve('fnv:' + (h>>>0).toString(16));
+    }
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(str)).then(function(buf){
+      return Array.from(new Uint8Array(buf)).map(function(b){ return b.toString(16).padStart(2,'0'); }).join('');
+    });
+  }
+
+  function _snapManifestFromOp(op){
+    var m = op || {};
+    var col = (m.colocacion && m.colocacion.coloc_data) || [];
+    var sig = (m.sigec_glpi && m.sigec_glpi.sigec_rows) || [];
+    var glp = (m.sigec_glpi && m.sigec_glpi.glpi_rows) || [];
+    var cart = (m.cartera && m.cartera.cart_data) || {};
+    var emp = (m.catalogos_inline && m.catalogos_inline.empleados_count) || 0;
+    var fuentes = 0;
+    if(col.length) fuentes++;
+    if(sig.length) fuentes++;
+    if(glp.length) fuentes++;
+    if(cart && (cart.ciDistCyg || cart.ciDistSAP)) fuentes++;
+    if(m.leads && (Object.keys(m.leads.leads_data||{}).length || (m.leads.call_rows||[]).length)) fuentes++;
+    if(m.matriculas_metas && m.matriculas_metas.matriculas_data && m.matriculas_metas.matriculas_data.length) fuentes++;
+    if(m.acompanamiento && m.acompanamiento.hist_seguimientos && m.acompanamiento.hist_seguimientos.length) fuentes++;
+    if(emp) fuentes++;
+    return {
+      sedes_coloc: col.length,
+      filas_sigec: sig.length,
+      filas_glpi: glp.length,
+      cartera_ok: !!(cart.ciDistCyg || cart.ciDistSAP),
+      empleados: emp,
+      fuentes_ok: fuentes
+    };
+  }
+
+  function _snapRecolectarOperacion(){
+    var empBd = (typeof EMPLEADOS_BD !== 'undefined') ? EMPLEADOS_BD : {};
+    return {
+      colocacion: {
+        coloc_data: _snapClone(window._coloc_data || []),
+        coloc_s2: _snapClone(window._coloc_S2 || []),
+        coloc_s1: _snapClone(window._coloc_S1 || null),
+        coloc_data_fuente: window._coloc_data_fuente || '',
+        historico: _snapClone(window._historicoColoc || [])
+      },
+      sigec_glpi: {
+        sigec_rows: _snapClone(window._sigecRows || []),
+        glpi_rows: _snapClone(window._glpiRows || []),
+        sigec_nacional: _snapClone(window._sigecNacional || null),
+        glpi_nacional: _snapClone(window._glpiNacional || null),
+        sigec_data: _snapClone(window._sigecData || null),
+        glpi_data: _snapClone(window._glpiData || null)
+      },
+      cartera: {
+        cart_data: _snapClone(window._cartData || null),
+        cartera_data: _snapClone(window._cartera_data || null)
+      },
+      leads: {
+        leads_data: _snapClone(window._leads_data || {}),
+        call_data: _snapClone(window._leadsCallData || null),
+        call_rows: _snapClone(window._leadsCallRows || []),
+        adm_data: _snapClone(window._leadsAdmData || null),
+        adm_rows: _snapClone(window._leadsAdmRows || []),
+        scala_data: _snapClone(window._leadsScalaData || null),
+        bunji_data: _snapClone(window._leadsBunjiData || null),
+        leads_data_alt: _snapClone(window._leadsData || null)
+      },
+      susceptibles: {
+        data: _snapClone(window._susceptiblesData || null),
+        total: window._susceptibles_total || 0,
+        sin_saldo: window._susceptibles_sin_saldo || 0,
+        con_saldo: window._susceptibles_con_saldo || 0,
+        susceptibles_data: _snapClone(window._susceptibles_data || null)
+      },
+      matriculas_metas: {
+        matriculas_data: _snapClone(window._matriculasData || []),
+        matriculas_total: window._matriculas_total || 0,
+        matriculas_total_meta: window._matriculas_total_meta || 0,
+        matriculas_nuevos: window._matriculas_nuevos || 0,
+        matriculas_continuos: window._matriculas_continuos || 0,
+        metas_data: _snapClone(window._metas_data || null),
+        meta_conv: _snapClone(window._metaConv || null),
+        mts_meta_n: window._mtsMetaN || 0,
+        mts_meta_v: window._mtsMetaV || 0
+      },
+      base_congelados: {
+        base_coloc_data: _snapClone(window._baseColocData || []),
+        base_coloc_filas: _snapClone(window._baseColocFilas || []),
+        base_coloc_total: window._baseColoc_total || 0,
+        base_coloc_lineas: _snapClone(window._baseColoc_lineas || null),
+        base_coloc_meses: _snapClone(window._baseColoc_meses || null),
+        congelados_data: _snapClone(window._congeladosData || []),
+        congelados_raw: _snapClone(window._congeladosRaw || [])
+      },
+      acompanamiento: {
+        hist_seguimientos: _snapClone(window._histSeguimientos || []),
+        hist_cargado: !!window._histCargado,
+        seguimientos_por_sede: _snapClone(window._seguimientosPorSede || null)
+      },
+      hubspot: _snapClone(window._hubspot_data || null),
+      malla: {
+        malla_data: _snapClone(window._malla_data || window._mallaData || []),
+        malla_turnos: _snapClone(window._mallaTurnos || []),
+        malla_turnos_index: _snapClone(window._mallaTurnosIndex || []),
+        malla_turnos_hoy: _snapClone(window._mallaTurnosHoy || []),
+        malla_turnos_sin_hoy: _snapClone(window._mallaTurnosSinHoy || []),
+        malla_en_turno: _snapClone(window._mallaEnTurnoApp || []),
+        malla_cerro: _snapClone(window._mallaCerroApp || []),
+        malla_ingreso: _snapClone(window._mallaIngresoApp || []),
+        malla_por_sede: _snapClone(window._mallaPorSede || null)
+      },
+      memoria: _snapClone(window._memoriaSheetData || null),
+      resumen_gerencial: _snapClone(window._resumenGerencial || null),
+      scic_derivados: {
+        scic_data: _snapClone(window.SCIC_DATA || null),
+        scic_nacional: _snapClone(window._SCIC_NACIONAL || null),
+        mcm_resumen: _snapClone(window._MCM_RESUMEN || null)
+      },
+      catalogos_inline: {
+        empleados_count: Object.keys(empBd).length
+      },
+      sheets_ultima_carga: window._sheetsUltimaCarga || null
+    };
+  }
+
+  function cmdRecolectarSnapshot(fechaCorte){
+    var fecha = fechaCorte || _snapFechaColombia();
+    var catalogos = {
+      rectorias: _snapClone(typeof RECTORIAS !== 'undefined' ? RECTORIAS : {}),
+      pg_sede_rectoria: _snapClone(typeof PG_SEDE_RECTORIA !== 'undefined' ? PG_SEDE_RECTORIA : {}),
+      empleados_bd: _snapClone(typeof EMPLEADOS_BD !== 'undefined' ? EMPLEADOS_BD : {})
+    };
+    var operacion = _snapRecolectarOperacion();
+    var periodo = {
+      s2: (typeof _DATA !== 'undefined' && _DATA.periodo) ? _DATA.periodo : 'S2',
+      dh_total: (typeof _DATA !== 'undefined') ? _DATA.dh_total : null,
+      dh_trans: (typeof _DATA !== 'undefined') ? _DATA.dh_trans : null,
+      dh_rest: (typeof _DATA !== 'undefined') ? _DATA.dh_rest : null,
+      meta_s2: (typeof _DATA !== 'undefined') ? _DATA.meta_s2 : null
+    };
+    var manifest = _snapManifestFromOp(operacion);
+    var snap = {
+      schema: SCHEMA,
+      schema_version: SCHEMA_VERSION,
+      fecha_corte: fecha,
+      generado_en: _snapIsoColombia(),
+      app_version: (typeof APP_VERSION !== 'undefined') ? APP_VERSION : (window.APP_VERSION || ''),
+      modo: 'snapshot_diario',
+      catalogos: catalogos,
+      operacion: operacion,
+      periodo: periodo,
+      meta: manifest
+    };
+    return _snapSha256(JSON.stringify(operacion)).then(function(chk){
+      snap.meta.checksum = chk;
+      return snap;
+    });
+  }
+
+  function _snapValidarSnapshot(snap){
+    if(!snap || snap.schema !== SCHEMA) return { ok: false, msg: 'No es un snapshot CMD válido' };
+    if(!snap.fecha_corte) return { ok: false, msg: 'Falta fecha_corte' };
+    if(!snap.operacion) return { ok: false, msg: 'Snapshot sin datos operacionales' };
+  var m = snap.meta || _snapManifestFromOp(snap.operacion);
+    if((m.sedes_coloc||0) < 1 && (m.filas_sigec||0) < 1){
+      return { ok: false, msg: 'Snapshot incompleto (sin colocación ni SIGEC)' };
+    }
+    if((m.fuentes_ok||0) < 3){
+      return { ok: false, msg: 'Snapshot con pocas fuentes cargadas (' + (m.fuentes_ok||0) + ')' };
+    }
+    return { ok: true, meta: m };
+  }
+
+  function _snapAplicarCatalogos(cat){
+    if(!cat) return;
+    if(cat.rectorias && typeof RECTORIAS !== 'undefined') Object.assign(RECTORIAS, cat.rectorias);
+    if(cat.pg_sede_rectoria && typeof PG_SEDE_RECTORIA !== 'undefined') Object.assign(PG_SEDE_RECTORIA, cat.pg_sede_rectoria);
+    if(cat.empleados_bd && typeof EMPLEADOS_BD !== 'undefined'){
+      Object.keys(EMPLEADOS_BD).forEach(function(k){ delete EMPLEADOS_BD[k]; });
+      Object.assign(EMPLEADOS_BD, cat.empleados_bd);
+    }
+  }
+
+  function cmdAplicarSnapshot(snap){
+    var val = _snapValidarSnapshot(snap);
+    if(!val.ok) return Promise.reject(new Error(val.msg));
+    return _snapSha256(JSON.stringify(snap.operacion || {})).then(function(chk){
+      if(snap.meta && snap.meta.checksum && snap.meta.checksum !== chk){
+        console.warn('[SNAPSHOT] Checksum no coincide — datos pueden estar alterados');
+      }
+      _snapAplicarCatalogos(snap.catalogos);
+    var op = snap.operacion || {};
+    var c = op.colocacion || {};
+    window._coloc_data = c.coloc_data || [];
+    window._coloc_S2 = c.coloc_s2 || window._coloc_data;
+    window._coloc_S1 = c.coloc_s1 || null;
+    window._coloc_data_fuente = c.coloc_data_fuente || 'snapshot';
+    window._historicoColoc = c.historico || [];
+    var sg = op.sigec_glpi || {};
+    window._sigecRows = sg.sigec_rows || [];
+    window._glpiRows = sg.glpi_rows || [];
+    window._sigecNacional = sg.sigec_nacional || null;
+    window._glpiNacional = sg.glpi_nacional || null;
+    window._sigecData = sg.sigec_data || null;
+    window._glpiData = sg.glpi_data || null;
+    var cart = op.cartera || {};
+    window._cartData = cart.cart_data || null;
+    window._cartera_data = cart.cartera_data || null;
+    var ld = op.leads || {};
+    window._leads_data = ld.leads_data || {};
+    window._leadsCallData = ld.call_data || null;
+    window._leadsCallRows = ld.call_rows || [];
+    window._leadsAdmData = ld.adm_data || null;
+    window._leadsAdmRows = ld.adm_rows || [];
+    window._leadsScalaData = ld.scala_data || null;
+    window._leadsBunjiData = ld.bunji_data || null;
+    window._leadsData = ld.leads_data_alt || null;
+    var su = op.susceptibles || {};
+    window._susceptiblesData = su.data || null;
+    window._susceptibles_total = su.total || 0;
+    window._susceptibles_sin_saldo = su.sin_saldo || 0;
+    window._susceptibles_con_saldo = su.con_saldo || 0;
+    window._susceptibles_data = su.susceptibles_data || null;
+    var mm = op.matriculas_metas || {};
+    window._matriculasData = mm.matriculas_data || [];
+    window._matriculas_total = mm.matriculas_total || 0;
+    window._matriculas_total_meta = mm.matriculas_total_meta || 0;
+    window._matriculas_nuevos = mm.matriculas_nuevos || 0;
+    window._matriculas_continuos = mm.matriculas_continuos || 0;
+    window._metas_data = mm.metas_data || null;
+    window._metaConv = mm.meta_conv || null;
+    window._mtsMetaN = mm.mts_meta_n || 0;
+    window._mtsMetaV = mm.mts_meta_v || 0;
+    var bc = op.base_congelados || {};
+    window._baseColocData = bc.base_coloc_data || [];
+    window._baseColocFilas = bc.base_coloc_filas || [];
+    window._baseColoc_total = bc.base_coloc_total || 0;
+    window._baseColoc_lineas = bc.base_coloc_lineas || null;
+    window._baseColoc_meses = bc.base_coloc_meses || null;
+    window._congeladosData = bc.congelados_data || [];
+    window._congeladosRaw = bc.congelados_raw || [];
+    var ac = op.acompanamiento || {};
+    window._histSeguimientos = ac.hist_seguimientos || [];
+    window._histCargado = !!ac.hist_cargado;
+    window._seguimientosPorSede = ac.seguimientos_por_sede || null;
+    window._hubspot_data = op.hubspot || null;
+    var ml = op.malla || {};
+    window._malla_data = ml.malla_data || [];
+    window._mallaData = ml.malla_data || [];
+    window._mallaTurnos = ml.malla_turnos || [];
+    window._mallaTurnosIndex = ml.malla_turnos_index || [];
+    window._mallaTurnosHoy = ml.malla_turnos_hoy || [];
+    window._mallaTurnosSinHoy = ml.malla_turnos_sin_hoy || [];
+    window._mallaEnTurnoApp = ml.malla_en_turno || [];
+    window._mallaCerroApp = ml.malla_cerro || [];
+    window._mallaIngresoApp = ml.malla_ingreso || [];
+    window._mallaPorSede = ml.malla_por_sede || null;
+    window._memoriaSheetData = op.memoria || null;
+    window._resumenGerencial = op.resumen_gerencial || null;
+    var sd = op.scic_derivados || {};
+    if(sd.scic_data) window.SCIC_DATA = sd.scic_data;
+    if(sd.scic_nacional) window._SCIC_NACIONAL = sd.scic_nacional;
+    if(sd.mcm_resumen) window._MCM_RESUMEN = sd.mcm_resumen;
+    window._sheetsUltimaCarga = op.sheets_ultima_carga || Date.now();
+    try{ if(typeof SCIC_sincronizar === 'function') SCIC_sincronizar(); }catch(e){}
+    try{ if(typeof SCIC_construirMUS === 'function') SCIC_construirMUS(); }catch(e){}
+    try{ if(typeof _mtsCargarPeriodoHabiles === 'function') _mtsCargarPeriodoHabiles(); }catch(e){}
+    try{ if(typeof _mtsCargarMeta === 'function') _mtsCargarMeta(); }catch(e){}
+    try{ if(typeof renderLoginDashboard === 'function') renderLoginDashboard(); }catch(e){}
+    try{ if(typeof actualizarMenuKPIs === 'function') actualizarMenuKPIs(); }catch(e){}
+    try{ if(typeof _scicPintarUltimaActualizacion === 'function') _scicPintarUltimaActualizacion(); }catch(e){}
+    try{ if(window._cartData && typeof window._renderCartera === 'function') window._renderCartera(); }catch(e){}
+    return Promise.resolve(snap);
+    });
+  }
+
+  function cmdEsModoSnapshot(){
+    return !!(window._modoSnapshot && window._modoSnapshot.activo);
+  }
+
+  function _snapPintarModoUI(){
+    var hist = cmdEsModoSnapshot();
+    var fecha = (window._modoSnapshot && window._modoSnapshot.fecha_corte) || '—';
+    var live = document.getElementById('menu-hz-live-badge');
+    var hb = document.getElementById('menu-hz-hist-badge');
+    var banner = document.getElementById('cmd-snapshot-banner');
+    var btxt = document.getElementById('cmd-snapshot-banner-txt');
+    var ref = document.getElementById('btn-menu-refresh');
+    if(live) live.style.display = hist ? 'none' : '';
+    if(hb) hb.style.display = hist ? '' : 'none';
+    if(hb && hist) hb.textContent = '🕐 Modo histórico · corte ' + fecha + ' · solo lectura';
+    if(banner) banner.classList.toggle('visible', hist);
+    if(btxt && hist) btxt.textContent = 'Modo histórico — Corte ' + fecha + ' — Solo lectura (sin Sheets)';
+    if(ref) ref.disabled = hist;
+  }
+
+  function cmdActivarModoSnapshot(fecha){
+    window._modoSnapshot = { activo: true, fecha_corte: fecha };
+    if(window._scicAutoRefreshTimer){ clearInterval(window._scicAutoRefreshTimer); window._scicAutoRefreshTimer = null; }
+    _snapPintarModoUI();
+    try{ _scicPintarUltimaActualizacion(); }catch(e){}
+  }
+
+  function cmdSalirModoHistorico(){
+    window._modoSnapshot = { activo: false, fecha_corte: null };
+    _snapPintarModoUI();
+    if(typeof cargarDesdeSheetsCompleto === 'function'){
+      cargarDesdeSheetsCompleto(true).then(function(){
+        try{ if(typeof window._scicIniciarAutoRefresh === 'function') window._scicIniciarAutoRefresh(); }catch(e){}
+      }).catch(function(){});
+    }
+  }
+  window.cmdSalirModoHistorico = cmdSalirModoHistorico;
+
+  function _snapDescargarGz(fecha, buf){
+    try{
+      var blob = new Blob([buf], { type: 'application/gzip' });
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'CMD_snapshot_' + fecha + '.json.gz';
+      a.click();
+      setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+    }catch(e){ console.warn('[SNAPSHOT] descarga respaldo:', e); }
+  }
+
+  function _snapArrayBufToB64(buf){
+    var bytes = new Uint8Array(buf);
+    var chunk = 0x8000;
+    var s = '';
+    for(var i = 0; i < bytes.length; i += chunk){
+      s += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk));
+    }
+    return btoa(s);
+  }
+
+  function _snapSubirNube(fecha, buf, meta){
+    if(!SNAPSHOT_CLOUD.enabled || !SNAPSHOT_CLOUD.uploadUrl) return Promise.resolve();
+    var body = JSON.stringify({
+      fecha_corte: fecha,
+      app_version: meta.app_version || '',
+      checksum: (meta.checksum || ''),
+      generado_en: meta.generado_en || '',
+      payload_b64: _snapArrayBufToB64(buf)
+    });
+    return fetch(SNAPSHOT_CLOUD.uploadUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: body,
+      mode: 'cors'
+    }).catch(function(e){ console.warn('[SNAPSHOT] nube:', e); });
+  }
+
+  function cmdGuardarSnapshotDiario(fechaCorte, opts){
+    opts = opts || {};
+    if(cmdEsModoSnapshot() && !opts.forzar) return Promise.resolve(null);
+    return cmdRecolectarSnapshot(fechaCorte).then(function(snap){
+      var val = _snapValidarSnapshot(snap);
+      if(!val.ok) return Promise.reject(new Error(val.msg));
+      var json = JSON.stringify(snap);
+      return _snapGzipText(json).then(function(gz){
+        return _snapSha256(json).then(function(chk){
+          if(snap.meta.checksum !== chk) snap.meta.checksum = chk;
+          var rec = {
+            fecha_corte: snap.fecha_corte,
+            generado_en: snap.generado_en,
+            app_version: snap.app_version,
+            compressed: gz.compressed,
+            payload: gz.data,
+            meta: snap.meta
+          };
+          return _snapIdbPut(rec).then(function(){
+            try{ localStorage.setItem('cmd_snapshot_ultima_fecha', snap.fecha_corte); }catch(e){}
+            try{ localStorage.setItem('cmd_snapshot_guardado_' + snap.fecha_corte, '1'); }catch(e){}
+            if(opts.descargar) _snapDescargarGz(snap.fecha_corte, gz.data);
+            return _snapSubirNube(snap.fecha_corte, gz.data, snap.meta).then(function(){ return snap; });
+          });
+        });
+      });
+    });
+  }
+
+  function cmdCargarSnapshotPorFecha(fecha){
+    return _snapIdbGet(fecha).then(function(rec){
+      if(!rec) return Promise.reject(new Error('No hay snapshot para ' + fecha));
+      return _snapGunzipToText(rec.payload, rec.compressed !== false).then(function(txt){
+        var snap = JSON.parse(txt);
+        return cmdAplicarSnapshot(snap).then(function(){
+          cmdActivarModoSnapshot(fecha);
+          return snap;
+        });
+      });
+    });
+  }
+
+  function cmdCargarSnapshotDesdeObjeto(snap){
+    return cmdAplicarSnapshot(snap).then(function(){
+      cmdActivarModoSnapshot(snap.fecha_corte || '—');
+      return snap;
+    });
+  }
+
+  function _snapParseArchivo(file){
+    return new Promise(function(resolve, reject){
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        var buf = ev.target.result;
+        var name = (file.name || '').toLowerCase();
+        if(name.endsWith('.gz')){
+          _snapGunzipToText(buf, true).then(function(txt){
+            try{ resolve(JSON.parse(txt)); }catch(e){ reject(e); }
+          }).catch(reject);
+        }else{
+          try{
+            var txt = typeof buf === 'string' ? buf : new TextDecoder().decode(buf);
+            resolve(JSON.parse(txt));
+          }catch(e){ reject(e); }
+        }
+      };
+      reader.onerror = function(){ reject(reader.error); };
+      if((file.name||'').toLowerCase().endsWith('.gz')) reader.readAsArrayBuffer(file);
+      else reader.readAsText(file);
+    });
+  }
+
+  function cmdCargarSnapshotArchivo(ev){
+    var f = ev.target.files && ev.target.files[0];
+    if(!f) return;
+    _snapParseArchivo(f).then(function(snap){
+      return cmdCargarSnapshotDesdeObjeto(snap);
+    }).then(function(snap){
+      cerrarModalCorteHistorico();
+      if(typeof mostrarMenuPrincipal === 'function') mostrarMenuPrincipal();
+      alert('✅ Corte histórico cargado: ' + (snap.fecha_corte || '—'));
+    }).catch(function(e){
+      alert('Error al cargar snapshot: ' + (e && e.message ? e.message : e));
+    });
+    ev.target.value = '';
+  }
+  window.cmdCargarSnapshotArchivo = cmdCargarSnapshotArchivo;
+
+  function _snapFmtN(n){ return (n==null||isNaN(n)) ? '—' : Number(n).toLocaleString('es-CO'); }
+
+  function _snapResumenKPIs(snap){
+    var op = (snap && snap.operacion) || {};
+    var col = (op.colocacion && op.colocacion.coloc_data) || [];
+    var acum = 0, meta = 0;
+    col.forEach(function(r){ acum += (+r.acum_n||0); meta += (+r.meta_n||0); });
+    var sg = (op.sigec_glpi && op.sigec_glpi.sigec_rows) || [];
+    var glp = (op.sigec_glpi && op.sigec_glpi.glpi_rows) || [];
+    var cart = (op.cartera && op.cartera.cart_data) || {};
+    var mora = 0;
+    if(cart.ciDistCyg && cart.ciDistCyg.total>0 && cart.ciDistCyg.mora!=null){
+      mora = Math.round((cart.ciDistCyg.mora / cart.ciDistCyg.total) * 1000) / 10;
+    }
+    return { acum_n: acum, meta_n: meta, pct: meta>0?Math.round(acum/meta*1000)/10:0, sigec: sg.length, glpi: glp.length, mora: mora };
+  }
+
+  function cmdEjecutarComparacionSnapshots(){
+    var fa = (document.getElementById('snap-cmp-a')||{}).value;
+    var fb = (document.getElementById('snap-cmp-b')||{}).value;
+    var out = document.getElementById('snap-cmp-resultado');
+    if(!fa || !fb){ if(out) out.innerHTML='<div class="snap-cmp-diff">Selecciona dos fechas.</div>'; return; }
+    if(fa === fb){ if(out) out.innerHTML='<div class="snap-cmp-diff">Elige fechas distintas.</div>'; return; }
+    Promise.all([_snapIdbGet(fa), _snapIdbGet(fb)]).then(function(recs){
+      return Promise.all(recs.map(function(rec, i){
+        if(!rec) throw new Error('Falta snapshot ' + (i?fb:fa));
+        return _snapGunzipToText(rec.payload, rec.compressed !== false).then(function(t){ return JSON.parse(t); });
+      }));
+    }).then(function(snaps){
+      var ka = _snapResumenKPIs(snaps[0]);
+      var kb = _snapResumenKPIs(snaps[1]);
+      var html = '<div class="snap-cmp-grid">';
+      html += '<div class="snap-cmp-card"><div style="font-weight:800;margin-bottom:8px">'+fa+'</div>';
+      html += '<div>Coloc. acum: <b>'+_snapFmtN(ka.acum_n)+'</b> / '+_snapFmtN(ka.meta_n)+' ('+ka.pct+'%)</div>';
+      html += '<div>SIGEC: '+_snapFmtN(ka.sigec)+' · GLPI: '+_snapFmtN(ka.glpi)+'</div>';
+      html += '<div>Mora Cygnus: '+ka.mora+'%</div></div>';
+      html += '<div class="snap-cmp-card"><div style="font-weight:800;margin-bottom:8px">'+fb+'</div>';
+      html += '<div>Coloc. acum: <b>'+_snapFmtN(kb.acum_n)+'</b> / '+_snapFmtN(kb.meta_n)+' ('+kb.pct+'%)</div>';
+      html += '<div>SIGEC: '+_snapFmtN(kb.sigec)+' · GLPI: '+_snapFmtN(kb.glpi)+'</div>';
+      html += '<div>Mora Cygnus: '+kb.mora+'%</div></div></div>';
+      html += '<div class="snap-cmp-diff"><strong>Δ '+fa+' → '+fb+'</strong><br>';
+      html += 'Colocación: <b>'+((kb.acum_n-ka.acum_n)>=0?'+':'')+_snapFmtN(kb.acum_n-ka.acum_n)+'</b> créditos · ';
+      html += 'Cumplimiento: <b>'+((kb.pct-ka.pct)>=0?'+':'')+(Math.round((kb.pct-ka.pct)*10)/10)+'</b> pp · ';
+      html += 'SIGEC: <b>'+((kb.sigec-ka.sigec)>=0?'+':'')+_snapFmtN(kb.sigec-ka.sigec)+'</b> filas · ';
+      html += 'Mora: <b>'+((kb.mora-ka.mora)>=0?'+':'')+(Math.round((kb.mora-ka.mora)*10)/10)+'</b> pp</div>';
+      if(out) out.innerHTML = html;
+    }).catch(function(e){
+      if(out) out.innerHTML='<div class="snap-cmp-diff">Error: '+(e&&e.message||e)+'</div>';
+    });
+  }
+  window.cmdEjecutarComparacionSnapshots = cmdEjecutarComparacionSnapshots;
+
+  function _snapPoblarSelects(lista){
+    var selA = document.getElementById('snap-cmp-a');
+    var selB = document.getElementById('snap-cmp-b');
+    [selA, selB].forEach(function(sel){
+      if(!sel) return;
+      sel.innerHTML = '';
+      (lista||[]).forEach(function(it, idx){
+        var o = document.createElement('option');
+        o.value = it.fecha_corte;
+        o.textContent = it.fecha_corte + ' · ' + (it.generado_en||'').slice(0,16) + ' · v' + (it.app_version||'?').replace('pyv-comercial-','');
+        sel.appendChild(o);
+      });
+      if(sel.options.length>1) sel.selectedIndex = sel===selB ? 0 : 1;
+    });
+  }
+
+  function _snapRenderCatalogo(lista){
+    var el = document.getElementById('snap-catalogo-lista');
+    if(!el) return;
+    if(!lista || !lista.length){
+      el.innerHTML = '<div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px">Sin snapshots en este navegador.<br>Se guardan automáticamente a las <strong>23:00</strong> con la app abierta.</div>';
+      return;
+    }
+    var html = '';
+    lista.forEach(function(it){
+      var m = it.meta || {};
+      html += '<div class="snap-cat-item" onclick="cmdAbrirSnapshotFecha(\''+it.fecha_corte+'\')">';
+      html += '<div><div style="font-weight:800;font-size:13px;color:#c2410c">'+it.fecha_corte+'</div>';
+      html += '<div style="font-size:10px;color:#64748b;margin-top:2px">'+((it.generado_en||'').replace('T',' ').slice(0,19))+' · '+_snapFmtN(m.sedes_coloc)+' sedes · SIGEC '+_snapFmtN(m.filas_sigec)+'</div></div>';
+      html += '<span style="font-size:10px;font-weight:700;color:#ea580c">Abrir →</span></div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function cmdAbrirSnapshotFecha(fecha){
+    cmdCargarSnapshotPorFecha(fecha).then(function(){
+      cerrarModalCorteHistorico();
+      if(typeof mostrarMenuPrincipal === 'function') mostrarMenuPrincipal();
+    }).catch(function(e){ alert('No se pudo abrir: ' + (e&&e.message||e)); });
+  }
+  window.cmdAbrirSnapshotFecha = cmdAbrirSnapshotFecha;
+
+  function cmdSnapTab(tab){
+    var pa = document.getElementById('snap-panel-abrir');
+    var pc = document.getElementById('snap-panel-cmp');
+    var ta = document.getElementById('snap-tab-abrir');
+    var tc = document.getElementById('snap-tab-cmp');
+    if(pa) pa.style.display = tab==='cmp' ? 'none' : 'block';
+    if(pc) pc.style.display = tab==='cmp' ? 'block' : 'none';
+    if(ta){ ta.style.borderColor = tab==='abrir'?'#f97316':'#e5e7eb'; ta.style.background = tab==='abrir'?'#fff7ed':'#f8fafc'; }
+    if(tc){ tc.style.borderColor = tab==='cmp'?'#f97316':'#e5e7eb'; tc.style.background = tab==='cmp'?'#fff7ed':'#f8fafc'; }
+  }
+  window.cmdSnapTab = cmdSnapTab;
+
+  function abrirModalCorteHistorico(){
+    if(typeof _openModal === 'function' && !_openModal('modal-corte-historico', 999996, 'block')){
+      var m = document.getElementById('modal-corte-historico');
+      if(m) m.style.display = 'block';
+    }
+    cmdSnapTab('abrir');
+    _snapIdbList().then(function(lista){
+      _snapRenderCatalogo(lista);
+      _snapPoblarSelects(lista);
+    }).catch(function(){
+      _snapRenderCatalogo([]);
+    });
+  }
+  window.abrirModalCorteHistorico = abrirModalCorteHistorico;
+
+  function cerrarModalCorteHistorico(){
+    if(typeof _closeModal === 'function') _closeModal('modal-corte-historico');
+    else { var m = document.getElementById('modal-corte-historico'); if(m) m.style.display='none'; }
+  }
+  window.cerrarModalCorteHistorico = cerrarModalCorteHistorico;
+
+  function _snapIntentarAutoGuardado(motivo){
+    if(cmdEsModoSnapshot()) return Promise.resolve(null);
+    var fecha = _snapFechaColombia();
+    var key = 'cmd_snapshot_guardado_' + fecha;
+    try{ if(localStorage.getItem(key)) return Promise.resolve(null); }catch(e){}
+    var hora = _snapHoraColombia();
+    if(hora.h < 23 && motivo !== 'catchup') return Promise.resolve(null);
+    if(!(window._coloc_data && window._coloc_data.length) && !(window._sigecRows && window._sigecRows.length)){
+      return Promise.resolve(null);
+    }
+    console.log('[SNAPSHOT] Auto-guardado', fecha, '(' + (motivo||'23:00') + ')');
+    return cmdGuardarSnapshotDiario(fecha, { descargar: false }).then(function(snap){
+      console.log('[SNAPSHOT] Guardado OK', snap && snap.fecha_corte);
+      return snap;
+    }).catch(function(e){
+      console.warn('[SNAPSHOT] Auto-guardado falló:', e && e.message);
+      return null;
+    });
+  }
+
+  function _snapIniciarScheduler(){
+    setInterval(function(){
+      var hora = _snapHoraColombia();
+      if(hora.h === 23 && hora.m === 0){
+        _snapIntentarAutoGuardado('23:00');
+      }
+      if(hora.h === 23 && hora.m >= 1 && hora.m <= 5){
+        _snapIntentarAutoGuardado('23:00-retry');
+      }
+    }, 30000);
+    setTimeout(function(){ _snapIntentarAutoGuardado('catchup'); }, 15000);
+  }
+
+  window.cmdRecolectarSnapshot = cmdRecolectarSnapshot;
+  window.cmdAplicarSnapshot = cmdAplicarSnapshot;
+  window.cmdGuardarSnapshotDiario = cmdGuardarSnapshotDiario;
+  window.cmdEsModoSnapshot = cmdEsModoSnapshot;
+  window._snapIniciarScheduler = _snapIniciarScheduler;
+  window._snapIntentarAutoGuardado = _snapIntentarAutoGuardado;
+  window._snapPintarModoUI = _snapPintarModoUI;
+})();
+// ════════════════════════════════════════════════════════════
+
 // Carga completa desde Google Sheets (datos siempre en vivo al forzar)
 function cargarDesdeSheetsCompleto(forzar){
+  if(typeof cmdEsModoSnapshot==='function' && cmdEsModoSnapshot()){
+    console.log('[SCIC] Modo histórico activo — omitiendo carga Sheets');
+    return Promise.resolve();
+  }
   if(!REPO_IDS||!REPO_IDS.interno) Object.assign(REPO_IDS, _REPOS_OFICIALES||{});
   if(forzar) window._scicForzarVivo = true;
   var ps=[], intentar=function(fn,nombre){
@@ -4800,6 +5570,7 @@ function cargarDesdeSheetsCompleto(forzar){
     try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
     try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
     try{ _scicPintarUltimaActualizacion(); }catch(e){}
+    try{ if(typeof window._snapIntentarAutoGuardado==='function') window._snapIntentarAutoGuardado('post-carga'); }catch(e){}
   }).catch(function(e){
     window._scicForzarVivo = false;
     throw e;
@@ -6402,6 +7173,40 @@ document.addEventListener('DOMContentLoaded', function(){
     <div id="cum-todos"></div>
     <div style="margin-top:14px;padding:10px;background:#fffbeb;border-radius:8px;border:1px solid #fcd34d;font-size:11px;color:#92400e;text-align:center">
       ⏳ Fechas pendientes de carga para la mayoria de empleados
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MODAL CORTE HISTÓRICO (snapshot diario) -->
+<div id="modal-corte-historico" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:999996;overflow-y:auto;padding:16px">
+<div style="background:#fff;border-radius:18px;max-width:820px;margin:0 auto;overflow:hidden;box-shadow:0 24px 60px rgba(0,0,0,.35)">
+  <div style="background:linear-gradient(135deg,#9a3412,#c2410c);padding:18px 22px;display:flex;align-items:center;justify-content:space-between">
+    <div>
+      <div style="color:#fed7aa;font-size:14px;font-weight:800"><i class="ti ti-archive"></i> Corte histórico CMD</div>
+      <div style="color:rgba(255,255,255,.75);font-size:11px;margin-top:3px">Snapshots automáticos diarios (23:00) · IndexedDB local</div>
+    </div>
+    <button type="button" onclick="cerrarModalCorteHistorico()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px;font-family:Ubuntu,sans-serif">✕</button>
+  </div>
+  <div style="padding:16px 20px">
+    <div style="display:flex;gap:8px;margin-bottom:14px;border-bottom:1px solid #e5e7eb;padding-bottom:10px">
+      <button type="button" id="snap-tab-abrir" onclick="cmdSnapTab('abrir')" style="flex:1;padding:8px;border-radius:8px;border:2px solid #f97316;background:#fff7ed;color:#c2410c;font-weight:800;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif">📦 Abrir corte</button>
+      <button type="button" id="snap-tab-cmp" onclick="cmdSnapTab('cmp')" style="flex:1;padding:8px;border-radius:8px;border:2px solid #e5e7eb;background:#f8fafc;color:#64748b;font-weight:700;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif">📊 Comparar fechas</button>
+      <button type="button" onclick="document.getElementById('snap-file-ext').click()" style="padding:8px 12px;border-radius:8px;border:2px solid #e5e7eb;background:#fff;color:#475569;font-weight:700;font-size:11px;cursor:pointer;font-family:Ubuntu,sans-serif" title="Cargar .json o .json.gz externo">📁 Archivo</button>
+      <input type="file" id="snap-file-ext" accept=".json,.gz,application/json,application/gzip" style="display:none" onchange="cmdCargarSnapshotArchivo(event)">
+    </div>
+    <div id="snap-panel-abrir">
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Selecciona una fecha guardada en este navegador. La app entrará en <strong>modo histórico</strong> (sin Sheets).</div>
+      <div id="snap-catalogo-lista"><div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px">Cargando catálogo…</div></div>
+    </div>
+    <div id="snap-panel-cmp" style="display:none">
+      <div style="font-size:11px;color:#64748b;margin-bottom:10px">Compara dos cortes guardados (colocación, SIGEC, GLPI, cartera).</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
+        <div><label style="font-size:10px;font-weight:700;color:#64748b">Fecha A (anterior)</label><select id="snap-cmp-a" style="width:100%;margin-top:4px;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif"></select></div>
+        <div><label style="font-size:10px;font-weight:700;color:#64748b">Fecha B (reciente)</label><select id="snap-cmp-b" style="width:100%;margin-top:4px;padding:8px;border:1.5px solid #e5e7eb;border-radius:8px;font-size:12px;font-family:Ubuntu,sans-serif"></select></div>
+      </div>
+      <button type="button" onclick="cmdEjecutarComparacionSnapshots()" style="width:100%;padding:10px;border:none;border-radius:10px;background:linear-gradient(135deg,#c2410c,#ea580c);color:#fff;font-weight:800;font-size:12px;cursor:pointer;font-family:Ubuntu,sans-serif">Comparar cortes</button>
+      <div id="snap-cmp-resultado"></div>
     </div>
   </div>
 </div>
@@ -8996,9 +9801,11 @@ function _parseCumpleMMDD(s){
 
   var SCIC_AUTO_REFRESH_MS = 3 * 60 * 1000;
   window._scicIniciarAutoRefresh = function(){
+    if(typeof cmdEsModoSnapshot==='function' && cmdEsModoSnapshot()) return;
     if(window._scicAutoRefreshTimer) return;
     window._scicAutoRefreshTimer = setInterval(function(){
       if(document.hidden) return;
+      if(typeof cmdEsModoSnapshot==='function' && cmdEsModoSnapshot()) return;
       var fn = (typeof cargarDesdeSheetsCompleto==='function') ? cargarDesdeSheetsCompleto
         : ((typeof window._scicRefrescarDatosVivos==='function') ? window._scicRefrescarDatosVivos : null);
       if(!fn) return;
@@ -9010,8 +9817,10 @@ function _parseCumpleMMDD(s){
     }, SCIC_AUTO_REFRESH_MS);
   };
   setTimeout(function(){ try{ window._scicIniciarAutoRefresh(); }catch(e){} }, 8000);
+  setTimeout(function(){ try{ if(typeof window._snapIniciarScheduler==='function') window._snapIniciarScheduler(); }catch(e){} }, 12000);
 
   document.addEventListener('visibilitychange', function(){
+    if(typeof cmdEsModoSnapshot==='function' && cmdEsModoSnapshot()) return;
     if(!document.hidden && typeof window._scicRefrescarDatosVivos==='function'){
       window._scicRefrescarDatosVivos(true).then(function(){
         try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
