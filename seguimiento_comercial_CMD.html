@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.59   (APP_VERSION = 'pyv-comercial-5.4.59')
+  Versión actual: pyv-comercial-5.4.60   (APP_VERSION = 'pyv-comercial-5.4.60')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.60 (2026-07-07)
+    - Estado Nacional Colocación S2: «Vamos» usa SIGEC facturadas + GLPI aprobadas (criterio colocado), no acum_n del informe.
+    - Sincronización al cargar Sheets: obtenerGlpiNacional/obtenerSigecNacional tras leer filas y refrescar menú.
   pyv-comercial-5.4.59 (2026-07-07)
     - Colocación SIGEC/GLPI: índice Sede GLPI corregido (col 7); aprobadas 850 y facturadas 8177 desde repo actualizado.
     - Retomas GLPI: solo EXCEPCIONES DE CREDITO > Nuevo y > Renovacion aprobadas restan de cerradas SIGEC.
@@ -291,11 +294,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.59">
-<meta name="build-id" content="pyv-comercial-5.4.59-20260707-1900">
+<meta name="app-version" content="pyv-comercial-5.4.60">
+<meta name="build-id" content="pyv-comercial-5.4.60-20260707-1905">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.59';
+window.APP_VERSION='pyv-comercial-5.4.60';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1458,6 +1461,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <div class="menu-nac-lbl">Vamos (colocado S2)</div>
           <div class="menu-nac-big" id="menu-nac-acum">—</div>
           <div class="menu-nac-sub" id="menu-nac-pct-txt">—% de la meta</div>
+          <div class="menu-nac-sub" style="font-size:9px;opacity:.8;margin-top:2px">SIGEC facturadas + GLPI aprobadas</div>
         </div>
         <div class="menu-nac-card menu-nac-deber">
           <div class="menu-nac-lbl">Deberíamos hoy</div>
@@ -3896,7 +3900,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.59';
+var APP_VERSION = 'pyv-comercial-5.4.60';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -3908,7 +3912,7 @@ var _DATA = {
   periodo: 'S2',
   dh_total: 122, dh_trans: 37, dh_rest: 85,
   meta_s2: 34868,
-  acum_s2: 5549,
+  acum_s2: 9027,
   
   // Colocación por sede
   coloc: [{"sede": "COA Engativa Pres", "rectoria": "Rectoría Bogotá", "acum_n": 760, "acum_v": 2669484, "meta_n": 3381, "meta_v": 11859807, "pct_n": 22.5, "ant_n": 763, "sem": "ROJO"}, {"sede": "COA Usaquen", "rectoria": "Rectoría Bogotá", "acum_n": 1, "acum_v": 1714, "meta_n": 13, "meta_v": 33112, "pct_n": 7.7, "ant_n": 0, "sem": "ROJO"}, {"sede": "COA Ciudad Bolivar - Cofraternidad", "rectoria": "Rectoría Bogotá", "acum_n": 119, "acum_v": 303694, "meta_n": 626, "meta_v": 1479277, "pct_n": 19.0, "ant_n": 92, "sem": "ROJO"}, {"sede": "COA Santafe", "rectoria": "Rectoría Bogotá", "acum_n": 17, "acum_v": 41791, "meta_n": 138, "meta_v": 331068, "pct_n": 12.3, "ant_n": 22, "sem": "ROJO"}, {"sede": "COA Bosa", "rectoria": "Rectoría Bogotá", "acum_n": 11, "acum_v": 30217, "meta_n": 77, "meta_v": 188392, "pct_n": 14.3, "ant_n": 10, "sem": "ROJO"}, {"sede": "CO Kennedy", "rectoria": "Rectoría Bogotá", "acum_n": 21, "acum_v": 58062, "meta_n": 247, "meta_v": 526972, "pct_n": 8.5, "ant_n": 15, "sem": "ROJO"}, {"sede": "CO Tunal - San Camilo", "rectoria": "Rectoría Bogotá", "acum_n": 76, "acum_v": 186934, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 50, "sem": "ROJO"}, {"sede": "COA Girardot", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 0, "acum_v": 0, "meta_n": 760, "meta_v": 1774955, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Apulo", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Fusagasuga", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 1, "acum_v": 1968, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 5, "sem": "ROJO"}, {"sede": "CT La Mesa", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 0, "acum_v": 0, "meta_n": 48, "meta_v": 96940, "pct_n": 0.0, "ant_n": 1, "sem": "ROJO"}, {"sede": "CT Silvania", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 34, "acum_v": 95570, "meta_n": 1, "meta_v": 5043, "pct_n": 3400.0, "ant_n": 31, "sem": "VERDE"}, {"sede": "CR Madrid", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 6, "acum_v": 13364, "meta_n": 298, "meta_v": 745952, "pct_n": 2.0, "ant_n": 15, "sem": "ROJO"}, {"sede": "CP Gualiva - Villeta", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 3, "acum_v": 13428, "meta_n": 158, "meta_v": 364835, "pct_n": 1.9, "ant_n": 3, "sem": "ROJO"}, {"sede": "CT Facatativa", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 2, "acum_v": 3517, "meta_n": 87, "meta_v": 182915, "pct_n": 2.3, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Funza", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 0, "acum_v": 0, "meta_n": 43, "meta_v": 82481, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT La Vega", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Duitama", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 2, "acum_v": 3051, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Chiquinquira", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 229, "acum_v": 641490, "meta_n": 2, "meta_v": 7375, "pct_n": 11450.0, "ant_n": 216, "sem": "VERDE"}, {"sede": "CR Soacha", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 0, "acum_v": 0, "meta_n": 1311, "meta_v": 3587079, "pct_n": 0.0, "ant_n": 1, "sem": "ROJO"}, {"sede": "CT Choachi", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 87, "acum_v": 245365, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 48, "sem": "ROJO"}, {"sede": "CR Zipaquirá", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 1, "acum_v": 2702, "meta_n": 585, "meta_v": 1456577, "pct_n": 0.2, "ant_n": 0, "sem": "ROJO"}, {"sede": "CP Guavio - Guasca", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 3, "acum_v": 6254, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Ubate", "rectoria": "Rectoría Cundinamarca y Boyacá", "acum_n": 1532, "acum_v": 5367923, "meta_n": 58, "meta_v": 110660, "pct_n": 2641.4, "ant_n": 1419, "sem": "VERDE"}, {"sede": "Virtual y Distancia", "rectoria": "Virtual y Distancia", "acum_n": 211, "acum_v": 650116, "meta_n": 8994, "meta_v": 28342192, "pct_n": 2.3, "ant_n": 182, "sem": "ROJO"}, {"sede": "COA Bello", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 135, "acum_v": 297690, "meta_n": 1385, "meta_v": 3626768, "pct_n": 9.7, "ant_n": 36, "sem": "ROJO"}, {"sede": "Urabá", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 16, "acum_v": 44866, "meta_n": 576, "meta_v": 1319686, "pct_n": 2.8, "ant_n": 8, "sem": "ROJO"}, {"sede": "Itagüi", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 7, "acum_v": 9892, "meta_n": 49, "meta_v": 160283, "pct_n": 14.3, "ant_n": 1, "sem": "ROJO"}, {"sede": "CT El Bagre", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 13, "acum_v": 31655, "meta_n": 52, "meta_v": 80376, "pct_n": 25.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Istmina", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Quibdó", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "COA Caucasia", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Zaragoza", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Rionegro", "rectoria": "Rectoría Antioquia y Chocó", "acum_n": 155, "acum_v": 286415, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 112, "sem": "ROJO"}, {"sede": "CR Barranquilla", "rectoria": "Rectoría Caribe", "acum_n": 46, "acum_v": 75575, "meta_n": 1350, "meta_v": 2267675, "pct_n": 3.4, "ant_n": 54, "sem": "ROJO"}, {"sede": "CR Cartagena", "rectoria": "Rectoría Caribe", "acum_n": 37, "acum_v": 63013, "meta_n": 299, "meta_v": 495197, "pct_n": 12.4, "ant_n": 52, "sem": "ROJO"}, {"sede": "CR Santa Marta", "rectoria": "Rectoría Caribe", "acum_n": 0, "acum_v": 0, "meta_n": 390, "meta_v": 768764, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Magangue", "rectoria": "Rectoría Caribe", "acum_n": 58, "acum_v": 94600, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 60, "sem": "ROJO"}, {"sede": "COA Chinchina", "rectoria": "Rectoría Centro Occidente", "acum_n": 85, "acum_v": 224153, "meta_n": 320, "meta_v": 565375, "pct_n": 26.6, "ant_n": 86, "sem": "ROJO"}, {"sede": "CR Pereira", "rectoria": "Rectoría Centro Occidente", "acum_n": 0, "acum_v": 0, "meta_n": 350, "meta_v": 856542, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CU Armenia", "rectoria": "Rectoría Centro Occidente", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Cartago", "rectoria": "Rectoría Centro Occidente", "acum_n": 170, "acum_v": 398888, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 169, "sem": "ROJO"}, {"sede": "CR Cali", "rectoria": "Rectoría Centro Occidente", "acum_n": 74, "acum_v": 153655, "meta_n": 653, "meta_v": 1371700, "pct_n": 11.3, "ant_n": 81, "sem": "ROJO"}, {"sede": "CR Buga", "rectoria": "Rectoría Centro Occidente", "acum_n": 34, "acum_v": 76258, "meta_n": 419, "meta_v": 931271, "pct_n": 8.1, "ant_n": 24, "sem": "ROJO"}, {"sede": "CT Buenaventura", "rectoria": "Rectoría Centro Occidente", "acum_n": 0, "acum_v": 0, "meta_n": 161, "meta_v": 363285, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Florida", "rectoria": "Rectoría Centro Occidente", "acum_n": 126, "acum_v": 268038, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 146, "sem": "ROJO"}, {"sede": "CR Pasto", "rectoria": "Rectoría Centro Occidente", "acum_n": 0, "acum_v": 0, "meta_n": 670, "meta_v": 1370995, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Ipiales", "rectoria": "Rectoría Centro Occidente", "acum_n": 124, "acum_v": 311003, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 65, "sem": "ROJO"}, {"sede": "CR Bucaramanga", "rectoria": "Rectoría Oriente", "acum_n": 1, "acum_v": 4863, "meta_n": 696, "meta_v": 1548504, "pct_n": 0.1, "ant_n": 1, "sem": "ROJO"}, {"sede": "CS Floridablanca", "rectoria": "Rectoría Oriente", "acum_n": 1, "acum_v": 2362, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CS Piedecuesta", "rectoria": "Rectoría Oriente", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CS Giron", "rectoria": "Rectoría Oriente", "acum_n": 3, "acum_v": 11346, "meta_n": 0, "meta_v": 2695, "pct_n": 0, "ant_n": 5, "sem": "ROJO"}, {"sede": "CT Barrancabermeja", "rectoria": "Rectoría Oriente", "acum_n": 106, "acum_v": 270146, "meta_n": 31, "meta_v": 85400, "pct_n": 341.9, "ant_n": 114, "sem": "VERDE"}, {"sede": "CR Cucuta", "rectoria": "Rectoría Oriente", "acum_n": 43, "acum_v": 52286, "meta_n": 938, "meta_v": 1884666, "pct_n": 4.6, "ant_n": 21, "sem": "ROJO"}, {"sede": "CT Tibu", "rectoria": "Rectoría Oriente", "acum_n": 0, "acum_v": 0, "meta_n": 162, "meta_v": 226092, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CU Aguachica", "rectoria": "Rectoría Oriente", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CU El Tarra", "rectoria": "Rectoría Oriente", "acum_n": 26, "acum_v": 74122, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 6, "sem": "ROJO"}, {"sede": "CT Ocaña", "rectoria": "Rectoría Oriente", "acum_n": 281, "acum_v": 706617, "meta_n": 139, "meta_v": 264656, "pct_n": 202.2, "ant_n": 253, "sem": "VERDE"}, {"sede": "COA Villavicencio", "rectoria": "Rectoría Oriente", "acum_n": 11, "acum_v": 23396, "meta_n": 1978, "meta_v": 4598382, "pct_n": 0.6, "ant_n": 0, "sem": "ROJO"}, {"sede": "COA Orocue", "rectoria": "Rectoría Oriente", "acum_n": 17, "acum_v": 36576, "meta_n": 79, "meta_v": 121920, "pct_n": 21.5, "ant_n": 16, "sem": "ROJO"}, {"sede": "COA Mitu", "rectoria": "Rectoría Oriente", "acum_n": 0, "acum_v": 0, "meta_n": 175, "meta_v": 217635, "pct_n": 0.0, "ant_n": 2, "sem": "ROJO"}, {"sede": "COA Puerto Carreño", "rectoria": "Rectoría Oriente", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 15295, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Inirida", "rectoria": "Rectoría Oriente", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Yopal", "rectoria": "Rectoría Oriente", "acum_n": 134, "acum_v": 268756, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 97, "sem": "ROJO"}, {"sede": "CR Neiva", "rectoria": "Rectoría Centro Sur", "acum_n": 48, "acum_v": 76646, "meta_n": 637, "meta_v": 1204463, "pct_n": 7.5, "ant_n": 43, "sem": "ROJO"}, {"sede": "COA Garzon", "rectoria": "Rectoría Centro Sur", "acum_n": 24, "acum_v": 41161, "meta_n": 259, "meta_v": 401400, "pct_n": 9.3, "ant_n": 15, "sem": "ROJO"}, {"sede": "CT Pitalito", "rectoria": "Rectoría Centro Sur", "acum_n": 13, "acum_v": 23845, "meta_n": 141, "meta_v": 233469, "pct_n": 9.2, "ant_n": 11, "sem": "ROJO"}, {"sede": "CT Florencia", "rectoria": "Rectoría Centro Sur", "acum_n": 0, "acum_v": 0, "meta_n": 74, "meta_v": 121389, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CU Planadas", "rectoria": "Rectoría Centro Sur", "acum_n": 15, "acum_v": 27514, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 12, "sem": "ROJO"}, {"sede": "CT Mocoa", "rectoria": "Rectoría Centro Sur", "acum_n": 286, "acum_v": 606585, "meta_n": 81, "meta_v": 139575, "pct_n": 353.1, "ant_n": 230, "sem": "VERDE"}, {"sede": "CR Ibague", "rectoria": "Rectoría Centro Sur", "acum_n": 58, "acum_v": 106347, "meta_n": 1828, "meta_v": 3894306, "pct_n": 3.2, "ant_n": 32, "sem": "ROJO"}, {"sede": "CT Lerida", "rectoria": "Rectoría Centro Sur", "acum_n": 0, "acum_v": 0, "meta_n": 199, "meta_v": 358500, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Fresno", "rectoria": "Rectoría Centro Sur", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CT Mariquita", "rectoria": "Rectoría Centro Sur", "acum_n": 13, "acum_v": 23108, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 19, "sem": "ROJO"}, {"sede": "CT La Dorada", "rectoria": "Rectoría Centro Sur", "acum_n": 2, "acum_v": 6457, "meta_n": 91, "meta_v": 152385, "pct_n": 2.2, "ant_n": 0, "sem": "ROJO"}, {"sede": "COA Puerto Boyacá", "rectoria": "Rectoría Centro Sur", "acum_n": 15, "acum_v": 49410, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 35, "sem": "ROJO"}, {"sede": "Pance", "rectoria": "Fundación Universitaria Catolica Lumen Gentium", "acum_n": 0, "acum_v": 0, "meta_n": 172, "meta_v": 618506, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Yumbo", "rectoria": "Fundación Universitaria Catolica Lumen Gentium", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 1, "sem": "ROJO"}, {"sede": "Alfonso Lopez", "rectoria": "Fundación Universitaria Catolica Lumen Gentium", "acum_n": 28, "acum_v": 95281, "meta_n": 13, "meta_v": 33555, "pct_n": 215.4, "ant_n": 20, "sem": "VERDE"}, {"sede": "Melendez", "rectoria": "Fundación Universitaria Catolica Lumen Gentium", "acum_n": 0, "acum_v": 0, "meta_n": 96, "meta_v": 302111, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Jamundi", "rectoria": "Fundación Universitaria Catolica Lumen Gentium", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 4, "sem": "ROJO"}, {"sede": "Compatir", "rectoria": "Fundación Universitaria Catolica Lumen Gentium", "acum_n": 4, "acum_v": 14292, "meta_n": 2, "meta_v": 8865, "pct_n": 200.0, "ant_n": 7, "sem": "VERDE"}, {"sede": "Unicatolica Centro", "rectoria": "Fundación Universitaria Catolica Lumen Gentium", "acum_n": 45, "acum_v": 146569, "meta_n": 34, "meta_v": 127170, "pct_n": 132.4, "ant_n": 145, "sem": "VERDE"}, {"sede": "Popayan centro", "rectoria": "Fundación Universitaria de Popayan", "acum_n": 11, "acum_v": 27933, "meta_n": 656, "meta_v": 1888805, "pct_n": 1.7, "ant_n": 26, "sem": "ROJO"}, {"sede": "Santander de Quilichao", "rectoria": "Fundación Universitaria de Popayan", "acum_n": 40, "acum_v": 108242, "meta_n": 127, "meta_v": 364560, "pct_n": 31.5, "ant_n": 23, "sem": "ROJO"}, {"sede": "Unicomfacauca - Popayan", "rectoria": "Fundación Universitaria Comfacauca", "acum_n": 0, "acum_v": 0, "meta_n": 191, "meta_v": 576541, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Unicomfacauca - Santander de Quilichao", "rectoria": "Fundación Universitaria Comfacauca", "acum_n": 41, "acum_v": 131490, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 186, "sem": "ROJO"}, {"sede": "Tecnológico Comfenalco - Cartagena", "rectoria": "Fundación Universitaria Tecnológico Comfenalco", "acum_n": 25, "acum_v": 181326, "meta_n": 2143, "meta_v": 6289243, "pct_n": 1.2, "ant_n": 29, "sem": "ROJO"}, {"sede": "CURN Cartagena", "rectoria": "Corporación Universitaria Rafael Núñez", "acum_n": 0, "acum_v": 0, "meta_n": 158, "meta_v": 828687, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "CURN Barranquilla", "rectoria": "Corporación Universitaria Rafael Núñez", "acum_n": 11, "acum_v": 77196, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 4, "sem": "ROJO"}, {"sede": "Ternera", "rectoria": "Universidad Tecnologica de Bolivar", "acum_n": 6, "acum_v": 54099, "meta_n": 88, "meta_v": 661496, "pct_n": 6.8, "ant_n": 4, "sem": "ROJO"}, {"sede": "Manga", "rectoria": "Universidad Tecnologica de Bolivar", "acum_n": 0, "acum_v": 0, "meta_n": 33, "meta_v": 304620, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "UniAndes-Bogotá", "rectoria": "Universidad de los Andes", "acum_n": 1, "acum_v": 3686, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 3, "sem": "ROJO"}, {"sede": "UniMonserrate - Bogotá", "rectoria": "Fundación Universitaria Monserrate", "acum_n": 0, "acum_v": 0, "meta_n": 8, "meta_v": 29489, "pct_n": 0.0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Mosquera", "rectoria": "Fundación Universitaria Monserrate", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "AUNAR Cartagena", "rectoria": "Corporación Universitaria Autónoma de Nariño", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "AUNAR Pasto", "rectoria": "Corporación Universitaria Autónoma de Nariño", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "AUNAR Villavicencio", "rectoria": "Corporación Universitaria Autónoma de Nariño", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "AUNAR Bogotá", "rectoria": "Corporación Universitaria Autónoma de Nariño", "acum_n": 0, "acum_v": 0, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 0, "sem": "ROJO"}, {"sede": "Uniempresarial", "rectoria": "Fundación Universitaria Empresarial de la Camara de Comercio de Bogotá", "acum_n": 27, "acum_v": 37076, "meta_n": 0, "meta_v": 0, "pct_n": 0, "ant_n": 10, "sem": "ROJO"}, {"sede": "Tec. Minuto de Dios", "rectoria": "Tec. Minuto de Dios", "acum_n": 17, "acum_v": 23711, "meta_n": 110, "meta_v": 75606, "pct_n": 15.5, "ant_n": 9, "sem": "ROJO"}],
@@ -4762,18 +4766,29 @@ function _scicRefrescarDatosVivos(forzar){
       console.warn('[SCIC] SIGEC vivo error:', e&&e.message);
     }));
   } else if(typeof _leerHojaSigecColocacion==='function'){
-    ps.push(Promise.resolve().then(function(){ return _leerHojaSigecColocacion(); }).catch(function(e){
+    ps.push(Promise.resolve().then(function(){
+      return _leerHojaSigecColocacion().then(function(){
+        try{ if(typeof obtenerSigecNacional==='function') obtenerSigecNacional(); }catch(e){}
+      });
+    }).catch(function(e){
       console.warn('[SCIC] SIGEC directo error:', e&&e.message);
     }));
   }
   if(typeof _cargarGLPI==='function'){
     ps.push(Promise.resolve().then(function(){
-      return (typeof _leerHojaGlpiColocacion==='function') ? _leerHojaGlpiColocacion() : _cargarGLPI();
+      var prom = (typeof _leerHojaGlpiColocacion==='function') ? _leerHojaGlpiColocacion() : _cargarGLPI();
+      return Promise.resolve(prom).then(function(){
+        try{ if(typeof obtenerGlpiNacional==='function') obtenerGlpiNacional(); }catch(e){}
+        try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
+      });
     }).catch(function(e){
       console.warn('[SCIC] GLPI vivo error:', e&&e.message);
     }));
   }
-  return Promise.all(ps);
+  return Promise.all(ps).then(function(){
+    try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
+    return null;
+  });
 }
 function _scicSafeProm(v){
   try{
@@ -7945,8 +7960,9 @@ function _parseCumpleMMDD(s){
       var sigFact=Number(sig.facturada)||0;
       var glpiApr=Number(glpi.aprobada)||0;
       var comb=sigFact+glpiApr;
+      var colocadoVivo = (typeof _menuHaySigecGlpiVivo==='function' && _menuHaySigecGlpiVivo() && comb>0) ? comb : (Number(ejecN)||0);
       var deb=Math.round(Number(debemos)||0);
-      setTxt('lgi-coloc-vamos',ejecN?fmt(ejecN):'—');
+      setTxt('lgi-coloc-vamos',colocadoVivo?fmt(colocadoVivo):'—');
       setTxt('lgi-coloc-deb','deb: '+(deb?fmt(deb):'—'));
       setTxt('lgi-sigec-vamos',sigFact?fmt(sigFact):'—');
       setTxt('lgi-sigec-deb','deb: '+(deb?fmt(deb):'—'));
@@ -8620,6 +8636,36 @@ function _parseCumpleMMDD(s){
     return g;
   }
 
+  /** Colocado = SIGEC facturadas + GLPI aprobadas (mismo criterio en menú, login e informes). */
+  function _menuColocadoSigecGlpi(sig, glpi){
+    return (Number(sig && sig.facturada) || 0) + (Number(glpi && glpi.aprobada) || 0);
+  }
+  function _menuHaySigecGlpiVivo(){
+    return !!((window._sigecRows && window._sigecRows.length) || (window._glpiRows && window._glpiRows.length));
+  }
+  function _menuResolverColocadoAcum(acumColoc, sig, glpi){
+    var comb = _menuColocadoSigecGlpi(sig, glpi);
+    return comb > 0 ? comb : acumColoc;
+  }
+  function _mtsSincronizarEjecSigecGlpi(){
+    if(typeof obtenerSigecNacional !== 'function' || typeof obtenerGlpiNacional !== 'function') return 0;
+    var sig = obtenerSigecNacional();
+    var glpi = obtenerGlpiNacional();
+    var comb = _menuColocadoSigecGlpi(sig, glpi);
+    if(_menuHaySigecGlpiVivo() && comb > 0){
+      window._mtsEjecN = comb;
+      var metaN = window._mtsMetaN || (_DATA && _DATA.meta_s2) || 0;
+      if(metaN) window._mtsPctN = Math.round(comb / metaN * 100);
+      var diasTot = window._mtsDiasTotal || (_DATA && _DATA.dh_total) || 0;
+      var diasTra = window._mtsDiasTrans || (_DATA && _DATA.dh_trans) || 0;
+      if(metaN && diasTot > 0) window._mtsDebemos = Math.round(metaN / diasTot * diasTra);
+    }
+    return comb;
+  }
+  window._menuColocadoSigecGlpi = _menuColocadoSigecGlpi;
+  window._menuResolverColocadoAcum = _menuResolverColocadoAcum;
+  window._mtsSincronizarEjecSigecGlpi = _mtsSincronizarEjecSigecGlpi;
+
   function _menuNormSede(s){
     return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
   }
@@ -9016,6 +9062,11 @@ function _parseCumpleMMDD(s){
       sig=(typeof _ioAgregarSigec==='function')?_ioAgregarSigec(sedesFiltro):{facturada:0,total:0};
       g=(typeof _ioAgregarGlpi==='function')?_ioAgregarGlpi(sedesFiltro):{aprobada:0,total:0};
     }
+    if(typeof _menuResolverColocadoAcum==='function'){
+      acumN = _menuResolverColocadoAcum(acumN, sig, g);
+    } else {
+      acumN = (Number(sig.facturada)||0) + (Number(g && g.aprobada)||0) || acumN;
+    }
     var realUni = 0;
     try{
       if(typeof icSumarRealUniversidad==='function') realUni = icSumarRealUniversidad();
@@ -9220,18 +9271,12 @@ function _parseCumpleMMDD(s){
       if(vista.esNacional){
         if(!metaN && window._mtsMetaN) metaN = window._mtsMetaN;
         if(!metaN && _DATA && _DATA.meta_s2) metaN = _DATA.meta_s2;
-        if(!acumN && window._mtsEjecN) acumN = window._mtsEjecN;
-        if(!acumN && _DATA && _DATA.acum_s2) acumN = _DATA.acum_s2;
       }
 
       var diasTot = window._mtsDiasTotal || (_DATA&&_DATA.dh_total) || 0;
       var diasTra = window._mtsDiasTrans || (_DATA&&_DATA.dh_trans) || 0;
       var deb = 0;
       if(metaN && diasTot>0) deb = Math.round(metaN / diasTot * diasTra);
-
-      var pct = metaN>0 ? Math.round(acumN/metaN*100) : 0;
-      var sem = _semS2Pct(pct);
-      var colSem = _semS2Color(pct);
 
       var sig, glpi;
       if(vista.esNacional){
@@ -9251,6 +9296,18 @@ function _parseCumpleMMDD(s){
         sig=obtenerSigecNacional();
         glpi=obtenerGlpiNacional();
       }
+
+      acumN = (typeof _menuResolverColocadoAcum==='function')
+        ? _menuResolverColocadoAcum(acumN, sig, glpi)
+        : acumN;
+      if(vista.esNacional && !acumN && window._mtsEjecN) acumN = window._mtsEjecN;
+      if(vista.esNacional && !acumN && _DATA && _DATA.acum_s2) acumN = _DATA.acum_s2;
+      if(vista.esNacional && typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi();
+
+      var pct = metaN>0 ? Math.round(acumN/metaN*100) : 0;
+      var sem = _semS2Pct(pct);
+      var colSem = _semS2Color(pct);
+
       var ambitoLbl = vista.esNacional ? null : vista.etiqueta;
       var el;
       el=document.getElementById('menu-nacional-title');
@@ -9287,7 +9344,10 @@ function _parseCumpleMMDD(s){
       el=document.getElementById('menu-nac-fecha'); if(el) el.textContent=hoy.toLocaleDateString('es-CO',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
       el=document.getElementById('menu-nac-meta'); if(el) el.textContent=metaN?fmtN(metaN):'—';
       el=document.getElementById('menu-nac-acum'); if(el) el.textContent=acumN?fmtN(acumN):'—';
-      el=document.getElementById('menu-nac-pct-txt'); if(el) el.textContent=metaN?(pct+'% de la meta'+(ambitoLbl?' · '+ambitoLbl:' nacional')):'—';
+      var sigF=Number(sig.facturada)||0, glpiA=Number(glpi.aprobada)||0;
+      el=document.getElementById('menu-nac-pct-txt'); if(el) el.textContent=metaN
+        ? (pct+'% de la meta · SIGEC '+fmtN(sigF)+' + GLPI '+fmtN(glpiA))
+        : '—';
       el=document.getElementById('menu-nac-deber'); if(el) el.textContent=metaN?fmtN(Math.round(deb)):'—';
       el=document.getElementById('menu-nac-dh'); if(el) el.textContent=diasTot?(diasTra+' de '+diasTot+' días hábiles transcurridos'):'— días hábiles';
       el=document.getElementById('menu-nac-brecha'); if(el){ el.textContent=metaN?brechaTxt:'—'; el.style.color=brechaCol; }
@@ -9497,6 +9557,7 @@ function _parseCumpleMMDD(s){
       return _origCargarSigec().then(function(){
         return _leerHojaSigecColocacion().then(function(){
           try{ obtenerSigecNacional(); }catch(e){ console.warn('[SCIC] obtenerSigecNacional:', e&&e.message); }
+          try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
           try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
         });
       });
@@ -9509,6 +9570,7 @@ function _parseCumpleMMDD(s){
     var _wrapCargarGlpi = function(){
       return (_leerHojaGlpiColocacion ? _leerHojaGlpiColocacion() : _origCargarGlpi()).then(function(){
         try{ obtenerGlpiNacional(); }catch(e){}
+        try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
         try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
       });
     };
@@ -12770,15 +12832,24 @@ function _parseCumpleMMDD(s){
       meta+=r.meta_n||0; acum+=r.acum_n||0;
       if(_getSemaforoColoc(r)==='VERDE') verdes++;
     });
+    var sigSalud = (sedesFiltro && sedesFiltro.length && typeof _ioAgregarSigec==='function')
+      ? _ioAgregarSigec(sedesFiltro)
+      : (typeof obtenerSigecNacional==='function' ? obtenerSigecNacional() : {});
+    var glpiSalud = (sedesFiltro && sedesFiltro.length && typeof _ioAgregarGlpi==='function')
+      ? _ioAgregarGlpi(sedesFiltro)
+      : (typeof obtenerGlpiNacional==='function' ? obtenerGlpiNacional() : {});
+    if(typeof _menuResolverColocadoAcum==='function'){
+      acum = _menuResolverColocadoAcum(acum, sigSalud, glpiSalud);
+    }
     var pctCol = meta>0 ? Math.round(acum/meta*100) : 0;
     var scCol = Math.min(100, pctCol);
-    add('Colocación S2', pctCol+'%', scCol, pctCol>=90?'VERDE':pctCol>=70?'AMARILLO':'ROJO', 0.28, acum+' / '+meta+' créd.');
+    var sigF = Number(sigSalud.facturada)||0, glpiA = Number(glpiSalud.aprobada)||0;
+    add('Colocación S2', pctCol+'%', scCol, pctCol>=90?'VERDE':pctCol>=70?'AMARILLO':'ROJO', 0.28,
+      fmtN(acum)+' / '+fmtN(meta)+' · SIGEC '+fmtN(sigF)+' + GLPI '+fmtN(glpiA));
 
     var pctSig = 0;
     try{
-      var sig = (sedesFiltro && sedesFiltro.length && typeof _ioAgregarSigec==='function')
-        ? _ioAgregarSigec(sedesFiltro)
-        : (typeof obtenerSigecNacional==='function' ? obtenerSigecNacional() : {});
+      var sig = sigSalud;
       var m = sig.meta||meta, f = sig.facturada||0;
       pctSig = m>0 ? Math.round(f/m*100) : 0;
       add('SIGEC fact.', pctSig+'%', Math.min(100,pctSig), pctSig>=90?'VERDE':pctSig>=70?'AMARILLO':'ROJO', 0.22, (f||0)+' facturadas');
@@ -12788,9 +12859,7 @@ function _parseCumpleMMDD(s){
     add('Sedes en verde', pctVerdes+'%', pctVerdes, pctVerdes>=60?'VERDE':pctVerdes>=40?'AMARILLO':'ROJO', 0.18, verdes+' de '+total);
 
     try{
-      var g = (sedesFiltro && sedesFiltro.length && typeof _ioAgregarGlpi==='function')
-        ? _ioAgregarGlpi(sedesFiltro)
-        : (typeof obtenerGlpiNacional==='function' ? obtenerGlpiNacional() : {});
+      var g = glpiSalud;
       var pg = g.total>0 ? Math.round((g.aprobada||0)/g.total*100) : 0;
       add('GLPI aprob.', pg+'%', Math.min(100,pg), pg>=54?'VERDE':pg>=40?'AMARILLO':'ROJO', 0.12, (g.aprobada||0)+' aprobadas');
     }catch(e){ add('GLPI aprob.', '—', 50, 'AMARILLO', 0.12, ''); }
