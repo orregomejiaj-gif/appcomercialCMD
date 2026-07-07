@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.64   (APP_VERSION = 'pyv-comercial-5.4.64')
+  Versión actual: pyv-comercial-5.4.65   (APP_VERSION = 'pyv-comercial-5.4.65')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.65 (2026-07-07)
+    - Fix filtros informes: rectorías/sedes poblados (helpers globales + selector sede simple).
+    - Nuevo informe «Informe de Colocación» (hub + menú debajo de Salud Comercial) desde P ACTUAL.
   pyv-comercial-5.4.64 (2026-07-07)
     - Fix login: carga explícita SIGEC+GLPI, barra de progreso sincronizada con colocado unificado.
     - Fix informe Estado Sedes: colocación SIGEC (fact.) + GLPI (aprob.) vs meta con matching de sedes.
@@ -305,11 +308,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.64">
-<meta name="build-id" content="pyv-comercial-5.4.64-20260707-2130">
+<meta name="app-version" content="pyv-comercial-5.4.65">
+<meta name="build-id" content="pyv-comercial-5.4.65-20260707-2200">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.64';
+window.APP_VERSION='pyv-comercial-5.4.65';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1404,6 +1407,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </button>
         <div class="menu-dd-panel menu-dd-panel-wide" id="menu-dd-informes" hidden>
           <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('estado-sedes-hoy')" class="menu-qb menu-qb-gold"><span>📊</span> Estado Sedes</button>
+          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('informe-colocacion')" class="menu-qb menu-qb-green"><span>📋</span> Colocación</button>
           <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('cobertura-uni')" class="menu-qb menu-qb-cob"><span>🎓</span> Cob. UNI</button>
           <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('cobertura-mat')" class="menu-qb menu-qb-blue"><span>📚</span> Cob. Mat.</button>
           <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('pendientes')" class="menu-qb menu-qb-amber"><span>⏳</span> Pendientes</button>
@@ -1455,6 +1459,29 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </div>
         <div class="menu-salud-dims" id="menu-salud-dims">
           <div class="menu-salud-loading">Calculando salud comercial…</div>
+        </div>
+      </div>
+
+      <div class="menu-report-block menu-coloc-informe-panel" id="menu-coloc-informe-panel">
+        <div class="menu-coloc-informe-hdr">
+          <div>
+            <div class="menu-coloc-informe-title"><i class="ti ti-report-analytics"></i> Informe de Colocación</div>
+            <div class="menu-coloc-informe-sub">Fuente: INFORME COLOCACION P ACTUAL · meta, acumulado S2, año anterior y variación</div>
+          </div>
+          <button type="button" class="menu-coloc-informe-link" onclick="abrirInformesComerciales('informe-colocacion')">Ver detalle →</button>
+        </div>
+        <div class="menu-coloc-informe-kpis" id="menu-coloc-informe-kpis">
+          <div class="menu-coloc-informe-loading">Cargando informe de colocación…</div>
+        </div>
+        <div class="menu-coloc-informe-tbl-wrap">
+          <table class="menu-coloc-informe-tbl">
+            <thead><tr>
+              <th>Sede</th><th>Meta</th><th>Acum.</th><th>%</th><th>Año ant.</th><th>VAR #</th><th>Sem</th>
+            </tr></thead>
+            <tbody id="menu-coloc-informe-tbody">
+              <tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:12px">Cargando…</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -1729,6 +1756,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-qb-cob{background:linear-gradient(135deg,#f5f3ff,#ede9fe);color:#6d28d9;border-color:#c4b5fd}
 .menu-qb-purple{background:linear-gradient(135deg,#faf5ff,#f3e8ff);color:#7e22ce;border-color:#d8b4fe}
 .menu-qb-gold{background:linear-gradient(135deg,#fefce8,#fef9c3);color:#a16207;border-color:#fde047}
+.menu-qb-green{background:linear-gradient(135deg,#f0fdf4,#dcfce7);color:#15803d;border-color:#86efac}
 .menu-qb-teal{background:linear-gradient(135deg,#f0fdfa,#ccfbf1);color:#0f766e;border-color:#5eead4}
 .menu-qb-cyan{background:linear-gradient(135deg,#ecfeff,#cffafe);color:#0e7490;border-color:#67e8f9}
 .menu-qb-pink{background:linear-gradient(135deg,#fdf2f8,#fce7f3);color:#be185d;border-color:#f9a8d4}
@@ -1885,6 +1913,23 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-nac-bar-ideal{position:absolute;top:-3px;width:3px;height:18px;background:var(--yellow);border-radius:2px}
 .menu-nac-proy{color:var(--text2);font-size:11px;margin-top:12px;text-align:center}
 .menu-yoy-panel{margin-bottom:26px}
+.menu-coloc-informe-panel{margin-bottom:22px;padding:18px 20px;background:linear-gradient(135deg,#f8fafc,#fff);border:1px solid var(--border);border-radius:16px;border-left:4px solid var(--teal);box-shadow:0 2px 12px rgba(0,61,69,.04)}
+.menu-coloc-informe-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.menu-coloc-informe-title{font-size:14px;font-weight:800;color:var(--dark);display:flex;align-items:center;gap:8px}
+.menu-coloc-informe-sub{font-size:10px;color:var(--gray);margin-top:4px;line-height:1.45}
+.menu-coloc-informe-link{padding:6px 12px;border:none;border-radius:8px;background:#003D45;color:#FFD900;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif}
+.menu-coloc-informe-kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:12px}
+@media(min-width:800px){.menu-coloc-informe-kpis{grid-template-columns:repeat(4,1fr)}}
+.menu-coloc-informe-kpi{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.menu-coloc-informe-kpi-lbl{font-size:8px;font-weight:700;color:var(--gray);text-transform:uppercase}
+.menu-coloc-informe-kpi-val{font-size:18px;font-weight:900;color:var(--dark);margin-top:4px}
+.menu-coloc-informe-loading{font-size:11px;color:var(--gray);padding:8px 0}
+.menu-coloc-informe-tbl-wrap{overflow:auto;max-height:280px;border:1px solid var(--border);border-radius:10px}
+.menu-coloc-informe-tbl{width:100%;border-collapse:collapse;font-size:10px}
+.menu-coloc-informe-tbl th{background:#f1f5f9;padding:8px 10px;text-align:right;font-weight:700;color:#64748b;position:sticky;top:0}
+.menu-coloc-informe-tbl th:first-child{text-align:left}
+.menu-coloc-informe-tbl td{padding:7px 10px;border-top:1px solid #f1f5f9;text-align:right}
+.menu-coloc-informe-tbl td:first-child{text-align:left;font-weight:600;color:var(--dark)}
 .menu-yoy-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);flex-wrap:wrap}
 .menu-yoy-title{font-size:14px;font-weight:800;color:var(--dark);display:flex;align-items:center;gap:8px}
 .menu-yoy-sub{font-size:10px;color:var(--gray);margin-top:4px;max-width:520px;line-height:1.45}
@@ -3912,7 +3957,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.64';
+var APP_VERSION = 'pyv-comercial-5.4.65';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7558,6 +7603,7 @@ https://minutodediosportal.com/login/
     <div style="display:flex;flex:1;min-height:0;overflow:hidden">
       <div id="ic-tabs" style="width:220px;flex-shrink:0;background:#f8fafc;border-right:1px solid #e2e8f0;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:4px">
         <button type="button" class="ic-tab" data-ic="estado-sedes-hoy" onclick="icSeleccionarTab('estado-sedes-hoy')">📊 Estado Sedes a Hoy</button>
+        <button type="button" class="ic-tab" data-ic="informe-colocacion" onclick="icSeleccionarTab('informe-colocacion')">📋 Informe Colocación</button>
         <button type="button" class="ic-tab active" data-ic="cobertura-uni" onclick="icSeleccionarTab('cobertura-uni')">🎓 Cobertura Universidad</button>
         <button type="button" class="ic-tab" data-ic="cobertura-mat" onclick="icSeleccionarTab('cobertura-mat')">📚 Cobertura Matrículas</button>
         <button type="button" class="ic-tab" data-ic="nuevos-renov" onclick="icSeleccionarTab('nuevos-renov')">🆕 Nuevos vs Renovación</button>
@@ -7568,16 +7614,22 @@ https://minutodediosportal.com/login/
         <button type="button" class="ic-tab" data-ic="tasa-aprob" onclick="icSeleccionarTab('tasa-aprob')">📉 Tasa/Pérdida</button>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;min-width:0">
-        <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end">
+        <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;position:relative;z-index:2">
           <div>
             <div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">RECTORÍA</div>
-            <select id="ic-rectoria" onchange="icCambiarRectoria()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:200px">
+            <select id="ic-rectoria" onchange="icCambiarRectoria()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:200px;background:#fff;cursor:pointer">
               <option value="">Todas las rectorías</option>
             </select>
           </div>
           <div>
+            <div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">SEDE</div>
+            <select id="ic-sede" onchange="icCambiarSede()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:200px;background:#fff;cursor:pointer">
+              <option value="">Todas las sedes</option>
+            </select>
+          </div>
+          <div>
             <div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">SEDES <span style="font-weight:400">(Ctrl+clic varias)</span></div>
-            <select id="ic-sedes-multi" multiple size="4" onchange="icRenderInformeActivo()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:220px;max-height:88px">
+            <select id="ic-sedes-multi" multiple size="4" onchange="icCambiarSedesMulti()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:220px;max-height:88px;background:#fff;cursor:pointer">
             </select>
           </div>
           <div id="ic-filtro-resumen" style="flex:1;min-width:180px;font-size:10px;color:#003D45;font-weight:700;padding:4px 0"></div>
@@ -9300,6 +9352,57 @@ function _parseCumpleMMDD(s){
   }
   window.renderMenuVsAnterior = renderMenuVsAnterior;
 
+  function _colocVarN(r){
+    if(r.var_n!=null&&r.var_n!==''&&!isNaN(r.var_n)) return Math.round(r.var_n);
+    return Math.round((r.acum_n||0)-(r.ant_n||0));
+  }
+  function _colocPctMeta(r){
+    var meta=r.meta_n||0, acum=r.acum_n||0;
+    return meta>0?Math.round(acum/meta*100):0;
+  }
+  function renderMenuInformeColocacion(sedeFiltro){
+    var col=(typeof _menuFiltrarColoc==='function')?_menuFiltrarColoc(sedeFiltro):(window._coloc_data||[]);
+    if(!col.length) col=(window._coloc_data||[]).slice();
+    var tMeta=0,tAcum=0,tAnt=0,tVar=0;
+    col.forEach(function(r){
+      tMeta+=r.meta_n||0; tAcum+=r.acum_n||0; tAnt+=r.ant_n||0; tVar+=_colocVarN(r);
+    });
+    var pctNat=tMeta>0?Math.round(tAcum/tMeta*100):0;
+    var kpis=document.getElementById('menu-coloc-informe-kpis');
+    if(kpis){
+      kpis.innerHTML=[
+        ['Meta S2', tMeta?fmtN(tMeta):'—', '#003D45'],
+        ['Acumulado', tAcum?fmtN(tAcum):'—', '#1d4ed8'],
+        ['% Meta', tMeta?(pctNat+'%'):'—', pctNat>=90?'#16a34a':pctNat>=70?'#ca8a04':'#dc2626'],
+        ['VAR # vs año ant.', (tAnt||tAcum)?((tVar>=0?'+':'')+fmtN(tVar)):'—', tVar>=0?'#16a34a':'#dc2626']
+      ].map(function(x){
+        return '<div class="menu-coloc-informe-kpi"><div class="menu-coloc-informe-kpi-lbl">'+x[0]+'</div><div class="menu-coloc-informe-kpi-val" style="color:'+x[2]+'">'+x[1]+'</div></div>';
+      }).join('');
+    }
+    var tbody=document.getElementById('menu-coloc-informe-tbody');
+    if(tbody){
+      var rows=col.slice().sort(function(a,b){ return (b.acum_n||0)-(a.acum_n||0); });
+      if(!rows.length){
+        tbody.innerHTML='<tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:12px">Sin datos de INFORME COLOCACION P ACTUAL</td></tr>';
+      } else {
+        tbody.innerHTML=rows.map(function(r){
+          var pct=_colocPctMeta(r);
+          var vn=_colocVarN(r);
+          var sem=String(r.semaforo||r.sem||'').toUpperCase()||_semS2Pct(pct);
+          var semCol=sem.indexOf('VERDE')>=0?'#16a34a':sem.indexOf('AMAR')>=0?'#ca8a04':'#dc2626';
+          return '<tr><td>'+(r.sede||'—')+'</td>'
+            +'<td>'+fmtN(Math.round(r.meta_n||0))+'</td>'
+            +'<td><strong>'+fmtN(r.acum_n||0)+'</strong></td>'
+            +'<td>'+pct+'%</td>'
+            +'<td>'+fmtN(r.ant_n||0)+'</td>'
+            +'<td style="color:'+(vn>=0?'#16a34a':'#dc2626')+'">'+(vn>=0?'+':'')+fmtN(vn)+'</td>'
+            +'<td style="color:'+semCol+';font-weight:700">'+sem+'</td></tr>';
+        }).join('');
+      }
+    }
+  }
+  window.renderMenuInformeColocacion=renderMenuInformeColocacion;
+
   function actualizarMenuKPIs(){
     try{
       try{ if(typeof _sincronizarSesionDesdeEmpleados==='function') _sincronizarSesionDesdeEmpleados(); }catch(e){}
@@ -9405,6 +9508,7 @@ function _parseCumpleMMDD(s){
         : 'Proyección de cierre: —';
 
       renderMenuSigecSemaforo(metaN, sig, glpi, sedeAmb || ambitoLbl, sedesFiltro);
+      renderMenuInformeColocacion(vista.esNacional ? null : sedesFiltro);
       renderMenuVsAnterior(vista.esNacional ? null : sedesFiltro);
       renderMenuMcmRadar(vista.esNacional ? null : sedesFiltro);
       try{ if(typeof cmdActualizarBotonVistaMenu==='function') cmdActualizarBotonVistaMenu(); }catch(e){}
@@ -11928,6 +12032,8 @@ function _parseCumpleMMDD(s){
     }
     return (r[rectoria]||[]).slice().sort(function(a,b){ return a.localeCompare(b,'es'); });
   }
+  window._mapaListaRectorias=_mapaListaRectorias;
+  window._mapaListaSedes=_mapaListaSedes;
   function _mapaSetSelectOptions(sel, items, placeholder, multi){
     if(!sel) return;
     var prev = multi ? Array.from(sel.selectedOptions||[]).map(function(o){return o.value;}) : [sel.value];
@@ -11952,6 +12058,7 @@ function _parseCumpleMMDD(s){
       for(var i=0;i<sel.options.length;i++){ if(sel.options[i].value===prev[0]){ sel.value=prev[0]; break; } }
     }
   }
+  window._mapaSetSelectOptions=_mapaSetSelectOptions;
   function poblarSelectRectoriasUnificado(selectId, placeholder){
     var sel = typeof selectId==='string' ? document.getElementById(selectId) : selectId;
     if(!sel) return;
@@ -11962,6 +12069,8 @@ function _parseCumpleMMDD(s){
     if(!sel) return;
     _mapaSetSelectOptions(sel, _mapaListaSedes(rectoria||''), placeholder || '— Seleccionar sede —', !!sel.multiple);
   }
+  window.poblarSelectRectoriasUnificado=poblarSelectRectoriasUnificado;
+  window.poblarSelectSedesUnificado=poblarSelectSedesUnificado;
   function auditarYSincronizarDropdowns(){
     try{
       _cartAsegurarMapaRectorias();
@@ -14317,10 +14426,39 @@ function _parseCumpleMMDD(s){
   function icSedesFiltro(f){
     f=f||{};
     if(f.sedes&&f.sedes.length) return f.sedes.slice();
-    if(f.rectoria) return (typeof _mapaListaSedes==='function')?_mapaListaSedes(f.rectoria):[];
+    if(f.rectoria) return icListaSedes(f.rectoria);
     if(f.nivel==='sede'&&f.sel) return [f.sel];
-    if(f.nivel==='rectoria'&&f.sel) return (typeof _mapaListaSedes==='function')?_mapaListaSedes(f.sel):[];
+    if(f.nivel==='rectoria'&&f.sel) return icListaSedes(f.sel);
     return null;
+  }
+  function icListaRectorias(){
+    if(typeof _mapaListaRectorias==='function') return _mapaListaRectorias();
+    var r=(typeof RECTORIAS!=='undefined'&&RECTORIAS)?RECTORIAS:(window.RECTORIAS||{});
+    if(!Object.keys(r).length&&typeof _RECTORIAS_FALLBACK!=='undefined') r=_RECTORIAS_FALLBACK;
+    return Object.keys(r).sort(function(a,b){ return a.localeCompare(b,'es'); });
+  }
+  function icListaSedes(rectoria){
+    if(typeof _mapaListaSedes==='function') return _mapaListaSedes(rectoria||'');
+    var r=(typeof RECTORIAS!=='undefined'&&RECTORIAS)?RECTORIAS:(window.RECTORIAS||{});
+    if(!Object.keys(r).length&&typeof _RECTORIAS_FALLBACK!=='undefined') r=_RECTORIAS_FALLBACK;
+    if(!rectoria){
+      var all=[];
+      Object.keys(r).forEach(function(rect){ all=all.concat(r[rect]||[]); });
+      return all.filter(Boolean).sort(function(a,b){ return a.localeCompare(b,'es'); });
+    }
+    return (r[rectoria]||[]).slice().sort(function(a,b){ return a.localeCompare(b,'es'); });
+  }
+  function icListaSedesColoc(rectoria){
+    var sedes=icListaSedes(rectoria);
+    if(sedes.length) return sedes;
+    var col=window._coloc_data||[];
+    var out=[], seen={};
+    col.forEach(function(r){
+      if(!r.sede||seen[r.sede]) return;
+      if(rectoria&&icStr(r.rectoria)!==icStr(rectoria)) return;
+      seen[r.sede]=1; out.push(r.sede);
+    });
+    return out.sort(function(a,b){ return a.localeCompare(b,'es'); });
   }
   function icFiltroResumen(f){
     if(f.sedes&&f.sedes.length>1) return f.sedes.length+' sedes seleccionadas';
@@ -14571,7 +14709,12 @@ function _parseCumpleMMDD(s){
     }
     var rect=filtro.rectoria||(filtro.nivel==='rectoria'?filtro.sel:'');
     if(rect){
-      return col.filter(function(r){ return icStr(r.rectoria)===icStr(rect); });
+      var sedesRect=icListaSedes(rect);
+      return col.filter(function(r){
+        if(icStr(r.rectoria)===icStr(rect)) return true;
+        if(sedesRect.length&&sedesRect.some(function(s){ return icMatchSede(r.sede,s); })) return true;
+        return icMatchSede(r.rectoria, rect);
+      });
     }
     return col;
   }
@@ -14601,9 +14744,11 @@ function _parseCumpleMMDD(s){
 
   function icFiltroActual(){
     var rect=(document.getElementById('ic-rectoria')||{}).value||'';
+    var sedeOne=(document.getElementById('ic-sede')||{}).value||'';
     var sedesEl=document.getElementById('ic-sedes-multi');
     var sedes=[];
-    if(sedesEl){
+    if(sedeOne) sedes=[sedeOne];
+    else if(sedesEl){
       Array.from(sedesEl.selectedOptions||[]).forEach(function(o){
         if(o.value) sedes.push(o.value);
       });
@@ -14645,6 +14790,7 @@ function _parseCumpleMMDD(s){
 
   var IC_DESCS={
     'estado-sedes-hoy':'Panorama por sede al día de hoy: meta S2, colocado (SIGEC facturadas + GLPI aprobadas), deberíamos según curva, brecha y semáforo. Filtre por rectoría y/o seleccione varias sedes.',
+    'informe-colocacion':'Datos del INFORME COLOCACION P ACTUAL: meta S2, acumulado, valores, año anterior, variación y semáforo por sede.',
     'cobertura-uni':'Cobertura = colocado SIGEC+GLPI ÷ Total Real PARA LA UNIVERSIDAD (hoja INFORME DE MATRICULAS). También muestra acum_n del informe P Actual.',
     'cobertura-mat':'Cobertura matrículas = (SIGEC facturadas + GLPI aprobadas) ÷ total matriculados UNIMINUTO.',
     'nuevos-renov':'Nuevos y renovaciones desde COLOCACION SIGEC por estado. Cobertura nuevos = facturados nuevos ÷ Real Nuevos UNI; renovación = facturados renov ÷ Real Continuos UNI.',
@@ -14965,6 +15111,72 @@ function _parseCumpleMMDD(s){
     return html;
   }
 
+  function icFmtM(n){
+    var v=Number(n)||0;
+    if(v>=1e9) return '$'+(v/1e9).toFixed(1)+' MM';
+    if(v>=1e6) return '$'+(v/1e6).toFixed(1)+' M';
+    if(v>=1e3) return '$'+(v/1e3).toFixed(0)+' K';
+    return '$'+icFmt(Math.round(v));
+  }
+  function icColocVarN(r){
+    if(r.var_n!=null&&r.var_n!==''&&!isNaN(r.var_n)) return Math.round(r.var_n);
+    return Math.round((r.acum_n||0)-(r.ant_n||0));
+  }
+
+  function icRenderInformeColocacion(f){
+    var filas=icFilasColoc(f);
+    var rows=[], tMeta=0, tAcum=0, tAnt=0, tVar=0, tMetaV=0, tAcumV=0;
+    filas.forEach(function(r){
+      var meta=r.meta_n||0, acum=r.acum_n||0, ant=r.ant_n||0;
+      var vn=icColocVarN(r);
+      var pct=meta>0?Math.round(acum/meta*100):0;
+      var sem=String(r.semaforo||r.sem||'').toUpperCase()||icSem(pct,90,70);
+      tMeta+=meta; tAcum+=acum; tAnt+=ant; tVar+=vn; tMetaV+=r.meta_v||0; tAcumV+=r.acum_v||0;
+      rows.push({
+        sede:r.sede||'', rect:r.rectoria||'', meta:meta, acum:acum, ant:ant, vn:vn,
+        pct:pct, sem:sem, metaV:r.meta_v||0, acumV:r.acum_v||0
+      });
+    });
+    rows.sort(function(a,b){ return b.acum-a.acum; });
+    var pctNat=tMeta>0?Math.round(tAcum/tMeta*100):0;
+    var html='<div class="ic-explain">'+IC_DESCS['informe-colocacion']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
+    html+='<div class="ic-kpi-grid">';
+    html+=icKpi('Meta S2 #',icFmt(Math.round(tMeta)),'INFORME COLOCACION P ACTUAL','#003D45');
+    html+=icKpi('Acumulado #',icFmt(tAcum),pctNat+'% de la meta','#1d4ed8');
+    html+=icKpi('Meta S2 $',icFmtM(tMetaV),'Valor meta período','#003D45');
+    html+=icKpi('Acumulado $',icFmtM(tAcumV),'Valor colocado','#1d4ed8');
+    html+=icKpi('Año anterior',icFmt(tAnt),'Mismo período S2 año ant.','#64748b');
+    html+=icKpi('VAR # total',(tVar>=0?'+':'')+icFmt(tVar),'Diferencia vs año anterior',tVar>=0?'#16a34a':'#dc2626');
+    html+='</div>';
+    html+=icSec('Detalle por sede','Fuente: INFORME COLOCACION P ACTUAL · '+rows.length+' sedes');
+    html+='<div style="overflow:auto;max-height:460px"><table class="ic-tbl"><thead><tr>'
+      +'<th>Sede</th><th>Rectoría</th><th>Meta #</th><th>Acum #</th><th>% Meta</th>'
+      +'<th>Meta $</th><th>Acum $</th><th>Año ant.</th><th>VAR #</th><th>Sem</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var bCol=r.vn>=0?'#16a34a':'#dc2626';
+      html+='<tr><td style="font-weight:600">'+r.sede+'</td><td style="font-size:9px;color:#64748b">'+r.rect+'</td>'
+        +'<td style="text-align:right">'+icFmt(Math.round(r.meta))+'</td>'
+        +'<td style="text-align:right;font-weight:700">'+icFmt(r.acum)+'</td>'
+        +'<td style="text-align:right">'+r.pct+'%</td>'
+        +'<td style="text-align:right">'+icFmtM(r.metaV)+'</td>'
+        +'<td style="text-align:right">'+icFmtM(r.acumV)+'</td>'
+        +'<td style="text-align:right;color:#64748b">'+icFmt(r.ant)+'</td>'
+        +'<td style="text-align:right;color:'+bCol+';font-weight:700">'+(r.vn>=0?'+':'')+icFmt(r.vn)+'</td>'
+        +'<td>'+icSemHtml(r.sem)+'</td></tr>';
+    });
+    html+='</tbody><tfoot><tr style="font-weight:700;background:#f8fafc;">'
+      +'<td>TOTAL</td><td></td>'
+      +'<td style="text-align:right">'+icFmt(Math.round(tMeta))+'</td>'
+      +'<td style="text-align:right">'+icFmt(tAcum)+'</td>'
+      +'<td style="text-align:right">'+pctNat+'%</td>'
+      +'<td style="text-align:right">'+icFmtM(tMetaV)+'</td>'
+      +'<td style="text-align:right">'+icFmtM(tAcumV)+'</td>'
+      +'<td style="text-align:right">'+icFmt(tAnt)+'</td>'
+      +'<td style="text-align:right;color:'+(tVar>=0?'#16a34a':'#dc2626')+'">'+(tVar>=0?'+':'')+icFmt(tVar)+'</td>'
+      +'<td></td></tr></tfoot></table></div>';
+    return html;
+  }
+
   function icRenderEstadoSedesHoy(f){
     var dhTot=window._mtsDiasTotal||(_DATA&&_DATA.dh_total)||122;
     var dhTra=window._mtsDiasTrans||(_DATA&&_DATA.dh_trans)||0;
@@ -15065,6 +15277,7 @@ function _parseCumpleMMDD(s){
 
   var IC_RENDERERS={
     'estado-sedes-hoy':icRenderEstadoSedesHoy,
+    'informe-colocacion':icRenderInformeColocacion,
     'cobertura-uni':icRenderCoberturaUni,
     'cobertura-mat':icRenderCoberturaMat,
     'nuevos-renov':icRenderNuevosRenov,
@@ -15105,34 +15318,71 @@ function _parseCumpleMMDD(s){
   };
 
   function icInicializarFiltros(){
-    var rectSel=document.getElementById('ic-rectoria');
-    if(rectSel){
-      var prev=rectSel.value;
-      rectSel.innerHTML='<option value="">Todas las rectorías</option>';
-      (typeof _mapaListaRectorias==='function'?_mapaListaRectorias():[]).forEach(function(r){
-        var o=document.createElement('option'); o.value=r; o.textContent=r; rectSel.appendChild(o);
-      });
-      if(prev) rectSel.value=prev;
+    if(typeof poblarSelectRectoriasUnificado==='function'){
+      poblarSelectRectoriasUnificado('ic-rectoria','Todas las rectorías');
+    } else {
+      var rectSel=document.getElementById('ic-rectoria');
+      if(rectSel){
+        var prev=rectSel.value;
+        rectSel.innerHTML='<option value="">Todas las rectorías</option>';
+        icListaRectorias().forEach(function(r){
+          var o=document.createElement('option'); o.value=r; o.textContent=r; rectSel.appendChild(o);
+        });
+        if(prev) rectSel.value=prev;
+      }
     }
     icActualizarFiltros(false);
   }
   window.icActualizarFiltros=function(render){
     var rect=(document.getElementById('ic-rectoria')||{}).value||'';
-    var sel=document.getElementById('ic-sedes-multi');
-    if(!sel) return;
-    var prev=[];
-    Array.from(sel.selectedOptions||[]).forEach(function(o){ if(o.value) prev.push(o.value); });
-    var sedes=(typeof _mapaListaSedes==='function')?_mapaListaSedes(rect):[];
-    sel.innerHTML='';
-    sedes.forEach(function(s){
-      var o=document.createElement('option');
-      o.value=s; o.textContent=s;
-      if(prev.indexOf(s)>=0) o.selected=true;
-      sel.appendChild(o);
-    });
+    var sedeSel=document.getElementById('ic-sede');
+    var multiSel=document.getElementById('ic-sedes-multi');
+    var sedes=icListaSedesColoc(rect);
+    var prevSede=sedeSel?sedeSel.value:'';
+    var prevMulti=[];
+    if(multiSel) Array.from(multiSel.selectedOptions||[]).forEach(function(o){ if(o.value) prevMulti.push(o.value); });
+    if(sedeSel){
+      sedeSel.innerHTML='<option value="">Todas las sedes</option>';
+      sedes.forEach(function(s){
+        var o=document.createElement('option');
+        o.value=s; o.textContent=s;
+        if(prevSede===s) o.selected=true;
+        sedeSel.appendChild(o);
+      });
+    }
+    if(multiSel){
+      multiSel.innerHTML='';
+      sedes.forEach(function(s){
+        var o=document.createElement('option');
+        o.value=s; o.textContent=s;
+        if(prevMulti.indexOf(s)>=0) o.selected=true;
+        multiSel.appendChild(o);
+      });
+    }
     if(render!==false) icRenderInformeActivo();
   };
-  window.icCambiarRectoria=function(){ icActualizarFiltros(true); };
+  window.icCambiarRectoria=function(){
+    var sedeSel=document.getElementById('ic-sede');
+    if(sedeSel) sedeSel.value='';
+    var multiSel=document.getElementById('ic-sedes-multi');
+    if(multiSel) Array.from(multiSel.options||[]).forEach(function(o){ o.selected=false; });
+    icActualizarFiltros(true);
+  };
+  window.icCambiarSede=function(){
+    var sede=(document.getElementById('ic-sede')||{}).value||'';
+    var multiSel=document.getElementById('ic-sedes-multi');
+    if(multiSel) Array.from(multiSel.options||[]).forEach(function(o){ o.selected=(sede&&o.value===sede); });
+    icRenderInformeActivo();
+  };
+  window.icCambiarSedesMulti=function(){
+    var multiSel=document.getElementById('ic-sedes-multi');
+    var sedeSel=document.getElementById('ic-sede');
+    if(!multiSel||!sedeSel) return icRenderInformeActivo();
+    var picked=Array.from(multiSel.selectedOptions||[]).filter(function(o){ return o.value; });
+    if(picked.length===1) sedeSel.value=picked[0].value;
+    else sedeSel.value='';
+    icRenderInformeActivo();
+  };
   window.icCambiarNivel=window.icCambiarRectoria;
 
   window.abrirInformesComerciales=function(tab){
@@ -15149,7 +15399,12 @@ function _parseCumpleMMDD(s){
     var m=document.getElementById('modal-informes-comerciales');
     if(m) m.style.display='none';
   };
-  window.icRefrescarInformes=function(){ icCargarDatosInformes(true).then(icRenderInformeActivo); };
+  window.icRefrescarInformes=function(){
+    icCargarDatosInformes(true).then(function(){
+      icInicializarFiltros();
+      icRenderInformeActivo();
+    });
+  };
 
   function icCargarDatosInformes(forzar){
     var ps=[];
@@ -15163,6 +15418,8 @@ function _parseCumpleMMDD(s){
       ps.push(_leerHojaSigecColocacion().catch(function(){}));
     if(typeof _leerHojaGlpiColocacion==='function'&&(!(window._glpiRows||[]).length||forzar))
       ps.push(_leerHojaGlpiColocacion().catch(function(){}));
+    if(typeof _cargarColocacion==='function'&&(!(window._coloc_data||[]).length||forzar))
+      ps.push(_cargarColocacion().catch(function(){}));
     if(typeof _cargarBaseColoc==='function'&&(!(window._baseColoc_total>0)||forzar))
       ps.push(_cargarBaseColoc().catch(function(){}));
     ps.push(window.icEnriquecerColocUniversidad());
@@ -15252,7 +15509,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.64 — Login GLPI + Estado Sedes SIGEC+GLPI');
+  console.log('[CMD] Informes Comerciales v5.4.65 — Filtros rectoría/sede + Informe Colocación');
 })();
 
 </script>
