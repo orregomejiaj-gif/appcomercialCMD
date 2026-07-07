@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.63   (APP_VERSION = 'pyv-comercial-5.4.63')
+  Versión actual: pyv-comercial-5.4.64   (APP_VERSION = 'pyv-comercial-5.4.64')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.64 (2026-07-07)
+    - Fix login: carga explícita SIGEC+GLPI, barra de progreso sincronizada con colocado unificado.
+    - Fix informe Estado Sedes: colocación SIGEC (fact.) + GLPI (aprob.) vs meta con matching de sedes.
   pyv-comercial-5.4.63 (2026-07-07)
     - Nuevo informe «Estado Sedes a Hoy»: meta, colocado SIGEC+GLPI, brecha vs curva, semáforo por sede.
     - Hub Informes: filtros por rectoría y sedes múltiples (Ctrl+clic); coherencia SIGEC+GLPI en todos los tabs.
@@ -302,11 +305,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.63">
-<meta name="build-id" content="pyv-comercial-5.4.63-20260707-2115">
+<meta name="app-version" content="pyv-comercial-5.4.64">
+<meta name="build-id" content="pyv-comercial-5.4.64-20260707-2130">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.63';
+window.APP_VERSION='pyv-comercial-5.4.64';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -1312,27 +1315,27 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </div>
         <!-- Colocación · SIGEC · GLPI (corte día anterior) -->
         <div id="lgi-sigec-glpi" style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:11px;padding:11px;margin-bottom:7px">
-          <div style="color:rgba(255,255,255,.4);font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📊 Colocación · SIGEC · GLPI · corte día anterior</div>
+          <div style="color:rgba(255,255,255,.4);font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📊 Colocación SIGEC + GLPI · facturadas + aprobadas</div>
           <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:6px">
             <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
-              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">Colocados</div>
-              <div style="font-size:14px;font-weight:900;color:#4ade80" id="lgi-coloc-vamos">—</div>
-              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-coloc-deb">deb: —</div>
-            </div>
-            <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
-              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">SIGEC</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">SIGEC fact.</div>
               <div style="font-size:14px;font-weight:900;color:#60a5fa" id="lgi-sigec-vamos">—</div>
-              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-sigec-deb">deb: —</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-sigec-deb">vs meta</div>
             </div>
             <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
-              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">GLPI</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">GLPI aprob.</div>
               <div style="font-size:14px;font-weight:900;color:#a78bfa" id="lgi-glpi-vamos">—</div>
-              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-glpi-deb">deb: —</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-glpi-deb">vs meta</div>
             </div>
             <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
-              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">SIGEC+GLPI</div>
-              <div style="font-size:14px;font-weight:900;color:#fbbf24" id="lgi-comb-vamos">—</div>
-              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-comb-deb">deb: —</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">Colocado</div>
+              <div style="font-size:14px;font-weight:900;color:#4ade80" id="lgi-comb-vamos">—</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-comb-deb">SIGEC+GLPI</div>
+            </div>
+            <div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:7px 4px">
+              <div style="font-size:7px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700;margin-bottom:3px">% Meta S2</div>
+              <div style="font-size:14px;font-weight:900;color:#fbbf24" id="lgi-coloc-vamos">—</div>
+              <div style="font-size:7px;color:rgba(255,255,255,.35)" id="lgi-coloc-deb">deb: —</div>
             </div>
           </div>
           <div style="font-size:9px;color:rgba(255,255,255,.45);text-align:center;line-height:1.45" id="lgi-sigglpi-debemos">Según informe de colocación (SIGEC+GLPI): deberíamos llevar —</div>
@@ -3909,7 +3912,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.63';
+var APP_VERSION = 'pyv-comercial-5.4.64';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4050,7 +4053,9 @@ var SEDE_EQUIVALENCIAS_COLOCACION = {
   'TUNJA':'Tunja','YOPAL':'Yopal','LETICIA':'Leticia','MOCOA':'Mocoa',
   'QUIBDO':'Quibdó','FLORENCIA':'Florencia','POPAYAN':'Popayán','TUMACO':'Tumaco',
   'VIRTUAL':'Virtual','VIRTUAL Y DISTANCIA':'Virtual y Distancia','VIRTUAL Y DISTANCIA.':'Virtual y Distancia',
-  'VIRTUAL DISTANCIA':'Virtual y Distancia','SEDES VIRTUALES':'Virtual y Distancia','NACIONAL':'Nacional'
+  'VIRTUAL DISTANCIA':'Virtual y Distancia','SEDES VIRTUALES':'Virtual y Distancia','NACIONAL':'Nacional',
+  'VIRTUAL/ DISTANCIA PRINCIPAL':'Virtual y Distancia','VIRTUAL DISTANCIA PRINCIPAL':'Virtual y Distancia',
+  'IBAGUE':'Ibagué','IBAGUÉ':'Ibagué','MADRID':'CR Madrid','BARRANQUILLA':'CR Barranquilla'
 };
 
 // Función crítica: normalizar nombre de sede entre fuentes
@@ -7966,30 +7971,53 @@ function _parseCumpleMMDD(s){
     try{
       var sig=(typeof obtenerSigecNacional==='function')?obtenerSigecNacional():{facturada:0};
       var glpi=(typeof obtenerGlpiNacional==='function')?obtenerGlpiNacional():{aprobada:0};
+      if((!sig||!sig.facturada)&&typeof _DATA!=='undefined'&&_DATA.sigec) sig=_DATA.sigec;
+      if((!glpi||!glpi.aprobada)&&typeof _DATA!=='undefined'&&_DATA.glpi) glpi=_DATA.glpi;
+      if((!glpi||!glpi.aprobada)&&window._glpiNacional) glpi=window._glpiNacional;
       var sigFact=Number(sig.facturada)||0;
       var glpiApr=Number(glpi.aprobada)||0;
       var comb=sigFact+glpiApr;
-      var colocadoVivo = (typeof _menuHaySigecGlpiVivo==='function' && _menuHaySigecGlpiVivo() && comb>0) ? comb : (Number(ejecN)||0);
       var deb=Math.round(Number(debemos)||0);
-      setTxt('lgi-coloc-vamos',colocadoVivo?fmt(colocadoVivo):'—');
+      var pctMeta=metaN>0?Math.round(comb/metaN*100):0;
+      var cargando=!(window._glpiRows&&window._glpiRows.length)&&!glpiApr&&!(_DATA&&_DATA.glpi&&_DATA.glpi.aprobada);
+      setTxt('lgi-sigec-vamos',sigFact?fmt(sigFact):(cargando?'…':'—'));
+      setTxt('lgi-glpi-vamos',glpiApr?fmt(glpiApr):(cargando?'…':'—'));
+      setTxt('lgi-comb-vamos',comb?fmt(comb):(cargando?'…':'—'));
+      setTxt('lgi-coloc-vamos',metaN?(pctMeta+'%'):'—');
       setTxt('lgi-coloc-deb','deb: '+(deb?fmt(deb):'—'));
-      setTxt('lgi-sigec-vamos',sigFact?fmt(sigFact):'—');
-      setTxt('lgi-sigec-deb','deb: '+(deb?fmt(deb):'—'));
-      setTxt('lgi-glpi-vamos',glpiApr?fmt(glpiApr):'—');
-      setTxt('lgi-glpi-deb','deb: '+(deb?fmt(deb):'—'));
-      setTxt('lgi-comb-vamos',comb?fmt(comb):'—');
+      setTxt('lgi-sigec-deb',metaN?(Math.round(sigFact/metaN*100)+'% meta'):'—');
+      setTxt('lgi-glpi-deb',metaN?(Math.round(glpiApr/metaN*100)+'% meta'):'—');
       setTxt('lgi-comb-deb','deb: '+(deb?fmt(deb):'—'));
-      var pctComb=deb>0?Math.round(comb/deb*100):0;
+      var pctDeb=deb>0?Math.round(comb/deb*100):0;
       var msg=metaN
-        ?('Según informe de colocación (SIGEC+GLPI) hasta ayer: deberíamos llevar <strong style="color:#FFD900">'+fmt(deb)+'</strong> · vamos <strong style="color:#4ade80">'+fmt(comb)+'</strong> ('+pctComb+'%)')
-        :'Cargando meta del período…';
+        ?('Colocación SIGEC+GLPI: <strong style="color:#4ade80">'+fmt(comb)+'</strong> (SIGEC '+fmt(sigFact)+' + GLPI '+fmt(glpiApr)+') · '
+          +(deb?('deberíamos <strong style="color:#FFD900">'+fmt(deb)+'</strong> ('+pctDeb+'% curva)'):''))
+        :(cargando?'Cargando SIGEC y GLPI desde Sheets…':'Cargando meta del período…');
       var el=document.getElementById('lgi-sigglpi-debemos');
       if(el) el.innerHTML=msg;
     }catch(e){ console.warn('[SCIC] renderLoginSigecGlpi:',e&&e.message); }
   }
 
+  function _lgiCargarSigecGlpiVivo(){
+    var ps=[];
+    if(typeof _leerHojaSigecColocacion==='function')
+      ps.push(_leerHojaSigecColocacion().then(function(){
+        try{ if(typeof obtenerSigecNacional==='function') obtenerSigecNacional(); }catch(e){}
+      }).catch(function(){}));
+    if(typeof _leerHojaGlpiColocacion==='function')
+      ps.push(_leerHojaGlpiColocacion().then(function(){
+        try{ if(typeof obtenerGlpiNacional==='function') obtenerGlpiNacional(); }catch(e){}
+      }).catch(function(){}));
+    return Promise.all(ps).then(function(){
+      try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
+      try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
+    });
+  }
+  window._lgiCargarSigecGlpiVivo=_lgiCargarSigecGlpiVivo;
+
   function renderLoginDashboard(){
     try{
+      try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
       var metaN=window._mtsMetaN||0, ejecN=window._mtsEjecN||0;
       var pctN=window._mtsPctN|| (metaN?Math.round(ejecN/metaN*100):0);
       var diasTot=window._mtsDiasTotal||0, diasTra=window._mtsDiasTrans||0;
@@ -8138,6 +8166,7 @@ function _parseCumpleMMDD(s){
       var done=function(){
         try{typeof _mtsCargarPeriodoHabiles==='function'&&_mtsCargarPeriodoHabiles();}catch(e){}
         try{typeof _mtsCargarMeta==='function'&&_mtsCargarMeta();}catch(e){}
+        try{ if(typeof _lgiCargarSigecGlpiVivo==='function') return _lgiCargarSigecGlpiVivo(); }catch(e){}
         renderLoginDashboard();
         try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
       };
@@ -8149,9 +8178,10 @@ function _parseCumpleMMDD(s){
         var fnCol=window._cargarColocacion||_cargarColocacion;
         if(typeof fnCol==='function') ps.push(fnCol(per));
         if(typeof cargarSigecContadoresMenu==='function') ps.push(cargarSigecContadoresMenu());
+        if(typeof _leerHojaGlpiColocacion==='function') ps.push(_leerHojaGlpiColocacion());
       }
       Promise.all(ps).then(done).catch(done);
-      if(typeof _cargarTop5==='function'){ try{_cargarTop5().then(renderLoginDashboard).catch(function(){});}catch(e){} }
+      if(typeof _cargarTop5==='function'){ try{_cargarTop5().then(function(){ renderLoginDashboard(); }).catch(function(){});}catch(e){} }
     }catch(e){ renderLoginDashboard(); }
   };
 
@@ -10134,10 +10164,20 @@ function _parseCumpleMMDD(s){
   function _cdNormSede(s){
     return (typeof normalizarSedeColocacion==='function') ? normalizarSedeColocacion(s) : String(s||'').trim();
   }
+  function _cdSedeKey(s){
+    return String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+      .replace(/^(coa|co|cr|ct|cu|cs|cp)\s+/i,'').replace(/\s+/g,'').replace(/[^a-z0-9]/g,'');
+  }
   function _cdMatchSede(a,b){
     if(!a||!b) return false;
     var x=_cdNormSede(a).toLowerCase(), y=_cdNormSede(b).toLowerCase();
-    return x===y || x.indexOf(y)>=0 || y.indexOf(x)>=0;
+    if(x===y || x.indexOf(y)>=0 || y.indexOf(x)>=0) return true;
+    var ka=_cdSedeKey(a), kb=_cdSedeKey(b);
+    if(ka.length>=3 && kb.length>=3){
+      if(ka===kb || ka.indexOf(kb)>=0 || kb.indexOf(ka)>=0) return true;
+      if(ka.indexOf('virtual')>=0 && kb.indexOf('virtual')>=0) return true;
+    }
+    return false;
   }
   function _cdKpiCard(lbl, val, col, sub){
     return '<div style="background:#f8fafc;border-radius:10px;padding:10px;border-left:3px solid '+col+'">'
@@ -14300,6 +14340,51 @@ function _parseCumpleMMDD(s){
     var e=est.toLowerCase();
     return e.indexOf('aprob')>=0||e.indexOf('factur')>=0||e.indexOf('cerrada fac')>=0;
   }
+  function icResolverSedeColoc(raw, sedesLista){
+    if(!raw) return '';
+    var lista=sedesLista||[];
+    var i;
+    for(i=0;i<lista.length;i++){
+      if(icMatchSede(raw,lista[i])) return lista[i];
+    }
+    var kr=icNormSedeKey(raw), best='';
+    if(kr.length>=3){
+      for(i=0;i<lista.length;i++){
+        var kj=icNormSedeKey(lista[i]);
+        if(!kj||kj.length<3) continue;
+        if(kr===kj||kr.indexOf(kj)>=0||kj.indexOf(kr)>=0){ best=lista[i]; break; }
+        if(kr.indexOf('virtual')>=0&&kj.indexOf('virtual')>=0){ best=lista[i]; break; }
+      }
+    }
+    if(best) return best;
+    var norm=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(raw):icStr(raw);
+    for(i=0;i<lista.length;i++){
+      if(icMatchSede(norm,lista[i])) return lista[i];
+    }
+    return norm;
+  }
+  function icMapaColocadoPorSede(f){
+    var filas=icFilasColoc(f);
+    var sedes=filas.map(function(r){ return r.sede; }).filter(Boolean);
+    var map={}, sinSede={sig:0,glpi:0};
+    sedes.forEach(function(s){ map[s]={sig:0,glpi:0}; });
+    icFilasSigec(f).forEach(function(r){
+      if(icClasifSigec(r)!=='facturada') return;
+      var cols=r._cols||[];
+      var raw=r.Sede||cols[IC_SIG.SED]||'';
+      var sede=icResolverSedeColoc(raw,sedes);
+      if(sede&&map[sede]) map[sede].sig++;
+      else sinSede.sig++;
+    });
+    icFilasGlpi(f).forEach(function(r){
+      if(!icGlpiAprobada(r)) return;
+      var sede=icResolverSedeColoc(icGlpiLeerSede(r),sedes);
+      if(sede&&map[sede]) map[sede].glpi++;
+      else sinSede.glpi++;
+    });
+    map._sinSede=sinSede;
+    return map;
+  }
   function icColocadoSigecGlpi(f){
     var sigF=0, glpA=0;
     icFilasSigec(f).forEach(function(r){ if(icClasifSigec(r)==='facturada') sigF++; });
@@ -14888,12 +14973,13 @@ function _parseCumpleMMDD(s){
     var colM=(typeof _mdConstruirColocado==='function')?_mdConstruirColocado(window._sigecRows||[],window._glpiRows||[],mesInf.y,mesInf.m):null;
     var hoyKey=(typeof _mdDateKey==='function')?_mdDateKey(hoy):'';
     var filas=icFilasColoc(f);
-    var rows=[], totMeta=0, totCol=0, totDeb=0, totMes=0, totHoy=0;
+    var mapa=icMapaColocadoPorSede(f);
+    var totNac=icColocadoSigecGlpi(f);
+    var rows=[], totMeta=0, totDeb=0, totMes=0, totHoy=0;
     filas.forEach(function(r){
       var sede=r.sede||'';
-      var sig=(typeof _ioAgregarSigec==='function')?_ioAgregarSigec([sede]):{facturada:0};
-      var glpi=(typeof _ioAgregarGlpi==='function')?_ioAgregarGlpi([sede]):{aprobada:0};
-      var col=(sig.facturada||0)+(glpi.aprobada||0);
+      var m=mapa[sede]||{sig:0,glpi:0};
+      var sig=m.sig||0, glpi=m.glpi||0, col=sig+glpi;
       var meta=r.meta_n||0;
       var deb=meta&&dhTot>0?Math.round(meta/dhTot*dhTra):0;
       var brecha=col-deb;
@@ -14909,36 +14995,39 @@ function _parseCumpleMMDD(s){
         }
       }
       rows.push({
-        sede:sede, rectoria:r.rectoria||'', meta:meta, col:col, sig:sig.facturada||0,
-        glpi:glpi.aprobada||0, acumInf:r.acum_n||0, deb:deb, brecha:brecha, pct:pct,
+        sede:sede, rectoria:r.rectoria||'', meta:meta, col:col, sig:sig,
+        glpi:glpi, acumInf:r.acum_n||0, deb:deb, brecha:brecha, pct:pct,
         sem:sem, ant:r.ant_n||0, colMes:colMes, colHoy:colHoy
       });
-      totMeta+=meta; totCol+=col; totDeb+=deb; totMes+=colMes; totHoy+=colHoy;
+      totMeta+=meta; totDeb+=deb; totMes+=colMes; totHoy+=colHoy;
     });
     rows.sort(function(a,b){ return b.col-a.col; });
-    var pctNac=totMeta>0?Math.round(totCol/totMeta*100):0;
-    var brechaNac=totCol-totDeb;
+    var tSig=totNac.sigec, tGlp=totNac.glpi, tCol=totNac.total;
+    var pctNac=totMeta>0?Math.round(tCol/totMeta*100):0;
+    var brechaNac=tCol-totDeb;
     var metaDia=dhTot>0?totMeta/dhTot:0;
     var html='<div class="ic-explain">'+IC_DESCS['estado-sedes-hoy']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
     html+='<div class="ic-kpi-grid">';
     html+=icKpi('Meta S2',icFmt(Math.round(totMeta)),icFiltroResumen(f),'#003D45');
-    html+=icKpi('Colocado',icFmt(totCol),'SIGEC+GLPI · '+pctNac+'% meta','#16a34a');
+    html+=icKpi('Coloc. SIGEC (fact.)',icFmt(tSig),'Facturadas SIGEC','#1d4ed8');
+    html+=icKpi('Coloc. GLPI (aprob.)',icFmt(tGlp),'Aprobadas GLPI','#7c3aed');
+    html+=icKpi('Colocado SIGEC+GLPI',icFmt(tCol),tSig+' + '+tGlp+' · '+pctNac+'% meta','#16a34a');
     html+=icKpi('Deberíamos hoy',icFmt(Math.round(totDeb)),dhTra+' de '+dhTot+' días hábiles','#1d4ed8');
     html+=icKpi('Brecha curva',(brechaNac>=0?'+':'')+icFmt(brechaNac),brechaNac>=0?'Por encima':'Por debajo',brechaNac>=0?'#16a34a':'#dc2626');
     html+=icKpi('Colocado mes',icFmt(totMes),'Mes en curso','#6366f1');
     html+=icKpi('Colocado hoy',icFmt(totHoy),'Meta día ~'+metaDia.toFixed(1),totHoy>=metaDia?'#16a34a':'#ca8a04');
     html+='</div>';
-    html+=icSec('Detalle por sede','Ordenado por colocado SIGEC+GLPI · '+rows.length+' sedes');
+    html+=icSec('Detalle por sede','Colocación SIGEC (facturadas) + GLPI (aprobadas) vs meta · '+rows.length+' sedes');
     html+='<div style="overflow:auto;max-height:420px"><table class="ic-tbl"><thead><tr>'
-      +'<th>Sede</th><th>Rectoría</th><th>Meta</th><th>Colocado</th><th>SIGEC</th><th>GLPI</th>'
+      +'<th>Sede</th><th>Rectoría</th><th>Meta S2</th><th>Coloc. SIGEC</th><th>Coloc. GLPI</th><th>Colocado</th>'
       +'<th>% Meta</th><th>Deberíamos</th><th>Brecha</th><th>Sem</th><th>Mes</th><th>Hoy</th><th>Año ant.</th></tr></thead><tbody>';
     rows.forEach(function(r){
       var bCol=r.brecha>=0?'#16a34a':'#dc2626';
       html+='<tr><td style="font-weight:600">'+r.sede+'</td><td style="font-size:9px;color:#64748b">'+r.rectoria+'</td>'
         +'<td style="text-align:right">'+icFmt(Math.round(r.meta))+'</td>'
+        +'<td style="text-align:right;color:#1d4ed8">'+icFmt(r.sig)+'</td>'
+        +'<td style="text-align:right;color:#7c3aed">'+icFmt(r.glpi)+'</td>'
         +'<td style="text-align:right;font-weight:700">'+icFmt(r.col)+'</td>'
-        +'<td style="text-align:right;color:#16a34a">'+icFmt(r.sig)+'</td>'
-        +'<td style="text-align:right;color:#0891b2">'+icFmt(r.glpi)+'</td>'
         +'<td style="text-align:right">'+r.pct+'%</td>'
         +'<td style="text-align:right">'+icFmt(Math.round(r.deb))+'</td>'
         +'<td style="text-align:right;color:'+bCol+';font-weight:700">'+(r.brecha>=0?'+':'')+icFmt(r.brecha)+'</td>'
@@ -14947,7 +15036,15 @@ function _parseCumpleMMDD(s){
         +'<td style="text-align:right">'+icFmt(r.colHoy)+'</td>'
         +'<td style="text-align:right;color:#64748b">'+icFmt(r.ant)+'</td></tr>';
     });
-    html+='</tbody></table></div>';
+    html+='</tbody><tfoot><tr style="font-weight:700;background:#f8fafc;">'
+      +'<td>TOTAL</td><td></td><td style="text-align:right">'+icFmt(Math.round(totMeta))+'</td>'
+      +'<td style="text-align:right;color:#1d4ed8">'+icFmt(tSig)+'</td>'
+      +'<td style="text-align:right;color:#7c3aed">'+icFmt(tGlp)+'</td>'
+      +'<td style="text-align:right">'+icFmt(tCol)+'</td>'
+      +'<td style="text-align:right">'+pctNac+'%</td>'
+      +'<td style="text-align:right">'+icFmt(Math.round(totDeb))+'</td>'
+      +'<td style="text-align:right;color:'+(brechaNac>=0?'#16a34a':'#dc2626')+'">'+(brechaNac>=0?'+':'')+icFmt(brechaNac)+'</td>'
+      +'<td colspan="4"></td></tr></tfoot></table></div>';
     html+=icSec('Informes sugeridos para decisión','Datos disponibles en los Sheets conectados');
     html+='<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:8px;font-size:10px">';
     [
@@ -15155,7 +15252,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.63 — Estado Sedes a Hoy + filtros rectoría/sedes');
+  console.log('[CMD] Informes Comerciales v5.4.64 — Login GLPI + Estado Sedes SIGEC+GLPI');
 })();
 
 </script>
