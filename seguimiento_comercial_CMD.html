@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.61   (APP_VERSION = 'pyv-comercial-5.4.61')
+  Versión actual: pyv-comercial-5.4.62   (APP_VERSION = 'pyv-comercial-5.4.62')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.62 (2026-07-07)
+    - GLPI colocación: filas sin ticket (celdas fusionadas en Sheet) ya cuentan en aprobadas; Vamos S2 = 9.027 (8.177 + 850).
   pyv-comercial-5.4.61 (2026-07-07)
     - Informe Gestión Cartera: hoja Virtual carga datos de rectoría Virtual y Distancia (match por rectoría y alias de sede).
   pyv-comercial-5.4.60 (2026-07-07)
@@ -300,7 +302,7 @@
 <meta name="build-id" content="pyv-comercial-5.4.61-20260707-1915">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.61';
+window.APP_VERSION='pyv-comercial-5.4.62';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3902,7 +3904,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.61';
+var APP_VERSION = 'pyv-comercial-5.4.62';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -8446,8 +8448,14 @@ function _parseCumpleMMDD(s){
             hdr.forEach(function(h, i){ if(h) obj[h] = cols[i] != null ? cols[i] : ''; });
             return obj;
           }).filter(function(r){
-            var tk = String(r._cols[0] || '').trim();
-            return tk && tk.toLowerCase() !== 'ticket';
+            var cols = r._cols || [];
+            var tk = String(cols[0] || '').trim();
+            if (tk.toLowerCase() === 'ticket') return false;
+            if (tk) return true;
+            var est = String(cols[3] || r.Estado || '').trim();
+            var ced = String(cols[2] || '').trim();
+            var sede = String(cols[7] || r.Sede || '').trim();
+            return !!(est || ced || sede);
           });
           window._glpiRows = filas;
           console.log('[SCIC] COLOCACION GLPI:', filas.length, 'tickets desde repo colocación');
