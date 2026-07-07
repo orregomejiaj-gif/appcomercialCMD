@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.58   (APP_VERSION = 'pyv-comercial-5.4.58')
+  Versión actual: pyv-comercial-5.4.59   (APP_VERSION = 'pyv-comercial-5.4.59')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.59 (2026-07-07)
+    - Informe Gestión Cartera: hoja Virtual carga datos de rectoría Virtual y Distancia (match por rectoría y alias de sede).
   pyv-comercial-5.4.58 (2026-07-06)
     - Snapshot: eliminada copia IndexedDB del navegador; solo descarga .json.gz y carga manual desde archivo/carpeta.
   pyv-comercial-5.4.57 (2026-07-06)
@@ -287,11 +289,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.58">
-<meta name="build-id" content="pyv-comercial-5.4.58-20260706-1505">
+<meta name="app-version" content="pyv-comercial-5.4.59">
+<meta name="build-id" content="pyv-comercial-5.4.59-20260707-0155">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.58';
+window.APP_VERSION='pyv-comercial-5.4.59';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3892,7 +3894,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.58';
+var APP_VERSION = 'pyv-comercial-5.4.59';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4032,7 +4034,8 @@ var SEDE_EQUIVALENCIAS_COLOCACION = {
   'VALLEDUPAR':'Valledupar','SANTA MARTA':'Santa Marta','RIOHACHA':'Riohacha',
   'TUNJA':'Tunja','YOPAL':'Yopal','LETICIA':'Leticia','MOCOA':'Mocoa',
   'QUIBDO':'Quibdó','FLORENCIA':'Florencia','POPAYAN':'Popayán','TUMACO':'Tumaco',
-  'VIRTUAL':'Virtual','NACIONAL':'Nacional'
+  'VIRTUAL':'Virtual','VIRTUAL Y DISTANCIA':'Virtual y Distancia','VIRTUAL Y DISTANCIA.':'Virtual y Distancia',
+  'VIRTUAL DISTANCIA':'Virtual y Distancia','SEDES VIRTUALES':'Virtual y Distancia','NACIONAL':'Nacional'
 };
 
 // Función crítica: normalizar nombre de sede entre fuentes
@@ -13077,7 +13080,7 @@ function _parseCumpleMMDD(s){
   var INFORME_CARTERA_MESES = ['ENERO','FEBRERO','MARZO','ABRIL','MAYO','JUNIO','JULIO','AGOSTO','SEPTIEMBRE','OCTUBRE','NOVIEMBRE','DICIEMBRE'];
   var INFORME_CARTERA_NACIONAL = [
     {cyg:'Bogota Pres',sap:'Bogota Presen',rectoria:'Rectoría Bogotá'},
-    {cyg:'Virtual',sap:'Virtual',sedes:['Virtual y Distancia','Virtual']},
+    {cyg:'Virtual',sap:'Virtual',rectoria:'Virtual y Distancia'},
     {cyg:'Cundinamarca',sap:'Cundinamarca',rectoria:'Rectoría Cundinamarca y Boyacá'},
     {cyg:'Antioquia Choco',sap:'Antioquia Choco',rectoria:'Rectoría Antioquia y Chocó'},
     {cyg:'Centro Sur',sap:'Centro Sur',rectoria:'Rectoría Centro Sur'},
@@ -13098,7 +13101,7 @@ function _parseCumpleMMDD(s){
       {cyg:'COA Bosa',sap:'COA Bosa',sedes:['COA Bosa']},
       {cyg:'CO Kennedy',sap:'CO Kennedy',sedes:['CO Kennedy']}
     ]},
-    {name:'Virtual',filas:[{cyg:'Virtual',sap:'Virtual',sedes:['Virtual y Distancia','Virtual']}]},
+    {name:'Virtual',filas:[{cyg:'Virtual',sap:'Virtual',rectoria:'Virtual y Distancia'}]},
     {name:'Otras IES Bogota',filas:[
       {cyg:'TEC MINUTO DE DIOS',sap:'TEC MINUTO DE DIOS',sedes:['Tec. Minuto de Dios']},
       {cyg:'UNIMONSERRATE',sap:'UNIMONSERRATE',sedes:['UniMonserrate - Bogotá','Mosquera']}
@@ -13197,16 +13200,37 @@ function _parseCumpleMMDD(s){
     var r = (typeof RECTORIAS!=='undefined'&&RECTORIAS)||(typeof _RECTORIAS_FALLBACK!=='undefined'?_RECTORIAS_FALLBACK:{});
     return (r[rect]||[]).slice();
   }
+  function _cartInformeNormKey(s){
+    return String((typeof _cartNormSede==='function')?_cartNormSede(s):s||'').trim().toLowerCase().replace(/\s+/g,' ');
+  }
+  function _cartInformeRectoriaReg(r){
+    var raw = (r && r.rectoria) ? String(r.rectoria).trim() : '';
+    if(raw){
+      if(raw==='Virtual' || _cartInformeNormKey(raw)==='virtual y distancia') return 'Virtual y Distancia';
+      return raw;
+    }
+    return (typeof _cartResolverRectoria==='function') ? _cartResolverRectoria(r&&r.sede) : (r&&r.sede)||'';
+  }
+  function _cartInformeSedeMatch(src, mapKey, mapRec){
+    var ns = _cartInformeNormKey(src), nk = _cartInformeNormKey(mapKey);
+    if(!ns || !nk) return false;
+    if(ns===nk || nk.indexOf(ns)>=0 || ns.indexOf(nk)>=0) return true;
+    if(mapRec && mapRec._rect){
+      var nr = _cartInformeNormKey(mapRec._rect);
+      if(nr && (nr===ns || nr.indexOf(ns)>=0 || ns.indexOf(nr)>=0)) return true;
+    }
+    return false;
+  }
   function _cartInformeMetricasPorSede(apIdx,ciIdx){
     var mapa = {}, esMora = function(e){ return e==='1-30'||e==='31-60'||e==='61-90'||e==='+90'; };
     function norm(s){ return (typeof _cartNormSede==='function')?_cartNormSede(s):String(s||'').trim(); }
-    function get(s){
-      var k = norm(s)||'Sin sede';
-      if(!mapa[k]) mapa[k]=_cartInformeEmpty();
+    function get(s, r){
+      var k = _cartInformeNormKey(s)||'sin sede';
+      if(!mapa[k]) mapa[k]={_sede:norm(s)||'Sin sede',_rect:_cartInformeRectoriaReg(r||{sede:s}),asigCant:0,asigCap:0,recCant:0,recCap:0,rodCant:0,rodCap:0};
       return mapa[k];
     }
     Object.keys(apIdx||{}).forEach(function(id){
-      var r=apIdx[id], s=norm(r&&r.sede)||'Sin sede', m=get(s);
+      var r=apIdx[id], s=norm(r&&r.sede)||'Sin sede', m=get(s,r);
       var cap=r.saldo||r.capital||0;
       m.asigCant++; m.asigCap+=cap;
       var c=ciIdx[id];
@@ -13217,14 +13241,20 @@ function _parseCumpleMMDD(s){
     });
     return mapa;
   }
-  function _cartInformeAcumular(sources,mapa){
+  function _cartInformeAcumular(sources,mapa,opts){
+    opts = opts || {};
     var acc=_cartInformeEmpty(), keys=Object.keys(mapa||{});
-    function norm(s){ return (typeof _cartNormSede==='function')?_cartNormSede(s):String(s||'').trim().toLowerCase(); }
-    (sources||[]).forEach(function(src){
-      var ns=norm(src);
+    if(opts.rectoria){
+      var rectKey = _cartInformeNormKey(opts.rectoria);
       keys.forEach(function(k){
-        var nk=norm(k);
-        if(nk===ns||nk.indexOf(ns)>=0||ns.indexOf(nk)>=0) _cartInformeSumar(acc,mapa[k]);
+        var rec = mapa[k];
+        if(_cartInformeNormKey(rec&&rec._rect)===rectKey) _cartInformeSumar(acc, rec);
+      });
+      return acc;
+    }
+    (sources||[]).forEach(function(src){
+      keys.forEach(function(k){
+        if(_cartInformeSedeMatch(src, (mapa[k]&&mapa[k]._sede)||k, mapa[k])) _cartInformeSumar(acc,mapa[k]);
       });
     });
     return acc;
@@ -13279,7 +13309,11 @@ function _parseCumpleMMDD(s){
   }
   function _cartInformeGrupoMetricas(grupo,cygMap,sapMap){
     var sedes = grupo.sedes || (grupo.rectoria ? _cartInformeSedesRectoria(grupo.rectoria) : []);
-    return {cyg:_cartInformeAcumular(sedes,cygMap), sap:_cartInformeAcumular(sedes,sapMap)};
+    var opts = grupo.rectoria ? {rectoria: grupo.rectoria} : null;
+    return {
+      cyg: opts ? _cartInformeAcumular(sedes, cygMap, opts) : _cartInformeAcumular(sedes, cygMap),
+      sap: opts ? _cartInformeAcumular(sedes, sapMap, opts) : _cartInformeAcumular(sedes, sapMap)
+    };
   }
   function _cartInformeBuildAOA(hoja,cygMap,sapMap,mes){
     var aoa=_cartInformeHeaderAOA(mes), totCyg=_cartInformeEmpty(), totSap=_cartInformeEmpty();
@@ -13292,9 +13326,11 @@ function _parseCumpleMMDD(s){
       aoa.push(_cartInformeFilaAOA('Total  Nacional',totCyg,'Total  Nacional',totSap));
     } else {
       (hoja.filas||[]).forEach(function(f){
-        var sedes=f.sedes||[f.cyg];
-        var cyg=_cartInformeAcumular(sedes,cygMap);
-        var sap=_cartInformeAcumular(sedes,sapMap);
+        var sedes=f.sedes||[];
+        var opts = f.rectoria ? {rectoria: f.rectoria} : null;
+        if(!sedes.length && f.rectoria) sedes = _cartInformeSedesRectoria(f.rectoria);
+        var cyg = opts ? _cartInformeAcumular(sedes, cygMap, opts) : _cartInformeAcumular(sedes, cygMap);
+        var sap = opts ? _cartInformeAcumular(sedes, sapMap, opts) : _cartInformeAcumular(sedes, sapMap);
         aoa.push(_cartInformeFilaAOA(f.cyg,cyg,f.sap||f.cyg,sap));
         _cartInformeSumar(totCyg,cyg); _cartInformeSumar(totSap,sap);
       });
