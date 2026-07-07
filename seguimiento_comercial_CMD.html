@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.65   (APP_VERSION = 'pyv-comercial-5.4.65')
+  Versión actual: pyv-comercial-5.4.66   (APP_VERSION = 'pyv-comercial-5.4.66')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.66 (2026-07-07)
+    - Fix hub Informes: un solo selector de sedes (multi Ctrl+clic), sin duplicado.
   pyv-comercial-5.4.65 (2026-07-07)
     - Fix filtros informes: rectorías/sedes poblados (helpers globales + selector sede simple).
     - Nuevo informe «Informe de Colocación» (hub + menú debajo de Salud Comercial) desde P ACTUAL.
@@ -308,11 +310,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.65">
-<meta name="build-id" content="pyv-comercial-5.4.65-20260707-2200">
+<meta name="app-version" content="pyv-comercial-5.4.66">
+<meta name="build-id" content="pyv-comercial-5.4.66-20260707-2345">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.65';
+window.APP_VERSION='pyv-comercial-5.4.66';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3957,7 +3959,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.65';
+var APP_VERSION = 'pyv-comercial-5.4.66';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7622,14 +7624,8 @@ https://minutodediosportal.com/login/
             </select>
           </div>
           <div>
-            <div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">SEDE</div>
-            <select id="ic-sede" onchange="icCambiarSede()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:200px;background:#fff;cursor:pointer">
-              <option value="">Todas las sedes</option>
-            </select>
-          </div>
-          <div>
-            <div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">SEDES <span style="font-weight:400">(Ctrl+clic varias)</span></div>
-            <select id="ic-sedes-multi" multiple size="4" onchange="icCambiarSedesMulti()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:220px;max-height:88px;background:#fff;cursor:pointer">
+            <div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">SEDES <span style="font-weight:400">(Ctrl+clic para varias · sin selección = todas)</span></div>
+            <select id="ic-sedes-multi" multiple size="5" onchange="icRenderInformeActivo()" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:240px;min-height:96px;background:#fff;cursor:pointer">
             </select>
           </div>
           <div id="ic-filtro-resumen" style="flex:1;min-width:180px;font-size:10px;color:#003D45;font-weight:700;padding:4px 0"></div>
@@ -14744,11 +14740,9 @@ function _parseCumpleMMDD(s){
 
   function icFiltroActual(){
     var rect=(document.getElementById('ic-rectoria')||{}).value||'';
-    var sedeOne=(document.getElementById('ic-sede')||{}).value||'';
     var sedesEl=document.getElementById('ic-sedes-multi');
     var sedes=[];
-    if(sedeOne) sedes=[sedeOne];
-    else if(sedesEl){
+    if(sedesEl){
       Array.from(sedesEl.selectedOptions||[]).forEach(function(o){
         if(o.value) sedes.push(o.value);
       });
@@ -15335,21 +15329,10 @@ function _parseCumpleMMDD(s){
   }
   window.icActualizarFiltros=function(render){
     var rect=(document.getElementById('ic-rectoria')||{}).value||'';
-    var sedeSel=document.getElementById('ic-sede');
     var multiSel=document.getElementById('ic-sedes-multi');
     var sedes=icListaSedesColoc(rect);
-    var prevSede=sedeSel?sedeSel.value:'';
     var prevMulti=[];
     if(multiSel) Array.from(multiSel.selectedOptions||[]).forEach(function(o){ if(o.value) prevMulti.push(o.value); });
-    if(sedeSel){
-      sedeSel.innerHTML='<option value="">Todas las sedes</option>';
-      sedes.forEach(function(s){
-        var o=document.createElement('option');
-        o.value=s; o.textContent=s;
-        if(prevSede===s) o.selected=true;
-        sedeSel.appendChild(o);
-      });
-    }
     if(multiSel){
       multiSel.innerHTML='';
       sedes.forEach(function(s){
@@ -15362,26 +15345,9 @@ function _parseCumpleMMDD(s){
     if(render!==false) icRenderInformeActivo();
   };
   window.icCambiarRectoria=function(){
-    var sedeSel=document.getElementById('ic-sede');
-    if(sedeSel) sedeSel.value='';
     var multiSel=document.getElementById('ic-sedes-multi');
     if(multiSel) Array.from(multiSel.options||[]).forEach(function(o){ o.selected=false; });
     icActualizarFiltros(true);
-  };
-  window.icCambiarSede=function(){
-    var sede=(document.getElementById('ic-sede')||{}).value||'';
-    var multiSel=document.getElementById('ic-sedes-multi');
-    if(multiSel) Array.from(multiSel.options||[]).forEach(function(o){ o.selected=(sede&&o.value===sede); });
-    icRenderInformeActivo();
-  };
-  window.icCambiarSedesMulti=function(){
-    var multiSel=document.getElementById('ic-sedes-multi');
-    var sedeSel=document.getElementById('ic-sede');
-    if(!multiSel||!sedeSel) return icRenderInformeActivo();
-    var picked=Array.from(multiSel.selectedOptions||[]).filter(function(o){ return o.value; });
-    if(picked.length===1) sedeSel.value=picked[0].value;
-    else sedeSel.value='';
-    icRenderInformeActivo();
   };
   window.icCambiarNivel=window.icCambiarRectoria;
 
@@ -15509,7 +15475,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.65 — Filtros rectoría/sede + Informe Colocación');
+  console.log('[CMD] Informes Comerciales v5.4.66 — Filtro sedes único multi-select');
 })();
 
 </script>
