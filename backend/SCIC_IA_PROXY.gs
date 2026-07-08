@@ -50,7 +50,7 @@ function callGemini_(body) {
   }
 
   var model = body.gemini_model || body.model || 'gemini-2.0-flash';
-  var maxTokens = Number(body.max_tokens) || 1200;
+  var maxTokens = Number(body.max_tokens) || 1800;
 
   var payload = {
     systemInstruction: system ? { parts: [{ text: system }] } : undefined,

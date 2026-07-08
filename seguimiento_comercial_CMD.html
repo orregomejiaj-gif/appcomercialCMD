@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.70   (APP_VERSION = 'pyv-comercial-5.4.70')
+  Versión actual: pyv-comercial-5.4.71   (APP_VERSION = 'pyv-comercial-5.4.71')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.71 (2026-07-08)
+    - Salud de datos Sheets: sin ceros falsos (…/— mientras carga), aviso carga parcial, no vaciar arrays al refrescar.
+    - Gemini web: CogniPYV y AI CENTER usan contexto en vivo (_ioConstruirContexto + fuentes SIGEC/GLPI).
   pyv-comercial-5.4.70 (2026-07-08)
     - Fix crítico informes: clasificación SIGEC facturada (export leerEstadoSigec/clasificarEstadoSigec + fallback icClasifSigec).
     - Filtro multi-sede: icFilasSigec/Glpi usan icResolverSedeColoc (Virtual, Bello, alias SIGEC).
@@ -323,11 +326,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.70">
-<meta name="build-id" content="pyv-comercial-5.4.70-20260708-0047">
+<meta name="app-version" content="pyv-comercial-5.4.71">
+<meta name="build-id" content="pyv-comercial-5.4.71-20260708-0047">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.70';
+window.APP_VERSION='pyv-comercial-5.4.71';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3967,7 +3970,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.70';
+var APP_VERSION = 'pyv-comercial-5.4.71';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4810,38 +4813,44 @@ function _scicRefrescarDatosVivos(forzar){
     return Promise.resolve();
   }
   if(forzar){
-    window._coloc_data = [];
-    window._sigecRows = [];
-    window._glpiRows = [];
     window._coloc_data_fuente = 'recargando';
-    window._sigecNacional = null;
-    window._glpiNacional = null;
+    window._scicCargaEstado = { coloc: null, sigec: null, glpi: null, inicio: Date.now() };
+    try{ if(typeof _scicPintarUltimaActualizacion==='function') _scicPintarUltimaActualizacion(); }catch(e){}
   }
   var ps = [];
   var per = (typeof periodoActivoPorFecha==='function') ? periodoActivoPorFecha(new Date()) : 'S2';
   var fnCol = (typeof window._cargarColocacion==='function') ? window._cargarColocacion
     : ((typeof _cargarColocacion==='function') ? _cargarColocacion : null);
   if(fnCol){
-    ps.push(Promise.resolve().then(function(){ return fnCol(per); }).catch(function(e){
+    ps.push(Promise.resolve().then(function(){ return fnCol(per); }).then(function(){
+      if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('coloc', true, (window._coloc_data||[]).length);
+    }).catch(function(e){
       console.warn('[SCIC] colocacion vivo error:', e&&e.message);
+      if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('coloc', false, 0);
       if(!forzar && typeof _COLOC_FALLBACK!=='undefined' && _COLOC_FALLBACK.length){
         window._coloc_data = _COLOC_FALLBACK.slice();
         window._coloc_S2 = window._coloc_data;
         window._coloc_data_fuente = 'fallback';
+        if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('coloc', true, window._coloc_data.length);
       }
     }));
   }
   if(typeof cargarSigecContadoresMenu==='function'){
-    ps.push(Promise.resolve().then(function(){ return cargarSigecContadoresMenu(); }).catch(function(e){
+    ps.push(Promise.resolve().then(function(){ return cargarSigecContadoresMenu(); }).then(function(){
+      if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('sigec', (window._sigecRows||[]).length>0, (window._sigecRows||[]).length);
+    }).catch(function(e){
       console.warn('[SCIC] SIGEC vivo error:', e&&e.message);
+      if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('sigec', false, 0);
     }));
   } else if(typeof _leerHojaSigecColocacion==='function'){
     ps.push(Promise.resolve().then(function(){
       return _leerHojaSigecColocacion().then(function(){
         try{ if(typeof obtenerSigecNacional==='function') obtenerSigecNacional(); }catch(e){}
+        if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('sigec', (window._sigecRows||[]).length>0, (window._sigecRows||[]).length);
       });
     }).catch(function(e){
       console.warn('[SCIC] SIGEC directo error:', e&&e.message);
+      if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('sigec', false, 0);
     }));
   }
   if(typeof _cargarGLPI==='function'){
@@ -4850,13 +4859,19 @@ function _scicRefrescarDatosVivos(forzar){
       return Promise.resolve(prom).then(function(){
         try{ if(typeof obtenerGlpiNacional==='function') obtenerGlpiNacional(); }catch(e){}
         try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
+        if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('glpi', (window._glpiRows||[]).length>0, (window._glpiRows||[]).length);
       });
     }).catch(function(e){
       console.warn('[SCIC] GLPI vivo error:', e&&e.message);
+      if(typeof _scicRegistrarCarga==='function') _scicRegistrarCarga('glpi', false, 0);
     }));
   }
   return Promise.all(ps).then(function(){
+    if(window._coloc_data_fuente==='recargando' && (window._coloc_data||[]).length){
+      window._coloc_data_fuente = 'sheet';
+    }
     try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
+    try{ if(typeof _scicPintarUltimaActualizacion==='function') _scicPintarUltimaActualizacion(); }catch(e){}
     return null;
   });
 }
@@ -4869,6 +4884,60 @@ function _scicSafeProm(v){
 window._scicSafeProm = _scicSafeProm;
 window._scicRefrescarDatosVivos = _scicRefrescarDatosVivos;
 
+// ── Salud de datos Sheets: evitar ceros falsos por carga incompleta ──
+window._scicCargaEstado = window._scicCargaEstado || { coloc: null, sigec: null, glpi: null, inicio: null };
+function _scicDatosRecargando(){
+  return window._coloc_data_fuente === 'recargando';
+}
+function _scicSigecGlpiListos(){
+  if(_scicDatosRecargando()) return false;
+  return !!((window._sigecRows||[]).length || (window._glpiRows||[]).length);
+}
+function _scicColocListo(){
+  if(_scicDatosRecargando()) return false;
+  return !!((window._coloc_data||[]).length);
+}
+function _scicFmtDato(val, listo, ceroEsValido){
+  if(!listo) return '…';
+  if(val==null || val==='') return '—';
+  var n = Number(val);
+  if(isNaN(n)) return String(val);
+  if(!n && !ceroEsValido) return '0';
+  return (typeof fmtN==='function') ? fmtN(n) : n.toLocaleString('es-CO');
+}
+function _scicRegistrarCarga(fuente, ok, count){
+  window._scicCargaEstado = window._scicCargaEstado || {};
+  window._scicCargaEstado[fuente] = { ok: !!ok, count: count||0, ts: Date.now() };
+}
+function _scicResumenFuentes(){
+  var st = window._scicCargaEstado || {};
+  var parts = [];
+  ['coloc','sigec','glpi'].forEach(function(k){
+    var s = st[k];
+    if(_scicDatosRecargando() && !s) parts.push(k.toUpperCase()+': …');
+    else if(!s) parts.push(k.toUpperCase()+': pendiente');
+    else if(s.ok) parts.push(k.toUpperCase()+': '+s.count);
+    else parts.push(k.toUpperCase()+': ⚠ error');
+  });
+  return parts.join(' · ');
+}
+function _scicHayFalloCarga(){
+  if(_scicDatosRecargando()) return false;
+  var st = window._scicCargaEstado || {};
+  if(st.sigec && !st.sigec.ok) return true;
+  if(st.glpi && !st.glpi.ok) return true;
+  if(st.coloc && !st.coloc.ok && !(window._coloc_data||[]).length) return true;
+  if(window._sheetsUltimaCarga && !_scicSigecGlpiListos()) return true;
+  return false;
+}
+window._scicDatosRecargando = _scicDatosRecargando;
+window._scicSigecGlpiListos = _scicSigecGlpiListos;
+window._scicColocListo = _scicColocListo;
+window._scicFmtDato = _scicFmtDato;
+window._scicRegistrarCarga = _scicRegistrarCarga;
+window._scicResumenFuentes = _scicResumenFuentes;
+window._scicHayFalloCarga = _scicHayFalloCarga;
+
 function _scicPintarUltimaActualizacion(){
   var el = document.getElementById('menu-ultima-actualizacion');
   if(!el) return;
@@ -4880,12 +4949,25 @@ function _scicPintarUltimaActualizacion(){
   }
   if(!window._sheetsUltimaCarga){
     el.textContent = 'Sincronizando con Sheets…';
+    el.style.color = '#94a3b8';
+    return;
+  }
+  if(_scicDatosRecargando()){
+    el.textContent = '⟳ Actualizando datos en vivo… · conservando última lectura';
+    el.style.color = '#fbbf24';
     return;
   }
   var d = new Date(window._sheetsUltimaCarga);
   var fuente = window._coloc_data_fuente === 'sheet' ? 'Sheets' : (window._coloc_data_fuente || 'Sheets');
-  el.textContent = 'Actualizado ' + d.toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' · ' + fuente
+  var base = 'Actualizado ' + d.toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', second:'2-digit'}) + ' · ' + fuente
     + ' · ' + (window._coloc_data||[]).length + ' sedes · SIGEC ' + (window._sigecRows||[]).length + ' · GLPI ' + (window._glpiRows||[]).length;
+  if(typeof _scicHayFalloCarga==='function' && _scicHayFalloCarga()){
+    el.textContent = '⚠ Carga parcial — ' + base + ' · ' + _scicResumenFuentes();
+    el.style.color = '#fb923c';
+  } else {
+    el.textContent = base;
+    el.style.color = '';
+  }
 }
 window._scicPintarUltimaActualizacion = _scicPintarUltimaActualizacion;
 
@@ -5412,7 +5494,17 @@ function cargarDesdeSheetsCompleto(forzar){
   intentar((typeof window._cargarMallaTurnos==='function')?window._cargarMallaTurnos:_cargarMallaTurnos,'malla');
   intentar((typeof window._cargarMemoriaSheet==='function')?window._cargarMemoriaSheet:_cargarMemoriaSheet,'memoria');
   return Promise.all(ps).then(function(){
-    window._sheetsUltimaCarga = Date.now();
+    if(window._coloc_data_fuente==='recargando'){
+      window._coloc_data_fuente = (window._coloc_data||[]).length ? 'sheet' : (window._coloc_data_fuente||'pendiente');
+    }
+    if(typeof _scicRegistrarCarga==='function'){
+      if(!window._scicCargaEstado.coloc) _scicRegistrarCarga('coloc', (window._coloc_data||[]).length>0, (window._coloc_data||[]).length);
+      if(!window._scicCargaEstado.sigec) _scicRegistrarCarga('sigec', (window._sigecRows||[]).length>0, (window._sigecRows||[]).length);
+      if(!window._scicCargaEstado.glpi) _scicRegistrarCarga('glpi', (window._glpiRows||[]).length>0, (window._glpiRows||[]).length);
+    }
+    var cargaOk = (window._coloc_data||[]).length>0 || _scicSigecGlpiListos();
+    if(cargaOk) window._sheetsUltimaCarga = Date.now();
+    else console.warn('[SCIC] Carga incompleta — no se actualiza marca de tiempo');
     window._scicForzarVivo = false;
     console.log('[SCIC] Carga completa desde Sheets: '+ps.length+' fuentes · coloc '+((window._coloc_data||[]).length)+' · SIGEC '+((window._sigecRows||[]).length)+' · GLPI '+((window._glpiRows||[]).length));
     if(typeof SCIC_construirMUS==='function') try{ SCIC_construirMUS(); }catch(e){}
@@ -8035,10 +8127,11 @@ function _parseCumpleMMDD(s){
       var comb=sigFact+glpiApr;
       var deb=Math.round(Number(debemos)||0);
       var pctMeta=metaN>0?Math.round(comb/metaN*100):0;
-      var cargando=!(window._glpiRows&&window._glpiRows.length)&&!glpiApr&&!(_DATA&&_DATA.glpi&&_DATA.glpi.aprobada);
-      setTxt('lgi-sigec-vamos',sigFact?fmt(sigFact):(cargando?'…':'—'));
-      setTxt('lgi-glpi-vamos',glpiApr?fmt(glpiApr):(cargando?'…':'—'));
-      setTxt('lgi-comb-vamos',comb?fmt(comb):(cargando?'…':'—'));
+      var cargando=(typeof _scicDatosRecargando==='function'&&_scicDatosRecargando())
+        ||((typeof _scicSigecGlpiListos==='function'&&!_scicSigecGlpiListos())&&!(sigFact||glpiApr)&&!(_DATA&&(_DATA.sigec||_DATA.glpi)));
+      setTxt('lgi-sigec-vamos',cargando?'…':(sigFact?fmt(sigFact):'—'));
+      setTxt('lgi-glpi-vamos',cargando?'…':(glpiApr?fmt(glpiApr):'—'));
+      setTxt('lgi-comb-vamos',cargando?'…':(comb?fmt(comb):'—'));
       setTxt('lgi-coloc-vamos',metaN?(pctMeta+'%'):'—');
       setTxt('lgi-coloc-deb','deb: '+(deb?fmt(deb):'—'));
       setTxt('lgi-sigec-deb',metaN?(Math.round(sigFact/metaN*100)+'% meta'):'—');
@@ -8738,6 +8831,7 @@ function _parseCumpleMMDD(s){
     g.semaforo = (typeof mcm_sem==='function') ? mcm_sem(g.pct_aprobada,54,35) : (g.pct_aprobada>=54?'VERDE':g.pct_aprobada>=35?'AMARILLO':'ROJO');
     return g;
   }
+  window.obtenerGlpiNacional = obtenerGlpiNacional;
 
   /** Colocado = SIGEC facturadas + GLPI aprobadas (mismo criterio en menú, login e informes). */
   function _menuColocadoSigecGlpi(sig, glpi){
@@ -8746,6 +8840,7 @@ function _parseCumpleMMDD(s){
   function _menuHaySigecGlpiVivo(){
     return !!((window._sigecRows && window._sigecRows.length) || (window._glpiRows && window._glpiRows.length));
   }
+  window._menuHaySigecGlpiVivo = _menuHaySigecGlpiVivo;
   function _menuResolverColocadoAcum(acumColoc, sig, glpi){
     var comb = _menuColocadoSigecGlpi(sig, glpi);
     return comb > 0 ? comb : acumColoc;
@@ -8841,9 +8936,9 @@ function _parseCumpleMMDD(s){
     var metaLbl = sedeAmb ? ('Meta sede: '+fmtN(meta)) : ('Meta nacional: '+fmtN(meta));
     el=document.getElementById('menu-sig-meta-txt'); if(el) el.textContent = meta ? metaLbl : (sedeAmb?'Meta sede: —':'Meta nacional: —');
     el=document.getElementById('menu-sig-fact-txt'); if(el) el.textContent = hayDatos ? ('Facturadas SIGEC: '+fmtN(fact)+' ('+pctSig+'% meta)') : 'Facturadas SIGEC: cargando…';
-    el=document.getElementById('menu-glpi-apr'); if(el) el.textContent=fmtN(glpi.aprobada||0);
-    el=document.getElementById('menu-glpi-abi'); if(el) el.textContent=fmtN(glpi.abierta||0);
-    el=document.getElementById('menu-glpi-neg'); if(el) el.textContent=fmtN(glpi.negada||0);
+    el=document.getElementById('menu-glpi-apr'); if(el) el.textContent = (hayDatos||glpi.aprobada) ? fmtN(glpi.aprobada||0) : '—';
+    el=document.getElementById('menu-glpi-abi'); if(el) el.textContent = (hayDatos||glpi.abierta) ? fmtN(glpi.abierta||0) : '—';
+    el=document.getElementById('menu-glpi-neg'); if(el) el.textContent = (hayDatos||glpi.negada) ? fmtN(glpi.negada||0) : '—';
     if(typeof _ioContarGlpiCategorias==='function' && typeof _ioCalcPerdida==='function'){
       var gCat=_ioContarGlpiCategorias(sedesFiltro&&sedesFiltro.length?sedesFiltro:(sedeAmb?[sedeAmb]:null));
       var perd=_ioCalcPerdida(sig, gCat.retomasRecup);
@@ -8858,17 +8953,24 @@ function _parseCumpleMMDD(s){
     var wrap = document.getElementById('menu-sem-trio');
     var lbl = document.getElementById('menu-sem-trio-lbl');
     if(!wrap) return;
+    var listo = (typeof _scicSigecGlpiListos==='function') ? _scicSigecGlpiListos() : true;
+    var recarg = (typeof _scicDatosRecargando==='function') && _scicDatosRecargando();
     if(lbl) lbl.textContent = sedeAmb ? ('Semáforos '+sedeAmb+' vs meta S2') : 'Semáforos nacionales vs meta S2';
+    if(recarg){
+      wrap.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:12px;color:#fbbf24;font-size:11px">⟳ Actualizando SIGEC/GLPI…</div>';
+      return;
+    }
     function card(titulo, valor, metaVal){
-      var v=Number(valor)||0, m=Number(metaVal)||0;
-      var pct=m>0?Math.min(100,Math.round(v/m*100)):0;
-      var cls=pct>=90?'msc-verde':pct>=70?'msc-amarillo':'msc-rojo';
-      var sem=m>0?(pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO'):'—';
+      var v=listo ? (Number(valor)||0) : null;
+      var m=Number(metaVal)||0;
+      var pct=(listo&&m>0)?Math.min(100,Math.round(v/m*100)):null;
+      var cls=pct==null?'':(pct>=90?'msc-verde':pct>=70?'msc-amarillo':'msc-rojo');
+      var sem=(pct==null)?'…':(m>0?(pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO'):'—');
       return '<div class="menu-sem-card '+cls+'">'
         +'<div class="msc-tit">'+titulo+'</div>'
-        +'<div class="msc-val">'+(m?pct+'%':'—')+'</div>'
+        +'<div class="msc-val">'+(pct==null?'…':(pct+'%'))+'</div>'
         +'<div class="msc-pct">'+sem+'</div>'
-        +'<div class="msc-meta">'+fmtN(v)+' / '+fmtN(Math.round(m))+'</div>'
+        +'<div class="msc-meta">'+(listo?(fmtN(v)+' / '+fmtN(Math.round(m))):'…')+'</div>'
         +'</div>';
     }
     var comb=(Number(sigFact)||0)+(Number(glpiApr)||0);
@@ -12902,12 +13004,20 @@ function _parseCumpleMMDD(s){
     var modo=nivel==='nacional'?'operativo':'cumplimiento';
     return _ioRenderInforme(ctx, {modo:modo, prefix:'cd', incluirHistorial:true, incluirTasaAprob:true});
   }
-  function procesarConsultaCmdIA(pregunta){
+  function _cmdIAResolverNivelSel(q){
+    var sede = _cmdIAResolverSede(q);
+    if(sede) return { nivel:'sede', sel:sede };
+    var rect = _cmdIAResolverRectoria(q);
+    if(rect) return { nivel:'rectoria', sel:rect };
+    if(/nacional|país|pais|s2/.test(q.toLowerCase())) return { nivel:'nacional', sel:'' };
+    return { nivel:'nacional', sel:'' };
+  }
+  async function procesarConsultaCmdIA(pregunta){
     var q = String(pregunta||'').trim();
     if(!q) return 'Escribe una pregunta, por ejemplo: <b>¿Cómo está Bello?</b>';
     var ql = q.toLowerCase();
     if(ql.indexOf('ayuda')>=0||ql.indexOf('hola')>=0)
-      return 'Puedo informar sobre <b>sedes</b>, <b>rectorías</b>, <b>estado nacional</b>, <b>SIGEC/GLPI</b>, <b>cartera</b>, <b>malla</b> y <b>asesores</b>. Ej: «¿Cómo está Bello?», «Estado rectoría Bogotá», «SIGEC nacional».';
+      return 'Puedo informar sobre <b>sedes</b>, <b>rectorías</b>, <b>estado nacional</b>, <b>SIGEC/GLPI</b>, <b>cartera</b>, <b>malla</b> y <b>asesores</b>. Ej: «¿Cómo está Bello?», «Estado rectoría Bogotá», «SIGEC nacional». Con Gemini activo también respondo preguntas abiertas con datos en vivo.';
     if(ql.indexOf('riesg')>=0 && ql.indexOf('cartera')>=0) return _cmdIARiesgosCartera();
     if((ql.indexOf('malla')>=0||ql.indexOf('asesor')>=0||ql.indexOf('turno')>=0)&&typeof _ioRenderInforme==='function'){
       var ctxN=_ioConstruirContexto('nacional','');
@@ -12919,7 +13029,7 @@ function _parseCumpleMMDD(s){
     }
     if(ql.indexOf('rector')>=0){
       var rect=_cmdIAResolverRectoria(q);
-      if(rect) return _cmdIAGenerarInformeRectoria(rect);
+      if(rect) return _cmdIAGenerarInformeIntegral('rectoria', rect);
     }
     if(ql.indexOf('nacional')>=0 || ql.indexOf('país')>=0 || ql.indexOf('pais')>=0 || (ql.indexOf('s2')>=0 && ql.indexOf('estado')>=0)){
       if(typeof _ioRenderInforme==='function') return _cmdIAGenerarInformeIntegral('nacional','');
@@ -12929,6 +13039,11 @@ function _parseCumpleMMDD(s){
     if(sede){
       if(typeof _ioRenderInforme==='function') return _cmdIAGenerarInformeIntegral('sede', sede);
       return _cmdIAGenerarInformeSede(sede);
+    }
+    if(typeof _scicLlamarGemini==='function'){
+      var ns = _cmdIAResolverNivelSel(q);
+      var gem = await _scicLlamarGemini(q, { nivel: ns.nivel, sel: ns.sel });
+      if(gem) return '<div style="font-size:11px;line-height:1.55">'+gem+'</div>';
     }
     return 'No identifiqué sede o rectoría. Prueba: <b>¿Cómo está Bello?</b>, <b>Estado rectoría Bogotá</b> o <b>Estado nacional S2</b>.';
   }
@@ -12948,9 +13063,15 @@ function _parseCumpleMMDD(s){
     if(!q) return;
     cmdIAAppendMsg(q.replace(/</g,'&lt;'), 'user');
     inp.value = '';
-    setTimeout(function(){
-      cmdIAAppendMsg(procesarConsultaCmdIA(q), 'bot');
-    }, 120);
+    var waitId = 'cmd-ia-wait-'+Date.now();
+    cmdIAAppendMsg('<span id="'+waitId+'" style="color:#94a3b8"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Consultando datos en vivo…</span>', 'bot');
+    Promise.resolve(procesarConsultaCmdIA(q)).then(function(resp){
+      var w = document.getElementById(waitId);
+      if(w && w.parentNode) w.parentNode.innerHTML = resp;
+      else cmdIAAppendMsg(resp, 'bot');
+      var box = document.getElementById('cmd-ia-messages');
+      if(box) box.scrollTop = box.scrollHeight;
+    });
   }
   function cmdIAPreguntaRapida(q){
     var inp = document.getElementById('cmd-ia-input');
@@ -13233,34 +13354,89 @@ function _parseCumpleMMDD(s){
   }
   window._scicAnalisisLocalIA = _scicAnalisisLocalIA;
 
+  function _scicContextoWebIA(nivel, sel){
+    var ctx = {};
+    try{
+      if(typeof _ioConstruirContexto==='function'){
+        ctx.informe = _ioConstruirContexto(nivel||'nacional', sel||'');
+      }
+    }catch(e){}
+    ctx.fuentes_vivas = {
+      coloc_sedes: (window._coloc_data||[]).length,
+      sigec_tickets: (window._sigecRows||[]).length,
+      glpi_tickets: (window._glpiRows||[]).length,
+      fuente_coloc: window._coloc_data_fuente||'pendiente',
+      ultima_carga: window._sheetsUltimaCarga||null,
+      resumen: (typeof _scicResumenFuentes==='function')?_scicResumenFuentes():'',
+      listo_sigec_glpi: (typeof _scicSigecGlpiListos==='function')?_scicSigecGlpiListos():false
+    };
+    try{
+      if(window.SCIC_AI_CENTER && typeof SCIC_AI_CENTER._contexto==='function'){
+        ctx.scic = SCIC_AI_CENTER._contexto(nivel, sel||null);
+      }
+    }catch(e){}
+    return ctx;
+  }
+
+  async function _scicAsegurarDatosVivosIA(){
+    if(typeof _scicSigecGlpiListos==='function' && _scicSigecGlpiListos()) return;
+    if(typeof _scicDatosRecargando==='function' && _scicDatosRecargando()) return;
+    var prom = (typeof window._scicRefrescarDatosVivos==='function') ? window._scicRefrescarDatosVivos(true)
+      : ((typeof cargarDesdeSheetsCompleto==='function') ? cargarDesdeSheetsCompleto(true) : Promise.resolve());
+    try{ await prom; }catch(e){}
+  }
+
+  async function _scicLlamarGemini(pregunta, opts){
+    opts = opts || {};
+    var proxy = window.SCIC_IA_PROXY_URL || (typeof SCIC_IA_PROXY_URL !== 'undefined' ? SCIC_IA_PROXY_URL : '');
+    if(!proxy) return null;
+    await _scicAsegurarDatosVivosIA();
+    var nivel = opts.nivel || 'nacional';
+    var sel = opts.sel || '';
+    var ctx = _scicContextoWebIA(nivel, sel);
+    var system = opts.system || [
+      'Eres CogniPYV, analista comercial ejecutivo de la Cooperativa Minuto de Dios (SCIC).',
+      'Respondes en español, con datos concretos del JSON de contexto.',
+      'Si fuentes_vivas.listo_sigec_glpi es false, indícalo y no inventes cifras de colocación.',
+      'Colocado unificado = SIGEC facturadas + GLPI aprobadas.',
+      'Estructura: situación · causas · riesgos · 3 acciones priorizadas.'
+    ].join(' ');
+    var prompt = 'Pregunta: '+String(pregunta||'').trim()+'\n\nContexto web en vivo (Sheets SCIC):\n'+JSON.stringify(ctx, null, 2);
+    try{
+      var resp = await fetch(proxy, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify({
+          accion: 'ia_gemini',
+          system: system,
+          prompt: prompt,
+          max_tokens: opts.max_tokens || 1800,
+          gemini_model: opts.model || 'gemini-2.0-flash'
+        })
+      });
+      if(!resp.ok) return null;
+      var data = await resp.json();
+      var txt = data.text || data.respuesta || data.response;
+      if(!txt && data.content && data.content[0]) txt = data.content[0].text;
+      if(txt){
+        return String(txt).replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
+      }
+    }catch(e){ console.warn('[SCIC IA] Gemini:', e&&e.message); }
+    return null;
+  }
+  window._scicContextoWebIA = _scicContextoWebIA;
+  window._scicLlamarGemini = _scicLlamarGemini;
+
   if(window.SCIC_AI_CENTER && typeof SCIC_AI_CENTER._llamar_claude === 'function'){
     SCIC_AI_CENTER._llamar_claude = async function(system, userPrompt){
-      var proxy = window.SCIC_IA_PROXY_URL || (typeof SCIC_IA_PROXY_URL !== 'undefined' ? SCIC_IA_PROXY_URL : '');
-      if(proxy){
-        try{
-          var resp = await fetch(proxy, {
-            method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'text/plain' },
-            body: JSON.stringify({ accion: 'ia_gemini', system: system, prompt: userPrompt })
-          });
-          if(resp.ok){
-            var data = await resp.json();
-            var txt = data.text || data.respuesta || data.response;
-            if(!txt && data.content && data.content[0]) txt = data.content[0].text;
-            if(txt){
-              if(data.provider) console.log('[SCIC IA] Respuesta vía', data.provider, data.model||'');
-              return txt;
-            }
-          } else {
-            try{
-              var errBody = await resp.json();
-              console.warn('[SCIC IA] Proxy', resp.status, errBody.error||errBody);
-            }catch(e2){}
-          }
-        }catch(e){ console.warn('[SCIC IA] Proxy error:', e && e.message); }
-      }
-      var ctx = _scicExtraerCtxDePrompt(userPrompt);
+      var extraido = _scicExtraerCtxDePrompt(userPrompt);
+      var txt = await _scicLlamarGemini(
+        (userPrompt.match(/Pregunta:\s*(.+?)(?:\n\nContexto|$)/s)||[])[1] || userPrompt,
+        { system: system, nivel: extraido&&extraido.nivel, sel: extraido&&extraido.sede }
+      );
+      if(txt) return txt.replace(/<br>/g,'\n').replace(/<\/?b>/g,'');
+      var ctx = extraido;
       if(!ctx || !Object.keys(ctx).length){
         try{ ctx = SCIC_AI_CENTER._contexto(null, null); }catch(e){ ctx = {}; }
       }
@@ -14748,6 +14924,24 @@ function _parseCumpleMMDD(s){
     return '<div class="ic-kpi" style="border-top-color:'+(col||'#003D45')+'"><div class="ic-kpi-lbl">'+lbl+'</div><div class="ic-kpi-val">'+val+'</div>'+(sub?'<div class="ic-kpi-sub">'+sub+'</div>':'')+'</div>';
   }
   function icSec(t,sub){ return '<div class="ic-sec">'+t+(sub?'<div class="ic-sec-sub">'+sub+'</div>':'')+'</div>'; }
+  function icSigGlpiListo(){
+    if(typeof _scicDatosRecargando==='function' && _scicDatosRecargando()) return false;
+    if(typeof _scicSigecGlpiListos==='function') return _scicSigecGlpiListos();
+    return !!((window._sigecRows||[]).length || (window._glpiRows||[]).length);
+  }
+  function icFmtLive(n, listo){
+    if(!listo && !(Number(n)||0)) return '…';
+    return icFmt(Number(n)||0);
+  }
+  function icAvisoEstadoDatos(){
+    if(typeof _scicDatosRecargando==='function' && _scicDatosRecargando()){
+      return '<div style="margin-bottom:8px;padding:8px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:11px;color:#92400e">⟳ Sincronizando SIGEC/GLPI desde Sheets… Los valores previos se conservan hasta completar la carga.</div>';
+    }
+    if(!icSigGlpiListo() && typeof _scicHayFalloCarga==='function' && _scicHayFalloCarga()){
+      return '<div style="margin-bottom:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#9a3412">⚠ SIGEC/GLPI no disponibles. Use <b>Actualizar desde Sheets</b> en el menú. '+((typeof _scicResumenFuentes==='function')?_scicResumenFuentes():'')+'</div>';
+    }
+    return '';
+  }
 
   function icColValUni(row, kind){
     var map={
@@ -15282,7 +15476,8 @@ function _parseCumpleMMDD(s){
     var ssInf=icSinSedeColocado(mapaCol);
     var tColKpi=combInf.total;
     var pctNat=tMeta>0?Math.round(tColKpi/tMeta*100):0;
-    var html='<div class="ic-explain">'+IC_DESCS['informe-colocacion']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
+    var html=icAvisoEstadoDatos();
+    html+='<div class="ic-explain">'+IC_DESCS['informe-colocacion']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
     if(ssInf.total) html+='<div style="margin-bottom:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#9a3412">⚠ '+icFmt(ssInf.total)+' créditos SIGEC/GLPI sin sede asignada en el filtro (ver fila al final de la tabla).</div>';
     html+='<div class="ic-kpi-grid">';
     html+=icKpi('Meta S2 #',icFmt(Math.round(tMeta)),'INFORME COLOCACION P ACTUAL','#003D45');
@@ -15368,13 +15563,15 @@ function _parseCumpleMMDD(s){
     var pctNac=totMeta>0?Math.round(tCol/totMeta*100):0;
     var brechaNac=tCol-totDeb;
     var metaDia=dhTot>0?totMeta/dhTot:0;
-    var html='<div class="ic-explain">'+IC_DESCS['estado-sedes-hoy']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
+    var sgListo=icSigGlpiListo();
+    var html=icAvisoEstadoDatos();
+    html+='<div class="ic-explain">'+IC_DESCS['estado-sedes-hoy']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
     if(ssEst.total) html+='<div style="margin-bottom:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#9a3412">⚠ '+icFmt(ssEst.total)+' créditos sin sede asignada en el detalle (SIGEC '+icFmt(ssEst.sig)+' + GLPI '+icFmt(ssEst.glpi)+'). Suma filas: '+icFmt(sumFilas)+' + sin sede = '+icFmt(tCol)+'.</div>';
     html+='<div class="ic-kpi-grid">';
     html+=icKpi('Meta S2',icFmt(Math.round(totMeta)),icFiltroResumen(f),'#003D45');
-    html+=icKpi('Coloc. SIGEC (fact.)',icFmt(tSig),'Facturadas SIGEC','#1d4ed8');
-    html+=icKpi('Coloc. GLPI (aprob.)',icFmt(tGlp),'Aprobadas GLPI','#7c3aed');
-    html+=icKpi('Colocado SIGEC+GLPI',icFmt(tCol),tSig+' + '+tGlp+' · '+pctNac+'% meta','#16a34a');
+    html+=icKpi('Coloc. SIGEC (fact.)',icFmtLive(tSig,sgListo),'Facturadas SIGEC','#1d4ed8');
+    html+=icKpi('Coloc. GLPI (aprob.)',icFmtLive(tGlp,sgListo),'Aprobadas GLPI','#7c3aed');
+    html+=icKpi('Colocado SIGEC+GLPI',icFmtLive(tCol,sgListo),(sgListo?(tSig+' + '+tGlp+' · '+pctNac+'% meta'):'Esperando Sheets'),'#16a34a');
     html+=icKpi('Deberíamos hoy',icFmt(Math.round(totDeb)),dhTra+' de '+dhTot+' días hábiles','#1d4ed8');
     html+=icKpi('Brecha curva',(brechaNac>=0?'+':'')+icFmt(brechaNac),brechaNac>=0?'Por encima':'Por debajo',brechaNac>=0?'#16a34a':'#dc2626');
     html+=icKpi('Colocado mes',icFmt(totMes),'Mes en curso','#6366f1');
@@ -15460,7 +15657,11 @@ function _parseCumpleMMDD(s){
     setTimeout(function(){
       try{
         el.innerHTML=fn(f);
-        if(fu) fu.textContent='Fuentes: P Actual · SIGEC · GLPI · Matrículas · Base Colocación · Congelados · '+new Date().toLocaleString('es-CO');
+        if(fu){
+          var resumen=(typeof _scicResumenFuentes==='function')?_scicResumenFuentes():'';
+          var alerta=(typeof _scicHayFalloCarga==='function'&&_scicHayFalloCarga())?' · ⚠ carga parcial':'';
+          fu.textContent='Fuentes: P Actual · SIGEC ('+(window._sigecRows||[]).length+') · GLPI ('+(window._glpiRows||[]).length+') · '+resumen+alerta+' · '+new Date().toLocaleString('es-CO');
+        }
       }catch(e){
         el.innerHTML='<div style="color:#dc2626;padding:20px">Error: '+(e&&e.message||e)+'</div>';
       }
@@ -15639,7 +15840,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.70 — Fix clasificación SIGEC');
+  console.log('[CMD] Informes Comerciales v5.4.71 — Salud datos Sheets + Gemini web');
 })();
 
 </script>
