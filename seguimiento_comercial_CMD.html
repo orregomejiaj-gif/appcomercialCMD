@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.75   (APP_VERSION = 'pyv-comercial-5.4.75')
+  Versión actual: pyv-comercial-5.4.76   (APP_VERSION = 'pyv-comercial-5.4.76')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.76 (2026-07-08)
+    - Bienvenida: por sede muestra deberíamos llevar hoy, llevamos (SIGEC+GLPI) y diferencia vs curva S2.
   pyv-comercial-5.4.75 (2026-07-08)
     - CogniPYV: reintentos proxy (429/red), fallback gemini simple sin tools, mensaje de error real.
   pyv-comercial-5.4.74 (2026-07-08)
@@ -336,11 +338,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.75">
-<meta name="build-id" content="pyv-comercial-5.4.75-20260708-0355">
+<meta name="app-version" content="pyv-comercial-5.4.76">
+<meta name="build-id" content="pyv-comercial-5.4.76-20260708-1515">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.75';
+window.APP_VERSION='pyv-comercial-5.4.76';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -922,7 +924,7 @@ window._cargarTop5 = window._cargarTop5 || function(){
         <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:rgba(255,217,0,.1)"></div>
         <div style="color:#FFD900;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:4px">Bienvenido/a al SCIC</div>
         <div style="color:#fff;font-size:20px;font-weight:800;line-height:1.25" id="mbs-titulo">Tu panorama comercial</div>
-        <div style="color:rgba(255,255,255,.55);font-size:11px;margin-top:6px;line-height:1.45" id="mbs-subtitulo">Estado actual según tus sedes asignadas</div>
+        <div style="color:rgba(255,255,255,.55);font-size:11px;margin-top:6px;line-height:1.45" id="mbs-subtitulo">Estado actual y avance vs curva ideal S2</div>
       </div>
       <div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:14px">
         <div id="mbs-usuario" style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:rgba(255,255,255,.05);border-radius:12px;border:1px solid rgba(255,255,255,.1)">
@@ -3980,7 +3982,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.75';
+var APP_VERSION = 'pyv-comercial-5.4.76';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -12712,7 +12714,36 @@ function _parseCumpleMMDD(s){
       +'<div style="font-size:8px;color:rgba(255,255,255,.5);line-height:1.35">'+_mbsFmtN(v)+' / meta '+_mbsFmtN(Math.round(m))+'</div>'
       +'</div>';
   }
-  function _mbsRenderTrioSemaforos(sigFact, glpiApr, meta){
+  function _mbsCalcCurvaMeta(ctx){
+    var meta = Number(ctx && ctx.meta) || 0;
+    var col = Number((ctx && ctx.colocadoCombinado) || (ctx && ctx.acum)) || 0;
+    var dhTot = window._mtsDiasTotal || (_DATA && _DATA.dh_total) || 122;
+    var dhTra = window._mtsDiasTrans || (_DATA && _DATA.dh_trans) || 0;
+    var dhRest = Math.max(0, dhTot - dhTra);
+    var deb = meta > 0 && dhTot > 0 ? Math.round(meta / dhTot * dhTra) : 0;
+    var brecha = col - deb;
+    var faltan = Math.max(0, meta - col);
+    var ritmoNec = dhRest > 0 ? Math.round(faltan / dhRest * 10) / 10 : faltan;
+    return { deberiamos: deb, colocado: col, brecha: brecha, faltan: faltan, ritmoNec: ritmoNec, dhTra: dhTra, dhTot: dhTot, dhRest: dhRest };
+  }
+  function _mbsRenderCurvaMeta(curva){
+    if(!curva || !curva.dhTot) return '';
+    var b = curva.brecha;
+    var colBrecha = b >= 0 ? '#4ade80' : '#f87171';
+    var lblBrecha = b >= 0 ? ('+' + _mbsFmtN(b) + ' adelante') : (_mbsFmtN(Math.abs(b)) + ' atrás');
+    var detalle = curva.brecha < 0
+      ? '⚠️ Van <b style="color:#f87171">' + _mbsFmtN(Math.abs(curva.brecha)) + '</b> créditos por debajo de lo que deberíamos llevar hoy. Ritmo necesario: <b>' + curva.ritmoNec + '</b>/día · Faltan <b>' + _mbsFmtN(curva.faltan) + '</b> para meta.'
+      : '✅ Van <b style="color:#4ade80">' + _mbsFmtN(curva.brecha) + '</b> créditos por encima de la curva ideal. Faltan <b>' + _mbsFmtN(curva.faltan) + '</b> para cerrar meta S2.';
+    return '<div style="margin:10px 0 8px;padding:10px 12px;background:rgba(0,176,185,.1);border-radius:10px;border:1px solid rgba(0,176,185,.25)">'
+      + '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">📈 Cómo deberíamos ir · Día ' + curva.dhTra + ' de ' + curva.dhTot + ' hábiles S2</div>'
+      + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px">'
+      + '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:7px;color:rgba(255,255,255,.45);font-weight:700;text-transform:uppercase">Deberíamos llevar</div><div style="font-size:14px;font-weight:900;color:#00B0B9">' + _mbsFmtN(curva.deberiamos) + '</div></div>'
+      + '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:7px;color:rgba(255,255,255,.45);font-weight:700;text-transform:uppercase">Llevamos hoy</div><div style="font-size:14px;font-weight:900;color:#fff">' + _mbsFmtN(curva.colocado) + '</div><div style="font-size:7px;color:rgba(255,255,255,.4)">SIGEC + GLPI</div></div>'
+      + '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:7px;color:rgba(255,255,255,.45);font-weight:700;text-transform:uppercase">Diferencia</div><div style="font-size:12px;font-weight:900;color:' + colBrecha + '">' + lblBrecha + '</div></div>'
+      + '</div>'
+      + '<div style="font-size:9px;color:rgba(255,255,255,.55);line-height:1.5">' + detalle + '</div>'
+      + '</div>';
+  }
     var comb=(Number(sigFact)||0)+(Number(glpiApr)||0);
     return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 10px">'
       +_mbsRenderSemaforoCard('Solo SIGEC', sigFact, meta)
@@ -12733,9 +12764,10 @@ function _parseCumpleMMDD(s){
       }
       html += '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">';
       html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:8px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700">Meta S2</div><div style="font-size:16px;font-weight:900;color:#fff">'+_mbsFmtN(Math.round(ctx.meta))+'</div></div>';
-      html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:8px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700">Colocado</div><div style="font-size:16px;font-weight:900;color:#4ade80">'+_mbsFmtN(ctx.acum)+'</div></div>';
+      html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:8px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700">Colocado</div><div style="font-size:16px;font-weight:900;color:#4ade80">'+_mbsFmtN(ctx.colocadoCombinado||ctx.acum)+'</div></div>';
       html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:8px"><div style="font-size:8px;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:700">Cumplimiento</div><div style="font-size:16px;font-weight:900;color:'+_mbsSemColor(pct)+'">'+pct+'%</div></div>';
       html += '</div>';
+      html += _mbsRenderCurvaMeta(_mbsCalcCurvaMeta(ctx));
       html += '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Semáforos vs meta S2</div>';
       html += _mbsRenderTrioSemaforos(ctx.sig.facturada||0, ctx.glpi.aprobada||0, ctx.meta||0);
       html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:6px;font-size:10px;color:rgba(255,255,255,.65)">';
@@ -12755,15 +12787,17 @@ function _parseCumpleMMDD(s){
     if(typeof _ioConstruirContexto !== 'function') return '<div style="color:rgba(255,255,255,.5)">Cargando motor de informes…</div>';
     var ctx = _ioConstruirContexto('nacional', '');
     var pct = ctx.pct || 0;
-    var brecha = Math.max(0, (ctx.meta||0) - (ctx.acum||0));
+    var brecha = Math.max(0, (ctx.meta||0) - (ctx.colocadoCombinado||ctx.acum||0));
+    var curva = _mbsCalcCurvaMeta(ctx);
     var html = '<div style="background:rgba(255,217,0,.08);border:1px solid rgba(255,217,0,.25);border-radius:12px;padding:14px;margin-bottom:10px">';
     html += '<div style="font-size:13px;font-weight:800;color:#FFD900;margin-bottom:10px">🇨🇴 Panorama Nacional S2</div>';
     html += '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px">';
     html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:10px"><div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase">Meta nacional</div><div style="font-size:18px;font-weight:900;color:#fff">'+_mbsFmtN(Math.round(ctx.meta))+'</div></div>';
-    html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:10px"><div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase">Colocado acum.</div><div style="font-size:18px;font-weight:900;color:#4ade80">'+_mbsFmtN(ctx.acum)+'</div></div>';
+    html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:10px"><div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase">Colocado acum.</div><div style="font-size:18px;font-weight:900;color:#4ade80">'+_mbsFmtN(ctx.colocadoCombinado||ctx.acum)+'</div></div>';
     html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:10px"><div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase">Cumplimiento</div><div style="font-size:18px;font-weight:900;color:'+_mbsSemColor(pct)+'">'+pct+'%</div></div>';
-    html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:10px"><div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase">Brecha</div><div style="font-size:18px;font-weight:900;color:#f87171">'+_mbsFmtN(brecha)+'</div></div>';
+    html += '<div style="text-align:center;background:rgba(255,255,255,.05);border-radius:8px;padding:10px"><div style="font-size:8px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase">Faltan meta</div><div style="font-size:18px;font-weight:900;color:#f87171">'+_mbsFmtN(brecha)+'</div></div>';
     html += '</div>';
+    html += _mbsRenderCurvaMeta(curva);
     html += '<div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.45);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">Semáforos nacionales vs meta S2</div>';
     html += _mbsRenderTrioSemaforos(ctx.sig.facturada||0, ctx.glpi.aprobada||0, ctx.meta||0);
     html += '<div style="font-size:10px;color:rgba(255,255,255,.6);line-height:1.6">';
@@ -12798,13 +12832,13 @@ function _parseCumpleMMDD(s){
     var html = '';
     if(pack.esNacional){
       document.getElementById('mbs-titulo').textContent = 'Panorama Nacional';
-      document.getElementById('mbs-subtitulo').textContent = 'Vista ejecutiva de todo el canal comercial CMD';
+      document.getElementById('mbs-subtitulo').textContent = 'Vista nacional · avance vs curva ideal S2';
       html = _mbsRenderNacional();
     } else if(!pack.items.length){
       html = '<div style="font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:20px">No se encontraron sedes asignadas en tu perfil. Contacta al administrador.</div>';
     } else {
       document.getElementById('mbs-titulo').textContent = 'Tus sedes · Estado actual';
-      document.getElementById('mbs-subtitulo').textContent = pack.items.length+' sede(s) según hoja EMPLEADOS';
+      document.getElementById('mbs-subtitulo').textContent = pack.items.length+' sede(s) · cómo vamos vs lo que deberíamos llevar hoy';
       pack.items.forEach(function(it){
         html += _mbsRenderBloqueSede(it.label, it.canon);
       });
@@ -16209,7 +16243,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.75 — CogniPYV Gemini resiliente');
+  console.log('[CMD] Informes Comerciales v5.4.76 — Bienvenida curva S2 por sede');
 })();
 
 </script>
