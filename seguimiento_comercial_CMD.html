@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.66   (APP_VERSION = 'pyv-comercial-5.4.66')
+  Versión actual: pyv-comercial-5.4.68   (APP_VERSION = 'pyv-comercial-5.4.68')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,12 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.68 (2026-07-08)
+    - Auditoría informes: fix Colocado mes (Estado Sedes), multi-sede en Pendientes y Cobertura Mat.
+    - H2: acumulado semáforo usa colocado SIGEC+GLPI (criterio unificado).
+  pyv-comercial-5.4.67 (2026-07-08)
+    - Acompañamientos H1: solo metas de sede(s) seleccionadas; sin informes SIGEC ni ejecución.
+    - Acompañamientos H2: semáforos y colocación conectados a Sheets (SIGEC+GLPI); leads manual.
   pyv-comercial-5.4.66 (2026-07-07)
     - Fix hub Informes: un solo selector de sedes (multi Ctrl+clic), sin duplicado.
   pyv-comercial-5.4.65 (2026-07-07)
@@ -270,7 +276,8 @@
     - Menú: panel nacional ampliado (meta vs acumulado, deberíamos hoy, brecha, proyección).
   v4.7.0 (2026-06-30)
     - Menú rediseñado: aspecto comercial dinámico, KPIs en vivo desde Sheets.
-    - Hoja 1: metas de sedes seleccionadas por mes/período (renderMetasConsolidadas).
+    - Hoja 1: solo metas de sede(s) seleccionadas (sin informes SIGEC ni ejecución).
+    - Hoja 2: semáforos y colocación desde Sheets (SIGEC+GLPI); leads manual.
     - Hoja 2: semáforos conectados a colocación + resumen gerencial desde Sheets.
     - Herramientas PYV: barra de tabs con simuladores, fragmentos y más; HTML corregido.
     - HubSpot/Malla: modal propio sin destruir panel SCIC (#h5).
@@ -310,11 +317,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.66">
-<meta name="build-id" content="pyv-comercial-5.4.66-20260707-2345">
+<meta name="app-version" content="pyv-comercial-5.4.68">
+<meta name="build-id" content="pyv-comercial-5.4.68-20260708-0027">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.66';
+window.APP_VERSION='pyv-comercial-5.4.68';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -2178,12 +2185,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     <div id="meta-coloc-display"><p style="color:var(--text2);font-size:13px">Selecciona rectoría y sede(s) para ver las metas.</p></div>
   </div>
 
-  <!-- ESTADO SIGEC / COLOCACIÓN SEDE -->
-  <div class="card" id="card-sigec-seg" style="display:none">
-    <div class="card-hdr"><div class="cico"><i class="ti ti-chart-dots-3"></i></div><h2>Estado SIGEC y colocación de la sede</h2></div>
-    <div id="sigec-seg-display"><p style="color:var(--text2);font-size:13px">Selecciona rectoría y sede(s) para ver el estado SIGEC.</p></div>
-  </div>
-
   <!-- METAS KPI COORD -->
   <div class="card" id="card-metas-coord" style="display:none">
     <div class="card-hdr"><div class="cico"><i class="ti ti-list-check"></i></div><h2>Metas de indicadores — Coordinación</h2></div>
@@ -2260,6 +2261,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     <!-- GESTION DE LEADS -->
     <div class="card">
       <div class="card-hdr"><div class="cico"><i class="ti ti-funnel"></i></div><h2>Gestión de Leads</h2></div>
+      <p style="font-size:11px;color:var(--text2);margin:-4px 0 10px">Ingreso manual: leads, susceptibles y tasas de conversión no se autollenan desde Sheets.</p>
 
       <!-- SEGMENTO: LEADS NUEVOS -->
       <div style="border:1px solid var(--teal);border-radius:9px;padding:8px;margin-bottom:8px;background:linear-gradient(135deg,#f0fdfd,#fff)">
@@ -2472,7 +2474,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
               <div style="font-size:11px;font-weight:700;color:var(--dark);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">📊 Semáforo 2 — Acumulado período (Mayo al mes actual)</div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px">
                 <div class="field">
-                  <label>Ejecutado acumulado total (manual)</label>
+                  <label>Ejecutado acumulado total (desde Sheet)</label>
                   <input type="number" id="sem-acum-ejecutado" placeholder="ej: 3157"
                     oninput="calcSemaforoAcumulado()"
                     style="width:100%;padding:9px 12px;border:2px solid var(--teal);border-radius:8px;font-size:16px;font-weight:700;font-family:Ubuntu,sans-serif;box-sizing:border-box;color:var(--dark)">
@@ -3959,7 +3961,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.66';
+var APP_VERSION = 'pyv-comercial-5.4.68';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -9531,19 +9533,18 @@ function _parseCumpleMMDD(s){
     var sedes = (typeof state!=='undefined'&&state.sedes) ? state.sedes : [];
     if(!sedes.length) return;
     var sede = sedes[0];
-    var h2el = document.getElementById('sem-cierre-coord-h2');
-    if(h2el && typeof renderSemaforoCompleto==='function'){
-      try{ renderSemaforoCompleto('sem-cierre-coord-h2', sede, false); }catch(e){}
-    }
-    if(typeof coordRenderar5Semaforos==='function') coordRenderar5Semaforos();
-    var filas = buscarFilasColoc(sedes);
-    if(filas.length){
-      var metaN=filas.reduce(function(s,r){return s+(r.meta_n||0);},0);
-      var acumN=filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
-      var rc=document.getElementById('real_creditos');
-      if(rc && !rc.value) rc.value = acumN;
-      if(typeof actualizarSemaforoProyeccion==='function') actualizarSemaforoProyeccion();
-      if(typeof calcSemaforoColoc==='function') calcSemaforoColoc();
+    var pintar = function(){
+      var h2el = document.getElementById('sem-cierre-coord-h2');
+      if(h2el && typeof renderSemaforoCompleto==='function'){
+        try{ renderSemaforoCompleto('sem-cierre-coord-h2', sede, false); }catch(e){}
+      }
+      if(typeof coordRenderar5Semaforos==='function') coordRenderar5Semaforos();
+      if(typeof renderSeguimientoSigecPanel==='function') renderSeguimientoSigecPanel();
+    };
+    if(typeof _segH2SincronizarDesdeSheets==='function'){
+      _segH2SincronizarDesdeSheets(sedes).then(pintar).catch(pintar);
+    } else {
+      pintar();
     }
   }
   window.refreshH2Semaforos = refreshH2Semaforos;
@@ -9574,6 +9575,51 @@ function _parseCumpleMMDD(s){
         return;
       }
       _origMeta();
+      if(sedes.length && mode==='asesor'){
+        var el = document.getElementById('meta-coloc-display');
+        if(el){
+          el.querySelectorAll('div').forEach(function(b){
+            var txt = (b.textContent||'').toLowerCase();
+            if(txt.indexOf('ejecutado')>=0 || txt.indexOf('cumpl')>=0) b.remove();
+          });
+        }
+      }
+    };
+  }
+
+  if(typeof renderMetasConsolidadas==='function'){
+    var _origRMC547 = renderMetasConsolidadas;
+    window.renderMetasConsolidadas = function(){
+      var sedes = (state&&state.sedes)||[];
+      if(!sedes.length){
+        var t = document.getElementById('meta-coloc-display');
+        if(t) t.innerHTML = '<p style="color:var(--text2);font-size:13px">Selecciona al menos una sede.</p>';
+        return;
+      }
+      _origRMC547();
+      var el = document.getElementById('meta-coloc-display');
+      if(!el) return;
+      el.querySelectorAll('.mc-box').forEach(function(b){
+        var txt = (b.textContent||'').toLowerCase();
+        if(txt.indexOf('ejecucion')>=0 || txt.indexOf('ejecución')>=0 || txt.indexOf('ejecutado')>=0) b.remove();
+      });
+      var grid3 = el.querySelector('.grid3');
+      if(grid3 && !grid3.querySelector('.mc-box')) grid3.remove();
+    };
+  }
+
+  if(typeof renderEvolucionMensual==='function'){
+    window.renderEvolucionMensual = function(){
+      var sec = document.getElementById('evolucion-mensual-section');
+      if(sec) sec.style.display = 'none';
+    };
+  }
+  if(typeof renderAnioAnteriorTable==='function'){
+    window.renderAnioAnteriorTable = function(){
+      var sec = document.getElementById('anio-anterior-table');
+      if(sec) sec.innerHTML = '';
+      var sem = document.getElementById('anio-anterior-semaforo');
+      if(sem) sem.innerHTML = '';
     };
   }
 
@@ -9755,6 +9801,7 @@ function _parseCumpleMMDD(s){
   window.onMesChange = function(){
     if(_origOnMes) _origOnMes();
     setTimeout(refreshH1Metas, 80);
+    setTimeout(refreshH2Semaforos, 120);
   };
 
   construirResumenGerencial();
@@ -13774,21 +13821,24 @@ function _parseCumpleMMDD(s){
     doc.save('Historial_Acompanamientos_'+new Date().toISOString().slice(0,10)+'.pdf');
   };
 
-  function _mostrarBannerAutollenado(sedes, filas){
-    var el = document.getElementById('h1-autollenado-banner');
+  function _mostrarBannerAutollenado(sedes, filas, datos){
+    datos = datos || {};
+    var el = document.getElementById('h2-autollenado-banner');
     if(!el){
-      var h1 = document.getElementById('h1');
-      if(!h1) return;
+      var h2 = document.getElementById('h2');
+      if(!h2) return;
       el = document.createElement('div');
-      el.id = 'h1-autollenado-banner';
-      el.style.cssText = 'margin:0 16px 12px;padding:10px 14px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;font-size:11px;color:#065f46';
-      var card = h1.querySelector('.card');
-      if(card) h1.insertBefore(el, card); else h1.prepend(el);
+      el.id = 'h2-autollenado-banner';
+      el.style.cssText = 'margin:0 0 12px;padding:10px 14px;background:#ecfdf5;border:1px solid #6ee7b7;border-radius:10px;font-size:11px;color:#065f46';
+      var card = h2.querySelector('.card');
+      if(card) h2.insertBefore(el, card.nextSibling); else h2.prepend(el);
     }
     var metaN = filas.reduce(function(s,r){return s+(r.meta_n||0);},0);
-    var acumN = filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
-    el.innerHTML = '<strong>✅ Autollenado desde repositorios</strong> · Sedes: <b>'+sedes.join(', ')+'</b> · Meta: <b>'+_cmdFmtN(metaN)+'</b> · Acumulado: <b>'+_cmdFmtN(acumN)+'</b> · Datos de colocación SIGEC/Sheet.';
+    var colocado = datos.colocado!=null ? datos.colocado : filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
+    el.innerHTML = '<strong>✅ Datos desde Sheets</strong> · Sedes: <b>'+sedes.join(', ')+'</b> · Meta: <b>'+_cmdFmtN(metaN)+'</b> · Colocado SIGEC+GLPI: <b>'+_cmdFmtN(colocado)+'</b> · Leads y susceptibles: ingreso manual.';
     el.style.display = 'block';
+    var old = document.getElementById('h1-autollenado-banner');
+    if(old) old.style.display = 'none';
   }
 
   function _preseleccionarSedeEjecutor(){
@@ -13826,29 +13876,21 @@ function _parseCumpleMMDD(s){
     if(!sedes.length && !opts.skipPreselect) _preseleccionarSedeEjecutor();
     sedes = (state&&state.sedes)||[];
     if(!sedes.length) return;
-    if((!window._coloc_data||!window._coloc_data.length) && typeof _cargarSIGEC==='function'){
-      _cargarSIGEC().then(function(){ autollenarSeguimientoDesdeRepos(Object.assign({},opts,{skipPreselect:true})); });
-      return;
+    var aplicar = function(datos){
+      datos = datos || {};
+      var filas = datos.filas || (typeof buscarFilasColoc==='function' ? buscarFilasColoc(sedes) : []);
+      _mostrarBannerAutollenado(sedes, filas, datos);
+      if(typeof refreshH1Metas==='function') refreshH1Metas();
+      if(typeof refreshH2Semaforos==='function') refreshH2Semaforos();
+      if(typeof renderH3ValorAgregado==='function' && filas.length) renderH3ValorAgregado(filas);
+    };
+    if(typeof _segH2SincronizarDesdeSheets==='function'){
+      _segH2SincronizarDesdeSheets(sedes).then(aplicar).catch(function(){
+        aplicar({});
+      });
+    } else {
+      aplicar({});
     }
-    var filas = typeof buscarFilasColoc==='function' ? buscarFilasColoc(sedes) : [];
-    if(filas.length){
-      var metaN = filas.reduce(function(s,r){return s+(r.meta_n||0);},0);
-      var acumN = filas.reduce(function(s,r){return s+(r.acum_n||0);},0);
-      var rc = document.getElementById('real_creditos');
-      if(rc && (!rc.value || opts.force)) rc.value = acumN;
-      if(typeof state!=='undefined'){
-        state.metas = state.metas || {};
-        state.metas.meta_mes_n = metaN;
-        var dias = typeof getDiasHabilesInfo==='function' ? getDiasHabilesInfo() : {total:22};
-        state.metas.meta_dia_n = Math.round(metaN/(dias.total||22));
-      }
-      if(typeof actualizarSemaforoProyeccion==='function') actualizarSemaforoProyeccion();
-      if(typeof calcSemaforoColoc==='function') calcSemaforoColoc();
-    }
-    _mostrarBannerAutollenado(sedes, filas);
-    if(typeof refreshH1Metas==='function') refreshH1Metas();
-    if(typeof refreshH2Semaforos==='function') refreshH2Semaforos();
-    if(typeof renderH3ValorAgregado==='function' && filas.length) renderH3ValorAgregado(filas);
   };
 
   window.renderH3ValorAgregado = function(filas){
@@ -14134,8 +14176,86 @@ function _parseCumpleMMDD(s){
     }
 
     if(typeof refreshH1Metas==='function') refreshH1Metas();
-    if(typeof renderSeguimientoSigecPanel==='function') renderSeguimientoSigecPanel();
   };
+
+  var _SEG_LEADS_IDS = ['leads_call','leads_mercadeo','leads_actividad','leads_bd','leads_continuos','leads_susceptibles','leads_gest','sol_rad_nuevos','sol_rad_continuos','tasa_contacto'];
+
+  function _segSetCampo(id, val){
+    if(_SEG_LEADS_IDS.indexOf(id)>=0) return;
+    var el = document.getElementById(id);
+    if(!el || val==null || val==='') return;
+    el.value = val;
+  }
+
+  function _segH2AplicarSheets(sedes){
+    var filas = (typeof buscarFilasColoc==='function') ? buscarFilasColoc(sedes) : [];
+    var sig = (typeof _ioAgregarSigec==='function') ? _ioAgregarSigec(sedes) : _segProcesarSigecSedes(sedes);
+    var glpi = (typeof _ioAgregarGlpi==='function') ? _ioAgregarGlpi(sedes) : {aprobada:0, abierta:0, negada:0, total:0};
+    var metaN = filas.reduce(function(s,r){ return s+(r.meta_n||0); }, 0);
+    var acumN = filas.reduce(function(s,r){ return s+(r.acum_n||0); }, 0);
+    var antN = filas.reduce(function(s,r){ return s+(r.ant_n||0); }, 0);
+    var antV = filas.reduce(function(s,r){ return s+(r.acum_v||0); }, 0);
+    var colocado = (sig.facturada||0) + (glpi.aprobada||0);
+    var solRad = sig.total || sig.radicadas || 0;
+    var solApro = colocado;
+    var solAbi = (sig.abierta||0) + (sig.pendiente||0) + (sig.pendiente_doc||0) + (glpi.abierta||0);
+    var solCerr = (sig.cerrada||0) + (sig.cerrada_fac||0) + (glpi.negada||0);
+
+    _segSetCampo('real_creditos', colocado);
+    _segSetCampo('sol_rad', solRad);
+    _segSetCampo('sol_apro', solApro);
+    _segSetCampo('sol_abiertas', solAbi);
+    _segSetCampo('sol_cerr', solCerr);
+    _segSetCampo('sem-acum-ejecutado', colocado);
+    _segSetCampo('ant-creditos', antN);
+    if(antV) _segSetCampo('ant-valor', Math.round(antV));
+
+    if(typeof state!=='undefined'){
+      state.metas = state.metas || {};
+      state.metas.meta_mes_n = metaN;
+      var dias = (typeof getDiasHabilesInfo==='function') ? getDiasHabilesInfo() : {total:22};
+      state.metas.meta_dia_n = Math.round(metaN/(dias.total||22));
+      state.seguimiento = state.seguimiento || {};
+      state.seguimiento.real_creditos = colocado;
+      state.seguimiento.sol_rad = solRad;
+      state.seguimiento.sol_apro = solApro;
+      state.seguimiento.sol_abiertas = solAbi;
+      state.seguimiento.sol_cerr = solCerr;
+    }
+
+    if(typeof calcPortafolio==='function') calcPortafolio();
+    if(typeof calcRecuperacion==='function') calcRecuperacion();
+    if(typeof actualizarSemaforoProyeccion==='function') actualizarSemaforoProyeccion();
+    if(typeof calcSemaforoColoc==='function') calcSemaforoColoc();
+    if(typeof calcSemaforoAcumulado==='function') calcSemaforoAcumulado();
+    if(typeof calcSemaforoVsAnterior==='function') calcSemaforoVsAnterior();
+    if(typeof calcConversion==='function') calcConversion();
+    if(typeof calcPromDiario==='function') calcPromDiario();
+
+    return {filas:filas, sig:sig, glpi:glpi, colocado:colocado, metaN:metaN, acumN:acumN};
+  }
+
+  function _segH2SincronizarDesdeSheets(sedes){
+    sedes = sedes || ((typeof state!=='undefined'&&state.sedes) ? state.sedes : []);
+    if(!sedes.length) return Promise.resolve(null);
+    var needColoc = !window._coloc_data || !window._coloc_data.length;
+    var needSigec = !window._sigecRows || !window._sigecRows.length;
+    var needGlpi = !window._glpiRows || !window._glpiRows.length;
+    if(!needColoc && !needSigec && !needGlpi) return Promise.resolve(_segH2AplicarSheets(sedes));
+    var jobs = [];
+    if(needColoc && typeof _cargarColocacion==='function') jobs.push(_cargarColocacion());
+    if(needSigec && typeof _cargarSIGEC==='function') jobs.push(_cargarSIGEC());
+    if(needGlpi && typeof _cargarGLPI==='function') jobs.push(_cargarGLPI());
+    if(!jobs.length) return Promise.resolve(_segH2AplicarSheets(sedes));
+    return Promise.all(jobs).then(function(){ return _segH2AplicarSheets(sedes); });
+  }
+  window._segH2SincronizarDesdeSheets = _segH2SincronizarDesdeSheets;
+
+  function _segColocadoSede(sd, filasColoc){
+    var sig = (typeof _ioAgregarSigec==='function') ? _ioAgregarSigec([sd]) : {facturada:0};
+    var glpi = (typeof _ioAgregarGlpi==='function') ? _ioAgregarGlpi([sd]) : {aprobada:0};
+    return (sig.facturada||0) + (glpi.aprobada||0);
+  }
 
   function _segSigecFilasSedes(sedes){
     var rows = window._sigecRows || [];
@@ -14178,26 +14298,22 @@ function _parseCumpleMMDD(s){
 
   function renderSeguimientoSigecPanel(){
     var sedes = (typeof state!=='undefined' && state.sedes) ? state.sedes : [];
-    var cardH1 = document.getElementById('card-sigec-seg');
-    var elH1 = document.getElementById('sigec-seg-display');
     var cardH2 = document.getElementById('card-sigec-seg-h2');
     var elH2 = document.getElementById('sigec-seg-h2-display');
     var visible = sedes.length > 0;
-    if(cardH1) cardH1.style.display = visible ? 'block' : 'none';
     if(cardH2) cardH2.style.display = visible ? 'block' : 'none';
-    if(!visible){
-      if(elH1) elH1.innerHTML = '<p style="color:var(--text2);font-size:13px">Selecciona rectoría y sede(s) para ver el estado SIGEC.</p>';
-      return;
-    }
+    if(!visible || !elH2) return;
 
     var filasColoc = (typeof buscarFilasColoc==='function') ? buscarFilasColoc(sedes) : [];
     var metaN = filasColoc.reduce(function(s,r){ return s+(r.meta_n||0); }, 0);
+    var sig = (typeof _ioAgregarSigec==='function') ? _ioAgregarSigec(sedes) : _segProcesarSigecSedes(sedes);
+    var glpi = (typeof _ioAgregarGlpi==='function') ? _ioAgregarGlpi(sedes) : {aprobada:0};
+    var colocado = (sig.facturada||0) + (glpi.aprobada||0);
     var acumN = filasColoc.reduce(function(s,r){ return s+(r.acum_n||0); }, 0);
-    var pctCol = metaN>0 ? Math.round(acumN/metaN*100) : 0;
+    var pctCol = metaN>0 ? Math.round(colocado/metaN*100) : 0;
     var meses = (typeof getMesesSeleccionados==='function') ? getMesesSeleccionados() : ['Mayo'];
     var anio = parseInt((document.getElementById('anio')||{}).value || state.anio || new Date().getFullYear(), 10);
     var metaMes = (typeof getMetaAcumulada==='function') ? getMetaAcumulada(sedes, meses) : {n:0,v:0};
-    var sig = _segProcesarSigecSedes(sedes);
     var rad = _segClasificarRadicaciones(_segSigecFilasSedes(sedes), meses, anio);
     var mixItems = [
       ['Facturadas', sig.facturada, '#4ade80'],
@@ -14226,11 +14342,12 @@ function _parseCumpleMMDD(s){
         var tmp = buscarFilasColoc([sd]);
         f = tmp[0] || null;
       }
-      var p = (f&&f.meta_n>0) ? Math.round((f.acum_n||0)/f.meta_n*100) : 0;
-      var sem = (typeof _getSemaforoColoc==='function'&&f) ? _getSemaforoColoc(f) : (p>=90?'VERDE':p>=70?'AMARILLO':'ROJO');
+      var colSd = _segColocadoSede(sd, filasColoc);
+      var p = (f&&f.meta_n>0) ? Math.round(colSd/f.meta_n*100) : 0;
+      var sem = p>=90?'VERDE':p>=70?'AMARILLO':'ROJO';
       sedesHtml += '<div style="display:flex;align-items:center;justify-content:space-between;padding:6px 10px;background:#f8fafc;border-radius:8px;font-size:11px">'
         +'<span style="font-weight:600">'+sd+'</span>'
-        +'<span>'+_segSemEmoji(sem)+' '+sem+' · '+p+'% · '+_segFmtN(f?f.acum_n:0)+' / '+_segFmtN(f?f.meta_n:0)+'</span></div>';
+        +'<span>'+_segSemEmoji(sem)+' '+sem+' · '+p+'% · '+_segFmtN(colSd)+' / '+_segFmtN(f?f.meta_n:0)+'</span></div>';
     });
     sedesHtml += '</div>';
 
@@ -14241,7 +14358,7 @@ function _parseCumpleMMDD(s){
       +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:10px">'
       +'<div style="background:#e0f7f8;border-radius:8px;padding:10px;text-align:center"><div style="font-size:9px;color:#0d6e75;font-weight:700">META MES</div><div style="font-size:18px;font-weight:900;color:#003D45">'+_segFmtN(metaMes.n)+'</div></div>'
       +'<div style="background:#f0fdf4;border-radius:8px;padding:10px;text-align:center"><div style="font-size:9px;color:#15803d;font-weight:700">META TOTAL S2</div><div style="font-size:18px;font-weight:900;color:#166534">'+_segFmtN(metaN)+'</div></div>'
-      +'<div style="background:#eff6ff;border-radius:8px;padding:10px;text-align:center"><div style="font-size:9px;color:#1d4ed8;font-weight:700">COLOCADO S2</div><div style="font-size:18px;font-weight:900;color:#1e40af">'+_segFmtN(acumN)+' <span style="font-size:11px">('+pctCol+'%)</span></div></div>'
+      +'<div style="background:#eff6ff;border-radius:8px;padding:10px;text-align:center"><div style="font-size:9px;color:#1d4ed8;font-weight:700">COLOCADO SIGEC+GLPI</div><div style="font-size:18px;font-weight:900;color:#1e40af">'+_segFmtN(colocado)+' <span style="font-size:11px">('+pctCol+'%)</span></div><div style="font-size:8px;color:#64748b;margin-top:2px">SIGEC '+_segFmtN(sig.facturada||0)+' + GLPI '+_segFmtN(glpi.aprobada||0)+' · Informe '+_segFmtN(acumN)+'</div></div>'
       +'<div style="background:#faf5ff;border-radius:8px;padding:10px;text-align:center"><div style="font-size:9px;color:#7c3aed;font-weight:700">TOTAL SIGEC</div><div style="font-size:18px;font-weight:900;color:#6d28d9">'+_segFmtN(sig.total)+' rad.</div></div>'
       +'</div>'
       +sedesHtml
@@ -14253,42 +14370,20 @@ function _parseCumpleMMDD(s){
       +'<div style="background:#f8fafc;border-radius:8px;padding:10px;text-align:center;border:1px solid #e2e8f0"><div style="font-size:9px;color:#475569;font-weight:700">DIFERENCIA</div><div style="font-size:20px;font-weight:900;color:'+(diffRad>=0?'#16a34a':'#dc2626')+'">'+diffTxt+'</div><div style="font-size:9px;color:#6b7280">nuevas − antiguas</div></div>'
       +'</div>';
 
-    if(elH1) elH1.innerHTML = html;
-    if(elH2) elH2.innerHTML = html;
+    elH2.innerHTML = html;
   }
   window.renderSeguimientoSigecPanel = renderSeguimientoSigecPanel;
 
   var _origRefreshH1 = window.refreshH1Metas;
   window.refreshH1Metas = function(){
     if(_origRefreshH1) _origRefreshH1();
-    var sedes = (state&&state.sedes)||[];
-    var cardSig = document.getElementById('card-sigec-seg');
-    if(cardSig) cardSig.style.display = sedes.length ? 'block' : 'none';
-    if(sedes.length) renderSeguimientoSigecPanel();
-  };
-
-  var _origRefreshH2 = window.refreshH2Semaforos;
-  window.refreshH2Semaforos = function(){
-    if(_origRefreshH2) _origRefreshH2();
-    renderSeguimientoSigecPanel();
   };
 
   var _origOnSedeAsesor = window.onSedeAsesorChange;
   window.onSedeAsesorChange = function(){
     if(_origOnSedeAsesor) _origOnSedeAsesor();
-    setTimeout(function(){ renderSeguimientoSigecPanel(); }, 80);
+    setTimeout(refreshH2Semaforos, 120);
   };
-
-  if(typeof onMesChange==='function'){
-    var _origOnMes = onMesChange;
-    window.onMesChange = function(){
-      _origOnMes();
-      if((state.sedes||[]).length){
-        if(typeof refreshH1Metas==='function') refreshH1Metas();
-        renderSeguimientoSigecPanel();
-      }
-    };
-  }
 
   /* ── pyv-comercial-5.4.38: Selector de meses seguimiento (checkboxes) ── */
   window.MESES_NOMBRES = window.MESES_NOMBRES || ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -14817,12 +14912,12 @@ function _parseCumpleMMDD(s){
     html+='</div>';
     html+=icSec('Desglose por sede','Colocado SIGEC+GLPI vs Real PARA LA UNIVERSIDAD');
     html+='<div style="overflow:auto;max-height:360px"><table class="ic-tbl"><thead><tr><th>Sede</th><th>Colocado</th><th>Informe</th><th>Real UNI</th><th>Cobertura</th><th>Real Nuevos</th><th>Real Continuos</th></tr></thead><tbody>';
+    var mapaUni=icMapaColocadoPorSede(f);
     filas.sort(function(a,b){ return (b.acum_n||0)-(a.acum_n||0); }).forEach(function(r){
       var rt=r.real_total_uni||0;
       var sede=r.sede||'';
-      var sig=(typeof _ioAgregarSigec==='function')?_ioAgregarSigec([sede]):{facturada:0};
-      var glpi=(typeof _ioAgregarGlpi==='function')?_ioAgregarGlpi([sede]):{aprobada:0};
-      var col=(sig.facturada||0)+(glpi.aprobada||0);
+      var m=mapaUni[sede]||{sig:0,glpi:0};
+      var col=(m.sig||0)+(m.glpi||0);
       var p=rt>0?Math.round(col/rt*100):0;
       html+='<tr><td>'+r.sede+'</td><td style="text-align:right;font-weight:700">'+icFmt(col)+'</td><td style="text-align:right;color:#64748b">'+icFmt(r.acum_n||0)+'</td><td style="text-align:right">'+icFmt(Math.round(rt))+'</td><td>'+icSemHtml(icSem(p,25,15))+' '+p+'%</td><td style="text-align:right">'+icFmt(Math.round(r.real_nuevos_uni||0))+'</td><td style="text-align:right">'+icFmt(Math.round(r.real_continuos_uni||0))+'</td></tr>';
     });
@@ -14841,6 +14936,15 @@ function _parseCumpleMMDD(s){
       var m2=(window._matriculasData||[]).find(function(x){ return icStr(x.rectoria)===icStr(rect); });
       var sedes=(typeof _mapaListaSedes==='function')?_mapaListaSedes(rect):[];
       mat=m2?Math.round((m2.total_real||0)/Math.max(1,sedes.length)):0;
+    } else if(f.sedes&&f.sedes.length){
+      var seenRect={};
+      f.sedes.forEach(function(sd){
+        var rect=(window.PG_SEDE_RECTORIA||{})[sd]||'';
+        var m2=(window._matriculasData||[]).find(function(x){ return icStr(x.rectoria)===icStr(rect); });
+        var sedesRect=(typeof _mapaListaSedes==='function')?_mapaListaSedes(rect):[];
+        var nSel=f.sedes.filter(function(s){ return icStr((window.PG_SEDE_RECTORIA||{})[s])===icStr(rect); }).length;
+        mat+=m2?Math.round((m2.total_real||0)*nSel/Math.max(1,sedesRect.length)):0;
+      });
     }
     var sigF=0, glpA=0;
     icFilasSigec(f).forEach(function(r){ if(icClasifSigec(r)==='facturada') sigF++; });
@@ -14950,23 +15054,31 @@ function _parseCumpleMMDD(s){
     return html;
   }
 
+  function icFiltroPermiteSede(sede, filtro){
+    filtro=filtro||{};
+    if(filtro.sedes&&filtro.sedes.length){
+      return filtro.sedes.some(function(s){ return icMatchSede(sede,s); });
+    }
+    if(filtro.nivel==='sede'&&filtro.sel) return icMatchSede(sede,filtro.sel);
+    if(filtro.nivel==='rectoria'&&filtro.sel){
+      var rect=(window.PG_SEDE_RECTORIA||{})[sede]||'';
+      return icStr(rect)===icStr(filtro.sel);
+    }
+    return true;
+  }
+
   function icBaseCedulas(filtro){
     filtro=filtro||{};
     var set={};
     function addCed(ced,sede){
       var n=icNormCed(ced); if(!n||n.length<5) return;
-      if(filtro.nivel==='sede'&&filtro.sel&&!icMatchSede(sede,filtro.sel)) return;
-      if(filtro.nivel==='rectoria'&&filtro.sel){
-        var rect=(window.PG_SEDE_RECTORIA||{})[sede]||'';
-        if(icStr(rect)!==icStr(filtro.sel)) return;
-      }
+      if(!icFiltroPermiteSede(sede,filtro)) return;
       set[n]=true;
     }
     (window._baseColocFilas||[]).forEach(function(r){ addCed(r.cedula,r.sede); });
     if(!Object.keys(set).length){
       (window._baseColocData||[]).forEach(function(s){
-        if(filtro.nivel==='sede'&&filtro.sel&&!icMatchSede(s.sede,filtro.sel)) return;
-        if(filtro.nivel==='rectoria'&&filtro.sel&&icStr(s.rectoria)!==icStr(filtro.sel)) return;
+        if(!icFiltroPermiteSede(s.sede,filtro)) return;
         (s.ccs||[]).forEach(function(c){ addCed(c,s.sede); });
       });
     }
@@ -14978,12 +15090,14 @@ function _parseCumpleMMDD(s){
     var n=0;
     if((window._baseColocFilas||[]).length){
       (window._baseColocFilas||[]).forEach(function(r){
-        if(filtro.nivel==='sede'&&filtro.sel&&!icMatchSede(r.sede,filtro.sel)) return;
-        if(filtro.nivel==='rectoria'&&filtro.sel){
-          var rect=(window.PG_SEDE_RECTORIA||{})[r.sede]||'';
-          if(icStr(rect)!==icStr(filtro.sel)) return;
-        }
+        if(!icFiltroPermiteSede(r.sede,filtro)) return;
         n++;
+      });
+      return n;
+    }
+    if(filtro.sedes&&filtro.sedes.length){
+      (window._baseColocData||[]).forEach(function(x){
+        if(filtro.sedes.some(function(s){ return icMatchSede(x.sede,s); })) n+=x.total||0;
       });
       return n;
     }
@@ -15008,15 +15122,6 @@ function _parseCumpleMMDD(s){
     var c=row._cols||[];
     return icNormCed(row['Cédula asociado']||row['Cedula asociado']||row['Identificacion']||c[IC_GLP.CED]);
   }
-  function icGlpiAprobada(row){
-    var c=row._cols||[];
-    var est=icStr(row.estado||row.Estado||c[IC_GLP.EST]).toLowerCase();
-    if(typeof _glpiEstadoNorm==='function'){
-      var n=_glpiEstadoNorm(est);
-      return n==='aprobada'||n==='facturada';
-    }
-    return est.indexOf('factur')>=0||est.indexOf('aprob')>=0;
-  }
 
   function icRenderPendientes(f){
     var base=icBaseCedulas(f);
@@ -15038,8 +15143,7 @@ function _parseCumpleMMDD(s){
     });
     icFilasGlpi(f).forEach(function(r){
       if(!icGlpiAprobada(r)) return;
-      var c=r._cols||[];
-      addAprobada(icCedulaGlpi(r), icStr(r.Sede||c[IC_GLP.SED]), 'GLPI', icStr(r.Ticket||c[IC_GLP.TICKET]));
+      addAprobada(icCedulaGlpi(r), icGlpiLeerSede(r), 'GLPI', icStr(r.Ticket||(r._cols||[])[IC_GLP.TICKET]));
     });
     var nAprob=Object.keys(aprobadasSet).length;
     var nCruz=Object.keys(cruzadasSet).length;
@@ -15119,38 +15223,44 @@ function _parseCumpleMMDD(s){
 
   function icRenderInformeColocacion(f){
     var filas=icFilasColoc(f);
-    var rows=[], tMeta=0, tAcum=0, tAnt=0, tVar=0, tMetaV=0, tAcumV=0;
+    var mapaCol=icMapaColocadoPorSede(f);
+    var comb=icColocadoSigecGlpi(f);
+    var rows=[], tMeta=0, tAcum=0, tCol=0, tAnt=0, tVar=0, tMetaV=0, tAcumV=0;
     filas.forEach(function(r){
       var meta=r.meta_n||0, acum=r.acum_n||0, ant=r.ant_n||0;
+      var m=mapaCol[r.sede]||{sig:0,glpi:0};
+      var col=(m.sig||0)+(m.glpi||0);
       var vn=icColocVarN(r);
-      var pct=meta>0?Math.round(acum/meta*100):0;
-      var sem=String(r.semaforo||r.sem||'').toUpperCase()||icSem(pct,90,70);
-      tMeta+=meta; tAcum+=acum; tAnt+=ant; tVar+=vn; tMetaV+=r.meta_v||0; tAcumV+=r.acum_v||0;
+      var pct=meta>0?Math.round(col/meta*100):0;
+      var sem=pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO';
+      tMeta+=meta; tAcum+=acum; tCol+=col; tAnt+=ant; tVar+=vn; tMetaV+=r.meta_v||0; tAcumV+=r.acum_v||0;
       rows.push({
-        sede:r.sede||'', rect:r.rectoria||'', meta:meta, acum:acum, ant:ant, vn:vn,
+        sede:r.sede||'', rect:r.rectoria||'', meta:meta, acum:acum, col:col, ant:ant, vn:vn,
         pct:pct, sem:sem, metaV:r.meta_v||0, acumV:r.acum_v||0
       });
     });
-    rows.sort(function(a,b){ return b.acum-a.acum; });
-    var pctNat=tMeta>0?Math.round(tAcum/tMeta*100):0;
+    rows.sort(function(a,b){ return b.col-a.col; });
+    var pctNat=tMeta>0?Math.round(tCol/tMeta*100):0;
     var html='<div class="ic-explain">'+IC_DESCS['informe-colocacion']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
     html+='<div class="ic-kpi-grid">';
     html+=icKpi('Meta S2 #',icFmt(Math.round(tMeta)),'INFORME COLOCACION P ACTUAL','#003D45');
-    html+=icKpi('Acumulado #',icFmt(tAcum),pctNat+'% de la meta','#1d4ed8');
+    html+=icKpi('Colocado SIGEC+GLPI',icFmt(tCol),pctNat+'% de la meta · criterio unificado','#16a34a');
+    html+=icKpi('Acum. informe #',icFmt(tAcum),'acum_n del sheet P Actual','#1d4ed8');
     html+=icKpi('Meta S2 $',icFmtM(tMetaV),'Valor meta período','#003D45');
     html+=icKpi('Acumulado $',icFmtM(tAcumV),'Valor colocado','#1d4ed8');
     html+=icKpi('Año anterior',icFmt(tAnt),'Mismo período S2 año ant.','#64748b');
     html+=icKpi('VAR # total',(tVar>=0?'+':'')+icFmt(tVar),'Diferencia vs año anterior',tVar>=0?'#16a34a':'#dc2626');
     html+='</div>';
-    html+=icSec('Detalle por sede','Fuente: INFORME COLOCACION P ACTUAL · '+rows.length+' sedes');
+    html+=icSec('Detalle por sede','Fuente: P Actual + colocado SIGEC+GLPI · '+rows.length+' sedes');
     html+='<div style="overflow:auto;max-height:460px"><table class="ic-tbl"><thead><tr>'
-      +'<th>Sede</th><th>Rectoría</th><th>Meta #</th><th>Acum #</th><th>% Meta</th>'
+      +'<th>Sede</th><th>Rectoría</th><th>Meta #</th><th>Colocado</th><th>Acum #</th><th>% Meta</th>'
       +'<th>Meta $</th><th>Acum $</th><th>Año ant.</th><th>VAR #</th><th>Sem</th></tr></thead><tbody>';
     rows.forEach(function(r){
       var bCol=r.vn>=0?'#16a34a':'#dc2626';
       html+='<tr><td style="font-weight:600">'+r.sede+'</td><td style="font-size:9px;color:#64748b">'+r.rect+'</td>'
         +'<td style="text-align:right">'+icFmt(Math.round(r.meta))+'</td>'
-        +'<td style="text-align:right;font-weight:700">'+icFmt(r.acum)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:#16a34a">'+icFmt(r.col)+'</td>'
+        +'<td style="text-align:right;color:#64748b">'+icFmt(r.acum)+'</td>'
         +'<td style="text-align:right">'+r.pct+'%</td>'
         +'<td style="text-align:right">'+icFmtM(r.metaV)+'</td>'
         +'<td style="text-align:right">'+icFmtM(r.acumV)+'</td>'
@@ -15161,7 +15271,8 @@ function _parseCumpleMMDD(s){
     html+='</tbody><tfoot><tr style="font-weight:700;background:#f8fafc;">'
       +'<td>TOTAL</td><td></td>'
       +'<td style="text-align:right">'+icFmt(Math.round(tMeta))+'</td>'
-      +'<td style="text-align:right">'+icFmt(tAcum)+'</td>'
+      +'<td style="text-align:right;color:#16a34a">'+icFmt(tCol)+'</td>'
+      +'<td style="text-align:right;color:#64748b">'+icFmt(tAcum)+'</td>'
       +'<td style="text-align:right">'+pctNat+'%</td>'
       +'<td style="text-align:right">'+icFmtM(tMetaV)+'</td>'
       +'<td style="text-align:right">'+icFmtM(tAcumV)+'</td>'
@@ -15194,11 +15305,7 @@ function _parseCumpleMMDD(s){
       var colMes=0, colHoy=0;
       if(colM){
         if(typeof _mdColSedeEnDia==='function') colHoy=_mdColSedeEnDia(colM,sede,hoyKey);
-        if(colM.porSedeMes){
-          Object.keys(colM.porSedeMes||{}).forEach(function(k){
-            if(k.indexOf(sede+'|')===0) colMes+=colM.porSedeMes[k]||0;
-          });
-        }
+        if(typeof _mdColMesSede==='function') colMes=_mdColMesSede(colM,sede);
       }
       rows.push({
         sede:sede, rectoria:r.rectoria||'', meta:meta, col:col, sig:sig,
@@ -15475,7 +15582,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.66 — Filtro sedes único multi-select');
+  console.log('[CMD] Informes Comerciales v5.4.68 — Auditoría veracidad SIGEC+GLPI');
 })();
 
 </script>
