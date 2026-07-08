@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.69   (APP_VERSION = 'pyv-comercial-5.4.69')
+  Versión actual: pyv-comercial-5.4.70   (APP_VERSION = 'pyv-comercial-5.4.70')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,9 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.70 (2026-07-08)
+    - Fix crítico informes: clasificación SIGEC facturada (export leerEstadoSigec/clasificarEstadoSigec + fallback icClasifSigec).
+    - Filtro multi-sede: icFilasSigec/Glpi usan icResolverSedeColoc (Virtual, Bello, alias SIGEC).
   pyv-comercial-5.4.69 (2026-07-08)
     - Informes: fila «Sin sede asignada» cuando SIGEC/GLPI no matchean sede del filtro; reconciliación KPI vs tabla.
     - Matching sede: icResolverSedeColoc no devuelve alias huérfano; asignación robusta al mapa por sede.
@@ -320,11 +323,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.69">
-<meta name="build-id" content="pyv-comercial-5.4.69-20260708-0047">
+<meta name="app-version" content="pyv-comercial-5.4.70">
+<meta name="build-id" content="pyv-comercial-5.4.70-20260708-0047">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.69';
+window.APP_VERSION='pyv-comercial-5.4.70';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3964,7 +3967,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.69';
+var APP_VERSION = 'pyv-comercial-5.4.70';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -8632,6 +8635,8 @@ function _parseCumpleMMDD(s){
     if(x.indexOf('pendiente') >= 0 || x.indexOf('espera') >= 0) return 'pendiente';
     return 'otro';
   }
+  window.leerEstadoSigec = leerEstadoSigec;
+  window.clasificarEstadoSigec = clasificarEstadoSigec;
 
   function procesarSigecFilas(rows){
     var sig = {facturada:0, cerrada_fac:0, cerrada:0, abierta:0, rechazada:0, pendiente_doc:0, pendiente:0, otro:0, total:0, con_estado:0};
@@ -14840,7 +14845,7 @@ function _parseCumpleMMDD(s){
     return rows.filter(function(r){
       var c=r._cols||[];
       var s=r.Sede||c[IC_SIG.SED];
-      return sf.some(function(sede){ return icMatchSede(s,sede); });
+      return !!icResolverSedeColoc(s, sf);
     });
   }
 
@@ -14850,8 +14855,7 @@ function _parseCumpleMMDD(s){
     var rows=window._glpiRows||[];
     if(!sf||!sf.length) return rows;
     return rows.filter(function(r){
-      var s=icGlpiLeerSede(r);
-      return sf.some(function(sede){ return icMatchSede(s,sede); });
+      return !!icResolverSedeColoc(icGlpiLeerSede(r), sf);
     });
   }
 
@@ -14872,8 +14876,19 @@ function _parseCumpleMMDD(s){
   }
 
   function icClasifSigec(row){
-    var est=(typeof leerEstadoSigec==='function')?leerEstadoSigec(row):icStr((row._cols||[])[IC_SIG.EST]);
-    return (typeof clasificarEstadoSigec==='function')?clasificarEstadoSigec(est):'otro';
+    var est='';
+    if(typeof leerEstadoSigec==='function') est=leerEstadoSigec(row);
+    else est=icStr((row._cols||[])[IC_SIG.EST]||row.Estado);
+    if(typeof clasificarEstadoSigec==='function') return clasificarEstadoSigec(est);
+    var x=icStr(est).toLowerCase();
+    if(x==='facturada'||x.indexOf('factur')>=0) return 'facturada';
+    if(x.indexOf('cerrada fac')>=0) return 'cerrada_fac';
+    if(x==='cerrada') return 'cerrada';
+    if(x==='abierta') return 'abierta';
+    if(x.indexOf('rechaz')>=0) return 'rechazada';
+    if(x.indexOf('pendiente')>=0&&x.indexOf('document')>=0) return 'pendiente_doc';
+    if(x.indexOf('pendiente')>=0||x.indexOf('espera')>=0) return 'pendiente';
+    return 'otro';
   }
   function icEsNuevo(row){
     var c=row._cols||[];
@@ -15624,7 +15639,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.69 — Reconciliación sin-sede SIGEC+GLPI');
+  console.log('[CMD] Informes Comerciales v5.4.70 — Fix clasificación SIGEC');
 })();
 
 </script>
