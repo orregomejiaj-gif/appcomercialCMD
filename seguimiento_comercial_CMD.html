@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.72   (APP_VERSION = 'pyv-comercial-5.4.72')
+  Versión actual: pyv-comercial-5.4.73   (APP_VERSION = 'pyv-comercial-5.4.73')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.73 (2026-07-08)
+    - SCIC_IA_PROXY_URL actualizado al proxy Gemini v3.1.0 desplegado (gemini:true).
   pyv-comercial-5.4.72 (2026-07-08)
     - Gemini function calling: 5 herramientas (refrescar Sheets, contexto, cumplimiento, sedes en riesgo, sugerencias meta).
     - Orquestador _scicLlamarGeminiConHerramientas en CogniPYV y AI CENTER; fallback local con sugerencias priorizadas.
@@ -330,11 +332,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.72">
-<meta name="build-id" content="pyv-comercial-5.4.72-20260708-0208">
+<meta name="app-version" content="pyv-comercial-5.4.73">
+<meta name="build-id" content="pyv-comercial-5.4.73-20260708-0315">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.72';
+window.APP_VERSION='pyv-comercial-5.4.73';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3974,7 +3976,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.72';
+var APP_VERSION = 'pyv-comercial-5.4.73';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4096,7 +4098,7 @@ var _DATA = {
 var SCIC_PROXY_URL = ''; // Proxy Apps Script deshabilitado (devolvía error). Se usa gviz directo sobre los sheets compartidos.
 // Ejemplo: var SCIC_PROXY_URL = 'https://script.google.com/macros/s/AKfycb.../exec';
 // Proxy IA — Apps Script solo Gemini (gratis). Ver backend/README.md
-var SCIC_IA_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwA2EReltq108f9Hf--Pj1aaEPN5pZJcKQjtsu9m6rFVKzUPEAbpIxBe8lHqwV7O6KMIw/exec';
+var SCIC_IA_PROXY_URL = 'https://script.google.com/macros/s/AKfycbwXZlL8EfTRCEEJVDqT-IRNT9xItH3uGTfu1l5LFiCauFZ8offbOcZbdoy2vyM88_ekUg/exec';
 
 // Carpeta SharePoint para respaldo manual del .json.gz (subir el archivo a mano)
 var SNAPSHOT_SHAREPOINT_FOLDER = 'https://coopminutodedios-my.sharepoint.com/:f:/p/juan_orrego/IgAt8-dt3RRVQ5pZNHU8fGWLAZXjmssy_xF1ydJlTwiQFZM?e=fyzMfR';
@@ -16170,7 +16172,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.72 — Gemini tools + sugerencias meta');
+  console.log('[CMD] Informes Comerciales v5.4.73 — Gemini proxy v3.1 + tools meta');
 })();
 
 </script>

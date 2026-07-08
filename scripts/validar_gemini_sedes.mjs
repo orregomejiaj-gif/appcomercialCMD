@@ -14,7 +14,7 @@ import puppeteer from 'puppeteer';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, '..');
 const HTML = path.join(ROOT, 'seguimiento_comercial_CMD.html');
-const PROXY_URL = 'https://script.google.com/macros/s/AKfycbwA2EReltq108f9Hf--Pj1aaEPN5pZJcKQjtsu9m6rFVKzUPEAbpIxBe8lHqwV7O6KMIw/exec';
+const PROXY_URL = 'https://script.google.com/macros/s/AKfycbwXZlL8EfTRCEEJVDqT-IRNT9xItH3uGTfu1l5LFiCauFZ8offbOcZbdoy2vyM88_ekUg/exec';
 const SEDES = ['Virtual y Distancia', 'COA Bello', 'CR Zipaquirá'];
 
 function serveHtml() {

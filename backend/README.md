@@ -12,7 +12,7 @@ Proxy en **Google Apps Script** para conectar SCIC con **Google Gemini** (plan g
 ### 2. Apps Script
 
 1. [script.google.com](https://script.google.com) → tu proyecto
-2. Pegar código de `backend/SCIC_IA_PROXY.gs` (versión 3.0)
+2. Pegar código de `backend/SCIC_IA_PROXY.gs` (versión 3.1.0)
 3. Engranaje → **Propiedades del script**:
 
 | Propiedad | Valor |
@@ -30,7 +30,7 @@ La URL ya está en el HTML (`SCIC_IA_PROXY_URL`). No pegar claves en GitHub.
 Abrir la URL `/exec` en el navegador:
 
 ```json
-{"ok":true,"proveedor":"Google Gemini","gemini":true,"version":"3.0.0"}
+{"ok":true,"proveedor":"Google Gemini","gemini":true,"version":"3.1.0"}
 ```
 
 ## Sin Gemini configurado
