@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.74   (APP_VERSION = 'pyv-comercial-5.4.74')
+  Versión actual: pyv-comercial-5.4.75   (APP_VERSION = 'pyv-comercial-5.4.75')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.75 (2026-07-08)
+    - CogniPYV: reintentos proxy (429/red), fallback gemini simple sin tools, mensaje de error real.
   pyv-comercial-5.4.74 (2026-07-08)
     - Modelo Gemini por defecto: gemini-2.5-flash (2.0-flash sin cuota en tier gratuito).
   pyv-comercial-5.4.73 (2026-07-08)
@@ -334,11 +336,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.74">
-<meta name="build-id" content="pyv-comercial-5.4.74-20260708-0340">
+<meta name="app-version" content="pyv-comercial-5.4.75">
+<meta name="build-id" content="pyv-comercial-5.4.75-20260708-0355">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.74';
+window.APP_VERSION='pyv-comercial-5.4.75';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3978,7 +3980,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.74';
+var APP_VERSION = 'pyv-comercial-5.4.75';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -13601,20 +13603,38 @@ function _parseCumpleMMDD(s){
 
   async function _scicProxyGeminiChat(payload){
     var proxy = window.SCIC_IA_PROXY_URL || (typeof SCIC_IA_PROXY_URL !== 'undefined' ? SCIC_IA_PROXY_URL : '');
-    if(!proxy) return null;
-    try{
-      var resp = await fetch(proxy, {
-        method: 'POST',
-        mode: 'cors',
-        headers: { 'Content-Type': 'text/plain' },
-        body: JSON.stringify(Object.assign({ accion: 'ia_gemini_chat' }, payload))
-      });
-      if(!resp.ok) return null;
-      return await resp.json();
-    }catch(e){
-      console.warn('[SCIC IA] chat:', e && e.message);
-      return null;
+    if(!proxy) return { ok: false, error: 'SCIC_IA_PROXY_URL no configurada' };
+    var modelos = [payload.gemini_model || 'gemini-2.5-flash', 'gemini-2.5-flash-lite'];
+    var ultimoErr = '';
+    for(var mi = 0; mi < modelos.length; mi++){
+      var pl = Object.assign({}, payload, { gemini_model: modelos[mi] });
+      for(var intento = 0; intento < 2; intento++){
+        try{
+          var resp = await fetch(proxy, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain' },
+            body: JSON.stringify(Object.assign({ accion: 'ia_gemini_chat' }, pl))
+          });
+          var raw = await resp.text();
+          var data = null;
+          try{ data = JSON.parse(raw); }catch(parseErr){}
+          if(data && (data.ok || data.text || data.function_call)) return data;
+          ultimoErr = (data && data.error) || ('HTTP '+resp.status);
+          if(String(ultimoErr).indexOf('429') >= 0 && intento === 0){
+            await new Promise(function(r){ setTimeout(r, 3000); });
+            continue;
+          }
+          if(data) return data;
+          return { ok: false, error: ultimoErr, detail: raw.slice(0, 300) };
+        }catch(e){
+          ultimoErr = String(e && e.message || e);
+          if(intento === 0){ await new Promise(function(r){ setTimeout(r, 1500); }); continue; }
+        }
+        break;
+      }
     }
+    return { ok: false, error: ultimoErr || 'Proxy sin respuesta' };
   }
 
   function _scicGeminiSystemPrompt(){
@@ -13641,6 +13661,7 @@ function _parseCumpleMMDD(s){
     var contents = [{ role: 'user', parts: [{ text: String(pregunta||'').trim() }] }];
     var system = opts.system || _scicGeminiSystemPrompt();
     var maxTurns = opts.max_turns || 8;
+    var ultimoErr = '';
 
     for(var turn = 0; turn < maxTurns; turn++){
       var data = await _scicProxyGeminiChat({
@@ -13651,6 +13672,8 @@ function _parseCumpleMMDD(s){
         gemini_model: opts.model || 'gemini-2.5-flash'
       });
       if(!data || !data.ok){
+        ultimoErr = (data && data.error) || 'sin respuesta del proxy';
+        console.warn('[SCIC IA] turno', turn, ultimoErr);
         break;
       }
       if(data.function_call && data.function_call.name){
@@ -13666,13 +13689,22 @@ function _parseCumpleMMDD(s){
       break;
     }
 
+    // Reintento sin tools (más liviano, menos cuota)
+    try{
+      var simple = await _scicLlamarGemini(pregunta, Object.assign({}, opts, { use_tools: false }));
+      if(simple) return simple;
+    }catch(eSimple){}
+
     // Fallback local con sugerencias
     var ra = _scicResolverNivelArgs({ nivel: opts.nivel || 'nacional', sel: opts.sel || '', sedes: opts.sedes });
+    var motivo = 'Gemini no respondió';
+    if(String(ultimoErr).indexOf('429') >= 0) motivo = 'Cuota Gemini agotada (espere 1 min y reintente)';
+    else if(ultimoErr) motivo = 'Gemini: '+ultimoErr;
     try{
       var an = _scicAnalizarCumplimiento({ nivel: ra.nivel, sel: ra.sel, sedes: ra.sedesFiltro });
       var rk = _scicListarSedesRiesgo({ limite: 5 });
       var sug = _scicSugerenciasMetaLocal(an, rk);
-      var lines = ['<b>Análisis local</b> (Gemini no disponible — verifique proxy v3.1)', '',
+      var lines = ['<b>Análisis local</b> ('+motivo+')', '',
         '<b>Situación:</b> '+an.titulo+' · Colocado '+an.colocado_sigec_glpi.toLocaleString('es-CO')+' / Meta '+an.meta.toLocaleString('es-CO')+' ('+an.pct_meta+'%) · Semáforo '+an.semaforo,
         '<b>Brecha curva:</b> '+(an.brecha_vs_curva>=0?'+':'')+an.brecha_vs_curva.toLocaleString('es-CO')+' · Ritmo nec. '+an.ritmo_necesario_dia+'/día',
         '<b>Acciones sugeridas:</b>'];
@@ -13749,10 +13781,13 @@ function _parseCumpleMMDD(s){
           gemini_model: opts.model || 'gemini-2.5-flash'
         })
       });
-      if(!resp.ok) return null;
-      var data = await resp.json();
-      var txt = data.text || data.respuesta || data.response;
-      if(!txt && data.content && data.content[0]) txt = data.content[0].text;
+      var raw = await resp.text();
+      var data = null;
+      try{ data = JSON.parse(raw); }catch(e){}
+      if(data && data.ok && data.text) return _scicHtmlGemini(data.text);
+      if(data && data.text) return _scicHtmlGemini(data.text);
+      var txt = data && (data.text || data.respuesta || data.response);
+      if(!txt && data && data.content && data.content[0]) txt = data.content[0].text;
       if(txt) return _scicHtmlGemini(txt);
     }catch(e){ console.warn('[SCIC IA] Gemini:', e&&e.message); }
     return null;
@@ -16174,7 +16209,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.74 — Gemini 2.5-flash + tools meta');
+  console.log('[CMD] Informes Comerciales v5.4.75 — CogniPYV Gemini resiliente');
 })();
 
 </script>
