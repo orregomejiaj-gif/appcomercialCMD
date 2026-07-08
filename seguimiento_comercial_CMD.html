@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.71   (APP_VERSION = 'pyv-comercial-5.4.71')
+  Versión actual: pyv-comercial-5.4.72   (APP_VERSION = 'pyv-comercial-5.4.72')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.72 (2026-07-08)
+    - Gemini function calling: 5 herramientas (refrescar Sheets, contexto, cumplimiento, sedes en riesgo, sugerencias meta).
+    - Orquestador _scicLlamarGeminiConHerramientas en CogniPYV y AI CENTER; fallback local con sugerencias priorizadas.
+    - Proxy SCIC_IA_PROXY v3.1.0: acción ia_gemini_chat multi-turno + tools.
   pyv-comercial-5.4.71 (2026-07-08)
     - Salud de datos Sheets: sin ceros falsos (…/— mientras carga), aviso carga parcial, no vaciar arrays al refrescar.
     - Gemini web: CogniPYV y AI CENTER usan contexto en vivo (_ioConstruirContexto + fuentes SIGEC/GLPI).
@@ -326,11 +330,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.71">
-<meta name="build-id" content="pyv-comercial-5.4.71-20260708-0047">
+<meta name="app-version" content="pyv-comercial-5.4.72">
+<meta name="build-id" content="pyv-comercial-5.4.72-20260708-0208">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.71';
+window.APP_VERSION='pyv-comercial-5.4.72';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3970,7 +3974,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.71';
+var APP_VERSION = 'pyv-comercial-5.4.72';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -13040,12 +13044,16 @@ function _parseCumpleMMDD(s){
       if(typeof _ioRenderInforme==='function') return _cmdIAGenerarInformeIntegral('sede', sede);
       return _cmdIAGenerarInformeSede(sede);
     }
-    if(typeof _scicLlamarGemini==='function'){
+    if(typeof _scicLlamarGeminiConHerramientas==='function'){
       var ns = _cmdIAResolverNivelSel(q);
-      var gem = await _scicLlamarGemini(q, { nivel: ns.nivel, sel: ns.sel });
-      if(gem) return '<div style="font-size:11px;line-height:1.55">'+gem+'</div>';
+      var gem = await _scicLlamarGeminiConHerramientas(q, { nivel: ns.nivel, sel: ns.sel });
+      if(gem) return gem;
+    } else if(typeof _scicLlamarGemini==='function'){
+      var ns2 = _cmdIAResolverNivelSel(q);
+      var gem2 = await _scicLlamarGemini(q, { nivel: ns2.nivel, sel: ns2.sel, use_tools: false });
+      if(gem2) return gem2;
     }
-    return 'No identifiqué sede o rectoría. Prueba: <b>¿Cómo está Bello?</b>, <b>Estado rectoría Bogotá</b> o <b>Estado nacional S2</b>.';
+    return 'No identifiqué sede o rectoría. Prueba: <b>¿Cómo está Bello?</b>, <b>Estado rectoría Bogotá</b> o <b>Estado nacional S2</b>. También puedes preguntar: <b>¿Qué hacer para cumplir la meta en Virtual?</b>';
   }
   function cmdIAAppendMsg(html, tipo){
     var box = document.getElementById('cmd-ia-messages');
@@ -13354,6 +13362,330 @@ function _parseCumpleMMDD(s){
   }
   window._scicAnalisisLocalIA = _scicAnalisisLocalIA;
 
+  // ══ Gemini Tools — function calling con datos SCIC en vivo ══
+  function _scicHerramientasSchema(){
+    return [
+      {
+        name: 'refrescar_datos_sheets',
+        description: 'Recarga datos en vivo desde Google Sheets (colocación, SIGEC, GLPI). Usar si fuentes_vivas no están listas o el usuario pide actualizar.',
+        parameters: { type: 'OBJECT', properties: {}, required: [] }
+      },
+      {
+        name: 'obtener_contexto_completo',
+        description: 'Contexto integral SCIC: meta, colocado SIGEC+GLPI, brecha, cartera, leads, malla, empleados, radicaciones, histórico del mes.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            nivel: { type: 'STRING', description: 'nacional | rectoria | sede' },
+            sel: { type: 'STRING', description: 'Nombre sede o rectoría según nivel' },
+            sedes: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Lista opcional de sedes (multi-sede)' }
+          },
+          required: ['nivel']
+        }
+      },
+      {
+        name: 'analizar_cumplimiento_meta',
+        description: 'KPIs de cumplimiento vs meta S2: colocado, brecha, deberíamos hoy, semáforo, ritmo necesario para cerrar meta.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            nivel: { type: 'STRING' },
+            sel: { type: 'STRING' },
+            sedes: { type: 'ARRAY', items: { type: 'STRING' } }
+          },
+          required: []
+        }
+      },
+      {
+        name: 'listar_sedes_en_riesgo',
+        description: 'Ranking de sedes con peor cumplimiento (% meta o brecha negativa). Útil para priorizar acciones comerciales.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            limite: { type: 'NUMBER', description: 'Máximo de sedes a devolver (default 10)' },
+            umbral_pct: { type: 'NUMBER', description: 'Solo sedes bajo este % meta (default 70)' }
+          },
+          required: []
+        }
+      },
+      {
+        name: 'generar_sugerencias_meta',
+        description: 'Sugerencias accionables para cumplir meta S2 según brecha, ritmo, SIGEC/GLPI, cartera y operación. Devuelve acciones priorizadas con datos.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            nivel: { type: 'STRING' },
+            sel: { type: 'STRING' },
+            sedes: { type: 'ARRAY', items: { type: 'STRING' } }
+          },
+          required: []
+        }
+      }
+    ];
+  }
+
+  function _scicResolverNivelArgs(args){
+    args = args || {};
+    var nivel = String(args.nivel || 'nacional').toLowerCase();
+    var sel = String(args.sel || '').trim();
+    var sedes = Array.isArray(args.sedes) ? args.sedes.filter(Boolean) : [];
+    if(sedes.length){
+      return { nivel: 'nacional', sel: '', sedesFiltro: sedes, opts: { sedesFiltro: sedes } };
+    }
+    if(nivel === 'sede' && sel) return { nivel: 'sede', sel: sel, sedesFiltro: [sel], opts: {} };
+    if(nivel === 'rectoria' && sel) return { nivel: 'rectoria', sel: sel, sedesFiltro: null, opts: {} };
+    return { nivel: 'nacional', sel: '', sedesFiltro: null, opts: {} };
+  }
+
+  function _scicSerializarContexto(ctx){
+    if(!ctx) return {};
+    var dhTot = window._mtsDiasTotal || (_DATA && _DATA.dh_total) || 122;
+    var dhTra = window._mtsDiasTrans || (_DATA && _DATA.dh_trans) || 0;
+    var dhRest = Math.max(0, dhTot - dhTra);
+    var deb = ctx.meta && dhTot > 0 ? Math.round(ctx.meta / dhTot * dhTra) : 0;
+    var brecha = (ctx.colocadoCombinado || ctx.acum || 0) - deb;
+    var ritmoAct = dhTra > 0 ? (ctx.colocadoCombinado || ctx.acum || 0) / dhTra : 0;
+    var faltan = Math.max(0, (ctx.meta || 0) - (ctx.colocadoCombinado || ctx.acum || 0));
+    var ritmoNec = dhRest > 0 ? faltan / dhRest : faltan;
+    var filas = (ctx.coloc || []).map(function(r){
+      return {
+        sede: r.sede, rectoria: r.rectoria,
+        meta_n: r.meta_n, acum_n: r.acum_n, ant_n: r.ant_n,
+        pct_informe: r.meta_n > 0 ? Math.round((r.acum_n || 0) / r.meta_n * 100) : 0
+      };
+    }).sort(function(a,b){ return (b.meta_n||0) - (a.meta_n||0); });
+    return {
+      titulo: ctx.titulo, nivel: ctx.nivel, sel: ctx.sel,
+      meta: ctx.meta, colocado_sigec_glpi: ctx.colocadoCombinado || ctx.acum,
+      pct_meta: ctx.pct, brecha_vs_curva: brecha,
+      deberiamos_hoy: deb, dias_habiles: { transcurridos: dhTra, total: dhTot, restantes: dhRest },
+      ritmo_actual_dia: Math.round(ritmoAct * 10) / 10,
+      ritmo_necesario_dia: Math.round(ritmoNec * 10) / 10,
+      colocado_hoy: ctx.colHoy, colocado_mes: ctx.colMes,
+      sigec: { facturadas: ctx.sigAcum, mes: ctx.sigMes, estados: ctx.sig },
+      glpi: { aprobadas: ctx.glpiAcum, mes: ctx.glpiMes, estados: ctx.glpi },
+      perdida: ctx.perdida, empleados: ctx.empleados, malla: ctx.malla,
+      leads: ctx.leads, matriculas: ctx.matriculas, seguimientos: ctx.seguimientos,
+      cartera: ctx.cartera ? { mora_resumen: ctx.cartera } : null,
+      sedes_detalle: filas.slice(0, 40),
+      sedes_total: filas.length
+    };
+  }
+
+  function _scicAnalizarCumplimiento(args){
+    var r = _scicResolverNivelArgs(args);
+    if(typeof _ioConstruirContexto !== 'function') return { error: 'Motor de informes no disponible' };
+    var ctx = _ioConstruirContexto(r.nivel, r.sel, r.opts);
+    var ser = _scicSerializarContexto(ctx);
+    var sem = ser.pct_meta >= 90 ? 'VERDE' : ser.pct_meta >= 70 ? 'AMARILLO' : 'ROJO';
+    ser.semaforo = sem;
+    ser.en_riesgo = ser.pct_meta < 70 || ser.brecha_vs_curva < 0;
+    ser.faltan_creditos = Math.max(0, ser.meta - ser.colocado_sigec_glpi);
+    return ser;
+  }
+
+  function _scicListarSedesRiesgo(args){
+    args = args || {};
+    var limite = Math.min(25, Math.max(1, Number(args.limite) || 10));
+    var umbral = Number(args.umbral_pct) || 70;
+    var dhTot = window._mtsDiasTotal || (_DATA && _DATA.dh_total) || 122;
+    var dhTra = window._mtsDiasTrans || (_DATA && _DATA.dh_trans) || 0;
+    var col = window._coloc_data || [];
+    var out = [];
+    col.forEach(function(row){
+      if(!row.sede) return;
+      var mini;
+      try{ mini = _scicAnalizarCumplimiento({ nivel: 'sede', sel: row.sede }); }catch(e){ return; }
+      if(mini.pct_meta < umbral || mini.brecha_vs_curva < 0){
+        out.push({
+          sede: row.sede, rectoria: row.rectoria,
+          meta: mini.meta, colocado: mini.colocado_sigec_glpi,
+          pct_meta: mini.pct_meta, brecha: mini.brecha_vs_curva,
+          semaforo: mini.semaforo, faltan: mini.faltan_creditos,
+          ritmo_necesario: mini.ritmo_necesario_dia
+        });
+      }
+    });
+    out.sort(function(a,b){ return a.pct_meta - b.pct_meta || a.brecha - b.brecha; });
+    return { umbral_pct: umbral, sedes_en_riesgo: out.slice(0, limite), total_detectadas: out.length };
+  }
+
+  function _scicSugerenciasMetaLocal(analisis, sedesRiesgo){
+    var s = [];
+    var a = analisis || {};
+    if(!a.colocado_sigec_glpi && !(typeof _scicSigecGlpiListos==='function' && _scicSigecGlpiListos())){
+      s.push({ prioridad: 1, accion: 'Actualizar datos desde Sheets antes de decidir (SIGEC/GLPI no cargados).' });
+      return s;
+    }
+    if(a.faltan_creditos > 0){
+      s.push({
+        prioridad: 1,
+        accion: 'Cerrar brecha de '+a.faltan_creditos.toLocaleString('es-CO')+' créditos vs meta S2.',
+        detalle: 'Ritmo actual '+a.ritmo_actual_dia+'/día · Necesario '+a.ritmo_necesario_dia+'/día · '+a.dias_habiles.restantes+' días hábiles restantes.'
+      });
+    }
+    if(a.brecha_vs_curva < 0){
+      s.push({ prioridad: 2, accion: 'Acelerar colocación: van '+Math.abs(a.brecha_vs_curva).toLocaleString('es-CO')+' créditos por debajo de la curva ideal al día de hoy.' });
+    }
+    var sig = (a.sigec && a.sigec.facturadas) || 0;
+    var glp = (a.glpi && a.glpi.aprobadas) || 0;
+    if(glp > sig * 1.5 && glp > 5){
+      s.push({ prioridad: 3, accion: 'Priorizar conversión SIGEC: GLPI aprobado ('+glp+') supera SIGEC facturado ('+sig+'). Revisar radicaciones pendientes de facturación.' });
+    } else if(sig > glp * 2 && sig > 5){
+      s.push({ prioridad: 3, accion: 'Reforzar pipeline GLPI: SIGEC facturado ('+sig+') con poco respaldo GLPI ('+glp+'). Validar desembolsos y retomas.' });
+    }
+    if(a.perdida && a.perdida.neta > 0){
+      s.push({ prioridad: 4, accion: 'Contener pérdida neta ('+a.perdida.neta+' créditos): activar retomas GLPI y seguimiento a rechazos.' });
+    }
+    if(a.malla && a.malla.enTurno < 3 && a.empleados && a.empleados.asesores > 0){
+      s.push({ prioridad: 5, accion: 'Solo '+a.malla.enTurno+' asesor(es) en turno. Ajustar malla para cubrir meta diaria.' });
+    }
+    if(sedesRiesgo && sedesRiesgo.sedes_en_riesgo && sedesRiesgo.sedes_en_riesgo.length){
+      var top = sedesRiesgo.sedes_en_riesgo.slice(0, 3).map(function(x){ return x.sede+' ('+x.pct_meta+'%)'; }).join(', ');
+      s.push({ prioridad: 2, accion: 'Enfocar sedes críticas: '+top+'.' });
+    }
+    if(!s.length){
+      s.push({ prioridad: 1, accion: 'Mantener ritmo: semáforo '+a.semaforo+' con '+a.pct_meta+'% de meta. Consolidar buenas prácticas.' });
+    }
+    return s.sort(function(x,y){ return x.prioridad - y.prioridad; });
+  }
+
+  async function _scicEjecutarHerramienta(nombre, args){
+    nombre = String(nombre || '').trim();
+    args = args || {};
+    try{
+      if(nombre === 'refrescar_datos_sheets'){
+        if(typeof cargarDesdeSheetsCompleto === 'function') await cargarDesdeSheetsCompleto(true);
+        else if(typeof window._scicRefrescarDatosVivos === 'function') await window._scicRefrescarDatosVivos(true);
+        return {
+          ok: true,
+          fuentes: {
+            coloc: (window._coloc_data||[]).length,
+            sigec: (window._sigecRows||[]).length,
+            glpi: (window._glpiRows||[]).length,
+            resumen: (typeof _scicResumenFuentes==='function')?_scicResumenFuentes():'',
+            listo: (typeof _scicSigecGlpiListos==='function')?_scicSigecGlpiListos():false
+          }
+        };
+      }
+      if(nombre === 'obtener_contexto_completo'){
+        var ra = _scicResolverNivelArgs(args);
+        if(typeof _ioConstruirContexto !== 'function') return { error: 'Motor no disponible' };
+        return { ok: true, contexto: _scicSerializarContexto(_ioConstruirContexto(ra.nivel, ra.sel, ra.opts)) };
+      }
+      if(nombre === 'analizar_cumplimiento_meta'){
+        return { ok: true, analisis: _scicAnalizarCumplimiento(args) };
+      }
+      if(nombre === 'listar_sedes_en_riesgo'){
+        return { ok: true, ranking: _scicListarSedesRiesgo(args) };
+      }
+      if(nombre === 'generar_sugerencias_meta'){
+        var an = _scicAnalizarCumplimiento(args);
+        var rk = _scicListarSedesRiesgo({ limite: 8, umbral_pct: 70 });
+        return {
+          ok: true,
+          analisis: an,
+          sedes_riesgo: rk,
+          sugerencias_base: _scicSugerenciasMetaLocal(an, rk)
+        };
+      }
+      return { error: 'Herramienta desconocida: '+nombre };
+    }catch(e){
+      return { error: String(e && e.message || e) };
+    }
+  }
+
+  async function _scicProxyGeminiChat(payload){
+    var proxy = window.SCIC_IA_PROXY_URL || (typeof SCIC_IA_PROXY_URL !== 'undefined' ? SCIC_IA_PROXY_URL : '');
+    if(!proxy) return null;
+    try{
+      var resp = await fetch(proxy, {
+        method: 'POST',
+        mode: 'cors',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(Object.assign({ accion: 'ia_gemini_chat' }, payload))
+      });
+      if(!resp.ok) return null;
+      return await resp.json();
+    }catch(e){
+      console.warn('[SCIC IA] chat:', e && e.message);
+      return null;
+    }
+  }
+
+  function _scicGeminiSystemPrompt(){
+    return [
+      'Eres CogniPYV, copiloto comercial de la Cooperativa Minuto de Dios (SCIC).',
+      'Tu meta es ayudar a CUMPLIR la meta S2 de colocación (créditos).',
+      'Colocado unificado = SIGEC facturadas + GLPI aprobadas (criterio oficial).',
+      'SIEMPRE usa las herramientas para obtener datos en vivo antes de responder con cifras.',
+      'Flujo recomendado: refrescar_datos_sheets (si hace falta) → analizar_cumplimiento_meta o listar_sedes_en_riesgo → generar_sugerencias_meta.',
+      'Responde en español. Estructura: Situación · Brecha vs meta · 3-5 acciones priorizadas · Riesgo si no se actúa.',
+      'No inventes números. Si los datos no están listos, dilo y pide actualizar Sheets.',
+      'Sé concreto: créditos/día, sedes a visitar, foco SIGEC vs GLPI.'
+    ].join(' ');
+  }
+
+  function _scicHtmlGemini(txt){
+    return '<div style="font-size:11px;line-height:1.55">'+String(txt||'').replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>')+'</div>';
+  }
+
+  async function _scicLlamarGeminiConHerramientas(pregunta, opts){
+    opts = opts || {};
+    await _scicAsegurarDatosVivosIA();
+    var tools = _scicHerramientasSchema();
+    var contents = [{ role: 'user', parts: [{ text: String(pregunta||'').trim() }] }];
+    var system = opts.system || _scicGeminiSystemPrompt();
+    var maxTurns = opts.max_turns || 8;
+
+    for(var turn = 0; turn < maxTurns; turn++){
+      var data = await _scicProxyGeminiChat({
+        system: system,
+        contents: contents,
+        tools: tools,
+        max_tokens: opts.max_tokens || 2200,
+        gemini_model: opts.model || 'gemini-2.0-flash'
+      });
+      if(!data || !data.ok){
+        break;
+      }
+      if(data.function_call && data.function_call.name){
+        var fc = data.function_call;
+        var toolResult = await _scicEjecutarHerramienta(fc.name, fc.args || {});
+        contents.push({ role: 'model', parts: [{ functionCall: { name: fc.name, args: fc.args || {} } }] });
+        contents.push({ role: 'user', parts: [{ functionResponse: { name: fc.name, response: { result: toolResult } } }] });
+        continue;
+      }
+      if(data.text){
+        return _scicHtmlGemini(data.text);
+      }
+      break;
+    }
+
+    // Fallback local con sugerencias
+    var ra = _scicResolverNivelArgs({ nivel: opts.nivel || 'nacional', sel: opts.sel || '', sedes: opts.sedes });
+    try{
+      var an = _scicAnalizarCumplimiento({ nivel: ra.nivel, sel: ra.sel, sedes: ra.sedesFiltro });
+      var rk = _scicListarSedesRiesgo({ limite: 5 });
+      var sug = _scicSugerenciasMetaLocal(an, rk);
+      var lines = ['<b>Análisis local</b> (Gemini no disponible — verifique proxy v3.1)', '',
+        '<b>Situación:</b> '+an.titulo+' · Colocado '+an.colocado_sigec_glpi.toLocaleString('es-CO')+' / Meta '+an.meta.toLocaleString('es-CO')+' ('+an.pct_meta+'%) · Semáforo '+an.semaforo,
+        '<b>Brecha curva:</b> '+(an.brecha_vs_curva>=0?'+':'')+an.brecha_vs_curva.toLocaleString('es-CO')+' · Ritmo nec. '+an.ritmo_necesario_dia+'/día',
+        '<b>Acciones sugeridas:</b>'];
+      sug.forEach(function(x,i){ lines.push((i+1)+'. '+x.accion+(x.detalle?' — '+x.detalle:'')); });
+      if(rk.sedes_en_riesgo && rk.sedes_en_riesgo.length){
+        lines.push('<b>Sedes en riesgo:</b> '+rk.sedes_en_riesgo.map(function(s){ return s.sede+' ('+s.pct_meta+'%)'; }).join(' · '));
+      }
+      return '<div style="font-size:11px;line-height:1.55">'+lines.join('<br>')+'</div>';
+    }catch(e){
+      return null;
+    }
+  }
+
+  window._scicHerramientasSchema = _scicHerramientasSchema;
+  window._scicEjecutarHerramienta = _scicEjecutarHerramienta;
+  window._scicLlamarGeminiConHerramientas = _scicLlamarGeminiConHerramientas;
+
   function _scicContextoWebIA(nivel, sel){
     var ctx = {};
     try{
@@ -13388,19 +13720,17 @@ function _parseCumpleMMDD(s){
 
   async function _scicLlamarGemini(pregunta, opts){
     opts = opts || {};
+    if(opts.use_tools !== false && typeof _scicLlamarGeminiConHerramientas === 'function'){
+      return _scicLlamarGeminiConHerramientas(pregunta, opts);
+    }
+    opts.use_tools = false;
     var proxy = window.SCIC_IA_PROXY_URL || (typeof SCIC_IA_PROXY_URL !== 'undefined' ? SCIC_IA_PROXY_URL : '');
     if(!proxy) return null;
     await _scicAsegurarDatosVivosIA();
     var nivel = opts.nivel || 'nacional';
     var sel = opts.sel || '';
     var ctx = _scicContextoWebIA(nivel, sel);
-    var system = opts.system || [
-      'Eres CogniPYV, analista comercial ejecutivo de la Cooperativa Minuto de Dios (SCIC).',
-      'Respondes en español, con datos concretos del JSON de contexto.',
-      'Si fuentes_vivas.listo_sigec_glpi es false, indícalo y no inventes cifras de colocación.',
-      'Colocado unificado = SIGEC facturadas + GLPI aprobadas.',
-      'Estructura: situación · causas · riesgos · 3 acciones priorizadas.'
-    ].join(' ');
+    var system = opts.system || _scicGeminiSystemPrompt();
     var prompt = 'Pregunta: '+String(pregunta||'').trim()+'\n\nContexto web en vivo (Sheets SCIC):\n'+JSON.stringify(ctx, null, 2);
     try{
       var resp = await fetch(proxy, {
@@ -13419,9 +13749,7 @@ function _parseCumpleMMDD(s){
       var data = await resp.json();
       var txt = data.text || data.respuesta || data.response;
       if(!txt && data.content && data.content[0]) txt = data.content[0].text;
-      if(txt){
-        return String(txt).replace(/\n/g,'<br>').replace(/\*\*(.+?)\*\*/g,'<b>$1</b>');
-      }
+      if(txt) return _scicHtmlGemini(txt);
     }catch(e){ console.warn('[SCIC IA] Gemini:', e&&e.message); }
     return null;
   }
@@ -13431,11 +13759,13 @@ function _parseCumpleMMDD(s){
   if(window.SCIC_AI_CENTER && typeof SCIC_AI_CENTER._llamar_claude === 'function'){
     SCIC_AI_CENTER._llamar_claude = async function(system, userPrompt){
       var extraido = _scicExtraerCtxDePrompt(userPrompt);
-      var txt = await _scicLlamarGemini(
-        (userPrompt.match(/Pregunta:\s*(.+?)(?:\n\nContexto|$)/s)||[])[1] || userPrompt,
-        { system: system, nivel: extraido&&extraido.nivel, sel: extraido&&extraido.sede }
-      );
-      if(txt) return txt.replace(/<br>/g,'\n').replace(/<\/?b>/g,'');
+      var pregunta = (userPrompt.match(/Pregunta:\s*(.+?)(?:\n\nContexto|$)/s)||[])[1] || userPrompt;
+      var txt = await _scicLlamarGeminiConHerramientas(pregunta, {
+        system: system || _scicGeminiSystemPrompt(),
+        nivel: extraido && extraido.nivel,
+        sel: extraido && extraido.sede
+      });
+      if(txt) return txt.replace(/<br>/g,'\n').replace(/<\/?b>/g,'').replace(/<[^>]+>/g,'');
       var ctx = extraido;
       if(!ctx || !Object.keys(ctx).length){
         try{ ctx = SCIC_AI_CENTER._contexto(null, null); }catch(e){ ctx = {}; }
@@ -15840,7 +16170,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.71 — Salud datos Sheets + Gemini web');
+  console.log('[CMD] Informes Comerciales v5.4.72 — Gemini tools + sugerencias meta');
 })();
 
 </script>

@@ -1,21 +1,25 @@
 /**
  * SCIC IA Proxy — Cooperativa Minuto de Dios
- * Proxy solo Google Gemini (gratis) desde la app SCIC en GitHub Pages.
+ * Proxy Google Gemini (gratis) desde la app SCIC en GitHub Pages.
  *
  * PROPIEDAD DEL SCRIPT:
  *   GEMINI_API_KEY = clave de https://aistudio.google.com/apikey
  *
  * IMPLEMENTAR → Aplicación web → Cualquier usuario → URL /exec
+ *
+ * Acciones POST:
+ *   ia | ia_gemini | gemini  — turno simple (system + prompt)
+ *   ia_gemini_chat            — multi-turno + function calling (contents + tools)
  */
 
 function doGet(e) {
   return jsonResponse_({
     ok: true,
     servicio: 'SCIC IA Proxy',
-    version: '3.0.0',
+    version: '3.1.0',
     proveedor: 'Google Gemini',
     gemini: !!PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY'),
-    uso: 'POST { accion: "ia", system, prompt }'
+    uso: 'POST { accion: "ia_gemini_chat", system, contents, tools }'
   });
 }
 
@@ -23,6 +27,10 @@ function doPost(e) {
   try {
     var body = parseBody_(e);
     var accion = String(body.accion || 'ia').toLowerCase();
+
+    if (accion === 'ia_gemini_chat' || accion === 'gemini_chat' || accion === 'ia_tools') {
+      return jsonFromResult_(callGeminiChat_(body));
+    }
 
     if (accion === 'ia' || accion === 'ia_gemini' || accion === 'gemini' || accion === 'ia_claude' || accion === 'claude') {
       return jsonFromResult_(callGemini_(body));
@@ -34,29 +42,18 @@ function doPost(e) {
   }
 }
 
-function callGemini_(body) {
-  var apiKey = PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+function getApiKey_() {
+  return PropertiesService.getScriptProperties().getProperty('GEMINI_API_KEY');
+}
+
+function geminiFetch_(model, payload) {
+  var apiKey = getApiKey_();
   if (!apiKey) {
     return {
       ok: false,
       error: 'GEMINI_API_KEY no configurada. Crear en aistudio.google.com/apikey y pegar en Propiedades del script.'
     };
   }
-
-  var system = String(body.system || '');
-  var prompt = String(body.prompt || body.user || '');
-  if (!prompt) {
-    return { ok: false, error: 'Falta prompt' };
-  }
-
-  var model = body.gemini_model || body.model || 'gemini-2.0-flash';
-  var maxTokens = Number(body.max_tokens) || 1800;
-
-  var payload = {
-    systemInstruction: system ? { parts: [{ text: system }] } : undefined,
-    contents: [{ role: 'user', parts: [{ text: prompt }] }],
-    generationConfig: { maxOutputTokens: maxTokens, temperature: 0.4 }
-  };
 
   var url = 'https://generativelanguage.googleapis.com/v1beta/models/' +
     encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(apiKey);
@@ -75,26 +72,106 @@ function callGemini_(body) {
     return {
       ok: false,
       error: 'Gemini API ' + code,
-      detail: raw.slice(0, 400)
+      detail: raw.slice(0, 500)
     };
   }
 
-  var data = JSON.parse(raw);
-  var text = '';
   try {
-    var parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
-    text = parts.map(function(p) { return p.text || ''; }).join('\n');
+    return { ok: true, data: JSON.parse(raw), model: model };
   } catch (e) {
-    text = '';
+    return { ok: false, error: 'Respuesta Gemini inválida', detail: raw.slice(0, 300) };
+  }
+}
+
+function parseGeminiParts_(data) {
+  var parts = (((data.candidates || [])[0] || {}).content || {}).parts || [];
+  var text = '';
+  var functionCall = null;
+
+  parts.forEach(function(p) {
+    if (p.text) text += p.text;
+    if (p.functionCall) functionCall = p.functionCall;
+  });
+
+  return { text: text || null, functionCall: functionCall };
+}
+
+function callGemini_(body) {
+  var system = String(body.system || '');
+  var prompt = String(body.prompt || body.user || '');
+  if (!prompt) {
+    return { ok: false, error: 'Falta prompt' };
   }
 
-  if (!text) {
-    return { ok: false, error: 'Gemini sin texto en respuesta', detail: raw.slice(0, 300) };
+  var model = body.gemini_model || body.model || 'gemini-2.0-flash';
+  var maxTokens = Number(body.max_tokens) || 1800;
+
+  var payload = {
+    systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: { maxOutputTokens: maxTokens, temperature: 0.35 }
+  };
+
+  var fetched = geminiFetch_(model, payload);
+  if (!fetched.ok) return fetched;
+
+  var parsed = parseGeminiParts_(fetched.data);
+  if (!parsed.text) {
+    return { ok: false, error: 'Gemini sin texto en respuesta', detail: JSON.stringify(fetched.data).slice(0, 300) };
   }
 
   return {
     ok: true,
-    text: text,
+    text: parsed.text,
+    provider: 'Gemini',
+    model: model
+  };
+}
+
+function callGeminiChat_(body) {
+  var contents = body.contents;
+  if (!contents || !contents.length) {
+    return { ok: false, error: 'Falta contents (array multi-turno)' };
+  }
+
+  var model = body.gemini_model || body.model || 'gemini-2.0-flash';
+  var maxTokens = Number(body.max_tokens) || 2200;
+  var system = String(body.system || '');
+
+  var payload = {
+    systemInstruction: system ? { parts: [{ text: system }] } : undefined,
+    contents: contents,
+    generationConfig: { maxOutputTokens: maxTokens, temperature: 0.35 }
+  };
+
+  if (body.tools && body.tools.length) {
+    payload.tools = [{ functionDeclarations: body.tools }];
+  }
+
+  var fetched = geminiFetch_(model, payload);
+  if (!fetched.ok) return fetched;
+
+  var parsed = parseGeminiParts_(fetched.data);
+
+  if (parsed.functionCall) {
+    return {
+      ok: true,
+      provider: 'Gemini',
+      model: model,
+      function_call: {
+        name: parsed.functionCall.name || '',
+        args: parsed.functionCall.args || {}
+      }
+    };
+  }
+
+  if (!parsed.text) {
+    return { ok: false, error: 'Gemini sin texto ni functionCall', detail: JSON.stringify(fetched.data).slice(0, 300) };
+  }
+
+  return {
+    ok: true,
+    text: parsed.text,
     provider: 'Gemini',
     model: model
   };
@@ -115,12 +192,14 @@ function jsonFromResult_(result) {
       detail: result.detail || null
     }, 500);
   }
-  return jsonResponse_({
+  var out = {
     ok: true,
-    text: result.text,
     provider: result.provider || 'Gemini',
     model: result.model || ''
-  });
+  };
+  if (result.text) out.text = result.text;
+  if (result.function_call) out.function_call = result.function_call;
+  return jsonResponse_(out);
 }
 
 function jsonResponse_(obj, status) {
