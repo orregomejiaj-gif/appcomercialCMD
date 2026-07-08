@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.73   (APP_VERSION = 'pyv-comercial-5.4.73')
+  Versión actual: pyv-comercial-5.4.74   (APP_VERSION = 'pyv-comercial-5.4.74')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.74 (2026-07-08)
+    - Modelo Gemini por defecto: gemini-2.5-flash (2.0-flash sin cuota en tier gratuito).
   pyv-comercial-5.4.73 (2026-07-08)
     - SCIC_IA_PROXY_URL actualizado al proxy Gemini v3.1.0 desplegado (gemini:true).
   pyv-comercial-5.4.72 (2026-07-08)
@@ -332,11 +334,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.73">
-<meta name="build-id" content="pyv-comercial-5.4.73-20260708-0315">
+<meta name="app-version" content="pyv-comercial-5.4.74">
+<meta name="build-id" content="pyv-comercial-5.4.74-20260708-0340">
 <title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.73';
+window.APP_VERSION='pyv-comercial-5.4.74';
 function _cmdPintarVersionTemprana(){
   var t=window.APP_VERSION_LABEL;
   ['app-version-badge','menu-version-badge'].forEach(function(id){
@@ -3976,7 +3978,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.73';
+var APP_VERSION = 'pyv-comercial-5.4.74';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -13646,7 +13648,7 @@ function _parseCumpleMMDD(s){
         contents: contents,
         tools: tools,
         max_tokens: opts.max_tokens || 2200,
-        gemini_model: opts.model || 'gemini-2.0-flash'
+        gemini_model: opts.model || 'gemini-2.5-flash'
       });
       if(!data || !data.ok){
         break;
@@ -13744,7 +13746,7 @@ function _parseCumpleMMDD(s){
           system: system,
           prompt: prompt,
           max_tokens: opts.max_tokens || 1800,
-          gemini_model: opts.model || 'gemini-2.0-flash'
+          gemini_model: opts.model || 'gemini-2.5-flash'
         })
       });
       if(!resp.ok) return null;
@@ -16172,7 +16174,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.73 — Gemini proxy v3.1 + tools meta');
+  console.log('[CMD] Informes Comerciales v5.4.74 — Gemini 2.5-flash + tools meta');
 })();
 
 </script>

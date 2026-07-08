@@ -103,7 +103,7 @@ function callGemini_(body) {
     return { ok: false, error: 'Falta prompt' };
   }
 
-  var model = body.gemini_model || body.model || 'gemini-2.0-flash';
+  var model = body.gemini_model || body.model || 'gemini-2.5-flash';
   var maxTokens = Number(body.max_tokens) || 1800;
 
   var payload = {
@@ -134,7 +134,7 @@ function callGeminiChat_(body) {
     return { ok: false, error: 'Falta contents (array multi-turno)' };
   }
 
-  var model = body.gemini_model || body.model || 'gemini-2.0-flash';
+  var model = body.gemini_model || body.model || 'gemini-2.5-flash';
   var maxTokens = Number(body.max_tokens) || 2200;
   var system = String(body.system || '');
 
