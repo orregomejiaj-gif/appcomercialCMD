@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.76   (APP_VERSION = 'pyv-comercial-5.4.76')
+  Versión actual: pyv-comercial-5.4.77   (APP_VERSION = 'pyv-comercial-5.4.77')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.77 (2026-07-08)
+    - Acceso/bienvenida: carga obligatoria Sheets (SIGEC+GLPI+coloc) antes de pintar dashboard y modal.
+    - Colocado en login usa SIGEC+GLPI sincronizado; indicador de estado Sheets en pantalla de acceso.
+    - Fix crítico: restaurada función _mbsRenderTrioSemaforos (rompía script de bienvenida/menú).
   pyv-comercial-5.4.76 (2026-07-08)
     - Fix visible: título y badges sincronizados con APP_VERSION (ya no quedan en 5.4.35).
     - Bienvenida: por sede muestra deberíamos llevar hoy, llevamos (SIGEC+GLPI) y diferencia vs curva S2.
@@ -339,11 +343,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.76">
-<meta name="build-id" content="pyv-comercial-5.4.76-20260708-1522">
-<title>SCIC pyv-comercial 5.4.76 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.77">
+<meta name="build-id" content="pyv-comercial-5.4.77-20260708-1545">
+<title>SCIC pyv-comercial 5.4.77 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.76';
+window.APP_VERSION='pyv-comercial-5.4.77';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1106,7 +1110,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.76</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.77</div>
 </div>
 
 
@@ -1115,7 +1119,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.76</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.77</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -1313,6 +1317,9 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <i class="ti ti-arrow-right" style="margin-right:5px;font-size:11px"></i>Ingresar al SCIC
         </button>
         <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.15);font-size:8px">Cooperativa Minuto de Dios &middot; 2026</div>
+        <div id="login-sheets-status" style="text-align:center;margin-top:8px;font-size:9px;color:rgba(255,255,255,.4);line-height:1.4">
+          <i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Conectando con Google Sheets…
+        </div>
       </div>
       <!-- DASHBOARD FUSIONADO (resumen + estado de gestión del canal) -->
       <div id="login-dashboard">
@@ -3992,7 +3999,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.76';
+var APP_VERSION = 'pyv-comercial-5.4.77';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4906,6 +4913,59 @@ function _scicSafeProm(v){
 window._scicSafeProm = _scicSafeProm;
 window._scicRefrescarDatosVivos = _scicRefrescarDatosVivos;
 
+/** Carga Sheets completa (deduplicada) antes de pintar login/bienvenida/menú */
+window._scicSheetsPromesa = null;
+function _scicAsegurarSheetsListos(forzar){
+  if(typeof cmdEsModoSnapshot==='function' && cmdEsModoSnapshot()) return Promise.resolve();
+  var colocOk = (typeof _scicColocListo==='function') ? _scicColocListo() : !!(window._coloc_data||[]).length;
+  var sigGlpiOk = (typeof _scicSigecGlpiListos==='function') ? _scicSigecGlpiListos() : !!((window._sigecRows||[]).length || (window._glpiRows||[]).length);
+  if(!forzar && colocOk && sigGlpiOk && !_scicDatosRecargando()){
+    try{ if(typeof _mtsCargarPeriodoHabiles==='function') _mtsCargarPeriodoHabiles(); }catch(e){}
+    try{ if(typeof _mtsCargarMeta==='function') _mtsCargarMeta(); }catch(e){}
+    try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
+    return Promise.resolve();
+  }
+  if(window._scicSheetsPromesa && !forzar) return window._scicSheetsPromesa;
+  var prom = (typeof cargarDesdeSheetsCompleto==='function')
+    ? cargarDesdeSheetsCompleto(true)
+    : ((typeof _scicRefrescarDatosVivos==='function') ? _scicRefrescarDatosVivos(true) : Promise.resolve());
+  window._scicSheetsPromesa = Promise.resolve(prom).then(function(){
+    try{ if(typeof _mtsCargarPeriodoHabiles==='function') _mtsCargarPeriodoHabiles(); }catch(e){}
+    try{ if(typeof _mtsCargarMeta==='function') _mtsCargarMeta(); }catch(e){}
+    try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
+    try{ if(typeof _scicPintarEstadoSheetsLogin==='function') _scicPintarEstadoSheetsLogin(); }catch(e){}
+    window._scicSheetsPromesa = null;
+  }).catch(function(err){
+    window._scicSheetsPromesa = null;
+    console.warn('[SCIC] Sheets inicial:', err&&err.message);
+    try{ if(typeof _scicPintarEstadoSheetsLogin==='function') _scicPintarEstadoSheetsLogin(true); }catch(e){}
+  });
+  return window._scicSheetsPromesa;
+}
+window._scicAsegurarSheetsListos = _scicAsegurarSheetsListos;
+
+function _scicPintarEstadoSheetsLogin(error){
+  var el = document.getElementById('login-sheets-status');
+  if(!el) return;
+  if(typeof _scicDatosRecargando==='function' && _scicDatosRecargando()){
+    el.innerHTML = '<i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando datos desde Google Sheets…';
+    el.style.color = 'rgba(255,255,255,.45)';
+    return;
+  }
+  var sig = (window._sigecRows||[]).length;
+  var glp = (window._glpiRows||[]).length;
+  var col = (window._coloc_data||[]).length;
+  if(error || (!col && !sig && !glp)){
+    el.innerHTML = '⚠️ Sin conexión a Sheets — verifica red e intenta actualizar';
+    el.style.color = '#f87171';
+    return;
+  }
+  el.innerHTML = '🟢 Datos en vivo · Coloc '+col+' sedes · SIGEC '+sig+' · GLPI '+glp
+    + (window._sheetsUltimaCarga ? ' · '+new Date(window._sheetsUltimaCarga).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}) : '');
+  el.style.color = 'rgba(255,255,255,.4)';
+}
+window._scicPintarEstadoSheetsLogin = _scicPintarEstadoSheetsLogin;
+
 // ── Salud de datos Sheets: evitar ceros falsos por carga incompleta ──
 window._scicCargaEstado = window._scicCargaEstado || { coloc: null, sigec: null, glpi: null, inicio: null };
 function _scicDatosRecargando(){
@@ -5532,6 +5592,7 @@ function cargarDesdeSheetsCompleto(forzar){
     if(typeof SCIC_construirMUS==='function') try{ SCIC_construirMUS(); }catch(e){}
     try{ if(typeof _mtsCargarPeriodoHabiles==='function') _mtsCargarPeriodoHabiles(); }catch(e){}
     try{ if(typeof _mtsCargarMeta==='function') _mtsCargarMeta(); }catch(e){}
+    try{ if(typeof _scicPintarEstadoSheetsLogin==='function') _scicPintarEstadoSheetsLogin(); }catch(e){}
     try{ if(typeof renderLoginDashboard==='function') renderLoginDashboard(); }catch(e){}
     try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
     try{ _scicPintarUltimaActualizacion(); }catch(e){}
@@ -8189,7 +8250,17 @@ function _parseCumpleMMDD(s){
   function renderLoginDashboard(){
     try{
       try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
+      var colocOk = (typeof _scicColocListo==='function') ? _scicColocListo() : !!(window._coloc_data||[]).length;
+      var sigGlpiOk = (typeof _scicSigecGlpiListos==='function') ? _scicSigecGlpiListos() : !!((window._sigecRows||[]).length || (window._glpiRows||[]).length);
+      var cargando = (typeof _scicDatosRecargando==='function' && _scicDatosRecargando()) || !colocOk || !sigGlpiOk;
       var metaN=window._mtsMetaN||0, ejecN=window._mtsEjecN||0;
+      if(cargando){
+        setTxt('lgi-meta','…'); setTxt('lgi-ejec','…'); setTxt('lgi-pct','…');
+        setTxt('lgi-dias-trans','…'); setTxt('lgi-dias-rest','…');
+        setTxt('lgi-periodo-label','Cargando datos desde Google Sheets…');
+        try{ if(typeof _scicPintarEstadoSheetsLogin==='function') _scicPintarEstadoSheetsLogin(); }catch(e){}
+        return;
+      }
       var pctN=window._mtsPctN|| (metaN?Math.round(ejecN/metaN*100):0);
       var diasTot=window._mtsDiasTotal||0, diasTra=window._mtsDiasTrans||0;
       var diasRest=Math.max(0,diasTot-diasTra), debemos=window._mtsDebemos||0;
@@ -8225,6 +8296,7 @@ function _parseCumpleMMDD(s){
       renderLoginSigecGlpi(metaN,ejecN,debemos);
       if(!(typeof EMPLEADOS_CUM!=='undefined'&&EMPLEADOS_CUM&&EMPLEADOS_CUM.length)){ _lgiCargarCumple(); }
       renderLoginCumple();
+      try{ if(typeof _scicPintarEstadoSheetsLogin==='function') _scicPintarEstadoSheetsLogin(); }catch(e){}
     }catch(err){ console.warn('[SCIC] renderLoginDashboard:', err&&err.message); }
   }
   window.renderLoginDashboard=renderLoginDashboard;
@@ -8311,9 +8383,16 @@ function _parseCumpleMMDD(s){
         if(btn){ btn.disabled=false; btn.style.opacity='1'; }
         return;
       }
-      window._pendingEmp={correo:correo,emp:emp};
-      _completarLogin();
-      if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+      var entrar=function(){
+        window._pendingEmp={correo:correo,emp:emp};
+        _completarLogin();
+        if(btn){ btn.disabled=false; btn.style.opacity='1'; }
+      };
+      if(res) res.innerHTML='<div style="text-align:center;padding:16px"><i class="ti ti-loader" style="font-size:24px;color:#003D45;animation:spin 1s linear infinite"></i>'
+        +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Sincronizando datos desde Sheets…</div>'
+        +'<div style="font-size:10px;color:#94a3b8;margin-top:4px">SIGEC · GLPI · Colocación S2</div></div>';
+      var promSheets=(typeof _scicAsegurarSheetsListos==='function')?_scicAsegurarSheetsListos(false):Promise.resolve();
+      promSheets.then(entrar).catch(entrar);
     };
     if(res) res.innerHTML='<div style="text-align:center;padding:16px"><i class="ti ti-loader" style="font-size:24px;color:#003D45;animation:spin 1s linear infinite"></i>'
       +'<div style="font-size:12px;color:#003D45;font-weight:700;margin-top:10px">Consultando sedes en EMPLEADOS…</div>'
@@ -8337,21 +8416,16 @@ function _parseCumpleMMDD(s){
       var done=function(){
         try{typeof _mtsCargarPeriodoHabiles==='function'&&_mtsCargarPeriodoHabiles();}catch(e){}
         try{typeof _mtsCargarMeta==='function'&&_mtsCargarMeta();}catch(e){}
-        try{ if(typeof _lgiCargarSigecGlpiVivo==='function') return _lgiCargarSigecGlpiVivo(); }catch(e){}
+        try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
         renderLoginDashboard();
         try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+        try{ if(typeof _scicPintarEstadoSheetsLogin==='function') _scicPintarEstadoSheetsLogin(); }catch(e){}
       };
-      var per=(typeof periodoActivoPorFecha==='function')?periodoActivoPorFecha(new Date()):'S2';
-      var ps=[];
-      if(typeof window._scicRefrescarDatosVivos==='function'){
-        ps.push(window._scicRefrescarDatosVivos(true));
-      } else {
-        var fnCol=window._cargarColocacion||_cargarColocacion;
-        if(typeof fnCol==='function') ps.push(fnCol(per));
-        if(typeof cargarSigecContadoresMenu==='function') ps.push(cargarSigecContadoresMenu());
-        if(typeof _leerHojaGlpiColocacion==='function') ps.push(_leerHojaGlpiColocacion());
-      }
-      Promise.all(ps).then(done).catch(done);
+      var prom = (typeof _scicAsegurarSheetsListos==='function')
+        ? _scicAsegurarSheetsListos(false)
+        : ((typeof cargarDesdeSheetsCompleto==='function') ? cargarDesdeSheetsCompleto(true)
+          : ((typeof window._scicRefrescarDatosVivos==='function') ? window._scicRefrescarDatosVivos(true) : Promise.resolve()));
+      prom.then(done).catch(done);
       if(typeof _cargarTop5==='function'){ try{_cargarTop5().then(function(){ renderLoginDashboard(); }).catch(function(){});}catch(e){} }
     }catch(e){ renderLoginDashboard(); }
   };
@@ -9905,7 +9979,16 @@ function _parseCumpleMMDD(s){
     window._arrancar = function(){
       var r = _origArrancar.apply(this, arguments);
       aplicarVersionApp();
+      try{ if(typeof _scicPintarEstadoSheetsLogin==='function') _scicPintarEstadoSheetsLogin(); }catch(e){}
       return r;
+    };
+  }
+
+  if(typeof _mtsCargarMeta==='function'){
+    var _origMtsCargarMeta = _mtsCargarMeta;
+    window._mtsCargarMeta = function(){
+      _origMtsCargarMeta.apply(this, arguments);
+      try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
     };
   }
 
@@ -12754,6 +12837,7 @@ function _parseCumpleMMDD(s){
       + '<div style="font-size:9px;color:rgba(255,255,255,.55);line-height:1.5">' + detalle + '</div>'
       + '</div>';
   }
+  function _mbsRenderTrioSemaforos(sigFact, glpiApr, meta){
     var comb=(Number(sigFact)||0)+(Number(glpiApr)||0);
     return '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 10px">'
       +_mbsRenderSemaforoCard('Solo SIGEC', sigFact, meta)
@@ -12763,6 +12847,12 @@ function _parseCumpleMMDD(s){
   }
   function _mbsRenderBloqueSede(sedeLabel, sedeColoc){
     var html = '';
+    if(typeof _scicDatosRecargando==='function' && _scicDatosRecargando()){
+      return '<div style="background:rgba(255,255,255,.05);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center;color:rgba(255,255,255,.5);font-size:11px"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando '+sedeLabel+' desde Sheets…</div>';
+    }
+    if(typeof _scicSigecGlpiListos==='function' && !_scicSigecGlpiListos()){
+      return '<div style="background:rgba(255,255,255,.05);border-radius:12px;padding:14px;margin-bottom:10px;text-align:center;color:rgba(255,255,255,.5);font-size:11px"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Esperando SIGEC/GLPI para '+sedeLabel+'…</div>';
+    }
     if(typeof _ioConstruirContexto === 'function'){
       var ctx = _ioConstruirContexto('sede', sedeColoc);
       var pct = ctx.pct || 0;
@@ -12872,6 +12962,7 @@ function _parseCumpleMMDD(s){
     if(sd) sd.textContent = sedesLbl;
     modal.style.display = 'block';
     var cont = document.getElementById('mbs-contenido');
+    if(cont) cont.innerHTML = '<div style="text-align:center;padding:32px;color:rgba(255,255,255,.5);font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:28px"></i><div style="margin-top:12px;font-weight:700">Cargando datos desde Google Sheets…</div><div style="font-size:10px;margin-top:6px;color:rgba(255,255,255,.35)">SIGEC · GLPI · Colocación S2</div></div>';
     var pintar = function(){
       if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
       var p = _mbsSedesParaBienvenida(emp);
@@ -12880,14 +12971,22 @@ function _parseCumpleMMDD(s){
       if(sd) sd.textContent = lbl;
       _mbsRenderContenido(emp);
     };
-    pintar();
-    if(typeof window._scicRefrescarDatosVivos==='function'){
-      window._scicRefrescarDatosVivos(true).then(pintar).catch(function(){});
-    }
+    var prom = (typeof _scicAsegurarSheetsListos==='function')
+      ? _scicAsegurarSheetsListos(true)
+      : ((typeof cargarDesdeSheetsCompleto==='function') ? cargarDesdeSheetsCompleto(true)
+        : ((typeof window._scicRefrescarDatosVivos==='function') ? window._scicRefrescarDatosVivos(true) : Promise.resolve()));
+    prom.then(pintar).catch(pintar);
   };
   window.cerrarModalBienvenidaSede = function(){
     var m = document.getElementById('modal-bienvenida-sede');
     if(m) m.style.display = 'none';
+    var fin = function(){
+      try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+      try{ if(typeof _scicPintarUltimaActualizacion==='function') _scicPintarUltimaActualizacion(); }catch(e){}
+    };
+    if(typeof _scicAsegurarSheetsListos==='function'){
+      _scicAsegurarSheetsListos(false).then(fin).catch(fin);
+    } else fin();
   };
   window._mbsActualizarSiAbierta = function(emp){
     if(!emp) return;
@@ -12925,10 +13024,16 @@ function _parseCumpleMMDD(s){
         window._menuVistaAmbito='nacional';
         if(navState&&typeof navState==='object') navState.menuVistaAmbito='nacional';
         try{ if(typeof cmdActualizarBotonVistaMenu==='function') cmdActualizarBotonVistaMenu(); }catch(e){}
-        if(emp){
-          try{ if(typeof _empAplicarEmpleadoSesion==='function') _empAplicarEmpleadoSesion(emp); }catch(e){}
-          try{ if(typeof mostrarModalBienvenidaSede === 'function') mostrarModalBienvenidaSede(emp); }catch(e){}
-        }
+        var postSheets=function(){
+          try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
+          if(emp){
+            try{ if(typeof _empAplicarEmpleadoSesion==='function') _empAplicarEmpleadoSesion(emp); }catch(e){}
+            try{ if(typeof mostrarModalBienvenidaSede === 'function') mostrarModalBienvenidaSede(emp); }catch(e){}
+          }
+        };
+        if(typeof _scicAsegurarSheetsListos==='function'){
+          _scicAsegurarSheetsListos(false).then(postSheets).catch(postSheets);
+        } else postSheets();
       };
     }
   })();
@@ -13791,6 +13896,9 @@ function _parseCumpleMMDD(s){
   }
 
   async function _scicAsegurarDatosVivosIA(){
+    if(typeof _scicAsegurarSheetsListos==='function'){
+      try{ await _scicAsegurarSheetsListos(false); return; }catch(e){}
+    }
     if(typeof _scicSigecGlpiListos==='function' && _scicSigecGlpiListos()) return;
     if(typeof _scicDatosRecargando==='function' && _scicDatosRecargando()) return;
     var prom = (typeof window._scicRefrescarDatosVivos==='function') ? window._scicRefrescarDatosVivos(true)
@@ -16253,7 +16361,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.76 — Bienvenida curva S2 por sede');
+  console.log('[CMD] Informes Comerciales v5.4.77 — Sheets obligatorio en acceso/bienvenida');
 })();
 
 </script>
