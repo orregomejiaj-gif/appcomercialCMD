@@ -11,6 +11,7 @@
 
   CHANGELOG
   pyv-comercial-5.4.76 (2026-07-08)
+    - Fix visible: título y badges sincronizados con APP_VERSION (ya no quedan en 5.4.35).
     - Bienvenida: por sede muestra deberíamos llevar hoy, llevamos (SIGEC+GLPI) y diferencia vs curva S2.
   pyv-comercial-5.4.75 (2026-07-08)
     - CogniPYV: reintentos proxy (429/red), fallback gemini simple sin tools, mensaje de error real.
@@ -339,12 +340,20 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="app-version" content="pyv-comercial-5.4.76">
-<meta name="build-id" content="pyv-comercial-5.4.76-20260708-1515">
-<title>SCIC pyv-comercial 5.4.35 — Cooperativa Minuto de Dios</title>
+<meta name="build-id" content="pyv-comercial-5.4.76-20260708-1522">
+<title>SCIC pyv-comercial 5.4.76 — Cooperativa Minuto de Dios</title>
 <script>
 window.APP_VERSION='pyv-comercial-5.4.76';
+function _cmdVersionLabel(){
+  var s=window.APP_VERSION||'';
+  var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
+  return m?(m[1]+' '+m[2]):s;
+}
 function _cmdPintarVersionTemprana(){
-  var t=window.APP_VERSION_LABEL;
+  var t=_cmdVersionLabel();
+  if(!t) return;
+  window.APP_VERSION_LABEL=t;
+  document.title='SCIC '+t+' — Cooperativa Minuto de Dios';
   ['app-version-badge','menu-version-badge'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.textContent=t;
@@ -353,6 +362,7 @@ function _cmdPintarVersionTemprana(){
   if(hb) hb.style.display='block';
 }
 document.addEventListener('DOMContentLoaded',_cmdPintarVersionTemprana);
+setTimeout(_cmdPintarVersionTemprana,0);
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap" rel="stylesheet">
 <link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css" rel="stylesheet">
@@ -1096,7 +1106,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.35</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.76</div>
 </div>
 
 
@@ -1105,7 +1115,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.35</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.76</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>

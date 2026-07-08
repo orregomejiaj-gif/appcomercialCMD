@@ -27,6 +27,15 @@ jobs:
         run: |
           grep -m1 "APP_VERSION" seguimiento_comercial_CMD.html
           grep -m1 "build-id" seguimiento_comercial_CMD.html
+          NUM=$(grep -oP "window\.APP_VERSION='pyv-comercial-\K[0-9.]+" seguimiento_comercial_CMD.html | head -1)
+          echo "Versión esperada: $NUM"
+          test -n "$NUM" || (echo "APP_VERSION no encontrada" && exit 1)
+          grep -q "<title>SCIC pyv-comercial ${NUM}" seguimiento_comercial_CMD.html || (echo "title no coincide" && exit 1)
+          grep -q ">pyv-comercial ${NUM}</div>" seguimiento_comercial_CMD.html || (echo "badges no coinciden" && exit 1)
+          if grep -E '<(title|div)[^>]*>.*5\.4\.35' seguimiento_comercial_CMD.html; then
+            echo "ERROR: quedó 5.4.35 en title o badge"
+            exit 1
+          fi
 
       - name: Prepare site artifact
         run: |
