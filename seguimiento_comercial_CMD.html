@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.78   (APP_VERSION = 'pyv-comercial-5.4.78')
+  Versión actual: pyv-comercial-5.4.79   (APP_VERSION = 'pyv-comercial-5.4.79')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,7 +10,11 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
-  pyv-comercial-5.4.78 (2026-07-09)
+  pyv-comercial-5.4.79 (2026-07-09)
+    - Motor de inteligencia comercial: patrones por día de semana, impacto por estado, tiempos sin congelar.
+    - Nuevos informes: Pérdida por Cédula (cruce identificación + export CSV), Reincidencia Sedes (alertas).
+    - Panel Informes reorganizado (Colocación / Operación / Inteligencia). Menú informes con icAbrirDesdeMenu.
+  pyv-comercial-5.4.79 (2026-07-09)
     - Informes: tiempos rad→aprob SIGEC+GLPI (SLA 72h), congelados corregidos, mapa de calor, gráficas ECharts.
     - Nuevos tabs: Congelados (transición cerrado/aprobado/desembolso) y Mapa & Impacto (heatmap + embudo).
     - Pendientes/retomas: tiempo desde aprobación, flag congelado, pérdida neta = cerradas − recuperadas GLPI.
@@ -347,11 +351,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.78">
-<meta name="build-id" content="pyv-comercial-5.4.78-20260709-0145">
-<title>SCIC pyv-comercial 5.4.78 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.79">
+<meta name="build-id" content="pyv-comercial-5.4.79-20260709-0200">
+<title>SCIC pyv-comercial 5.4.79 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.78';
+window.APP_VERSION='pyv-comercial-5.4.79';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1114,7 +1118,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.78</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.79</div>
 </div>
 
 
@@ -1123,7 +1127,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.78</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.79</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -1457,18 +1461,17 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <span class="menu-dd-chevron">▾</span>
         </button>
         <div class="menu-dd-panel menu-dd-panel-wide" id="menu-dd-informes" hidden>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('estado-sedes-hoy')" class="menu-qb menu-qb-gold"><span>📊</span> Estado Sedes</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('informe-colocacion')" class="menu-qb menu-qb-green"><span>📋</span> Colocación</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('cobertura-uni')" class="menu-qb menu-qb-cob"><span>🎓</span> Cob. UNI</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('cobertura-mat')" class="menu-qb menu-qb-blue"><span>📚</span> Cob. Mat.</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('pendientes')" class="menu-qb menu-qb-amber"><span>⏳</span> Pendientes</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('tasa-aprob')" class="menu-qb menu-qb-red"><span>📉</span> Tasa/Pérd.</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('retomas')" class="menu-qb menu-qb-purple"><span>🔄</span> Retomas</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('corte-dia')" class="menu-qb menu-qb-gold"><span>📅</span> Corte</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('nuevos-renov')" class="menu-qb menu-qb-teal"><span>🆕</span> N/R</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('congelados')" class="menu-qb menu-qb-sky"><span>❄️</span> Congelados</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('mapa-operacion')" class="menu-qb menu-qb-purple"><span>🗺️</span> Mapa</button>
-          <button type="button" onclick="menuDdAction('informes');abrirInformesComerciales('tiempos')" class="menu-qb menu-qb-sky"><span>⏱️</span> Tiempos</button>
+          <button type="button" onclick="icAbrirDesdeMenu('estado-sedes-hoy')" class="menu-qb menu-qb-gold"><span>📊</span> Estado Sedes</button>
+          <button type="button" onclick="icAbrirDesdeMenu('informe-colocacion')" class="menu-qb menu-qb-green"><span>📋</span> Colocación</button>
+          <button type="button" onclick="icAbrirDesdeMenu('cobertura-uni')" class="menu-qb menu-qb-cob"><span>🎓</span> Cob. UNI</button>
+          <button type="button" onclick="icAbrirDesdeMenu('pendientes')" class="menu-qb menu-qb-amber"><span>⏳</span> Pendientes</button>
+          <button type="button" onclick="icAbrirDesdeMenu('tasa-aprob')" class="menu-qb menu-qb-red"><span>📉</span> Tasa/Pérd.</button>
+          <button type="button" onclick="icAbrirDesdeMenu('intel-patrones')" class="menu-qb menu-qb-teal"><span>🧠</span> Inteligencia</button>
+          <button type="button" onclick="icAbrirDesdeMenu('perdida-cedulas')" class="menu-qb menu-qb-red"><span>🔍</span> Pérd. Cédula</button>
+          <button type="button" onclick="icAbrirDesdeMenu('reincidencia')" class="menu-qb menu-qb-amber"><span>🚨</span> Reincidencia</button>
+          <button type="button" onclick="icAbrirDesdeMenu('congelados')" class="menu-qb menu-qb-sky"><span>❄️</span> Congelados</button>
+          <button type="button" onclick="icAbrirDesdeMenu('mapa-operacion')" class="menu-qb menu-qb-purple"><span>🗺️</span> Mapa</button>
+          <button type="button" onclick="icAbrirDesdeMenu('tiempos')" class="menu-qb menu-qb-sky"><span>⏱️</span> Tiempos</button>
         </div>
       </div>
       <div class="menu-dd" data-dd="utilidades">
@@ -1861,7 +1864,11 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-sidebar-compact{width:min(280px,28vw)}
 .menu-sidebar-hint{font-size:10px;color:var(--text2);line-height:1.55;padding:8px 4px}
 .menu-sidebar-hint b{color:var(--dark)}
+.ic-tab-sec{font-size:8px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:.5px;padding:10px 8px 4px;margin-top:4px;border-top:1px solid #e2e8f0}
+.ic-tab-sec:first-child{border-top:none;margin-top:0;padding-top:4px}
 .ic-tab{display:block;width:100%;text-align:left;padding:10px 12px;border:1px solid transparent;border-radius:10px;background:transparent;color:#334155;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;line-height:1.3;transition:.15s}
+.ic-btn-export{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border:none;border-radius:8px;background:#003D45;color:#FFD900;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;margin:8px 0}
+.ic-btn-export:hover{background:#005a66}
 .ic-tab:hover{background:#e0f2fe;border-color:#bae6fd;color:#003D45}
 .ic-tab.active{background:#003D45;color:#FFD900;border-color:#003D45}
 .ic-kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-bottom:14px}
@@ -4010,7 +4017,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.78';
+var APP_VERSION = 'pyv-comercial-5.4.79';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7788,8 +7795,8 @@ https://minutodediosportal.com/login/
     <div style="background:linear-gradient(135deg,#003D45,#005a66);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0">
       <div>
         <div style="color:#FFD900;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase">Informes Comerciales CMD</div>
-        <div style="color:#fff;font-size:17px;font-weight:800">📑 Panel de Informes · Cobertura y Operación</div>
-        <div style="color:rgba(255,255,255,.55);font-size:10px;margin-top:3px" id="ic-modal-sub">Cobertura universidad · SIGEC/GLPI · tiempos · pendientes · retomas</div>
+        <div style="color:#fff;font-size:17px;font-weight:800">📑 Panel de Informes · Colocación · Operación · Inteligencia</div>
+        <div style="color:rgba(255,255,255,.55);font-size:10px;margin-top:3px" id="ic-modal-sub">Patrones · pérdida por cédula · reincidencia · tiempos · congelados · alertas</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <button type="button" onclick="icRefrescarInformes()" style="padding:8px 12px;border:none;border-radius:8px;background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↺ Actualizar</button>
@@ -7798,18 +7805,24 @@ https://minutodediosportal.com/login/
     </div>
     <div style="display:flex;flex:1;min-height:0;overflow:hidden">
       <div id="ic-tabs" style="width:220px;flex-shrink:0;background:#f8fafc;border-right:1px solid #e2e8f0;overflow-y:auto;padding:10px 8px;display:flex;flex-direction:column;gap:4px">
+        <div class="ic-tab-sec">Colocación</div>
         <button type="button" class="ic-tab" data-ic="estado-sedes-hoy" onclick="icSeleccionarTab('estado-sedes-hoy')">📊 Estado Sedes a Hoy</button>
         <button type="button" class="ic-tab" data-ic="informe-colocacion" onclick="icSeleccionarTab('informe-colocacion')">📋 Informe Colocación</button>
         <button type="button" class="ic-tab active" data-ic="cobertura-uni" onclick="icSeleccionarTab('cobertura-uni')">🎓 Cobertura Universidad</button>
         <button type="button" class="ic-tab" data-ic="cobertura-mat" onclick="icSeleccionarTab('cobertura-mat')">📚 Cobertura Matrículas</button>
         <button type="button" class="ic-tab" data-ic="nuevos-renov" onclick="icSeleccionarTab('nuevos-renov')">🆕 Nuevos vs Renovación</button>
-        <button type="button" class="ic-tab" data-ic="corte-dia" onclick="icSeleccionarTab('corte-dia')">📅 Colocación Corte Día Ant.</button>
+        <button type="button" class="ic-tab" data-ic="corte-dia" onclick="icSeleccionarTab('corte-dia')">📅 Corte Día Ant.</button>
+        <div class="ic-tab-sec">Operación</div>
         <button type="button" class="ic-tab" data-ic="tiempos" onclick="icSeleccionarTab('tiempos')">⏱️ Tiempos Rad→Aprob</button>
         <button type="button" class="ic-tab" data-ic="congelados" onclick="icSeleccionarTab('congelados')">❄️ Congelados</button>
         <button type="button" class="ic-tab" data-ic="mapa-operacion" onclick="icSeleccionarTab('mapa-operacion')">🗺️ Mapa & Impacto</button>
         <button type="button" class="ic-tab" data-ic="pendientes" onclick="icSeleccionarTab('pendientes')">⏳ Pendientes Desembolso</button>
         <button type="button" class="ic-tab" data-ic="retomas" onclick="icSeleccionarTab('retomas')">🔄 Retomas</button>
         <button type="button" class="ic-tab" data-ic="tasa-aprob" onclick="icSeleccionarTab('tasa-aprob')">📉 Tasa/Pérdida</button>
+        <div class="ic-tab-sec">Inteligencia & Alertas</div>
+        <button type="button" class="ic-tab" data-ic="intel-patrones" onclick="icSeleccionarTab('intel-patrones')">🧠 Patrones & Tiempos</button>
+        <button type="button" class="ic-tab" data-ic="perdida-cedulas" onclick="icSeleccionarTab('perdida-cedulas')">🔍 Pérdida por Cédula</button>
+        <button type="button" class="ic-tab" data-ic="reincidencia" onclick="icSeleccionarTab('reincidencia')">🚨 Reincidencia Sedes</button>
       </div>
       <div style="flex:1;display:flex;flex-direction:column;min-width:0">
         <div style="padding:10px 14px;border-bottom:1px solid #e2e8f0;background:#fff;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;position:relative;z-index:2">
@@ -15226,7 +15239,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.78 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.79 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -15838,6 +15851,231 @@ function _parseCumpleMMDD(s){
     return out;
   }
 
+  var IC_DIAS_SEM = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+  var IC_DIAS_LAB = ['Lun','Mar','Mié','Jue','Vie'];
+
+  function icInteligenciaConstruir(f){
+    f = f || {};
+    var congSet = icCongeladosSet();
+    var diasRad = {0:0,1:0,2:0,3:0,4:0,5:0,6:0};
+    var diasPorEst = {};
+    IC_DIAS_SEM.forEach(function(d,i){ diasPorEst[i] = {rad:0,cerrada:0,cerrada_fac:0,facturada:0,rechazada:0,congelada:0,aprobada:0,abierta:0}; });
+    var impacto = {cerrada:0,cerrada_fac:0,facturada:0,rechazada:0,congelada:0,glpi_aprob:0,glpi_cerr:0,radicadas:0};
+    var tiemposNoCong = {rad_cerr:{n:0,sum:0}, rad_cerrfac:{n:0,sum:0}, rad_fact:{n:0,sum:0}, rad_aprob_glpi:{n:0,sum:0}};
+    var cedMap = {};
+    var reincMap = {};
+
+    function bumpTiempo(bucket, hrs){
+      if(!bucket || hrs <= 0) return;
+      bucket.n++; bucket.sum += hrs;
+    }
+    function regCed(ced, patch){
+      var n = icNormCed(ced);
+      if(!n || n.length < 5) return;
+      if(!cedMap[n]) cedMap[n] = {ced:n, cerrada:0, cerrada_fac:0, rechazada:0, facturada:0, glpi_aprob:0, tickets:[], sedes:{}};
+      var o = cedMap[n];
+      if(patch.cerrada) o.cerrada += patch.cerrada;
+      if(patch.cerrada_fac) o.cerrada_fac += patch.cerrada_fac;
+      if(patch.rechazada) o.rechazada += patch.rechazada;
+      if(patch.facturada) o.facturada += patch.facturada;
+      if(patch.glpi_aprob) o.glpi_aprob += patch.glpi_aprob;
+      if(patch.ticket){
+        var tk = icNormTicket(patch.ticket);
+        if(tk && o.tickets.indexOf(tk) < 0) o.tickets.push(tk);
+      }
+      if(patch.sede){
+        var sd = icStr(patch.sede);
+        if(sd) o.sedes[sd] = (o.sedes[sd] || 0) + 1;
+      }
+    }
+    function regReinc(ced, sede, ticket, origen, estado){
+      var n = icNormCed(ced);
+      if(!n || n.length < 5) return;
+      if(!reincMap[n]) reincMap[n] = {ced:n, tickets:{}, sedes:{}, items:[]};
+      var tk = icNormTicket(ticket);
+      if(!tk) return;
+      var o = reincMap[n];
+      if(!o.tickets[tk]){
+        o.tickets[tk] = true;
+        var sd = icStr(sede) || 'Sin sede';
+        o.sedes[sd] = (o.sedes[sd] || 0) + 1;
+        o.items.push({tk:tk, sede:sd, origen:origen, estado:estado});
+      }
+    }
+
+    icFilasSigec(f).forEach(function(r){
+      var c = r._cols || [];
+      var cls = icClasifSigec(r);
+      var tk = icNormTicket(r.Ticket || c[IC_SIG.TICKET]);
+      var sede = icStr(r.Sede || c[IC_SIG.SED]);
+      var ced = icCedulaSigec(r);
+      var fr = icFechaRadicSigec(r);
+      var esCong = !!congSet[tk];
+      impacto.radicadas++;
+      if(cls === 'cerrada') impacto.cerrada++;
+      else if(cls === 'cerrada_fac') impacto.cerrada_fac++;
+      else if(cls === 'facturada') impacto.facturada++;
+      else if(cls === 'rechazada') impacto.rechazada++;
+      if(esCong) impacto.congelada++;
+      if(fr){
+        var dow = fr.getDay();
+        diasRad[dow] = (diasRad[dow] || 0) + 1;
+        if(diasPorEst[dow]){
+          diasPorEst[dow].rad++;
+          if(cls === 'cerrada') diasPorEst[dow].cerrada++;
+          else if(cls === 'cerrada_fac') diasPorEst[dow].cerrada_fac++;
+          else if(cls === 'facturada') diasPorEst[dow].facturada++;
+          else if(cls === 'rechazada') diasPorEst[dow].rechazada++;
+          if(esCong) diasPorEst[dow].congelada++;
+          else if(cls === 'abierta' || cls === 'pendiente' || cls === 'pendiente_doc') diasPorEst[dow].abierta++;
+        }
+      }
+      if(!esCong && fr){
+        var fa = icFechaAprobSigec(r);
+        var fin = fa || new Date();
+        var hrs = icHorasHabiles(fr, fin);
+        if(cls === 'cerrada') bumpTiempo(tiemposNoCong.rad_cerr, hrs);
+        else if(cls === 'cerrada_fac') bumpTiempo(tiemposNoCong.rad_cerrfac, hrs);
+        else if(cls === 'facturada') bumpTiempo(tiemposNoCong.rad_fact, hrs);
+      }
+      if(cls === 'cerrada') regCed(ced, {cerrada:1, ticket:tk, sede:sede});
+      else if(cls === 'cerrada_fac') regCed(ced, {cerrada_fac:1, ticket:tk, sede:sede});
+      else if(cls === 'rechazada') regCed(ced, {rechazada:1, ticket:tk, sede:sede});
+      else if(cls === 'facturada') regCed(ced, {facturada:1, ticket:tk, sede:sede});
+      regReinc(ced, sede, tk, 'SIGEC', cls);
+    });
+
+    icFilasGlpi(f).forEach(function(r){
+      var c = r._cols || [];
+      var tk = icNormTicket(r.Ticket || c[IC_GLP.TICKET]);
+      var sede = icGlpiLeerSede(r);
+      var ced = icCedulaGlpi(r);
+      var est = icStr(r.estado || r.Estado || c[IC_GLP.EST]).toLowerCase();
+      var gap = icGlpiAprobada(r);
+      var fr = icFechaRadicGlpi(r);
+      var esCong = !!congSet[tk];
+      if(gap){
+        impacto.glpi_aprob++;
+        if(fr){
+          var dow = fr.getDay();
+          diasRad[dow] = (diasRad[dow] || 0) + 1;
+          if(diasPorEst[dow]) diasPorEst[dow].aprobada++;
+        }
+        regCed(ced, {glpi_aprob:1, ticket:tk, sede:sede});
+        if(!esCong && fr){
+          var fag = icFechaAprobGlpi(r) || new Date();
+          bumpTiempo(tiemposNoCong.rad_aprob_glpi, icHorasHabiles(fr, fag));
+        }
+        regReinc(ced, sede, tk, 'GLPI', 'aprobada');
+      } else if(est.indexOf('cerr') >= 0 || est.indexOf('negad') >= 0){
+        impacto.glpi_cerr++;
+        regReinc(ced, sede, tk, 'GLPI', 'cerrada');
+      }
+    });
+
+    var gCat = icContarGlpiCat(f);
+    var sigAgg = {cerrada:impacto.cerrada, cerrada_fac:impacto.cerrada_fac, radicadas:impacto.radicadas, total:impacto.radicadas};
+    var perd = (typeof _ioCalcPerdida === 'function') ? _ioCalcPerdida(sigAgg, gCat.retomasRecup) : {bruta:0,neta:0,tasa:0,retomas:0};
+
+    var perdCed = {total:0, perdidaFirme:0, recuperadas:0, pendRecuperar:0, mixtas:0, detalle:[]};
+    Object.keys(cedMap).forEach(function(k){
+      var o = cedMap[k];
+      var perdida = o.cerrada + o.cerrada_fac + o.rechazada;
+      var recuper = o.facturada + o.glpi_aprob;
+      if(!perdida && !recuper) return;
+      perdCed.total++;
+      o.perdida = perdida;
+      o.recuper = recuper;
+      o.neto = Math.max(0, perdida - recuper);
+      var estado = 'solo_colocacion';
+      if(perdida && !recuper){
+        perdCed.pendRecuperar++;
+        estado = 'pendiente_recuperar';
+      } else if(perdida && recuper){
+        perdCed.mixtas++;
+        if(o.neto > 0){
+          perdCed.pendRecuperar++;
+          estado = 'pendiente_recuperar';
+        } else {
+          perdCed.recuperadas++;
+          estado = 'recuperada';
+        }
+      }
+      o.estado = estado;
+      if(estado === 'pendiente_recuperar') perdCed.perdidaFirme++;
+      perdCed.detalle.push(o);
+    });
+    perdCed.detalle.sort(function(a,b){ return (b.neto||0)-(a.neto||0); });
+
+    var reincSedes = {}, reincAlertas = [];
+    Object.keys(reincMap).forEach(function(k){
+      var o = reincMap[k];
+      var nTk = Object.keys(o.tickets).length;
+      if(nTk < 2) return;
+      o.nTickets = nTk;
+      o.nSedes = Object.keys(o.sedes).length;
+      reincAlertas.push(o);
+      Object.keys(o.sedes).forEach(function(sd){
+        if(!reincSedes[sd]) reincSedes[sd] = {sede:sd, cedulas:0, tickets:0, multiSede:0};
+        reincSedes[sd].cedulas++;
+        reincSedes[sd].tickets += o.sedes[sd];
+        if(o.nSedes > 1) reincSedes[sd].multiSede++;
+      });
+    });
+    reincAlertas.sort(function(a,b){ return b.nTickets - a.nTickets; });
+    var reincRank = Object.keys(reincSedes).map(function(s){ return reincSedes[s]; })
+      .sort(function(a,b){ return b.cedulas - a.cedulas; });
+
+    var diaMax = 1, diaMin = 1, maxRad = 0, minRad = 1e9;
+    [1,2,3,4,5].forEach(function(d){
+      var v = diasRad[d] || 0;
+      if(v > maxRad){ maxRad = v; diaMax = d; }
+      if(v < minRad && v > 0){ minRad = v; diaMin = d; }
+    });
+    if(minRad === 1e9) minRad = 0;
+
+    function promH(bucket){ return bucket.n > 0 ? Math.round(bucket.sum / bucket.n) : 0; }
+
+    return {
+      diasRad:diasRad, diasPorEst:diasPorEst, impacto:impacto, congelados:icAnalizarCongeladosTransicion(f),
+      tiemposNoCong:tiemposNoCong, promTiempos:{
+        rad_cerr:promH(tiemposNoCong.rad_cerr), rad_cerrfac:promH(tiemposNoCong.rad_cerrfac),
+        rad_fact:promH(tiemposNoCong.rad_fact), rad_aprob_glpi:promH(tiemposNoCong.rad_aprob_glpi)
+      },
+      perdida:perd, perdCed:perdCed, reincAlertas:reincAlertas, reincRank:reincRank,
+      patron:{diaMax:diaMax, diaMin:diaMin, maxRad:maxRad, minRad:minRad,
+        labelMax:IC_DIAS_SEM[diaMax], labelMin:IC_DIAS_SEM[diaMin]}
+    };
+  }
+
+  function icExportCsv(nombre, filas, cols){
+    if(!filas || !filas.length) return;
+    var esc = function(v){
+      var s = v == null ? '' : String(v);
+      if(s.indexOf('"') >= 0 || s.indexOf(',') >= 0 || s.indexOf('\n') >= 0) return '"' + s.replace(/"/g,'""') + '"';
+      return s;
+    };
+    var lines = [cols.map(function(c){ return esc(c.lbl); }).join(',')];
+    filas.forEach(function(row){
+      lines.push(cols.map(function(c){ return esc(typeof c.get === 'function' ? c.get(row) : row[c.key]); }).join(','));
+    });
+    var blob = new Blob(['\ufeff' + lines.join('\n')], {type:'text/csv;charset=utf-8;'});
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (nombre || 'informe') + '_' + new Date().toISOString().slice(0,10) + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  }
+  window.icExportCsv = icExportCsv;
+  window.icInteligenciaConstruir = icInteligenciaConstruir;
+  window.icAbrirDesdeMenu = function(tab){
+    if(typeof menuDdAction === 'function') menuDdAction('informes');
+    setTimeout(function(){
+      if(typeof abrirInformesComerciales === 'function') abrirInformesComerciales(tab || '');
+    }, 40);
+  };
+
   var IC_DESCS={
     'estado-sedes-hoy':'Panorama por sede al día de hoy: meta S2, colocado (SIGEC facturadas + GLPI aprobadas), deberíamos según curva, brecha y semáforo. Filtre por rectoría y/o seleccione varias sedes.',
     'informe-colocacion':'Datos del INFORME COLOCACION P ACTUAL: meta S2, acumulado, valores, año anterior, variación y semáforo por sede.',
@@ -15850,7 +16088,12 @@ function _parseCumpleMMDD(s){
     'mapa-operacion':'Mapa de calor por día/hora de radicación y sede. Impacto de cerrados vs meta S2.',
     'pendientes':'Comparación por cédula: aprobados vs BASE COLOCACIÓN. Incluye tiempo desde aprobación y si estuvo congelado.',
     'retomas':'Retomas GLPI (EXCEPCIONES DE CRÉDITO) vs pérdida SIGEC: (cerradas + cerradas facturadas) − recuperadas.',
-    'tasa-aprob':'Tasa de pérdida: (cerradas SIGEC + cerradas facturadas) − retomas GLPI recuperadas. Incluye colocación, SIGEC, GLPI y suma combinada.'
+    'tasa-aprob':'Tasa de pérdida: (cerradas SIGEC + cerradas facturadas) − retomas GLPI recuperadas. Incluye colocación, SIGEC, GLPI y suma combinada.',
+    'intel-patrones':'Inteligencia operativa: radicaciones por día de semana (fecha cargue/ingreso), impacto por estado, tiempos sin congelar (rad→cerrada→facturada) y alertas de patrón.',
+    'perdida-cedulas':'Cruce por identificación: cédulas con cerrada/cerr.fac/rechazada vs facturada/GLPI aprobada. Pendientes de recuperar y exportación CSV.',
+    'reincidencia':'Alerta: misma cédula con varios radicados distintos. Ranking de sedes con mayor reincidencia (riesgo operativo y fraude).',
+    'cobertura-mat-nota':'Nota: solapa parcialmente con Cobertura Universidad; use este tab solo si necesita denominador matriculados UNIMINUTO.',
+    'corte-dia-nota':'Nota: informe acotado al corte día anterior; para decisiones use Estado Sedes o Inteligencia.'
   };
 
   function icRenderCoberturaUni(f){
@@ -16379,8 +16622,196 @@ function _parseCumpleMMDD(s){
       ]}]
     });
     html+=icSec('Fórmula','Pérdida neta = (cerradas + cerradas facturadas) − retomas GLPI recuperadas');
+    html+='<p style="font-size:10px;color:#64748b;margin-top:8px">Para cruce por cédula y pendientes de recuperar, abra <b>Pérdida por Cédula</b> en Inteligencia & Alertas.</p>';
     return html;
   }
+
+  function icRenderIntelPatrones(f){
+    var intel = icInteligenciaConstruir(f);
+    var imp = intel.impacto, pat = intel.patron, pt = intel.promTiempos;
+    var html = icAvisoEstadoDatos();
+    html += '<div class="ic-explain">'+IC_DESCS['intel-patrones']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
+    if(pat.maxRad > 0 && pat.minRad > 0 && pat.diaMax !== pat.diaMin){
+      html += '<div style="margin-bottom:10px;padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;font-size:11px;color:#1e40af">'
+        +'<b>Patrón detectado:</b> los <b>'+pat.labelMax+'</b> concentran más radicaciones ('+icFmt(pat.maxRad)+') que los <b>'+pat.labelMin+'</b> ('+icFmt(pat.minRad)+'). '
+        +'Ajuste capacidad de radicación y seguimiento en esos días.</div>';
+    }
+    html += '<div class="ic-kpi-grid">';
+    html += icKpi('Radicadas SIGEC', icFmt(imp.radicadas), 'Con fecha en análisis', '#003D45');
+    html += icKpi('Cerradas', icFmt(imp.cerrada), 'Impacto pérdida', '#dc2626');
+    html += icKpi('Cerr. fact.', icFmt(imp.cerrada_fac), 'Cierre con factura', '#ca8a04');
+    html += icKpi('Facturadas', icFmt(imp.facturada), 'Colocación SIGEC', '#16a34a');
+    html += icKpi('Rechazadas', icFmt(imp.rechazada), 'Motor / rechazo', '#b91c1c');
+    html += icKpi('Congeladas', icFmt(imp.congelada), 'Tickets en hoja CONGELADOS', '#0891b2');
+    html += icKpi('GLPI aprobadas', icFmt(imp.glpi_aprob), 'Recuperación / coloc.', '#6366f1');
+    html += icKpi('Pérdida neta', icFmt(intel.perdida.neta), intel.perdida.tasa+'% tasa', '#dc2626');
+    html += '</div>';
+    html += '<div class="ic-chart-row">';
+    html += '<div class="ic-chart-box"><h4>Radicaciones por día (lun–vie)</h4><div id="ic-chart-intel-dias" class="ic-chart"></div></div>';
+    html += '<div class="ic-chart-box"><h4>Impacto por estado</h4><div id="ic-chart-intel-est" class="ic-chart"></div></div>';
+    html += '</div>';
+    var diasLab = [1,2,3,4,5];
+    icQueueChart('ic-chart-intel-dias', {
+      tooltip:{trigger:'axis'},
+      xAxis:{type:'category',data:diasLab.map(function(d){ return IC_DIAS_SEM[d]; })},
+      yAxis:{type:'value'},
+      series:[
+        {name:'Radicaciones',type:'bar',data:diasLab.map(function(d){ return intel.diasRad[d]||0; }),itemStyle:{color:'#003D45'}},
+        {name:'Cerradas',type:'line',data:diasLab.map(function(d){ return (intel.diasPorEst[d]&&intel.diasPorEst[d].cerrada)||0; }),itemStyle:{color:'#dc2626'}}
+      ]
+    });
+    icQueueChart('ic-chart-intel-est', {
+      tooltip:{trigger:'item'},
+      series:[{type:'pie',radius:['40%','68%'],data:[
+        {value:imp.facturada,name:'Facturadas',itemStyle:{color:'#16a34a'}},
+        {value:imp.cerrada,name:'Cerradas',itemStyle:{color:'#dc2626'}},
+        {value:imp.cerrada_fac,name:'Cerr. fact.',itemStyle:{color:'#ca8a04'}},
+        {value:imp.rechazada,name:'Rechazadas',itemStyle:{color:'#b91c1c'}},
+        {value:imp.congelada,name:'Congeladas',itemStyle:{color:'#0891b2'}},
+        {value:imp.glpi_aprob,name:'GLPI aprob.',itemStyle:{color:'#6366f1'}}
+      ].filter(function(x){ return x.value > 0; })}]
+    });
+    html += icSec('Tiempos sin congelar (promedio horas hábiles)', 'Solo solicitudes NO en hoja CONGELADOS · SLA meta '+IC_META_HORAS_APROB+'h');
+    html += '<div class="ic-kpi-grid">';
+    html += icKpi('Rad → Cerrada', icFmtHoras(pt.rad_cerr), (intel.tiemposNoCong.rad_cerr.n)+' casos', pt.rad_cerr>IC_META_HORAS_APROB?'#dc2626':'#16a34a');
+    html += icKpi('Rad → Cerr. fact.', icFmtHoras(pt.rad_cerrfac), (intel.tiemposNoCong.rad_cerrfac.n)+' casos', '#ca8a04');
+    html += icKpi('Rad → Facturada', icFmtHoras(pt.rad_fact), (intel.tiemposNoCong.rad_fact.n)+' casos', '#16a34a');
+    html += icKpi('Rad → GLPI aprob.', icFmtHoras(pt.rad_aprob_glpi), (intel.tiemposNoCong.rad_aprob_glpi.n)+' casos', '#6366f1');
+    html += '</div>';
+    var tr = intel.congelados;
+    html += icSec('Transición congelados (resumen)', 'Cerrados · facturados · rechazados · aprobados GLPI');
+    html += '<div class="ic-kpi-grid">';
+    html += icKpi('Total cong.', icFmt(tr.total), '', '#0891b2');
+    html += icKpi('→ Cerrada', icFmt(tr.sigecCerrada), 'SIGEC', '#dc2626');
+    html += icKpi('→ Cerr. fact.', icFmt(tr.sigecCerradaFac), 'SIGEC', '#ca8a04');
+    html += icKpi('→ Facturada', icFmt(tr.sigecFacturada), 'SIGEC', '#16a34a');
+    html += icKpi('→ GLPI aprob.', icFmt(tr.glpiAprobada), 'GLPI', '#6366f1');
+    html += icKpi('→ GLPI cerr.', icFmt(tr.glpiCerrada), 'Sin aprobación', '#b91c1c');
+    html += '</div>';
+    html += icSec('Auditoría de informes', 'Priorice tabs que aportan a colocación, seguimiento y alertas');
+    html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;font-size:10px">';
+    [
+      ['Alto valor','Estado Sedes, Inteligencia, Pérdida Cédula, Reincidencia, Pendientes, Tiempos'],
+      ['Complementario','Retomas, Congelados, Mapa & Impacto, Tasa/Pérdida'],
+      ['Uso puntual','Corte día ant. (snapshot); Cob. Matrículas si ya usa Cob. Universidad']
+    ].forEach(function(x){
+      html += '<div style="background:#fff;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px"><b style="color:#003D45">'+x[0]+'</b><div style="color:#64748b;margin-top:4px;line-height:1.45">'+x[1]+'</div></div>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  function icRenderPerdidaCedulas(f){
+    var intel = icInteligenciaConstruir(f);
+    var pc = intel.perdCed;
+    var html = icAvisoEstadoDatos();
+    html += '<div class="ic-explain">'+IC_DESCS['perdida-cedulas']+'</div>';
+    html += '<div class="ic-kpi-grid">';
+    html += icKpi('Cédulas analizadas', icFmt(pc.total), 'Con pérdida y/o recuperación', '#003D45');
+    html += icKpi('Pend. recuperar', icFmt(pc.pendRecuperar), 'Pérdida sin colocación', '#dc2626');
+    html += icKpi('Recuperadas / mixtas', icFmt(pc.recuperadas + pc.mixtas), 'Con fact./GLPI aprob.', '#16a34a');
+    html += icKpi('Pérdida neta tickets', icFmt(intel.perdida.neta), intel.perdida.tasa+'% tradicional', '#b91c1c');
+    html += icKpi('Retomas GLPI', icFmt(intel.perdida.retomas), 'Recuperación categoría', '#6366f1');
+    html += '</div>';
+    html += '<button type="button" class="ic-btn-export" onclick="icExportPerdidaCedulas()">⬇ Exportar informe pérdida por cédula (CSV)</button>';
+    window._icPerdidaCedExport = pc.detalle.filter(function(o){ return o.neto > 0 || o.estado === 'pendiente_recuperar'; });
+    html += '<div class="ic-chart-row">';
+    html += '<div class="ic-chart-box"><h4>Pendientes vs recuperadas (cédulas)</h4><div id="ic-chart-perd-ced" class="ic-chart"></div></div>';
+    html += '</div>';
+    icQueueChart('ic-chart-perd-ced', {
+      series:[{type:'pie',radius:'65%',data:[
+        {value:pc.pendRecuperar,name:'Pend. recuperar',itemStyle:{color:'#dc2626'}},
+        {value:pc.recuperadas,name:'Recuperadas',itemStyle:{color:'#16a34a'}},
+        {value:Math.max(0,pc.total-pc.pendRecuperar-pc.recuperadas),name:'Otras',itemStyle:{color:'#94a3b8'}}
+      ].filter(function(x){ return x.value > 0; })}]
+    });
+    html += icSec('Pendientes de recuperar por identificación', 'Cédulas con cerrada/cerr.fac/rechazada y sin facturada/GLPI aprobada suficiente');
+    html += '<div style="overflow:auto;max-height:380px"><table class="ic-tbl"><thead><tr><th>Cédula</th><th>Cerr.</th><th>Cerr.Fac</th><th>Rech.</th><th>Fact.</th><th>GLPI</th><th>Neto</th><th>Estado</th><th>Sedes</th></tr></thead><tbody>';
+    pc.detalle.filter(function(o){ return o.estado === 'pendiente_recuperar' || o.neto > 0; }).slice(0,120).forEach(function(o){
+      html += '<tr><td style="font-weight:600">'+o.ced+'</td>'
+        +'<td style="text-align:right">'+icFmt(o.cerrada)+'</td><td style="text-align:right">'+icFmt(o.cerrada_fac)+'</td>'
+        +'<td style="text-align:right">'+icFmt(o.rechazada)+'</td><td style="text-align:right;color:#16a34a">'+icFmt(o.facturada)+'</td>'
+        +'<td style="text-align:right;color:#6366f1">'+icFmt(o.glpi_aprob)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:#dc2626">'+icFmt(o.neto)+'</td>'
+        +'<td style="font-size:9px">'+o.estado+'</td>'
+        +'<td style="font-size:9px;color:#64748b">'+Object.keys(o.sedes||{}).slice(0,2).join(', ')+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div style="margin-top:10px;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:10px;color:#7f1d1d;line-height:1.5">'
+      +'<b>Pérdida tradicional (tickets):</b> '+icFmt(intel.perdida.bruta)+' bruta − '+icFmt(intel.perdida.retomas)+' retomas = '
+      +'<b>'+icFmt(intel.perdida.neta)+'</b> neta ('+intel.perdida.tasa+'%). '
+      +'<b>Por cédula:</b> identifica estudiantes con solicitudes perdidas aún recuperables vía retoma GLPI o nueva radicación.</div>';
+    return html;
+  }
+  window.icExportPerdidaCedulas = function(){
+    var rows = window._icPerdidaCedExport || [];
+    icExportCsv('perdida_por_cedula', rows, [
+      {lbl:'Cedula',get:function(r){return r.ced;}},
+      {lbl:'Cerradas',get:function(r){return r.cerrada;}},
+      {lbl:'Cerradas_fact',get:function(r){return r.cerrada_fac;}},
+      {lbl:'Rechazadas',get:function(r){return r.rechazada;}},
+      {lbl:'Facturadas',get:function(r){return r.facturada;}},
+      {lbl:'GLPI_aprob',get:function(r){return r.glpi_aprob;}},
+      {lbl:'Perdida_neta',get:function(r){return r.neto;}},
+      {lbl:'Estado',get:function(r){return r.estado;}},
+      {lbl:'Tickets',get:function(r){return (r.tickets||[]).join(';');}},
+      {lbl:'Sedes',get:function(r){return Object.keys(r.sedes||{}).join(';');}}
+    ]);
+  };
+
+  function icRenderReincidencia(f){
+    var intel = icInteligenciaConstruir(f);
+    var alerts = intel.reincAlertas;
+    var rank = intel.reincRank;
+    var html = icAvisoEstadoDatos();
+    html += '<div class="ic-explain">'+IC_DESCS['reincidencia']+' · <b>'+icFmt(alerts.length)+'</b> cédulas con 2+ radicados distintos</div>';
+    html += '<div class="ic-kpi-grid">';
+    html += icKpi('Cédulas reincidentes', icFmt(alerts.length), '2+ tickets distintos', '#dc2626');
+    html += icKpi('Sedes con alerta', icFmt(rank.length), 'Con reincidencia', '#ca8a04');
+    html += icKpi('Multi-sede', icFmt(alerts.filter(function(a){ return a.nSedes > 1; }).length), 'Misma cédula, varias sedes', '#b91c1c');
+    html += icKpi('Máx. tickets/ced.', alerts.length ? icFmt(alerts[0].nTickets) : '0', alerts.length ? alerts[0].ced : '—', '#7f1d1d');
+    html += '</div>';
+    html += '<button type="button" class="ic-btn-export" onclick="icExportReincidencia()">⬇ Exportar alertas reincidencia (CSV)</button>';
+    window._icReincExport = alerts;
+    html += '<div class="ic-chart-row">';
+    html += '<div class="ic-chart-box"><h4>Top sedes · cédulas reincidentes</h4><div id="ic-chart-reinc-sede" class="ic-chart"></div></div>';
+    html += '</div>';
+    var topS = rank.slice(0, 12);
+    icQueueChart('ic-chart-reinc-sede', {
+      grid:{left:110,right:16,top:12,bottom:24},
+      xAxis:{type:'value'},
+      yAxis:{type:'category',data:topS.map(function(x){return x.sede;}).reverse(),axisLabel:{fontSize:9}},
+      series:[{type:'bar',data:topS.map(function(x){return x.cedulas;}).reverse(),itemStyle:{color:'#dc2626'}}]
+    });
+    html += icSec('Ranking sedes', 'Mayor cantidad de cédulas con múltiples radicados en la misma sede');
+    html += '<div style="overflow:auto;max-height:280px"><table class="ic-tbl"><thead><tr><th>Sede</th><th>Cédulas reinc.</th><th>Tickets</th><th>Multi-sede</th></tr></thead><tbody>';
+    rank.slice(0, 40).forEach(function(r){
+      html += '<tr><td style="font-weight:600">'+r.sede+'</td><td style="text-align:right;color:#dc2626">'+icFmt(r.cedulas)+'</td>'
+        +'<td style="text-align:right">'+icFmt(r.tickets)+'</td><td style="text-align:right">'+icFmt(r.multiSede)+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += icSec('Detalle cédulas alerta', 'Radicados distintos por identificación');
+    html += '<div style="overflow:auto;max-height:320px"><table class="ic-tbl"><thead><tr><th>Cédula</th><th># Tickets</th><th># Sedes</th><th>Detalle</th></tr></thead><tbody>';
+    alerts.slice(0, 80).forEach(function(a){
+      var det = (a.items||[]).slice(0,4).map(function(it){ return it.tk+' ('+it.sede+')'; }).join(' · ');
+      html += '<tr><td style="font-weight:600">'+a.ced+'</td><td style="text-align:right">'+a.nTickets+'</td>'
+        +'<td style="text-align:right;color:'+(a.nSedes>1?'#dc2626':'#64748b')+'">'+a.nSedes+'</td>'
+        +'<td style="font-size:9px;color:#64748b">'+det+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    return html;
+  }
+  window.icExportReincidencia = function(){
+    var rows = window._icReincExport || [];
+    icExportCsv('reincidencia_cedulas', rows, [
+      {lbl:'Cedula',get:function(r){return r.ced;}},
+      {lbl:'Num_tickets',get:function(r){return r.nTickets;}},
+      {lbl:'Num_sedes',get:function(r){return r.nSedes;}},
+      {lbl:'Sedes',get:function(r){return Object.keys(r.sedes||{}).join(';');}},
+      {lbl:'Tickets',get:function(r){return Object.keys(r.tickets||{}).join(';');}},
+      {lbl:'Detalle',get:function(r){return (r.items||[]).map(function(it){return it.tk+'|'+it.sede+'|'+it.origen+'|'+it.estado;}).join(';');}}
+    ]);
+  };
 
   function icFmtM(n){
     var v=Number(n)||0;
@@ -16583,7 +17014,10 @@ function _parseCumpleMMDD(s){
     'mapa-operacion':icRenderMapaOperacion,
     'pendientes':icRenderPendientes,
     'retomas':icRenderRetomas,
-    'tasa-aprob':icRenderTasaAprob
+    'tasa-aprob':icRenderTasaAprob,
+    'intel-patrones':icRenderIntelPatrones,
+    'perdida-cedulas':icRenderPerdidaCedulas,
+    'reincidencia':icRenderReincidencia
   };
 
   window.icRenderInformeActivo=function(){
@@ -16791,7 +17225,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.78 — tiempos/congelados/mapas ECharts');
+  console.log('[CMD] Informes Comerciales v5.4.79 — inteligencia/pérdida cédula/reincidencia');
 })();
 
 </script>
