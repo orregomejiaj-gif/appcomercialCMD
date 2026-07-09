@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.80   (APP_VERSION = 'pyv-comercial-5.4.80')
+  Versión actual: pyv-comercial-5.4.81   (APP_VERSION = 'pyv-comercial-5.4.81')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,10 +10,12 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.81 (2026-07-09)
+    - Hotfix rendimiento: icMinutosHabiles optimizado (por día, no por minuto) evita congelar el navegador.
+    - Caché inteligencia + tabs pesados con requestAnimationFrame para UI responsiva.
   pyv-comercial-5.4.80 (2026-07-09)
-    - Siguiente nivel informes: Turno en Vivo (MALLA+colocado), Scorecard radar sede,
-      Alertas CogniPYV, Historial Acompañamiento×SIGEC, Cartera×Colocación, YoY heatmap.
-    - Export Excel/PDF por tab activo. Carga MALLA, cartera y historial en panel informes.
+    - Siguiente nivel informes: Turno en Vivo, Scorecard radar, Alertas CogniPYV, Historial Acomp., Cartera×Coloc., YoY.
+    - Export Excel/PDF por tab. Carga MALLA, cartera e historial en panel informes.
   pyv-comercial-5.4.79 (2026-07-09)
     - Motor de inteligencia comercial: patrones por día de semana, impacto por estado, tiempos sin congelar.
     - Nuevos informes: Pérdida por Cédula (cruce identificación + export CSV), Reincidencia Sedes (alertas).
@@ -352,11 +354,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.80">
-<meta name="build-id" content="pyv-comercial-5.4.80-20260709-0215">
-<title>SCIC pyv-comercial 5.4.80 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.81">
+<meta name="build-id" content="pyv-comercial-5.4.81-20260709-0315">
+<title>SCIC pyv-comercial 5.4.81 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.80';
+window.APP_VERSION='pyv-comercial-5.4.81';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1119,7 +1121,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.80</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.81</div>
 </div>
 
 
@@ -1128,7 +1130,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.80</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.81</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -4020,7 +4022,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.80';
+var APP_VERSION = 'pyv-comercial-5.4.81';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -15253,7 +15255,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.80 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.81 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -15490,20 +15492,35 @@ function _parseCumpleMMDD(s){
     var mins = icMinutosHabiles(ini, fin);
     return mins > 0 ? Math.round(mins / 60) : 0;
   }
+  var _icMinutosCache = {};
+  var _icMinutosCacheKeys = 0;
   function icMinutosHabiles(ini, fin){
     try{
       var a = icParseDate(ini), b = icParseDate(fin) || new Date();
       if(!a || isNaN(a) || isNaN(b) || b <= a) return 0;
-      var mins = 0, n = new Date(a);
-      while(n < b){
+      var key = a.getTime()+'|'+b.getTime();
+      if(_icMinutosCache[key] != null) return _icMinutosCache[key];
+      var maxDias = 120;
+      if(b - a > maxDias * 86400000) a = new Date(b.getTime() - maxDias * 86400000);
+      var mins = 0;
+      var n = new Date(a);
+      n.setHours(0, 0, 0, 0);
+      var guard = 0;
+      while(n <= b && guard < 400){
+        guard++;
         var dow = n.getDay();
         if(dow >= 1 && dow <= 5){
-          var h = n.getHours(), m = n.getMinutes();
-          if(h >= 8 && h < 18) mins++;
+          var dayStart = new Date(n); dayStart.setHours(8, 0, 0, 0);
+          var dayEnd = new Date(n); dayEnd.setHours(18, 0, 0, 0);
+          var from = a > dayStart ? a : dayStart;
+          var to = b < dayEnd ? b : dayEnd;
+          if(from < to) mins += Math.floor((to - from) / 60000);
         }
-        n.setMinutes(n.getMinutes() + 1);
-        if(mins > 30000) break;
+        n.setDate(n.getDate() + 1);
       }
+      if(_icMinutosCacheKeys > 8000){ _icMinutosCache = {}; _icMinutosCacheKeys = 0; }
+      _icMinutosCache[key] = mins;
+      _icMinutosCacheKeys = (_icMinutosCacheKeys || 0) + 1;
       return mins;
     }catch(e){ return 0; }
   }
@@ -15867,9 +15884,22 @@ function _parseCumpleMMDD(s){
 
   var IC_DIAS_SEM = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
   var IC_DIAS_LAB = ['Lun','Mar','Mié','Jue','Vie'];
+  var _icIntelCache = {key:'', data:null};
+
+  function icInteligenciaCacheKey(f){
+    f = f || {};
+    var sf = icSedesFiltro(f);
+    return [
+      (sf||[]).join(';'), f.rectoria||'',
+      (window._sigecRows||[]).length, (window._glpiRows||[]).length,
+      (window._congeladosData||[]).length, (window._congeladosRaw||[]).length
+    ].join('|');
+  }
 
   function icInteligenciaConstruir(f){
     f = f || {};
+    var ckey = icInteligenciaCacheKey(f);
+    if(_icIntelCache.key === ckey && _icIntelCache.data) return _icIntelCache.data;
     var congSet = icCongeladosSet();
     var diasRad = {0:0,1:0,2:0,3:0,4:0,5:0,6:0};
     var diasPorEst = {};
@@ -16050,7 +16080,7 @@ function _parseCumpleMMDD(s){
 
     function promH(bucket){ return bucket.n > 0 ? Math.round(bucket.sum / bucket.n) : 0; }
 
-    return {
+    var result = {
       diasRad:diasRad, diasPorEst:diasPorEst, impacto:impacto, congelados:icAnalizarCongeladosTransicion(f),
       tiemposNoCong:tiemposNoCong, promTiempos:{
         rad_cerr:promH(tiemposNoCong.rad_cerr), rad_cerrfac:promH(tiemposNoCong.rad_cerrfac),
@@ -16060,6 +16090,8 @@ function _parseCumpleMMDD(s){
       patron:{diaMax:diaMax, diaMin:diaMin, maxRad:maxRad, minRad:minRad,
         labelMax:IC_DIAS_SEM[diaMax], labelMin:IC_DIAS_SEM[diaMin]}
     };
+    _icIntelCache = {key:ckey, data:result};
+    return result;
   }
 
   function icExportCsv(nombre, filas, cols){
@@ -17519,6 +17551,11 @@ function _parseCumpleMMDD(s){
     'yoy-heatmap':icRenderYoyHeatmap
   };
 
+  var IC_TABS_PESADOS = {
+    'intel-patrones':1,'perdida-cedulas':1,'reincidencia':1,'scorecard-sede':1,
+    'alertas-cognipyv':1,'tiempos':1,'mapa-operacion':1,'congelados':1
+  };
+
   window.icRenderInformeActivo=function(){
     var f=icFiltroActual();
     var fn=IC_RENDERERS[IC_TAB];
@@ -17531,7 +17568,7 @@ function _parseCumpleMMDD(s){
     if(!el||!fn) return;
     el.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Calculando…</div>';
     window._icChartQueue=[];
-    setTimeout(function(){
+    var run=function(){
       try{
         el.innerHTML=fn(f);
         icFlushCharts();
@@ -17546,7 +17583,12 @@ function _parseCumpleMMDD(s){
       }catch(e){
         el.innerHTML='<div style="color:#dc2626;padding:20px">Error: '+(e&&e.message||e)+'</div>';
       }
-    },30);
+    };
+    if(IC_TABS_PESADOS[IC_TAB]){
+      setTimeout(function(){ requestAnimationFrame(run); }, 40);
+    } else {
+      setTimeout(run, 20);
+    }
   };
 
   window.icSeleccionarTab=function(tab){
@@ -17623,6 +17665,9 @@ function _parseCumpleMMDD(s){
     if(forzar){
       window._baseColocFilas=null;
       window._congeladosRaw=null;
+      _icIntelCache = {key:'', data:null};
+      _icMinutosCache = {};
+      _icMinutosCacheKeys = 0;
     }
     if(typeof window._scicRefrescarDatosVivos==='function'){
       ps.push(window._scicRefrescarDatosVivos(!!forzar).catch(function(){}));
@@ -17737,7 +17782,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.80 — turno/scorecard/alertas/cartera/yoy');
+  console.log('[CMD] Informes Comerciales v5.4.81 — hotfix rendimiento minutos hábiles');
 })();
 
 </script>
