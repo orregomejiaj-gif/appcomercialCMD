@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.81   (APP_VERSION = 'pyv-comercial-5.4.81')
+  Versión actual: pyv-comercial-5.4.82   (APP_VERSION = 'pyv-comercial-5.4.82')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.82 (2026-07-09)
+    - Fix Informe Colocación: solo datos INFORME COLOCACION P ACTUAL (sin SIGEC ni GLPI).
   pyv-comercial-5.4.81 (2026-07-09)
     - Hotfix rendimiento: icMinutosHabiles optimizado (por día, no por minuto) evita congelar el navegador.
     - Caché inteligencia + tabs pesados con requestAnimationFrame para UI responsiva.
@@ -354,11 +356,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.81">
-<meta name="build-id" content="pyv-comercial-5.4.81-20260709-0315">
-<title>SCIC pyv-comercial 5.4.81 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.82">
+<meta name="build-id" content="pyv-comercial-5.4.82-20260709-2106">
+<title>SCIC pyv-comercial 5.4.82 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.81';
+window.APP_VERSION='pyv-comercial-5.4.82';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1121,7 +1123,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.81</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.82</div>
 </div>
 
 
@@ -1130,7 +1132,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.81</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.82</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -4022,7 +4024,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.81';
+var APP_VERSION = 'pyv-comercial-5.4.82';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -15255,7 +15257,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.81 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.82 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -16124,7 +16126,7 @@ function _parseCumpleMMDD(s){
 
   var IC_DESCS={
     'estado-sedes-hoy':'Panorama por sede al día de hoy: meta S2, colocado (SIGEC facturadas + GLPI aprobadas), deberíamos según curva, brecha y semáforo. Filtre por rectoría y/o seleccione varias sedes.',
-    'informe-colocacion':'Datos del INFORME COLOCACION P ACTUAL: meta S2, acumulado, valores, año anterior, variación y semáforo por sede.',
+    'informe-colocacion':'Exclusivamente INFORME COLOCACION P ACTUAL (sheet colocación): meta S2, acumulado, valores, año anterior, variación y semáforo. Sin SIGEC ni GLPI.',
     'cobertura-uni':'Cobertura = colocado SIGEC+GLPI ÷ Total Real PARA LA UNIVERSIDAD (hoja INFORME DE MATRICULAS). También muestra acum_n del informe P Actual.',
     'cobertura-mat':'Cobertura matrículas = (SIGEC facturadas + GLPI aprobadas) ÷ total matriculados UNIMINUTO.',
     'nuevos-renov':'Nuevos y renovaciones desde COLOCACION SIGEC por estado. Cobertura nuevos = facturados nuevos ÷ Real Nuevos UNI; renovación = facturados renov ÷ Real Continuos UNI.',
@@ -17350,74 +17352,84 @@ function _parseCumpleMMDD(s){
     return Math.round((r.acum_n||0)-(r.ant_n||0));
   }
 
+  function icAvisoColocSheet(){
+    if(!(window._coloc_data||[]).length){
+      return '<div style="margin-bottom:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#9a3412">⚠ Sin datos del INFORME COLOCACION P ACTUAL. Use <b>Actualizar desde Sheets</b> en el menú.</div>';
+    }
+    if(window._coloc_data_fuente==='fallback'){
+      return '<div style="margin-bottom:8px;padding:8px 12px;background:#fffbeb;border:1px solid #fde68a;border-radius:8px;font-size:11px;color:#92400e">ℹ Mostrando datos de respaldo offline. Conecte Sheets para el informe oficial P Actual.</div>';
+    }
+    return '';
+  }
+  function icPctColocRow(r){
+    if(r.pct_n!=null && r.pct_n!=='' && !isNaN(r.pct_n)) return Math.round(Number(r.pct_n));
+    var meta=r.meta_n||0, acum=r.acum_n||0;
+    return meta>0?Math.round(acum/meta*100):0;
+  }
+  function icSemColocRow(r, pct){
+    var s=icStr(r.semaforo||r.sem).toUpperCase();
+    if(s.indexOf('VERDE')>=0) return 'VERDE';
+    if(s.indexOf('AMARILLO')>=0||s.indexOf('AMBAR')>=0) return 'AMARILLO';
+    if(s.indexOf('ROJO')>=0) return 'ROJO';
+    return icSem(pct||0, 90, 70);
+  }
+
   function icRenderInformeColocacion(f){
     var filas=icFilasColoc(f);
-    var mapaCol=icMapaColocadoPorSede(f);
-    var comb=icColocadoSigecGlpi(f);
-    var rows=[], tMeta=0, tAcum=0, tCol=0, tAnt=0, tVar=0, tMetaV=0, tAcumV=0;
+    var rows=[], tMeta=0, tAcum=0, tAnt=0, tVar=0, tMetaV=0, tAcumV=0;
     filas.forEach(function(r){
       var meta=r.meta_n||0, acum=r.acum_n||0, ant=r.ant_n||0;
-      var m=mapaCol[r.sede]||{sig:0,glpi:0};
-      var col=(m.sig||0)+(m.glpi||0);
       var vn=icColocVarN(r);
-      var pct=meta>0?Math.round(col/meta*100):0;
-      var sem=pct>=90?'VERDE':pct>=70?'AMARILLO':'ROJO';
-      tMeta+=meta; tAcum+=acum; tCol+=col; tAnt+=ant; tVar+=vn; tMetaV+=r.meta_v||0; tAcumV+=r.acum_v||0;
+      var pct=icPctColocRow(r);
+      var sem=icSemColocRow(r, pct);
+      var varPct=(r.var_pn!=null&&r.var_pn!=='')?Math.round(Number(r.var_pn)):(ant>0?Math.round(vn/ant*100):null);
+      tMeta+=meta; tAcum+=acum; tAnt+=ant; tVar+=vn; tMetaV+=r.meta_v||0; tAcumV+=r.acum_v||0;
       rows.push({
-        sede:r.sede||'', rect:r.rectoria||'', meta:meta, acum:acum, col:col, ant:ant, vn:vn,
-        pct:pct, sem:sem, metaV:r.meta_v||0, acumV:r.acum_v||0
+        sede:r.sede||'', rect:r.rectoria||'', meta:meta, acum:acum, ant:ant, vn:vn,
+        pct:pct, sem:sem, metaV:r.meta_v||0, acumV:r.acum_v||0, varPct:varPct
       });
     });
-    rows.sort(function(a,b){ return b.col-a.col; });
-    var combInf=icColocadoSigecGlpi(f);
-    var ssInf=icSinSedeColocado(mapaCol);
-    var tColKpi=combInf.total;
-    var pctNat=tMeta>0?Math.round(tColKpi/tMeta*100):0;
-    var html=icAvisoEstadoDatos();
-    html+='<div class="ic-explain">'+IC_DESCS['informe-colocacion']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
-    if(ssInf.total) html+='<div style="margin-bottom:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:11px;color:#9a3412">⚠ '+icFmt(ssInf.total)+' créditos SIGEC/GLPI sin sede asignada en el filtro (ver fila al final de la tabla).</div>';
+    rows.sort(function(a,b){ return (b.acum||0)-(a.acum||0); });
+    var pctNat=tMeta>0?Math.round(tAcum/tMeta*100):0;
+    var fuente=window._coloc_data_fuente==='sheet'?'INFORME COLOCACION P ACTUAL (Sheets)':'INFORME COLOCACION P ACTUAL';
+    var html=icAvisoColocSheet();
+    html+='<div class="ic-explain">'+IC_DESCS['informe-colocacion']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b> · Fuente: <b>'+fuente+'</b></div>';
     html+='<div class="ic-kpi-grid">';
-    html+=icKpi('Meta S2 #',icFmt(Math.round(tMeta)),'INFORME COLOCACION P ACTUAL','#003D45');
-    html+=icKpi('Colocado SIGEC+GLPI',icFmt(tColKpi),pctNat+'% de la meta · criterio unificado','#16a34a');
-    html+=icKpi('Acum. informe #',icFmt(tAcum),'acum_n del sheet P Actual','#1d4ed8');
+    html+=icKpi('Meta S2 #',icFmt(Math.round(tMeta)),'P Actual · meta_n','#003D45');
+    html+=icKpi('Acumulado #',icFmt(tAcum),pctNat+'% de la meta · acum_n','#16a34a');
     html+=icKpi('Meta S2 $',icFmtM(tMetaV),'Valor meta período','#003D45');
-    html+=icKpi('Acumulado $',icFmtM(tAcumV),'Valor colocado','#1d4ed8');
-    html+=icKpi('Año anterior',icFmt(tAnt),'Mismo período S2 año ant.','#64748b');
-    html+=icKpi('VAR # total',(tVar>=0?'+':'')+icFmt(tVar),'Diferencia vs año anterior',tVar>=0?'#16a34a':'#dc2626');
+    html+=icKpi('Acumulado $',icFmtM(tAcumV),'Valor acumulado','#1d4ed8');
+    html+=icKpi('Año anterior #',icFmt(tAnt),'ant_n mismo período S2','#64748b');
+    html+=icKpi('VAR # total',(tVar>=0?'+':'')+icFmt(tVar),'acum_n − ant_n',tVar>=0?'#16a34a':'#dc2626');
+    html+=icKpi('Sedes',icFmt(rows.length),'En filtro','#6366f1');
     html+='</div>';
-    html+=icSec('Detalle por sede','Fuente: P Actual + colocado SIGEC+GLPI · '+rows.length+' sedes');
+    html+=icSec('Detalle por sede','Solo columnas del INFORME COLOCACION P ACTUAL · '+rows.length+' sedes');
     html+='<div style="overflow:auto;max-height:460px"><table class="ic-tbl"><thead><tr>'
-      +'<th>Sede</th><th>Rectoría</th><th>Meta #</th><th>Colocado</th><th>Acum #</th><th>% Meta</th>'
-      +'<th>Meta $</th><th>Acum $</th><th>Año ant.</th><th>VAR #</th><th>Sem</th></tr></thead><tbody>';
+      +'<th>Sede</th><th>Rectoría</th><th>Meta #</th><th>Acumulado #</th><th>% Meta</th>'
+      +'<th>Meta $</th><th>Acum $</th><th>Año ant. #</th><th>VAR #</th><th>VAR %</th><th>Sem</th></tr></thead><tbody>';
     rows.forEach(function(r){
       var bCol=r.vn>=0?'#16a34a':'#dc2626';
       html+='<tr><td style="font-weight:600">'+r.sede+'</td><td style="font-size:9px;color:#64748b">'+r.rect+'</td>'
         +'<td style="text-align:right">'+icFmt(Math.round(r.meta))+'</td>'
-        +'<td style="text-align:right;font-weight:700;color:#16a34a">'+icFmt(r.col)+'</td>'
-        +'<td style="text-align:right;color:#64748b">'+icFmt(r.acum)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:#16a34a">'+icFmt(r.acum)+'</td>'
         +'<td style="text-align:right">'+r.pct+'%</td>'
         +'<td style="text-align:right">'+icFmtM(r.metaV)+'</td>'
         +'<td style="text-align:right">'+icFmtM(r.acumV)+'</td>'
         +'<td style="text-align:right;color:#64748b">'+icFmt(r.ant)+'</td>'
         +'<td style="text-align:right;color:'+bCol+';font-weight:700">'+(r.vn>=0?'+':'')+icFmt(r.vn)+'</td>'
+        +'<td style="text-align:right;color:'+bCol+'">'+(r.varPct!=null?(r.varPct>=0?'+':'')+r.varPct+'%':'—')+'</td>'
         +'<td>'+icSemHtml(r.sem)+'</td></tr>';
     });
-    if(ssInf.total){
-      html+='<tr style="background:#fff7ed"><td style="font-weight:600;color:#c2410c">Sin sede asignada</td><td></td>'
-        +'<td style="text-align:right">—</td><td style="text-align:right;font-weight:700;color:#c2410c">'+icFmt(ssInf.total)+'</td>'
-        +'<td colspan="7" style="font-size:10px;color:#9a3412">SIGEC '+icFmt(ssInf.sig)+' + GLPI '+icFmt(ssInf.glpi)+'</td></tr>';
-    }
     html+='</tbody><tfoot><tr style="font-weight:700;background:#f8fafc;">'
       +'<td>TOTAL</td><td></td>'
       +'<td style="text-align:right">'+icFmt(Math.round(tMeta))+'</td>'
-      +'<td style="text-align:right;color:#16a34a">'+icFmt(tColKpi)+'</td>'
-      +'<td style="text-align:right;color:#64748b">'+icFmt(tAcum)+'</td>'
+      +'<td style="text-align:right;color:#16a34a">'+icFmt(tAcum)+'</td>'
       +'<td style="text-align:right">'+pctNat+'%</td>'
       +'<td style="text-align:right">'+icFmtM(tMetaV)+'</td>'
       +'<td style="text-align:right">'+icFmtM(tAcumV)+'</td>'
       +'<td style="text-align:right">'+icFmt(tAnt)+'</td>'
       +'<td style="text-align:right;color:'+(tVar>=0?'#16a34a':'#dc2626')+'">'+(tVar>=0?'+':'')+icFmt(tVar)+'</td>'
-      +'<td></td></tr></tfoot></table></div>';
+      +'<td></td><td></td></tr></tfoot></table></div>';
     return html;
   }
 
@@ -17782,7 +17794,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.81 — hotfix rendimiento minutos hábiles');
+  console.log('[CMD] Informes Comerciales v5.4.82 — informe colocación solo P Actual');
 })();
 
 </script>
