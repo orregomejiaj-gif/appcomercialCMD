@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.83   (APP_VERSION = 'pyv-comercial-5.4.83')
+  Versión actual: pyv-comercial-5.4.84   (APP_VERSION = 'pyv-comercial-5.4.84')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,11 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.84 (2026-07-10)
+    - Fix informes Operación/Inteligencia: render inmediato al abrir panel, sin esperar carga Sheets.
+    - Anti-carrera: renders obsoletos no sobrescriben el tab activo.
+    - Pendientes desembolso: 16s → <1s (caché congelados + lookup único por ticket).
+    - Gráficos ECharts con try/catch; tabs pesados incluyen pendientes/retomas/tasa.
   pyv-comercial-5.4.83 (2026-07-09)
     - Nuevo informe Coloc. vs SIGEC+GLPI: reconciliación P Actual vs colocado operativo por sede.
     - Export Excel mejorado: hoja Meta + KPIs + tablas; builders dedicados para colocación y conciliación.
@@ -359,11 +364,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.83">
-<meta name="build-id" content="pyv-comercial-5.4.83-20260709-2115">
-<title>SCIC pyv-comercial 5.4.83 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.84">
+<meta name="build-id" content="pyv-comercial-5.4.84-20260710-1710">
+<title>SCIC pyv-comercial 5.4.84 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.83';
+window.APP_VERSION='pyv-comercial-5.4.84';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1126,7 +1131,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.83</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.84</div>
 </div>
 
 
@@ -1135,7 +1140,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.83</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.84</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -4028,7 +4033,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.83';
+var APP_VERSION = 'pyv-comercial-5.4.84';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -15262,7 +15267,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.83 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.84 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -15485,9 +15490,11 @@ function _parseCumpleMMDD(s){
     (window._icChartQueue||[]).forEach(function(q){
       var el = document.getElementById(q.id);
       if(!el) return;
-      var ch = echarts.init(el);
-      ch.setOption(q.opt);
-      window._icCharts.push(ch);
+      try{
+        var ch = echarts.init(el);
+        ch.setOption(q.opt);
+        window._icCharts.push(ch);
+      }catch(e){ console.warn('[CMD] chart', q.id, e&&e.message); }
     });
     window._icChartQueue = [];
   }
@@ -15564,6 +15571,8 @@ function _parseCumpleMMDD(s){
       || icFechaRadicGlpi(row);
   }
   function icCongeladosMap(){
+    var sig=(window._congeladosData||[]).length+'|'+(window._congeladosRaw||[]).length+'|'+(window._congeladosData_ts||0);
+    if(window._icCongMapCache && window._icCongMapCache.sig===sig) return window._icCongMapCache.map;
     var map = {};
     function add(tk, meta){
       var key = icNormTicket(tk);
@@ -15591,6 +15600,7 @@ function _parseCumpleMMDD(s){
         origen: 'raw'
       });
     });
+    window._icCongMapCache={sig:sig,map:map};
     return map;
   }
   function icCongeladosSet(){
@@ -16569,11 +16579,13 @@ function _parseCumpleMMDD(s){
   function icRenderPendientes(f){
     var base=icBaseCedulas(f);
     var baseTotal=icBaseTotal(f);
+    var cong=icCongeladosSet();
     var aprobadasSet={}, cruzadasSet={}, pendientes=[];
     var congLentos=0, hrsSum=0, hrsN=0;
     function addAprobada(ced,sede,origen,tk,fr,fa){
       var n=icNormCed(ced); if(!n||n.length<5) return;
-      var esCong = icEsCongelado(tk);
+      var tkN=icNormTicket(tk);
+      var esCong=!!cong[tkN];
       var hrs = (fr && fa) ? icHorasHabiles(fr, fa) : (fr ? icHorasHabiles(fr, new Date()) : 0);
       if(hrs) { hrsSum += hrs; hrsN++; }
       aprobadasSet[n]=aprobadasSet[n]||{ced:n,sede:sede,origen:origen,tk:tk,hrs:hrs,esCong:esCong};
@@ -17735,38 +17747,52 @@ function _parseCumpleMMDD(s){
 
   var IC_TABS_PESADOS = {
     'intel-patrones':1,'perdida-cedulas':1,'reincidencia':1,'scorecard-sede':1,
-    'alertas-cognipyv':1,'tiempos':1,'mapa-operacion':1,'congelados':1
+    'alertas-cognipyv':1,'tiempos':1,'mapa-operacion':1,'congelados':1,
+    'pendientes':1,'retomas':1,'tasa-aprob':1
   };
 
   window.icRenderInformeActivo=function(){
     var f=icFiltroActual();
-    var fn=IC_RENDERERS[IC_TAB];
+    var tab=IC_TAB;
+    var fn=IC_RENDERERS[tab];
     var el=document.getElementById('ic-contenido');
     var desc=document.getElementById('ic-desc-activo');
     var fu=document.getElementById('ic-fuente');
     var res=document.getElementById('ic-filtro-resumen');
     if(res) res.textContent=icFiltroResumen(f);
-    if(desc) desc.textContent=IC_DESCS[IC_TAB]||'';
-    if(!el||!fn) return;
+    if(desc) desc.textContent=IC_DESCS[tab]||'';
+    if(!el) return;
+    if(!fn){
+      el.innerHTML='<div style="color:#dc2626;padding:20px">Informe no disponible: <b>'+tab+'</b></div>';
+      return;
+    }
+    window._icRenderSeq=(window._icRenderSeq||0)+1;
+    var rid=window._icRenderSeq;
     el.innerHTML='<div style="text-align:center;padding:30px;color:#94a3b8"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Calculando…</div>';
     window._icChartQueue=[];
     var run=function(){
+      if(rid!==window._icRenderSeq) return;
       try{
         el.innerHTML=fn(f);
+        if(rid!==window._icRenderSeq) return;
         icFlushCharts();
+        if(rid!==window._icRenderSeq) return;
         if(fu){
           var resumen=(typeof _scicResumenFuentes==='function')?_scicResumenFuentes():'';
           var alerta=(typeof _scicHayFalloCarga==='function'&&_scicHayFalloCarga())?' · ⚠ carga parcial':'';
-          var txt='Fuentes: P Actual · SIGEC ('+(window._sigecRows||[]).length+') · GLPI ('+(window._glpiRows||[]).length+') · Malla ('+(window._mallaTurnosHoy||[]).length+') · Cartera ('+(window._cartData?'ok':'—')+') · '+resumen+alerta+' · '+new Date().toLocaleString('es-CO');
+          var cargando=window._icDatosInformesCargando?' · ⟳ actualizando Sheets':'';
+          var txt='Fuentes: P Actual · SIGEC ('+(window._sigecRows||[]).length+') · GLPI ('+(window._glpiRows||[]).length+') · Malla ('+(window._mallaTurnosHoy||[]).length+') · Cartera ('+(window._cartData?'ok':'—')+') · '+resumen+alerta+cargando+' · '+new Date().toLocaleString('es-CO');
           var ft=document.getElementById('ic-fuente-txt');
           if(ft) ft.textContent=txt;
           else fu.textContent=txt;
         }
       }catch(e){
-        el.innerHTML='<div style="color:#dc2626;padding:20px">Error: '+(e&&e.message||e)+'</div>';
+        if(rid!==window._icRenderSeq) return;
+        el.innerHTML='<div style="color:#dc2626;padding:20px">Error en <b>'+tab+'</b>: '+(e&&e.message||e)+'</div>';
+        console.error('[CMD] icRenderInformeActivo', tab, e);
       }
     };
-    if(IC_TABS_PESADOS[IC_TAB]){
+    if(IC_TABS_PESADOS[tab]){
       setTimeout(function(){ requestAnimationFrame(run); }, 40);
     } else {
       setTimeout(run, 20);
@@ -17825,10 +17851,16 @@ function _parseCumpleMMDD(s){
     var m=document.getElementById('modal-informes-comerciales');
     if(!m) return;
     m.style.display='block';
+    if(tab) icSeleccionarTab(tab);
+    else icSeleccionarTab(IC_TAB||'cobertura-uni');
+    window._icDatosInformesCargando=true;
     icCargarDatosInformes().then(function(){
+      window._icDatosInformesCargando=false;
       icInicializarFiltros();
-      if(tab) icSeleccionarTab(tab);
-      else icRenderInformeActivo();
+      icRenderInformeActivo();
+    }).catch(function(){
+      window._icDatosInformesCargando=false;
+      icRenderInformeActivo();
     });
   };
   window.cerrarInformesComerciales=function(){
@@ -17847,6 +17879,7 @@ function _parseCumpleMMDD(s){
     if(forzar){
       window._baseColocFilas=null;
       window._congeladosRaw=null;
+      window._icCongMapCache=null;
       _icIntelCache = {key:'', data:null};
       _icMinutosCache = {};
       _icMinutosCacheKeys = 0;
@@ -17964,7 +17997,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.83 — coloc vs SIGEC+GLPI + export Excel');
+  console.log('[CMD] Informes Comerciales v5.4.84 — fix informes operación/inteligencia');
 })();
 
 </script>
