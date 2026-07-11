@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.84   (APP_VERSION = 'pyv-comercial-5.4.84')
+  Versión actual: pyv-comercial-5.4.85   (APP_VERSION = 'pyv-comercial-5.4.85')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.85 (2026-07-11)
+    - Nuevo informe Pérdida Real: cruce por cédula (cerr.+cerr.fac.+rech.) vs fact.+GLPI aprob. Export Excel.
   pyv-comercial-5.4.84 (2026-07-10)
     - Fix informes Operación/Inteligencia: render inmediato al abrir panel, sin esperar carga Sheets.
     - Anti-carrera: renders obsoletos no sobrescriben el tab activo.
@@ -364,11 +366,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.84">
-<meta name="build-id" content="pyv-comercial-5.4.84-20260710-1710">
-<title>SCIC pyv-comercial 5.4.84 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.85">
+<meta name="build-id" content="pyv-comercial-5.4.85-20260711-0219">
+<title>SCIC pyv-comercial 5.4.85 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.84';
+window.APP_VERSION='pyv-comercial-5.4.85';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1131,7 +1133,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.84</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.85</div>
 </div>
 
 
@@ -1140,7 +1142,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.84</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.85</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -1482,6 +1484,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <button type="button" onclick="icAbrirDesdeMenu('tasa-aprob')" class="menu-qb menu-qb-red"><span>📉</span> Tasa/Pérd.</button>
           <button type="button" onclick="icAbrirDesdeMenu('intel-patrones')" class="menu-qb menu-qb-teal"><span>🧠</span> Inteligencia</button>
           <button type="button" onclick="icAbrirDesdeMenu('perdida-cedulas')" class="menu-qb menu-qb-red"><span>🔍</span> Pérd. Cédula</button>
+          <button type="button" onclick="icAbrirDesdeMenu('perdida-real')" class="menu-qb menu-qb-red"><span>🎯</span> Pérd. Real</button>
           <button type="button" onclick="icAbrirDesdeMenu('reincidencia')" class="menu-qb menu-qb-amber"><span>🚨</span> Reincidencia</button>
           <button type="button" onclick="icAbrirDesdeMenu('congelados')" class="menu-qb menu-qb-sky"><span>❄️</span> Congelados</button>
           <button type="button" onclick="icAbrirDesdeMenu('mapa-operacion')" class="menu-qb menu-qb-purple"><span>🗺️</span> Mapa</button>
@@ -4033,7 +4036,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.84';
+var APP_VERSION = 'pyv-comercial-5.4.85';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7839,6 +7842,7 @@ https://minutodediosportal.com/login/
         <div class="ic-tab-sec">Inteligencia & Alertas</div>
         <button type="button" class="ic-tab" data-ic="intel-patrones" onclick="icSeleccionarTab('intel-patrones')">🧠 Patrones & Tiempos</button>
         <button type="button" class="ic-tab" data-ic="perdida-cedulas" onclick="icSeleccionarTab('perdida-cedulas')">🔍 Pérdida por Cédula</button>
+        <button type="button" class="ic-tab" data-ic="perdida-real" onclick="icSeleccionarTab('perdida-real')">🎯 Pérdida Real</button>
         <button type="button" class="ic-tab" data-ic="reincidencia" onclick="icSeleccionarTab('reincidencia')">🚨 Reincidencia Sedes</button>
         <div class="ic-tab-sec">Siguiente Nivel</div>
         <button type="button" class="ic-tab" data-ic="turno-vivo" onclick="icSeleccionarTab('turno-vivo')">📡 Turno en Vivo</button>
@@ -15267,7 +15271,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.84 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.85 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -16155,6 +16159,7 @@ function _parseCumpleMMDD(s){
     'tasa-aprob':'Tasa de pérdida: (cerradas SIGEC + cerradas facturadas) − retomas GLPI recuperadas. Incluye colocación, SIGEC, GLPI y suma combinada.',
     'intel-patrones':'Inteligencia operativa: radicaciones por día de semana (fecha cargue/ingreso), impacto por estado, tiempos sin congelar (rad→cerrada→facturada) y alertas de patrón.',
     'perdida-cedulas':'Cruce por identificación: cédulas con cerrada/cerr.fac/rechazada vs facturada/GLPI aprobada. Pendientes de recuperar y exportación CSV.',
+    'perdida-real':'Solo pérdida real por cédula: solicitudes cerradas + cerradas facturadas + rechazadas (SIGEC) cruzadas con facturadas y GLPI aprobadas. Sin recuperación = pérdida real. Export Excel.',
     'reincidencia':'Alerta: misma cédula con varios radicados distintos. Ranking de sedes con mayor reincidencia (riesgo operativo y fraude).',
     'turno-vivo':'Tablero en vivo: malla de turnos (MALLA) + estado app + colocado del día por sede y estimado por asesor en franja.',
     'scorecard-sede':'Scorecard integral por sede: meta S2, curva, tiempos SLA, congelados, pérdida y cartera en radar ECharts.',
@@ -16782,6 +16787,140 @@ function _parseCumpleMMDD(s){
     return html;
   }
 
+  function icConstruirPerdidaReal(f){
+    var cedMap={};
+    function reg(ced, patch, sede, tk){
+      var n=icNormCed(ced);
+      if(!n||n.length<5) return;
+      if(!cedMap[n]) cedMap[n]={ced:n,cerrada:0,cerrada_fac:0,rechazada:0,facturada:0,glpi_aprob:0,tickets:[],sedes:{}};
+      var o=cedMap[n];
+      if(patch.cerrada) o.cerrada+=patch.cerrada;
+      if(patch.cerrada_fac) o.cerrada_fac+=patch.cerrada_fac;
+      if(patch.rechazada) o.rechazada+=patch.rechazada;
+      if(patch.facturada) o.facturada+=patch.facturada;
+      if(patch.glpi_aprob) o.glpi_aprob+=patch.glpi_aprob;
+      if(sede){ var sd=icStr(sede)||'Sin sede'; o.sedes[sd]=(o.sedes[sd]||0)+1; }
+      if(tk){ var t=icNormTicket(tk); if(t&&o.tickets.indexOf(t)<0) o.tickets.push(t); }
+    }
+    icFilasSigec(f).forEach(function(r){
+      var c=r._cols||[];
+      var cls=icClasifSigec(r);
+      var ced=icCedulaSigec(r);
+      var sede=icStr(r.Sede||c[IC_SIG.SED]);
+      var tk=icNormTicket(r.Ticket||c[IC_SIG.TICKET]);
+      if(cls==='cerrada') reg(ced,{cerrada:1},sede,tk);
+      else if(cls==='cerrada_fac') reg(ced,{cerrada_fac:1},sede,tk);
+      else if(cls==='rechazada') reg(ced,{rechazada:1},sede,tk);
+      else if(cls==='facturada') reg(ced,{facturada:1},sede,tk);
+    });
+    icFilasGlpi(f).forEach(function(r){
+      if(!icGlpiAprobada(r)) return;
+      reg(icCedulaGlpi(r),{glpi_aprob:1},icGlpiLeerSede(r),icNormTicket(r.Ticket||(r._cols||[])[IC_GLP.TICKET]));
+    });
+    var rows=[], tPerd=0, tRec=0, tReal=0, sinRec=0, insuf=0;
+    var porSede={};
+    Object.keys(cedMap).forEach(function(k){
+      var o=cedMap[k];
+      var perdida=o.cerrada+o.cerrada_fac+o.rechazada;
+      var recuper=o.facturada+o.glpi_aprob;
+      if(perdida<=0) return;
+      var neto=Math.max(0,perdida-recuper);
+      if(neto<=0) return;
+      var tipo=recuper===0?'SIN_RECUPERACION':'RECUP_INSUFICIENTE';
+      if(recuper===0) sinRec++; else insuf++;
+      tPerd+=perdida; tRec+=recuper; tReal+=neto;
+      var sedeP=Object.keys(o.sedes||{}).sort(function(a,b){ return (o.sedes[b]||0)-(o.sedes[a]||0); })[0]||'Sin sede';
+      if(!porSede[sedeP]) porSede[sedeP]={sede:sedeP,cedulas:0,solPerd:0,solRec:0,perdReal:0,sinRec:0};
+      porSede[sedeP].cedulas++;
+      porSede[sedeP].solPerd+=perdida;
+      porSede[sedeP].solRec+=recuper;
+      porSede[sedeP].perdReal+=neto;
+      if(recuper===0) porSede[sedeP].sinRec++;
+      rows.push({
+        ced:o.ced, cerrada:o.cerrada, cerrada_fac:o.cerrada_fac, rechazada:o.rechazada,
+        perdida_total:perdida, facturada:o.facturada, glpi_aprob:o.glpi_aprob,
+        recuper_total:recuper, perdida_real:neto, tipo:tipo,
+        sede:sedeP, sedes:Object.keys(o.sedes||{}).join('; '),
+        tickets:(o.tickets||[]).join('; ')
+      });
+    });
+    rows.sort(function(a,b){ return b.perdida_real-a.perdida_real; });
+    var rankSede=Object.keys(porSede).map(function(s){ return porSede[s]; })
+      .sort(function(a,b){ return b.perdReal-a.perdReal; });
+    return {rows:rows, rankSede:rankSede, tot:{cedulas:rows.length,perdida:tPerd,recuper:tRec,real:tReal,sinRec:sinRec,insuf:insuf}};
+  }
+
+  function icRenderPerdidaReal(f){
+    var d=icConstruirPerdidaReal(f);
+    var rows=d.rows, tot=d.tot;
+    window._icPerdidaRealExport=rows;
+    var html=icAvisoEstadoDatos();
+    html+='<div class="ic-explain">'+IC_DESCS['perdida-real']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
+    html+='<div style="margin-bottom:10px;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:10px;font-size:11px;color:#7f1d1d;line-height:1.55">'
+      +'<b>Fórmula pérdida real:</b> por cédula, (cerradas + cerradas facturadas + rechazadas SIGEC) − (facturadas SIGEC + GLPI aprobadas). '
+      +'Si el cruce no cubre la pérdida, la cédula aparece aquí como <b>pérdida real</b>.</div>';
+    html+='<div class="ic-kpi-grid">';
+    html+=icKpi('Cédulas pérdida real',icFmt(tot.cedulas),'Sin recuperación completa','#dc2626');
+    html+=icKpi('Sin fact./aprob.',icFmt(tot.sinRec),'Cero recuperación en la cédula','#b91c1c');
+    html+=icKpi('Recup. insuficiente',icFmt(tot.insuf),'Tiene fact./GLPI pero no alcanza','#ca8a04');
+    html+=icKpi('Solicitudes pérdida',icFmt(tot.perdida),'Cerr. + cerr.fac. + rechaz.','#7f1d1d');
+    html+=icKpi('Recuperadas cruce',icFmt(tot.recuper),'Facturadas + GLPI aprob.','#16a34a');
+    html+=icKpi('Pérdida real neta',icFmt(tot.real),'Total solicitudes no recuperadas','#dc2626');
+    html+='</div>';
+    html+='<div class="ic-chart-row"><div class="ic-chart-box"><h4>Pérdida real: sin recuperación vs insuficiente</h4><div id="ic-chart-perd-real-pie" class="ic-chart"></div></div>';
+    html+='<div class="ic-chart-box"><h4>Top sedes · pérdida real neta</h4><div id="ic-chart-perd-real-sede" class="ic-chart"></div></div></div>';
+    icQueueChart('ic-chart-perd-real-pie',{
+      series:[{type:'pie',radius:'65%',data:[
+        {value:tot.sinRec,name:'Sin recuperación',itemStyle:{color:'#dc2626'}},
+        {value:tot.insuf,name:'Recup. insuficiente',itemStyle:{color:'#ca8a04'}}
+      ].filter(function(x){ return x.value>0; })}]
+    });
+    var topS=d.rankSede.slice(0,12);
+    icQueueChart('ic-chart-perd-real-sede',{
+      grid:{left:110,right:16,top:12,bottom:24},
+      xAxis:{type:'value'},
+      yAxis:{type:'category',data:topS.map(function(x){return x.sede;}).reverse(),axisLabel:{fontSize:9}},
+      series:[{type:'bar',data:topS.map(function(x){return x.perdReal;}).reverse(),itemStyle:{color:'#dc2626'}}]
+    });
+    html+=icSec('Detalle por identificación','Solo cédulas con pérdida real (cruce no recuperado) · '+rows.length+' registros');
+    html+='<div style="overflow:auto;max-height:420px"><table class="ic-tbl"><thead><tr>'
+      +'<th>Cédula</th><th>Cerradas</th><th>Cerr. fact.</th><th>Rechazadas</th><th>Total pérdida</th>'
+      +'<th>Facturadas</th><th>GLPI aprob.</th><th>Total recuper.</th><th>Pérdida real</th><th>Tipo</th><th>Sede principal</th></tr></thead><tbody>';
+    rows.slice(0,200).forEach(function(r){
+      var col=r.tipo==='SIN_RECUPERACION'?'#b91c1c':'#ca8a04';
+      html+='<tr><td style="font-weight:600">'+r.ced+'</td>'
+        +'<td style="text-align:right">'+icFmt(r.cerrada)+'</td>'
+        +'<td style="text-align:right">'+icFmt(r.cerrada_fac)+'</td>'
+        +'<td style="text-align:right">'+icFmt(r.rechazada)+'</td>'
+        +'<td style="text-align:right;font-weight:700">'+icFmt(r.perdida_total)+'</td>'
+        +'<td style="text-align:right;color:#16a34a">'+icFmt(r.facturada)+'</td>'
+        +'<td style="text-align:right;color:#6366f1">'+icFmt(r.glpi_aprob)+'</td>'
+        +'<td style="text-align:right">'+icFmt(r.recuper_total)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:#dc2626">'+icFmt(r.perdida_real)+'</td>'
+        +'<td style="font-size:9px;color:'+col+'">'+r.tipo.replace(/_/g,' ')+'</td>'
+        +'<td style="font-size:9px;color:#64748b">'+r.sede+'</td></tr>';
+    });
+    html+='</tbody><tfoot><tr style="font-weight:700;background:#f8fafc;">'
+      +'<td>TOTAL</td><td colspan="3"></td>'
+      +'<td style="text-align:right">'+icFmt(tot.perdida)+'</td><td colspan="2"></td>'
+      +'<td style="text-align:right">'+icFmt(tot.recuper)+'</td>'
+      +'<td style="text-align:right;color:#dc2626">'+icFmt(tot.real)+'</td>'
+      +'<td colspan="2"></td></tr></tfoot></table></div>';
+    if(rows.length>200) html+='<div style="font-size:10px;color:#64748b;margin-top:6px">Mostrando 200 de '+rows.length+' — use <b>Excel</b> en el pie del panel para el listado completo.</div>';
+    html+=icSec('Resumen por sede','Agregado de pérdida real neta');
+    html+='<table class="ic-tbl"><thead><tr><th>Sede</th><th>Cédulas</th><th>Sol. pérdida</th><th>Sol. recuper.</th><th>Pérdida real</th><th>Sin recuperación</th></tr></thead><tbody>';
+    d.rankSede.slice(0,50).forEach(function(s){
+      html+='<tr><td style="font-weight:600">'+s.sede+'</td>'
+        +'<td style="text-align:right">'+icFmt(s.cedulas)+'</td>'
+        +'<td style="text-align:right">'+icFmt(s.solPerd)+'</td>'
+        +'<td style="text-align:right;color:#16a34a">'+icFmt(s.solRec)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:#dc2626">'+icFmt(s.perdReal)+'</td>'
+        +'<td style="text-align:right;color:#b91c1c">'+icFmt(s.sinRec)+'</td></tr>';
+    });
+    html+='</tbody></table>';
+    return html;
+  }
+
   function icRenderPerdidaCedulas(f){
     var intel = icInteligenciaConstruir(f);
     var pc = intel.perdCed;
@@ -17168,6 +17307,29 @@ function _parseCumpleMMDD(s){
       if(d.ss.total) rows.push(['Sin sede asignada','',0,0,d.ss.sig,d.ss.glpi,d.ss.total,'','','','','']);
       return [{name:'Meta',aoa:icSheetMetaExport('coloc-vs-sigec-glpi',f)},
         {name:'Conciliación', aoa:[['Sede','Rectoría','Meta #','Acum P Actual','SIGEC fact.','GLPI aprob.','Colocado SG','Brecha #','Brecha %','% Meta SG','% Meta Acum','Conciliación']].concat(rows)}];
+    },
+    'perdida-real':function(f){
+      var d=icConstruirPerdidaReal(f);
+      var det=d.rows.map(function(r){
+        return [r.ced,r.cerrada,r.cerrada_fac,r.rechazada,r.perdida_total,r.facturada,r.glpi_aprob,r.recuper_total,r.perdida_real,r.tipo,r.sede,r.sedes,r.tickets];
+      });
+      var sed=d.rankSede.map(function(s){
+        return [s.sede,s.cedulas,s.solPerd,s.solRec,s.perdReal,s.sinRec];
+      });
+      var kpi=[
+        ['Cédulas pérdida real',d.tot.cedulas],
+        ['Sin facturada/aprobada',d.tot.sinRec],
+        ['Recuperación insuficiente',d.tot.insuf],
+        ['Solicitudes pérdida',d.tot.perdida],
+        ['Solicitudes recuperadas',d.tot.recuper],
+        ['Pérdida real neta',d.tot.real]
+      ];
+      return [
+        {name:'Meta',aoa:icSheetMetaExport('perdida-real',f)},
+        {name:'KPIs',aoa:[['Indicador','Valor']].concat(kpi)},
+        {name:'Pérdida real cédulas',aoa:[['Cédula','Cerradas','Cerr.fact.','Rechazadas','Total pérdida','Facturadas','GLPI aprob.','Total recuper.','Pérdida real','Tipo','Sede principal','Sedes','Tickets']].concat(det)},
+        {name:'Por sede',aoa:[['Sede','Cédulas','Sol. pérdida','Sol. recuper.','Pérdida real','Sin recuperación']].concat(sed)}
+      ];
     }
   };
 
@@ -17736,6 +17898,7 @@ function _parseCumpleMMDD(s){
     'tasa-aprob':icRenderTasaAprob,
     'intel-patrones':icRenderIntelPatrones,
     'perdida-cedulas':icRenderPerdidaCedulas,
+    'perdida-real':icRenderPerdidaReal,
     'reincidencia':icRenderReincidencia,
     'turno-vivo':icRenderTurnoVivo,
     'scorecard-sede':icRenderScorecardSede,
@@ -17746,7 +17909,7 @@ function _parseCumpleMMDD(s){
   };
 
   var IC_TABS_PESADOS = {
-    'intel-patrones':1,'perdida-cedulas':1,'reincidencia':1,'scorecard-sede':1,
+    'intel-patrones':1,'perdida-cedulas':1,'perdida-real':1,'reincidencia':1,'scorecard-sede':1,
     'alertas-cognipyv':1,'tiempos':1,'mapa-operacion':1,'congelados':1,
     'pendientes':1,'retomas':1,'tasa-aprob':1
   };
@@ -17997,7 +18160,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.84 — fix informes operación/inteligencia');
+  console.log('[CMD] Informes Comerciales v5.4.85 — informe pérdida real por cédula');
 })();
 
 </script>
