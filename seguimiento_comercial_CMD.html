@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.85   (APP_VERSION = 'pyv-comercial-5.4.85')
+  Versión actual: pyv-comercial-5.4.86   (APP_VERSION = 'pyv-comercial-5.4.86')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.86 (2026-07-11)
+    - Reincidencia: vista cédulas con más radicaciones cerradas sin facturar/aprobar; export Excel con conteo y estados por ticket.
   pyv-comercial-5.4.85 (2026-07-11)
     - Nuevo informe Pérdida Real: cruce por cédula (cerr.+cerr.fac.+rech.) vs fact.+GLPI aprob. Export Excel.
   pyv-comercial-5.4.84 (2026-07-10)
@@ -366,11 +368,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.85">
-<meta name="build-id" content="pyv-comercial-5.4.85-20260711-0219">
+<meta name="app-version" content="pyv-comercial-5.4.86">
+<meta name="build-id" content="pyv-comercial-5.4.86-20260711-0230">
 <title>SCIC pyv-comercial 5.4.85 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.85';
+window.APP_VERSION='pyv-comercial-5.4.86';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -4036,7 +4038,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.85';
+var APP_VERSION = 'pyv-comercial-5.4.86';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -15917,6 +15919,31 @@ function _parseCumpleMMDD(s){
     ].join('|');
   }
 
+  function icReincEsCerradaSinRec(it){
+    if(!it) return false;
+    var e = icStr(it.estado);
+    if(it.origen === 'SIGEC') return e === 'cerrada' || e === 'rechazada';
+    if(it.origen === 'GLPI') return e === 'cerrada';
+    return false;
+  }
+  function icReincEstadoLabel(it){
+    var o = it.origen || '', e = icStr(it.estado);
+    if(o === 'SIGEC'){
+      if(e === 'cerrada') return 'SIGEC cerrada';
+      if(e === 'cerrada_fac') return 'SIGEC cerrada fact.';
+      if(e === 'facturada') return 'SIGEC facturada';
+      if(e === 'rechazada') return 'SIGEC rechazada';
+      if(e === 'abierta') return 'SIGEC abierta';
+      return 'SIGEC ' + e;
+    }
+    if(o === 'GLPI'){
+      if(e === 'aprobada') return 'GLPI aprobada';
+      if(e === 'cerrada') return 'GLPI cerrada';
+      return 'GLPI ' + e;
+    }
+    return e;
+  }
+
   function icInteligenciaConstruir(f){
     f = f || {};
     var ckey = icInteligenciaCacheKey(f);
@@ -16091,6 +16118,33 @@ function _parseCumpleMMDD(s){
     var reincRank = Object.keys(reincSedes).map(function(s){ return reincSedes[s]; })
       .sort(function(a,b){ return b.cedulas - a.cedulas; });
 
+    var reincCerradas = [], reincCerrSedes = {};
+    Object.keys(reincMap).forEach(function(k){
+      var o = reincMap[k];
+      var items = o.items || [];
+      if(!items.length) return;
+      var porEst = {}, cerrSinRec = 0;
+      items.forEach(function(it){
+        var lbl = icReincEstadoLabel(it);
+        porEst[lbl] = (porEst[lbl] || 0) + 1;
+        if(icReincEsCerradaSinRec(it)) cerrSinRec++;
+      });
+      if(cerrSinRec < 1) return;
+      reincCerradas.push({
+        ced:o.ced, totalRad:items.length, nCerradasSinRec:cerrSinRec,
+        nTickets:Object.keys(o.tickets).length, nSedes:Object.keys(o.sedes).length,
+        sedes:o.sedes, items:items, porEstado:porEst
+      });
+      Object.keys(o.sedes || {}).forEach(function(sd){
+        if(!reincCerrSedes[sd]) reincCerrSedes[sd] = {sede:sd, cedulas:0, cerradas:0};
+        reincCerrSedes[sd].cedulas++;
+        reincCerrSedes[sd].cerradas += cerrSinRec;
+      });
+    });
+    reincCerradas.sort(function(a,b){ return b.nCerradasSinRec - a.nCerradasSinRec || b.totalRad - a.totalRad; });
+    var reincCerrRank = Object.keys(reincCerrSedes).map(function(s){ return reincCerrSedes[s]; })
+      .sort(function(a,b){ return b.cedulas - a.cedulas; });
+
     var diaMax = 1, diaMin = 1, maxRad = 0, minRad = 1e9;
     [1,2,3,4,5].forEach(function(d){
       var v = diasRad[d] || 0;
@@ -16108,6 +16162,7 @@ function _parseCumpleMMDD(s){
         rad_fact:promH(tiemposNoCong.rad_fact), rad_aprob_glpi:promH(tiemposNoCong.rad_aprob_glpi)
       },
       perdida:perd, perdCed:perdCed, reincAlertas:reincAlertas, reincRank:reincRank,
+      reincCerradas:reincCerradas, reincCerrRank:reincCerrRank,
       patron:{diaMax:diaMax, diaMin:diaMin, maxRad:maxRad, minRad:minRad,
         labelMax:IC_DIAS_SEM[diaMax], labelMin:IC_DIAS_SEM[diaMin]}
     };
@@ -16160,7 +16215,7 @@ function _parseCumpleMMDD(s){
     'intel-patrones':'Inteligencia operativa: radicaciones por día de semana (fecha cargue/ingreso), impacto por estado, tiempos sin congelar (rad→cerrada→facturada) y alertas de patrón.',
     'perdida-cedulas':'Cruce por identificación: cédulas con cerrada/cerr.fac/rechazada vs facturada/GLPI aprobada. Pendientes de recuperar y exportación CSV.',
     'perdida-real':'Solo pérdida real por cédula: solicitudes cerradas + cerradas facturadas + rechazadas (SIGEC) cruzadas con facturadas y GLPI aprobadas. Sin recuperación = pérdida real. Export Excel.',
-    'reincidencia':'Alerta: misma cédula con varios radicados distintos. Ranking de sedes con mayor reincidencia (riesgo operativo y fraude).',
+    'reincidencia':'Alerta: misma cédula con varios radicados distintos. Ranking de sedes con mayor reincidencia. Incluye vista de cédulas con más radicaciones cerradas sin facturar ni aprobar (SIGEC cerrada/rechazada, GLPI cerrada) con export Excel por cédula y estados.',
     'turno-vivo':'Tablero en vivo: malla de turnos (MALLA) + estado app + colocado del día por sede y estimado por asesor en franja.',
     'scorecard-sede':'Scorecard integral por sede: meta S2, curva, tiempos SLA, congelados, pérdida y cartera en radar ECharts.',
     'alertas-cognipyv':'Alertas automáticas SLA (>72h), congelados críticos y pérdida. Botón para enviar análisis a CogniPYV.',
@@ -16979,12 +17034,22 @@ function _parseCumpleMMDD(s){
     ]);
   };
 
-  function icRenderReincidencia(f){
-    var intel = icInteligenciaConstruir(f);
+  function icReincToggleBtn(vista, label){
+    var act = (window._icReincVista || 'reinc') === vista;
+    var bg = act ? '#003D45' : '#e2e8f0';
+    var fg = act ? '#FFD900' : '#334155';
+    return '<button type="button" class="ic-btn-export" style="margin:0;background:'+bg+';color:'+fg+'" onclick="icReincidenciaCambiarVista(\''+vista+'\')">'+label+'</button>';
+  }
+
+  function icRenderReincidenciaReinc(f, intel){
     var alerts = intel.reincAlertas;
     var rank = intel.reincRank;
     var html = icAvisoEstadoDatos();
     html += '<div class="ic-explain">'+IC_DESCS['reincidencia']+' · <b>'+icFmt(alerts.length)+'</b> cédulas con 2+ radicados distintos</div>';
+    html += '<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+    html += icReincToggleBtn('reinc', '🚨 Reincidencia (2+ tickets)');
+    html += icReincToggleBtn('cerradas', '📋 Cerradas sin fact./aprob.');
+    html += '</div>';
     html += '<div class="ic-kpi-grid">';
     html += icKpi('Cédulas reincidentes', icFmt(alerts.length), '2+ tickets distintos', '#dc2626');
     html += icKpi('Sedes con alerta', icFmt(rank.length), 'Con reincidencia', '#ca8a04');
@@ -17021,6 +17086,67 @@ function _parseCumpleMMDD(s){
     html += '</tbody></table></div>';
     return html;
   }
+
+  function icRenderReincidenciaCerradas(f, intel){
+    var lista = intel.reincCerradas || [];
+    var rank = intel.reincCerrRank || [];
+    var totCerr = lista.reduce(function(s,o){ return s + o.nCerradasSinRec; }, 0);
+    window._icReincCerrExport = lista;
+    var html = icAvisoEstadoDatos();
+    html += '<div class="ic-explain">Cédulas con radicaciones <b>cerradas sin facturar ni aprobar</b> (SIGEC cerrada/rechazada, GLPI cerrada) · <b>'+icFmt(lista.length)+'</b> cédulas</div>';
+    html += '<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
+    html += icReincToggleBtn('reinc', '🚨 Reincidencia (2+ tickets)');
+    html += icReincToggleBtn('cerradas', '📋 Cerradas sin fact./aprob.');
+    html += '</div>';
+    html += '<div style="margin-bottom:10px;padding:10px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px;font-size:11px;color:#9a3412;line-height:1.55">'
+      +'<b>Criterio:</b> cuenta radicaciones en estado SIGEC <i>cerrada</i> o <i>rechazada</i>, y GLPI <i>cerrada</i>. '
+      +'Excluye facturadas SIGEC, cerradas facturadas y GLPI aprobadas. La tabla muestra cuántas veces radicó cada cédula y el estado actual de cada ticket.</div>';
+    html += '<div class="ic-kpi-grid">';
+    html += icKpi('Cédulas', icFmt(lista.length), 'Con cierre sin fact./aprob.', '#dc2626');
+    html += icKpi('Radic. cerr. s/fact.', icFmt(totCerr), 'Total solicitudes', '#b91c1c');
+    html += icKpi('Sedes', icFmt(rank.length), 'Con cédulas afectadas', '#ca8a04');
+    html += icKpi('Máx. cierres/ced.', lista.length ? icFmt(lista[0].nCerradasSinRec) : '0', lista.length ? lista[0].ced : '—', '#7f1d1d');
+    html += '</div>';
+    html += '<button type="button" class="ic-btn-export" onclick="icExportReincidenciaCerradas()">⬇ Exportar cerradas sin fact./aprob. (CSV)</button>';
+    html += '<div class="ic-chart-row">';
+    html += '<div class="ic-chart-box"><h4>Top sedes · cédulas con cierres sin fact./aprob.</h4><div id="ic-chart-reinc-cerr-sede" class="ic-chart"></div></div>';
+    html += '</div>';
+    var topS = rank.slice(0, 12);
+    icQueueChart('ic-chart-reinc-cerr-sede', {
+      grid:{left:110,right:16,top:12,bottom:24},
+      xAxis:{type:'value'},
+      yAxis:{type:'category',data:topS.map(function(x){return x.sede;}).reverse(),axisLabel:{fontSize:9}},
+      series:[{type:'bar',data:topS.map(function(x){return x.cedulas;}).reverse(),itemStyle:{color:'#ea580c'}}]
+    });
+    html += icSec('Ranking por cédula', 'Ordenado por cantidad de radicaciones cerradas sin facturar ni aprobar');
+    html += '<div style="overflow:auto;max-height:360px"><table class="ic-tbl"><thead><tr>'
+      +'<th>Cédula</th><th>Total radic.</th><th>Cerr. s/fact.</th><th># Sedes</th><th>Estados actuales</th><th>Tickets (estado)</th></tr></thead><tbody>';
+    lista.slice(0, 100).forEach(function(a){
+      var estRes = Object.keys(a.porEstado || {}).map(function(k){ return k + ' (' + a.porEstado[k] + ')'; }).join(' · ');
+      var det = (a.items || []).map(function(it){
+        return it.tk + ' [' + icReincEstadoLabel(it) + ']';
+      }).join(' · ');
+      html += '<tr><td style="font-weight:600">'+a.ced+'</td>'
+        +'<td style="text-align:right">'+a.totalRad+'</td>'
+        +'<td style="text-align:right;color:#dc2626;font-weight:700">'+a.nCerradasSinRec+'</td>'
+        +'<td style="text-align:right;color:'+(a.nSedes>1?'#dc2626':'#64748b')+'">'+a.nSedes+'</td>'
+        +'<td style="font-size:9px;color:#64748b">'+estRes+'</td>'
+        +'<td style="font-size:9px;color:#475569">'+det+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    return html;
+  }
+
+  function icRenderReincidencia(f){
+    var intel = icInteligenciaConstruir(f);
+    var vista = window._icReincVista || 'reinc';
+    if(vista === 'cerradas') return icRenderReincidenciaCerradas(f, intel);
+    return icRenderReincidenciaReinc(f, intel);
+  }
+  window.icReincidenciaCambiarVista = function(v){
+    window._icReincVista = v || 'reinc';
+    if(IC_TAB === 'reincidencia') icRenderInformeActivo();
+  };
   window.icExportReincidencia = function(){
     var rows = window._icReincExport || [];
     icExportCsv('reincidencia_cedulas', rows, [
@@ -17030,6 +17156,24 @@ function _parseCumpleMMDD(s){
       {lbl:'Sedes',get:function(r){return Object.keys(r.sedes||{}).join(';');}},
       {lbl:'Tickets',get:function(r){return Object.keys(r.tickets||{}).join(';');}},
       {lbl:'Detalle',get:function(r){return (r.items||[]).map(function(it){return it.tk+'|'+it.sede+'|'+it.origen+'|'+it.estado;}).join(';');}}
+    ]);
+  };
+  window.icExportReincidenciaCerradas = function(){
+    var rows = window._icReincCerrExport || [];
+    icExportCsv('reincidencia_cerradas_sin_fact', rows, [
+      {lbl:'Cedula',get:function(r){return r.ced;}},
+      {lbl:'Total_radicaciones',get:function(r){return r.totalRad;}},
+      {lbl:'Cerradas_sin_fact_aprob',get:function(r){return r.nCerradasSinRec;}},
+      {lbl:'Num_sedes',get:function(r){return r.nSedes;}},
+      {lbl:'Sedes',get:function(r){return Object.keys(r.sedes||{}).join(';');}},
+      {lbl:'Resumen_estados',get:function(r){
+        return Object.keys(r.porEstado||{}).map(function(k){ return k+':'+r.porEstado[k]; }).join(';');
+      }},
+      {lbl:'Detalle_tickets',get:function(r){
+        return (r.items||[]).map(function(it){
+          return it.tk+'|'+it.sede+'|'+icReincEstadoLabel(it);
+        }).join(';');
+      }}
     ]);
   };
 
@@ -17329,6 +17473,35 @@ function _parseCumpleMMDD(s){
         {name:'KPIs',aoa:[['Indicador','Valor']].concat(kpi)},
         {name:'Pérdida real cédulas',aoa:[['Cédula','Cerradas','Cerr.fact.','Rechazadas','Total pérdida','Facturadas','GLPI aprob.','Total recuper.','Pérdida real','Tipo','Sede principal','Sedes','Tickets']].concat(det)},
         {name:'Por sede',aoa:[['Sede','Cédulas','Sol. pérdida','Sol. recuper.','Pérdida real','Sin recuperación']].concat(sed)}
+      ];
+    },
+    'reincidencia':function(f){
+      var intel = icInteligenciaConstruir(f);
+      var reinc = (intel.reincAlertas || []).map(function(a){
+        return [a.ced, a.nTickets, a.nSedes, Object.keys(a.sedes||{}).join('; '),
+          Object.keys(a.tickets||{}).join('; '),
+          (a.items||[]).map(function(it){ return it.tk+'|'+it.sede+'|'+it.origen+'|'+it.estado; }).join('; ')];
+      });
+      var cerr = (intel.reincCerradas || []).map(function(a){
+        return [a.ced, a.totalRad, a.nCerradasSinRec, a.nSedes, Object.keys(a.sedes||{}).join('; '),
+          Object.keys(a.porEstado||{}).map(function(k){ return k+':'+a.porEstado[k]; }).join('; ')];
+      });
+      var det = [];
+      (intel.reincCerradas || []).forEach(function(a){
+        (a.items || []).forEach(function(it){
+          det.push([a.ced, it.tk, it.sede, it.origen, icReincEstadoLabel(it),
+            icReincEsCerradaSinRec(it) ? 'SI' : 'NO']);
+        });
+      });
+      var sedCerr = (intel.reincCerrRank || []).map(function(s){
+        return [s.sede, s.cedulas, s.cerradas];
+      });
+      return [
+        {name:'Meta',aoa:icSheetMetaExport('reincidencia',f)},
+        {name:'Reincidencia',aoa:[['Cédula','# Tickets','# Sedes','Sedes','Tickets','Detalle']].concat(reinc)},
+        {name:'Cerradas s fact',aoa:[['Cédula','Total radic.','Cerr. s/fact.','# Sedes','Sedes','Resumen estados']].concat(cerr)},
+        {name:'Detalle tickets',aoa:[['Cédula','Ticket','Sede','Origen','Estado actual','Cerr. s/fact.']].concat(det)},
+        {name:'Cerradas por sede',aoa:[['Sede','Cédulas','Cierres s/fact.']].concat(sedCerr)}
       ];
     }
   };
