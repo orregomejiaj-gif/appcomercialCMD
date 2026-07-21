@@ -12,6 +12,7 @@
   CHANGELOG
   pyv-comercial-5.4.87 (2026-07-21)
     - Fix Informe Cartera: rectoría Virtual y Distancia carga datos Cygnus/SAP (match sede/rectoría y alias).
+    - Alias sedes cartera: COA VIRTUAL, REC. UNIMINUTO VIRTUAL → Virtual y Distancia.
     - Rectorías cartera: agregación Cygnus+SAP por mapa RECTORIAS; oculta filas sin registros.
     - Export Excel cartera e informes comerciales: hoja Meta con estado Sheets, total y listado de rectorías/sedes.
     - Fix cédulas SAP en cartera (regex .0 al final).
@@ -4183,6 +4184,7 @@ var SEDE_EQUIVALENCIAS_COLOCACION = {
   'VALLEDUPAR':'Valledupar','SANTA MARTA':'Santa Marta','RIOHACHA':'Riohacha',
   'TUNJA':'Tunja','YOPAL':'Yopal','LETICIA':'Leticia','MOCOA':'Mocoa',
   'QUIBDO':'Quibdó','FLORENCIA':'Florencia','POPAYAN':'Popayán','TUMACO':'Tumaco',
+  'COA VIRTUAL':'Virtual y Distancia','REC. UNIMINUTO VIRTUAL':'Virtual y Distancia',
   'VIRTUAL':'Virtual y Distancia','Virtual':'Virtual y Distancia','VIRTUAL Y DISTANCIA':'Virtual y Distancia','VIRTUAL Y DISTANCIA.':'Virtual y Distancia',
   'VIRTUAL DISTANCIA':'Virtual y Distancia','SEDES VIRTUALES':'Virtual y Distancia','NACIONAL':'Nacional',
   'VIRTUAL/ DISTANCIA PRINCIPAL':'Virtual y Distancia','VIRTUAL DISTANCIA PRINCIPAL':'Virtual y Distancia',
@@ -14308,7 +14310,7 @@ function _parseCumpleMMDD(s){
     var sedeRaw = (r && r.sede) ? String(r.sede).trim() : '';
     if(sedeRaw){
       var ns = _cartInformeNormKey(sedeRaw);
-      if(ns==='virtual' || ns==='virtual y distancia' || (ns.indexOf('virtual')>=0 && ns.indexOf('distancia')>=0))
+      if(ns==='virtual' || ns==='virtual y distancia' || ns.indexOf('virtual')>=0)
         return 'Virtual y Distancia';
     }
     var raw = (r && r.rectoria) ? String(r.rectoria).trim() : '';
@@ -14376,7 +14378,7 @@ function _parseCumpleMMDD(s){
           var rec = mapa[k];
           var ns = _cartInformeNormKey(rec&&rec._sede);
           var nr = _cartInformeNormKey(rec&&rec._rect);
-          if(ns==='virtual' || nr==='virtual y distancia' || (ns.indexOf('virtual')>=0 && ns.indexOf('distancia')>=0))
+          if(ns.indexOf('virtual')>=0 || nr.indexOf('virtual')>=0)
             tomar(rec);
         });
       }
