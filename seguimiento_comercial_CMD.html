@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.97   (APP_VERSION = 'pyv-comercial-5.4.97')
+  Versión actual: pyv-comercial-5.4.98   (APP_VERSION = 'pyv-comercial-5.4.98')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.98 (2026-07-24)
+    - Panel menú principal: semáforo embudo de conversión de leads al inicio (nacional o sedes asignadas).
   pyv-comercial-5.4.97 (2026-07-24)
     - Fix filtros de análisis en informe embudo: KPIs, tablas y embudo visual se actualizan al filtrar por etapa o alerta.
   pyv-comercial-5.4.96 (2026-07-24)
@@ -405,11 +407,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.97">
-<meta name="build-id" content="pyv-comercial-5.4.97-20260730-1625">
-<title>SCIC pyv-comercial 5.4.97 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.98">
+<meta name="build-id" content="pyv-comercial-5.4.98-20260730-1630">
+<title>SCIC pyv-comercial 5.4.98 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.97';
+window.APP_VERSION='pyv-comercial-5.4.98';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1172,7 +1174,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.97</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.98</div>
 </div>
 
 
@@ -1181,7 +1183,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.97</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.98</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -4107,7 +4109,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.97';
+var APP_VERSION = 'pyv-comercial-5.4.98';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -15806,7 +15808,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.97 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.98 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -20023,7 +20025,7 @@ function _parseCumpleMMDD(s){
     cargarOperacion:function(forzar){ return icCargarDatosInformes(!!forzar); }
   };
 
-  console.log('[CMD] Informes Comerciales v5.4.97 — fix filtros embudo');
+  console.log('[CMD] Informes Comerciales v5.4.98 — semáforo embudo en menú');
 })();
 
 </script>
