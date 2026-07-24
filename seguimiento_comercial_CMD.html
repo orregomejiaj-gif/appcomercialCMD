@@ -380,7 +380,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta name="app-version" content="pyv-comercial-5.4.88">
 <meta name="build-id" content="pyv-comercial-5.4.88-20260724-1400">
-<title>SCIC pyv-comercial 5.4.85 — Cooperativa Minuto de Dios</title>
+<title>SCIC pyv-comercial 5.4.88 — Cooperativa Minuto de Dios</title>
 <script>
 window.APP_VERSION='pyv-comercial-5.4.88';
 function _cmdVersionLabel(){
@@ -1145,7 +1145,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.85</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.88</div>
 </div>
 
 
@@ -1154,7 +1154,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.85</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.88</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -16364,10 +16364,10 @@ function _parseCumpleMMDD(s){
     }
     if(n.indexOf('contact')>=0) return 'contactando';
     if(n.indexOf('conect')>=0) return 'conectado';
-    if(n.indexOf('interes')>=0) return 'interes';
-    if(n.indexOf('radic')>=0) return 'radicado';
+    if(n.indexOf('interes')>=0 || n.indexOf('perfil')>=0) return 'interes';
+    if(n.indexOf('radic')>=0 || n.indexOf('estudio')>=0) return 'radicado';
     if(n.indexOf('congel')>=0) return 'congelada';
-    if(n.indexOf('aprobad')>=0) return 'aprobado';
+    if(n.indexOf('aprobad')>=0 || n.indexOf('afiliacion')>=0 || n.indexOf('credito aprobado')>=0) return 'aprobado';
     return 'nuevo';
   }
   function icEmbudoStageIdx(etapa){
