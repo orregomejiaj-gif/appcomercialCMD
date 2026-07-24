@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.93   (APP_VERSION = 'pyv-comercial-5.4.93')
+  Versión actual: pyv-comercial-5.4.94   (APP_VERSION = 'pyv-comercial-5.4.94')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,11 +10,13 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.94 (2026-07-24)
+    - Bienvenida instantánea tras login: modal visible de inmediato con datos en caché; Sheets y embudo se actualizan en segundo plano (sin recarga forzada).
   pyv-comercial-5.4.93 (2026-07-24)
     - Nuevo informe «Embudo de conversión de leads — Resumen» en menú Informes.
     - Modal bienvenida: bloque embudo leads por sede asignada con semáforo y cuello de botella.
     - Login/acceso: semáforo nacional de embudo de conversión de leads en el dashboard.
-  pyv-comercial-5.4.93 (2026-07-24)
+  pyv-comercial-5.4.92 (2026-07-24)
     - Al elegir un informe desde el menú Informes: vista solo del informe (sin menú lateral); botón «← Catálogo informes» para volver.
     - Embudo de conversión de leads: análisis profundo (transiciones etapa→etapa, cuello de botella, ranking sedes, motivos descalificación, filtros y histórico local).
   pyv-comercial-5.4.91 (2026-07-24)
@@ -397,11 +399,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.93">
-<meta name="build-id" content="pyv-comercial-5.4.93-20260730-1518">
-<title>SCIC pyv-comercial 5.4.93 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.94">
+<meta name="build-id" content="pyv-comercial-5.4.94-20260730-1545">
+<title>SCIC pyv-comercial 5.4.94 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.93';
+window.APP_VERSION='pyv-comercial-5.4.94';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1164,7 +1166,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.93</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.94</div>
 </div>
 
 
@@ -1173,7 +1175,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.93</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.94</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -4073,7 +4075,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.93';
+var APP_VERSION = 'pyv-comercial-5.4.94';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -13152,6 +13154,32 @@ function _parseCumpleMMDD(s){
     var raw=(typeof _empParseSedes==='function')?_empParseSedes(emp.sede):_mbsParseSedes(emp.sede);
     return { esNacional:false, items:raw.map(function(r){ return { label:r, canon:_mbsResolverSedeColoc(r)||r }; }) };
   }
+  function _mbsDatosListos(){
+    var colocOk = (typeof _scicColocListo==='function') ? _scicColocListo() : !!(window._coloc_data||[]).length;
+    var sigGlpiOk = (typeof _scicSigecGlpiListos==='function') ? _scicSigecGlpiListos() : !!((window._sigecRows||[]).length || (window._glpiRows||[]).length);
+    return colocOk && sigGlpiOk && !(typeof _scicDatosRecargando==='function' && _scicDatosRecargando());
+  }
+  function _mbsRenderEsqueletoSedes(pack){
+    if(pack.esNacional){
+      return '<div style="background:rgba(255,217,0,.06);border:1px solid rgba(255,217,0,.15);border-radius:12px;padding:16px;margin-bottom:10px;text-align:center">'
+        +'<div style="font-size:13px;font-weight:800;color:#FFD900;margin-bottom:8px">🇨🇴 Panorama Nacional S2</div>'
+        +'<div style="font-size:11px;color:rgba(255,255,255,.45)"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando indicadores…</div></div>';
+    }
+    if(!pack.items.length){
+      return '<div style="font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:20px">No se encontraron sedes asignadas.</div>';
+    }
+    return pack.items.map(function(it){
+      return '<div style="background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;margin-bottom:10px">'
+        +'<div style="font-size:13px;font-weight:800;color:#FFD900;margin-bottom:8px">📍 '+it.label+'</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px">'
+        +'<div style="height:48px;background:rgba(255,255,255,.06);border-radius:8px;opacity:.7"></div>'
+        +'<div style="height:48px;background:rgba(255,255,255,.06);border-radius:8px;opacity:.7"></div>'
+        +'<div style="height:48px;background:rgba(255,255,255,.06);border-radius:8px;opacity:.7"></div>'
+        +'</div>'
+        +'<div style="font-size:10px;color:rgba(255,255,255,.4);text-align:center"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:12px"></i> Cargando SIGEC · GLPI · colocación…</div>'
+        +'</div>';
+    }).join('');
+  }
   function _mbsRenderContenido(emp){
     var cont = document.getElementById('mbs-contenido');
     if(!cont) return;
@@ -13160,15 +13188,15 @@ function _parseCumpleMMDD(s){
     if(pack.esNacional){
       document.getElementById('mbs-titulo').textContent = 'Panorama Nacional';
       document.getElementById('mbs-subtitulo').textContent = 'Vista nacional · avance vs curva ideal S2';
-      html = _mbsRenderNacional();
+      if(!_mbsDatosListos()) html = _mbsRenderEsqueletoSedes(pack);
+      else html = _mbsRenderNacional();
     } else if(!pack.items.length){
       html = '<div style="font-size:11px;color:rgba(255,255,255,.5);text-align:center;padding:20px">No se encontraron sedes asignadas en tu perfil. Contacta al administrador.</div>';
     } else {
       document.getElementById('mbs-titulo').textContent = 'Tus sedes · Estado actual';
       document.getElementById('mbs-subtitulo').textContent = pack.items.length+' sede(s) · cómo vamos vs lo que deberíamos llevar hoy';
-      pack.items.forEach(function(it){
-        html += _mbsRenderBloqueSede(it.label, it.canon);
-      });
+      if(!_mbsDatosListos()) html = _mbsRenderEsqueletoSedes(pack);
+      else pack.items.forEach(function(it){ html += _mbsRenderBloqueSede(it.label, it.canon); });
     }
     cont.innerHTML = html || '<div style="color:rgba(255,255,255,.45);font-size:11px;text-align:center">Sin datos disponibles aún. Presiona Continuar e intenta Actualizar en el menú.</div>';
   }
@@ -13188,8 +13216,6 @@ function _parseCumpleMMDD(s){
       : ('📍 '+(typeof _empEtiquetaSedes==='function'?_empEtiquetaSedes(emp):(pack.items.length?pack.items.map(function(it){return it.label;}).join(' · '):'—')));
     if(sd) sd.textContent = sedesLbl;
     modal.style.display = 'block';
-    var cont = document.getElementById('mbs-contenido');
-    if(cont) cont.innerHTML = '<div style="text-align:center;padding:32px;color:rgba(255,255,255,.5);font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:28px"></i><div style="margin-top:12px;font-weight:700">Cargando datos desde Google Sheets…</div><div style="font-size:10px;margin-top:6px;color:rgba(255,255,255,.35)">SIGEC · GLPI · Colocación S2</div></div>';
     var pintar = function(){
       if(correo&&EMPLEADOS_BD&&EMPLEADOS_BD[correo]) emp=EMPLEADOS_BD[correo];
       var p = _mbsSedesParaBienvenida(emp);
@@ -13198,17 +13224,16 @@ function _parseCumpleMMDD(s){
       if(sd) sd.textContent = lbl;
       _mbsRenderContenido(emp);
     };
+    pintar();
     var prom = (typeof _scicAsegurarSheetsListos==='function')
-      ? _scicAsegurarSheetsListos(true)
-      : ((typeof cargarDesdeSheetsCompleto==='function') ? cargarDesdeSheetsCompleto(true)
-        : ((typeof window._scicRefrescarDatosVivos==='function') ? window._scicRefrescarDatosVivos(true) : Promise.resolve()));
-    var embudoProm = function(){
+      ? _scicAsegurarSheetsListos(false)
+      : Promise.resolve();
+    prom.then(function(){
+      pintar();
       if(typeof _leerHojaEmbudoLeads==='function' && !(window._embudoLeadsRows&&window._embudoLeadsRows.length)){
-        return _leerHojaEmbudoLeads().catch(function(){});
+        _leerHojaEmbudoLeads().then(pintar).catch(function(){});
       }
-      return Promise.resolve();
-    };
-    prom.then(embudoProm).then(pintar).catch(pintar);
+    }).catch(pintar);
   };
   window.cerrarModalBienvenidaSede = function(){
     var m = document.getElementById('modal-bienvenida-sede');
@@ -13257,12 +13282,13 @@ function _parseCumpleMMDD(s){
         window._menuVistaAmbito='nacional';
         if(navState&&typeof navState==='object') navState.menuVistaAmbito='nacional';
         try{ if(typeof cmdActualizarBotonVistaMenu==='function') cmdActualizarBotonVistaMenu(); }catch(e){}
+        if(emp){
+          try{ if(typeof _empAplicarEmpleadoSesion==='function') _empAplicarEmpleadoSesion(emp); }catch(e){}
+          try{ if(typeof mostrarModalBienvenidaSede === 'function') mostrarModalBienvenidaSede(emp); }catch(e){}
+        }
         var postSheets=function(){
           try{ if(typeof actualizarMenuKPIs==='function') actualizarMenuKPIs(); }catch(e){}
-          if(emp){
-            try{ if(typeof _empAplicarEmpleadoSesion==='function') _empAplicarEmpleadoSesion(emp); }catch(e){}
-            try{ if(typeof mostrarModalBienvenidaSede === 'function') mostrarModalBienvenidaSede(emp); }catch(e){}
-          }
+          if(emp) try{ if(typeof _mbsActualizarSiAbierta==='function') _mbsActualizarSiAbierta(emp); }catch(e){}
         };
         if(typeof _scicAsegurarSheetsListos==='function'){
           _scicAsegurarSheetsListos(false).then(postSheets).catch(postSheets);
@@ -15514,7 +15540,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.93 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.94 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -19477,7 +19503,7 @@ function _parseCumpleMMDD(s){
     cargarOperacion:function(forzar){ return icCargarDatosInformes(!!forzar); }
   };
 
-  console.log('[CMD] Informes Comerciales v5.4.93 — embudo en panel Informes');
+  console.log('[CMD] Informes Comerciales v5.4.94 — bienvenida instantánea');
 })();
 
 </script>
