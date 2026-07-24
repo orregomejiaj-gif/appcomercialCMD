@@ -12,7 +12,7 @@ function icStr(v){ return v==null?'':String(v).trim(); }
 function icFmt(n){ return (Number(n)||0).toLocaleString('es-CO'); }
 function icNormCed(c){ return String(c||'').replace(/\\D/g,'').replace(/^0+/,''); }
 function icNormTicket(t){ return icStr(t).replace(/\\.0+$/,'').replace(/\\s+/g,''); }
-function icMatchSede(a,b){ var x=icStr(a).toLowerCase(), y=icStr(b).toLowerCase(); return x===y||x.indexOf(y)>=0||y.indexOf(x)>=0; }
+function icMatchSede(a,b){ if(!a||!b) return false; var x=icStr(a).toLowerCase(), y=icStr(b).toLowerCase(); return x===y||x.indexOf(y)>=0||y.indexOf(x)>=0; }
 function icNormSedeKey(s){ return icStr(s).toLowerCase().normalize('NFD').replace(/[\\u0300-\\u036f]/g,'').replace(/^(coa|co|cr|ct|cu|cs|cp)\\s+/i,'').replace(/\\s+/g,'').replace(/[^a-z0-9]/g,''); }
 function icResolverSedeColoc(raw, sedesLista){
   if(!raw) return '';
@@ -20,7 +20,64 @@ function icResolverSedeColoc(raw, sedesLista){
   for(var i=0;i<lista.length;i++){ if(icMatchSede(raw,lista[i])) return lista[i]; }
   return '';
 }
-function icSedesFiltro(f){ f=f||{}; if(f.sedes&&f.sedes.length) return f.sedes.slice(); return null; }
+function icMatchSedeMatricula(a,b){
+  if(icMatchSede(a,b)) return true;
+  var ka=icNormSedeKey(a), kb=icNormSedeKey(b);
+  if(!ka||!kb||ka.length<4||kb.length<4) return false;
+  if(ka===kb) return true;
+  return ka.indexOf(kb)>=0||kb.indexOf(ka)>=0;
+}
+function icResolverRectoriaSede(sedeRaw){
+  var sede = icStr(sedeRaw);
+  if(!sede) return '';
+  var map = window.PG_SEDE_RECTORIA || {};
+  if(map[sede]) return map[sede];
+  var norm = sede;
+  if(norm && map[norm]) return map[norm];
+  var keys = Object.keys(map), i;
+  for(i=0;i<keys.length;i++){
+    if(icMatchSede(norm, keys[i]) || icMatchSedeMatricula(norm, keys[i])) return map[keys[i]];
+  }
+  var kn = icNormSedeKey(norm);
+  if(kn.length >= 3){
+    for(i=0;i<keys.length;i++){
+      var kk = icNormSedeKey(keys[i]);
+      if(kk && (kn===kk || kn.indexOf(kk)>=0 || kk.indexOf(kn)>=0)) return map[keys[i]];
+    }
+  }
+  return '';
+}
+function icEmbudoPermiteFiltro(sede, rectoriaLead, filtro, sf){
+  filtro = filtro || {};
+  var sedeTxt = icStr(sede);
+  if(filtro.sedes && filtro.sedes.length){
+    if(!sedeTxt) return false;
+    return filtro.sedes.some(function(s){
+      return icMatchSede(sedeTxt,s) || icMatchSedeMatricula(sedeTxt,s) || !!icResolverSedeColoc(sedeTxt, [s]);
+    });
+  }
+  var rect = filtro.rectoria || (filtro.nivel==='rectoria' ? filtro.sel : '');
+  if(rect){
+    if(rectoriaLead && icStr(rectoriaLead)===icStr(rect)) return true;
+    var leadRect = icResolverRectoriaSede(sedeTxt);
+    if(leadRect && icStr(leadRect)===icStr(rect)) return true;
+    if(sf && sf.length && !!icResolverSedeColoc(sedeTxt, sf)) return true;
+    return false;
+  }
+  if(filtro.nivel==='sede' && filtro.sel){
+    return icMatchSede(sedeTxt, filtro.sel) || icMatchSedeMatricula(sedeTxt, filtro.sel) || !!icResolverSedeColoc(sedeTxt, [filtro.sel]);
+  }
+  return true;
+}
+function icSedesFiltro(f){
+  f=f||{};
+  if(f.sedes&&f.sedes.length) return f.sedes.slice();
+  var rect = f.rectoria || (f.nivel==='rectoria' ? f.sel : '');
+  if(rect==='Rectoría Antioquia') return ['COA Bello','COA Medellin'];
+  if(rect==='Rectoría Bogotá') return ['COA Engativa Pres'];
+  if(f.nivel==='sede'&&f.sel) return [f.sel];
+  return null;
+}
 function icFiltroPermiteSede(sede,filtro){
   filtro=filtro||{};
   if(filtro.sedes&&filtro.sedes.length) return filtro.sedes.some(function(s){ return icMatchSede(sede,s); });
@@ -79,17 +136,21 @@ var IC_EMBUDO_BOTTLENECK_TIPS = { contactando:'tip', conectado:'tip', interes:'t
 ${html.slice(start, end)}
 return {
   icConstruirEmbudoLeads, icConstruirCruceEmbudoCedulas, icEmbudoResumenCruce,
-  icEmbudoMapaAtencion, icEmbudoSerializarParaIA, IC_EMBUDO_STAGES
+  icEmbudoMapaAtencion, icEmbudoSerializarParaIA, IC_EMBUDO_STAGES,
+  icFiltrarEmbudoLeads, icEmbudoPermiteFiltro, icResolverRectoriaSede
 };
 `);
 
 const window = {
+  PG_SEDE_RECTORIA: { 'COA Bello': 'Rectoría Antioquia', 'COA Medellin': 'Rectoría Antioquia', 'COA Engativa Pres': 'Rectoría Bogotá' },
   _embudoLeadsRows: [
     { nombre:'Lead SIGEC', cedula:'001234567890', sede:'COA Bello', etapaRaw:'Nuevo', fuente:'HubSpot', propietario:'A', fecha: new Date(Date.now()-8*86400000) },
     { nombre:'Lead GLPI', cedula:'9876543210', sede:'COA Bello', etapaRaw:'Intentando contactar', fuente:'HubSpot', propietario:'A', fecha: new Date(Date.now()-3*86400000) },
     { nombre:'Lead COLOC', cedula:'1111222233', sede:'COA Bello', etapaRaw:'Manifiesta interés', fuente:'Web', propietario:'B', fecha: new Date(Date.now()-2*86400000) },
     { nombre:'Lead Cong', cedula:'4444555566', sede:'COA Bello', etapaRaw:'Crédito radicado', fuente:'Call', propietario:'B', fecha: new Date(Date.now()-1*86400000) },
     { nombre:'Lead OK', cedula:'7777888899', sede:'COA Bello', etapaRaw:'Crédito aprobado', fuente:'HubSpot', propietario:'A', fecha: new Date(Date.now()-1*86400000) },
+    { nombre:'Lead Bogota', cedula:'3333444455', sede:'Engativa Pres', etapaRaw:'Nuevo', fuente:'HubSpot', propietario:'C', fecha: new Date(Date.now()-2*86400000) },
+    { nombre:'Lead Rect', cedula:'6666777788', sede:'', rectoria:'Rectoría Bogotá', etapaRaw:'Conectado', fuente:'HubSpot', propietario:'C', fecha: new Date(Date.now()-1*86400000) },
   ],
   _sigecRows: [
     { Ticket:'TK001', Sede:'COA Bello', Estado:'Facturada', cedula:'1234567890', _cols:['TK001','','1234567890'] },
@@ -116,8 +177,10 @@ a(!!cruce['1111222233'] && cruce['1111222233'].tiene_credito, 'Cruce BASE COLOC 
 a(!!cruce['4444555566'] && cruce['4444555566'].es_congelado, 'Cruce CONGELADOS por ticket SIGEC');
 a(cruce['4444555566'].cong_dias_max===12, 'Congelado captura días');
 
+const filBello = api.icFiltrarEmbudoLeads({sedes:['COA Bello']});
+a(filBello.length===5, 'Filtro sede COA Bello directo: 5 leads');
 const d = api.icConstruirEmbudoLeads({sedes:['COA Bello']});
-a(d.total===5, 'Filtro sede: 5 leads');
+a(d.total===5, 'Filtro sede COA Bello construir: 5 leads');
 a(d.desfase.length>=2, 'Desfase detectado (ops > CRM)');
 a(d.congSinFact.length>=1, 'Congelado sin facturar detectado');
 a(d.creditoSinAvance.length>=1, 'Crédito sin avance etapa detectado');
@@ -153,6 +216,16 @@ window._embudoFiltro = { etapa: 'nuevo', alerta: '' };
 const filNuevo = d.leads.filter(l => l.etapa === 'nuevo');
 a(filNuevo.length >= 1 && filNuevo.every(l => l.etapa === 'nuevo'), 'Filtro etapa nuevo');
 window._embudoFiltro = { etapa: '', alerta: '' };
+
+a(api.icResolverRectoriaSede('Engativa Pres')==='Rectoría Bogotá', 'Resolver rectoría fuzzy sede');
+a(api.icEmbudoPermiteFiltro('Engativa Pres', '', {rectoria:'Rectoría Bogotá'}, ['COA Engativa Pres']), 'Filtro rectoría por sede fuzzy');
+a(api.icEmbudoPermiteFiltro('', 'Rectoría Bogotá', {rectoria:'Rectoría Bogotá'}, []), 'Filtro rectoría por columna rectoría');
+var filRect = api.icFiltrarEmbudoLeads({rectoria:'Rectoría Antioquia', nivel:'rectoria', sel:'Rectoría Antioquia', sedes:[]});
+a(filRect.length===5, 'Filtro rectoría Antioquia: 5 leads');
+var filBog = api.icFiltrarEmbudoLeads({rectoria:'Rectoría Bogotá', nivel:'rectoria', sel:'Rectoría Bogotá', sedes:[]});
+a(filBog.length===2, 'Filtro rectoría Bogotá: 2 leads');
+var filSedeFuzzy = api.icFiltrarEmbudoLeads({sedes:['Bello']});
+a(filSedeFuzzy.length===5, 'Filtro sede fuzzy Bello: 5 leads');
 
 console.log(ok+' OK, '+fail+' fallos');
 process.exit(fail?1:0);

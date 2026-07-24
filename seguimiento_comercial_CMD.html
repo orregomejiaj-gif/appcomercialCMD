@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.98   (APP_VERSION = 'pyv-comercial-5.4.98')
+  Versión actual: pyv-comercial-5.4.99   (APP_VERSION = 'pyv-comercial-5.4.99')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.99 (2026-07-24)
+    - Fix filtros rectoría/sede en informe embudo de conversión de leads (resolución fuzzy sede y rectoría).
   pyv-comercial-5.4.98 (2026-07-24)
     - Panel menú principal: semáforo embudo de conversión de leads al inicio (nacional o sedes asignadas).
   pyv-comercial-5.4.97 (2026-07-24)
@@ -407,11 +409,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.98">
-<meta name="build-id" content="pyv-comercial-5.4.98-20260730-1630">
-<title>SCIC pyv-comercial 5.4.98 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.99">
+<meta name="build-id" content="pyv-comercial-5.4.99-20260724-1708">
+<title>SCIC pyv-comercial 5.4.99 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.98';
+window.APP_VERSION='pyv-comercial-5.4.99';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1174,7 +1176,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.98</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.99</div>
 </div>
 
 
@@ -1183,7 +1185,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.98</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.99</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -4109,7 +4111,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.98';
+var APP_VERSION = 'pyv-comercial-5.4.99';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -8996,7 +8998,8 @@ function _parseCumpleMMDD(s){
             var lbl = embStr(c.label || c.id).toLowerCase();
             if(lbl.indexOf('nombre')>=0 && lbl.indexOf('lead')>=0) idx.nombre = i;
             else if(lbl.indexOf('identific')>=0 || lbl.indexOf('cedula')>=0 || lbl.indexOf('cédula')>=0) idx.cedula = i;
-            else if(lbl === 'sede') idx.sede = i;
+            else if(idx.sede == null && (lbl === 'sede' || lbl.indexOf('sede')>=0 || lbl.indexOf('oficina')>=0 || lbl.indexOf('coa')>=0 || lbl.indexOf('agencia')>=0)) idx.sede = i;
+            else if(idx.rectoria == null && lbl.indexOf('rector')>=0) idx.rectoria = i;
             else if(lbl.indexOf('etapa')>=0) idx.etapa = i;
             else if(lbl.indexOf('fuente')>=0 && lbl.indexOf('lead')>=0) idx.fuente = i;
             else if(lbl.indexOf('creaci')>=0) idx.fecha = i;
@@ -9010,6 +9013,7 @@ function _parseCumpleMMDD(s){
               nombre: embStr(idx.nombre != null ? c[idx.nombre] : c[1]),
               cedula: embNormCed(cedRaw),
               sede: embStr(idx.sede != null ? c[idx.sede] : c[3]),
+              rectoria: embStr(idx.rectoria != null ? c[idx.rectoria] : ''),
               etapaRaw: embStr(idx.etapa != null ? c[idx.etapa] : ''),
               fuente: embStr(idx.fuente != null ? c[idx.fuente] : ''),
               propietario: embStr(idx.propietario != null ? c[idx.propietario] : ''),
@@ -15808,7 +15812,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.98 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.99 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -15817,10 +15821,53 @@ function _parseCumpleMMDD(s){
   function icSedesFiltro(f){
     f=f||{};
     if(f.sedes&&f.sedes.length) return f.sedes.slice();
-    if(f.rectoria) return icListaSedes(f.rectoria);
+    if(f.rectoria) return icListaSedesColoc(f.rectoria);
     if(f.nivel==='sede'&&f.sel) return [f.sel];
-    if(f.nivel==='rectoria'&&f.sel) return icListaSedes(f.sel);
+    if(f.nivel==='rectoria'&&f.sel) return icListaSedesColoc(f.sel);
     return null;
+  }
+  function icResolverRectoriaSede(sedeRaw){
+    var sede = icStr(sedeRaw);
+    if(!sede) return '';
+    var map = window.PG_SEDE_RECTORIA || {};
+    if(map[sede]) return map[sede];
+    var norm = (typeof normalizarSedeColocacion==='function') ? normalizarSedeColocacion(sede) : sede;
+    if(norm && map[norm]) return map[norm];
+    var keys = Object.keys(map), i;
+    var sl = norm.toLowerCase();
+    for(i=0;i<keys.length;i++){
+      if(icMatchSede(norm, keys[i]) || icMatchSedeMatricula(norm, keys[i])) return map[keys[i]];
+    }
+    var kn = icNormSedeKey(norm);
+    if(kn.length >= 3){
+      for(i=0;i<keys.length;i++){
+        var kk = icNormSedeKey(keys[i]);
+        if(kk && (kn===kk || kn.indexOf(kk)>=0 || kk.indexOf(kn)>=0)) return map[keys[i]];
+      }
+    }
+    return '';
+  }
+  function icEmbudoPermiteFiltro(sede, rectoriaLead, filtro, sf){
+    filtro = filtro || {};
+    var sedeTxt = icStr(sede);
+    if(filtro.sedes && filtro.sedes.length){
+      if(!sedeTxt) return false;
+      return filtro.sedes.some(function(s){
+        return icMatchSede(sedeTxt,s) || icMatchSedeMatricula(sedeTxt,s) || !!icResolverSedeColoc(sedeTxt, [s]);
+      });
+    }
+    var rect = filtro.rectoria || (filtro.nivel==='rectoria' ? filtro.sel : '');
+    if(rect){
+      if(rectoriaLead && icStr(rectoriaLead)===icStr(rect)) return true;
+      var leadRect = icResolverRectoriaSede(sedeTxt);
+      if(leadRect && icStr(leadRect)===icStr(rect)) return true;
+      if(sf && sf.length && !!icResolverSedeColoc(sedeTxt, sf)) return true;
+      return false;
+    }
+    if(filtro.nivel==='sede' && filtro.sel){
+      return icMatchSede(sedeTxt, filtro.sel) || icMatchSedeMatricula(sedeTxt, filtro.sel) || !!icResolverSedeColoc(sedeTxt, [filtro.sel]);
+    }
+    return true;
   }
   function icListaRectorias(){
     if(typeof _mapaListaRectorias==='function') return _mapaListaRectorias();
@@ -16820,10 +16867,11 @@ function _parseCumpleMMDD(s){
     var rows = (window._embudoLeadsRows || []).map(function(r){
       return Object.assign({}, r, {etapa: icMatchEmbudoEtapa(r.etapaRaw || r.etapa)});
     });
+    var tieneFiltro = (f.sedes && f.sedes.length) || f.rectoria || (f.nivel==='rectoria'&&f.sel) || (f.nivel==='sede'&&f.sel);
+    if(!tieneFiltro) return rows;
     var sf = icSedesFiltro(f);
-    if(!sf || !sf.length) return rows;
     return rows.filter(function(r){
-      return sf.some(function(s){ return !!icResolverSedeColoc(r.sede, [s]); });
+      return icEmbudoPermiteFiltro(r.sede, r.rectoria, f, sf);
     });
   }
   function icConstruirCruceEmbudoCedulas(f){
@@ -17543,12 +17591,16 @@ function _parseCumpleMMDD(s){
   function icFiltroPermiteSede(sede, filtro){
     filtro=filtro||{};
     if(filtro.sedes&&filtro.sedes.length){
-      return filtro.sedes.some(function(s){ return icMatchSede(sede,s); });
+      return filtro.sedes.some(function(s){
+        return icMatchSede(sede,s) || icMatchSedeMatricula(sede,s) || !!icResolverSedeColoc(sede, [s]);
+      });
     }
-    if(filtro.nivel==='sede'&&filtro.sel) return icMatchSede(sede,filtro.sel);
-    if(filtro.nivel==='rectoria'&&filtro.sel){
-      var rect=(window.PG_SEDE_RECTORIA||{})[sede]||'';
-      return icStr(rect)===icStr(filtro.sel);
+    if(filtro.nivel==='sede'&&filtro.sel){
+      return icMatchSede(sede,filtro.sel) || icMatchSedeMatricula(sede,filtro.sel) || !!icResolverSedeColoc(sede, [filtro.sel]);
+    }
+    var rect = filtro.rectoria || (filtro.nivel==='rectoria' ? filtro.sel : '');
+    if(rect){
+      return icStr(icResolverRectoriaSede(sede))===icStr(rect);
     }
     return true;
   }
@@ -20025,7 +20077,7 @@ function _parseCumpleMMDD(s){
     cargarOperacion:function(forzar){ return icCargarDatosInformes(!!forzar); }
   };
 
-  console.log('[CMD] Informes Comerciales v5.4.98 — semáforo embudo en menú');
+  console.log('[CMD] Informes Comerciales v5.4.99 — fix filtros embudo rectoría/sede');
 })();
 
 </script>
