@@ -139,5 +139,20 @@ const leadSigec = d.leads.find(l=>l.nombre==='Lead SIGEC');
 a(leadSigec && leadSigec.estado_ops.indexOf('SIGEC facturada')>=0, 'estado_ops SIGEC');
 a(leadSigec && leadSigec.desfase, 'Lead SIGEC en desfase');
 
+window._embudoFiltro = { etapa: '', alerta: 'desfase' };
+const filDesfase = (function(leads){
+  var fl = window._embudoFiltro || {};
+  return (leads||[]).filter(function(r){
+    if(fl.alerta === 'desfase' && !r.desfase) return false;
+    if(fl.etapa && r.etapa !== fl.etapa) return false;
+    return true;
+  });
+})(d.leads);
+a(filDesfase.length >= 1 && filDesfase.every(l => l.desfase), 'Filtro alerta desfase');
+window._embudoFiltro = { etapa: 'nuevo', alerta: '' };
+const filNuevo = d.leads.filter(l => l.etapa === 'nuevo');
+a(filNuevo.length >= 1 && filNuevo.every(l => l.etapa === 'nuevo'), 'Filtro etapa nuevo');
+window._embudoFiltro = { etapa: '', alerta: '' };
+
 console.log(ok+' OK, '+fail+' fallos');
 process.exit(fail?1:0);

@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.96   (APP_VERSION = 'pyv-comercial-5.4.96')
+  Versión actual: pyv-comercial-5.4.97   (APP_VERSION = 'pyv-comercial-5.4.97')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.97 (2026-07-24)
+    - Fix filtros de análisis en informe embudo: KPIs, tablas y embudo visual se actualizan al filtrar por etapa o alerta.
   pyv-comercial-5.4.96 (2026-07-24)
     - Embudo leads: cruce validado SIGEC/GLPI/BASE COLOC/CONGELADOS por cédula y ticket; guía de lectura, mapa de atención y sugerencias CogniPYV/Gemini.
   pyv-comercial-5.4.95 (2026-07-24)
@@ -403,11 +405,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.96">
-<meta name="build-id" content="pyv-comercial-5.4.96-20260730-1615">
-<title>SCIC pyv-comercial 5.4.96 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.97">
+<meta name="build-id" content="pyv-comercial-5.4.97-20260730-1625">
+<title>SCIC pyv-comercial 5.4.97 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.96';
+window.APP_VERSION='pyv-comercial-5.4.97';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1170,7 +1172,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.96</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.97</div>
 </div>
 
 
@@ -1179,7 +1181,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.96</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.97</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -4083,7 +4085,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.96';
+var APP_VERSION = 'pyv-comercial-5.4.97';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -15729,7 +15731,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.96 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.97 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -16999,6 +17001,7 @@ function _parseCumpleMMDD(s){
         estancados.push(item);
       }
       if(item.tiene_credito && idx < IC_EMBUDO_STAGE_INDEX.aprobado){
+        item.credito_sin_avance = true;
         creditoSinAvance.push(item);
       }
       rows.push(item);
@@ -18068,7 +18071,7 @@ function _parseCumpleMMDD(s){
   window.icEmbudoSetFiltro = function(campo, val){
     window._embudoFiltro = window._embudoFiltro || {etapa:'', alerta:''};
     window._embudoFiltro[campo] = val || '';
-    icRenderInformeActivo();
+    if(typeof window.icRenderInformeActivo === 'function') window.icRenderInformeActivo();
   };
   window.icEmbudoGuardarHistorico = function(){
     var f = icFiltroActual();
@@ -18088,7 +18091,7 @@ function _parseCumpleMMDD(s){
     });
     hist = hist.slice(0, 15);
     try{ localStorage.setItem(IC_EMBUDO_HIST_KEY, JSON.stringify(hist)); }catch(e){}
-    icRenderInformeActivo();
+    if(typeof window.icRenderInformeActivo === 'function') window.icRenderInformeActivo();
   };
   function icEmbudoLeerHistorico(){
     try{ return JSON.parse(localStorage.getItem(IC_EMBUDO_HIST_KEY) || '[]'); }catch(e){ return []; }
@@ -18101,11 +18104,84 @@ function _parseCumpleMMDD(s){
       if(fl.alerta === 'desfase' && !r.desfase) return false;
       if(fl.alerta === 'cong_sin_fact' && !r.cong_sin_fact) return false;
       if(fl.alerta === 'cong_pendiente' && !r.cong_pendiente) return false;
-      if(fl.alerta === 'credito_sin_avance' && !(r.tiene_credito && !r.facturada)) return false;
+      if(fl.alerta === 'credito_sin_avance' && !r.credito_sin_avance) return false;
       if(fl.alerta === 'descalificado' && r.etapa !== 'descalificado') return false;
       if(fl.alerta === 'rechazada' && r.etapa !== 'rechazada') return false;
       return true;
     });
+  }
+  function icEmbudoResumenDesdeLeads(leads){
+    leads = leads || [];
+    var funnel = {}, negCount = {descalificado:0, rechazada:0};
+    IC_EMBUDO_STAGES.forEach(function(s){ funnel[s.key]=0; });
+    var estancados = [], desfase = [], congSinFact = [], congPend = [], creditoSinAvance = [];
+    leads.forEach(function(r){
+      if(r.etapa === 'descalificado') negCount.descalificado++;
+      else if(r.etapa === 'rechazada') negCount.rechazada++;
+      else {
+        var idx = icEmbudoStageIdx(r.etapa);
+        IC_EMBUDO_STAGES.forEach(function(s,i){ if(idx >= i) funnel[s.key]++; });
+      }
+      if(r.estancado) estancados.push(r);
+      if(r.desfase) desfase.push(r);
+      if(r.cong_sin_fact) congSinFact.push(r);
+      if(r.cong_pendiente) congPend.push(r);
+      if(r.credito_sin_avance) creditoSinAvance.push(r);
+    });
+    var reached = IC_EMBUDO_STAGES.map(function(s){ return funnel[s.key]||0; });
+    var base = reached[0] || 1;
+    var funnelRows = IC_EMBUDO_STAGES.map(function(s,i){
+      var count = reached[i], prev = i>0 ? reached[i-1] : 0;
+      return {
+        etapa:s.label, key:s.key, count:count,
+        pct: Math.round((count/base)*100) || 0,
+        conv: i>0 && prev>0 ? Math.round((count/prev)*100) : null
+      };
+    });
+    var globalConv = reached[0] > 0 ? Math.round((reached[reached.length-1]/reached[0])*100) : 0;
+    var descPct = leads.length ? Math.round((negCount.descalificado||0)/leads.length*100) : 0;
+    var rechPct = leads.length ? Math.round((negCount.rechazada||0)/leads.length*100) : 0;
+    var transiciones = [], peorIdx = -1, peorConv = 1;
+    for(var fi=1; fi<IC_EMBUDO_STAGES.length; fi++){
+      var prevR = reached[fi-1], currR = reached[fi];
+      var convT = prevR > 0 ? Math.round((currR/prevR)*100) : null;
+      transiciones.push({
+        desde:IC_EMBUDO_STAGES[fi-1].label, hacia:IC_EMBUDO_STAGES[fi].label,
+        desdeKey:IC_EMBUDO_STAGES[fi-1].key, prev:prevR, curr:currR,
+        conv:convT, caida:Math.max(0, prevR-currR)
+      });
+      if(prevR >= 2){
+        var convR = currR/prevR;
+        if(convR < peorConv){ peorConv = convR; peorIdx = fi; }
+      }
+    }
+    var pb = {idx:peorIdx, conv:peorConv};
+    return {
+      total: leads.length, funnel: funnelRows, transiciones: transiciones,
+      estancados: estancados, desfase: desfase, congSinFact: congSinFact, congPend: congPend,
+      creditoSinAvance: creditoSinAvance, negCount: negCount, globalConv: globalConv,
+      descPct: descPct, rechPct: rechPct, peorBottleneck: pb,
+      cruceStats: icEmbudoResumenCruce({leads:leads, total:leads.length}),
+      mapaAtencion: icEmbudoMapaAtencion({estancados:estancados, desfase:desfase, congSinFact:congSinFact, creditoSinAvance:creditoSinAvance, negCount:negCount, peorBottleneck:pb})
+    };
+  }
+  function icEmbudoHtmlFiltroActivo(fl, vis, total){
+    if(!fl.etapa && !fl.alerta) return '';
+    var partes = [];
+    if(fl.etapa){
+      var lbl = fl.etapa;
+      IC_EMBUDO_STAGES.forEach(function(s){ if(s.key===fl.etapa) lbl=s.label; });
+      if(fl.etapa==='descalificado') lbl='Descalificado';
+      if(fl.etapa==='rechazada') lbl='Rechazada';
+      partes.push('Etapa: <b>'+lbl+'</b>');
+    }
+    if(fl.alerta){
+      var alertLbl = {estancado:'Estancados',desfase:'Desfase',cong_sin_fact:'Cong. sin facturar',cong_pendiente:'Cong. pendientes',credito_sin_avance:'Crédito sin avance',descalificado:'Descalificados',rechazada:'Rechazados'};
+      partes.push('Alerta: <b>'+(alertLbl[fl.alerta]||fl.alerta)+'</b>');
+    }
+    return '<div style="padding:10px 12px;background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;margin-bottom:12px;font-size:11px;color:#1e3a8a;line-height:1.5">'
+      +'<b>🔎 Filtro activo</b> · '+partes.join(' · ')+' · Mostrando <b>'+icFmt(vis)+'</b> de <b>'+icFmt(total)+'</b> leads'
+      +' · <button type="button" onclick="window._embudoFiltro={etapa:\'\',alerta:\'\'};window.icRenderInformeActivo()" style="margin-left:6px;padding:2px 8px;border:1px solid #93c5fd;border-radius:6px;background:#fff;color:#1d4ed8;font-size:10px;font-weight:700;cursor:pointer">✕ Limpiar</button></div>';
   }
 
   function icEmbudoCalcSemaforo(d){
@@ -18230,14 +18306,17 @@ function _parseCumpleMMDD(s){
   }
 
   function icRenderEmbudoLeads(f){
-    var d = icConstruirEmbudoLeads(f);
+    var d0 = icConstruirEmbudoLeads(f);
     var sheetN = (window._embudoLeadsRows && window._embudoLeadsRows.length) || 0;
     var fl = window._embudoFiltro || {};
-    var leadsVis = icEmbudoFiltrarLeads(d.leads);
+    var leadsVis = icEmbudoFiltrarLeads(d0.leads);
+    var hayFiltro = !!(fl.etapa || fl.alerta);
+    var d = hayFiltro ? Object.assign({}, d0, icEmbudoResumenDesdeLeads(leadsVis), {leads: leadsVis}) : d0;
+    if(!hayFiltro) leadsVis = d.leads;
     var hist = icEmbudoLeerHistorico();
     var html = icAvisoEstadoDatos();
     html += '<div class="ic-panel-title" style="font-size:15px;font-weight:800;color:#003D45;margin-bottom:6px">🎯 Embudo de conversión de leads</div>';
-    html += '<div class="ic-explain">'+IC_DESCS['embudo-leads']+' · <b>'+icFmt(d.total)+'</b> leads en filtro'
+    html += '<div class="ic-explain">'+IC_DESCS['embudo-leads']+' · <b>'+icFmt(d0.total)+'</b> leads en filtro'
       +(sheetN?' · <b>'+icFmt(sheetN)+'</b> registros en hoja «Embudo de conversión de leads»':'')
       +' · Cruce automático por cédula con BASE COLOC, SIGEC, GLPI y CONGELADOS</div>';
     html += '<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
@@ -18248,26 +18327,12 @@ function _parseCumpleMMDD(s){
     html += '<button type="button" class="ic-btn-export" onclick="icExportTabActivo(\'xlsx\')">⬇ Exportar Excel</button>';
     html += '<span style="font-size:10px;color:#64748b;line-height:1.4">Cruce por cédula (SIGEC/GLPI/COLOC) y por ticket (CONGELADOS)</span>';
     html += '</div>';
-    if(!sheetN && !d.total){
+    if(!sheetN && !d0.total){
       html += '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:12px">Sin datos de la hoja aún. Use <b>Actualizar Sheet</b> o espere la carga automática.</div>';
       return html;
     }
-    html += icEmbudoHtmlGuiaLectura();
-    html += icEmbudoHtmlCruceStats(d.cruceStats || icEmbudoResumenCruce(d));
-    html += icEmbudoHtmlMapaAtencion(d.mapaAtencion || icEmbudoMapaAtencion(d));
-    html += '<div class="ic-kpi-grid">';
-    html += icKpi('Leads en filtro', icFmt(d.total), 'Hoja Embudo de conversión de leads', '#003D45');
-    html += icKpi('Conv. global', (d.globalConv||0)+'%', 'Nuevo → Aprobado', d.globalConv>=15?'#16a34a':'#dc2626');
-    html += icKpi('Descalificados', icFmt(d.negCount.descalificado||0), (d.descPct||0)+'% del total', '#dc2626');
-    html += icKpi('Rechazados', icFmt(d.negCount.rechazada||0), (d.rechPct||0)+'% del total', '#ca8a04');
-    html += icKpi('Estancados 5+ días', icFmt(d.estancados.length), 'Nuevo / Intentando contactar', '#ca8a04');
-    html += icKpi('Desfase etapa', icFmt(d.desfase.length), 'Operación más avanzada que HubSpot', '#dc2626');
-    html += icKpi('Cong. s/ facturar', icFmt(d.congSinFact.length), 'CONGELADOS sin fact./aprob.', '#0891b2');
-    html += icKpi('Cong. pendientes', icFmt(d.congPend.length), 'Congelados con trámite abierto', '#6366f1');
-    html += icKpi('Crédito s/ avance', icFmt(d.creditoSinAvance.length), 'En BASE COLOC, etapa atrás', '#b91c1c');
-    html += '</div>';
 
-    html += icSec('Filtros de análisis','Refine la lista de leads y tablas de detalle');
+    html += icSec('Filtros de análisis','Refine KPIs, tablas y listado de leads');
     html += '<div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;align-items:flex-end">';
     html += '<div><div style="font-size:9px;font-weight:700;color:#64748b;margin-bottom:3px">ETAPA HUBSPOT</div>';
     html += '<select onchange="icEmbudoSetFiltro(\'etapa\',this.value)" style="padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:11px;min-width:180px">';
@@ -18289,13 +18354,26 @@ function _parseCumpleMMDD(s){
       html += '<option value="'+o[0]+'"'+(fl.alerta===o[0]?' selected':'')+'>'+o[1]+'</option>';
     });
     html += '</select></div>';
-    if(fl.etapa || fl.alerta){
-      html += '<button type="button" class="ic-btn-export" style="margin:0" onclick="window._embudoFiltro={etapa:\'\',alerta:\'\'};icRenderInformeActivo()">✕ Limpiar filtros</button>';
-    }
-    html += '<span style="font-size:10px;color:#003D45;font-weight:700">Mostrando '+icFmt(leadsVis.length)+' de '+icFmt(d.leads.length)+' leads</span>';
+    html += '<span style="font-size:10px;color:#003D45;font-weight:700">Mostrando '+icFmt(leadsVis.length)+' de '+icFmt(d0.leads.length)+' leads</span>';
+    html += '</div>';
+    html += icEmbudoHtmlFiltroActivo(fl, leadsVis.length, d0.leads.length);
+
+    html += icEmbudoHtmlGuiaLectura();
+    html += icEmbudoHtmlCruceStats(d.cruceStats || icEmbudoResumenCruce(d));
+    html += icEmbudoHtmlMapaAtencion(d.mapaAtencion || icEmbudoMapaAtencion(d));
+    html += '<div class="ic-kpi-grid">';
+    html += icKpi('Leads'+(hayFiltro?' (filtrados)':''), icFmt(d.total), hayFiltro?('De '+icFmt(d0.total)+' en sede/filtro'):'Hoja Embudo de conversión de leads', '#003D45');
+    html += icKpi('Conv. global', (d.globalConv||0)+'%', 'Nuevo → Aprobado', d.globalConv>=15?'#16a34a':'#dc2626');
+    html += icKpi('Descalificados', icFmt(d.negCount.descalificado||0), (d.descPct||0)+'% del total', '#dc2626');
+    html += icKpi('Rechazados', icFmt(d.negCount.rechazada||0), (d.rechPct||0)+'% del total', '#ca8a04');
+    html += icKpi('Estancados 5+ días', icFmt(d.estancados.length), 'Nuevo / Intentando contactar', '#ca8a04');
+    html += icKpi('Desfase etapa', icFmt(d.desfase.length), 'Operación más avanzada que HubSpot', '#dc2626');
+    html += icKpi('Cong. s/ facturar', icFmt(d.congSinFact.length), 'CONGELADOS sin fact./aprob.', '#0891b2');
+    html += icKpi('Cong. pendientes', icFmt(d.congPend.length), 'Congelados con trámite abierto', '#6366f1');
+    html += icKpi('Crédito s/ avance', icFmt(d.creditoSinAvance.length), 'En BASE COLOC, etapa atrás', '#b91c1c');
     html += '</div>';
 
-    html += icSec('Análisis profundo del embudo','Identifique en qué transición etapa→etapa se pierde más conversión');
+    html += icSec('Análisis profundo del embudo','Identifique en qué transición etapa→etapa se pierde más conversión'+(hayFiltro?' · vista filtrada':''));
     if(d.peorBottleneck && d.peorBottleneck.idx > 0){
       var pb = d.peorBottleneck;
       var pbDesde = IC_EMBUDO_STAGES[pb.idx-1].label;
@@ -18435,7 +18513,8 @@ function _parseCumpleMMDD(s){
         +(tagLbl[it.tipo]||it.tipo)+'</span><span>'+it.texto+'</span></div>';
     });
     function tblDetalle(titulo, lista, cols){
-      html += icSec(titulo, icFmt(lista.length)+' registros');
+      if(!lista.length && hayFiltro) return;
+      html += icSec(titulo, icFmt(lista.length)+' registros'+(hayFiltro?' · filtrado':''));
       html += '<div style="overflow:auto;max-height:300px"><table class="ic-tbl"><thead><tr>';
       cols.forEach(function(c){ html += '<th>'+c+'</th>'; });
       html += '</tr></thead><tbody>';
@@ -18452,6 +18531,9 @@ function _parseCumpleMMDD(s){
     tblDetalle('Congelados sin facturar ni aprobar', d.congSinFact, ['Nombre','Cédula','Sede','Etapa HubSpot','Operación real','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
     tblDetalle('Congelados con trámite pendiente', d.congPend, ['Nombre','Cédula','Sede','Etapa HubSpot','Operación real','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
     tblDetalle('Leads estancados (5+ días en etapa inicial)', d.estancados, ['Nombre','Cédula','Sede','Etapa HubSpot','Operación real','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    if(hayFiltro && !leadsVis.length){
+      html += '<div style="text-align:center;padding:24px;color:#94a3b8;font-size:12px">Ningún lead coincide con el filtro seleccionado.</div>';
+    }
     html += icSec('Listado de leads (hoja HubSpot)','Solo lectura · datos desde Google Sheet'+(fl.etapa||fl.alerta?' · filtrado':'')+'');
     html += '<div style="overflow:auto;max-height:360px"><table class="ic-tbl"><thead><tr>'
       +'<th>Nombre</th><th>Cédula</th><th>Sede</th><th>Etapa CRM</th><th>Operación</th><th>Fuente</th><th>Propietario</th><th>Días</th><th>COLOC</th><th>SIGEC</th><th>GLPI</th><th>Cong.</th><th>Alertas</th></tr></thead><tbody>';
@@ -19866,7 +19948,7 @@ function _parseCumpleMMDD(s){
     cargarOperacion:function(forzar){ return icCargarDatosInformes(!!forzar); }
   };
 
-  console.log('[CMD] Informes Comerciales v5.4.96 — embudo cruce validado + CogniPYV');
+  console.log('[CMD] Informes Comerciales v5.4.97 — fix filtros embudo');
 })();
 
 </script>
