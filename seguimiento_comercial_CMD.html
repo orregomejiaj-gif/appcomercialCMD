@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.95   (APP_VERSION = 'pyv-comercial-5.4.95')
+  Versión actual: pyv-comercial-5.4.96   (APP_VERSION = 'pyv-comercial-5.4.96')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.96 (2026-07-24)
+    - Embudo leads: cruce validado SIGEC/GLPI/BASE COLOC/CONGELADOS por cédula y ticket; guía de lectura, mapa de atención y sugerencias CogniPYV/Gemini.
   pyv-comercial-5.4.95 (2026-07-24)
     - Acompañamiento comercial (Hoja 2): semáforos e información del embudo de conversión de leads para las sedes seleccionadas.
   pyv-comercial-5.4.94 (2026-07-24)
@@ -401,11 +403,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.95">
-<meta name="build-id" content="pyv-comercial-5.4.95-20260730-1600">
-<title>SCIC pyv-comercial 5.4.95 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.96">
+<meta name="build-id" content="pyv-comercial-5.4.96-20260730-1615">
+<title>SCIC pyv-comercial 5.4.96 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.95';
+window.APP_VERSION='pyv-comercial-5.4.96';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1168,7 +1170,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.95</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.96</div>
 </div>
 
 
@@ -1177,7 +1179,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.95</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.96</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -4081,7 +4083,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.95';
+var APP_VERSION = 'pyv-comercial-5.4.96';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -13841,6 +13843,32 @@ function _parseCumpleMMDD(s){
           },
           required: []
         }
+      },
+      {
+        name: 'analizar_embudo_leads',
+        description: 'Embudo de conversión de leads HubSpot cruzado por cédula con SIGEC, GLPI, BASE COLOC y CONGELADOS (por ticket). Incluye semáforo, estancados, desfase CRM, congelados y cuello de botella.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            nivel: { type: 'STRING', description: 'nacional | rectoria | sede' },
+            sel: { type: 'STRING', description: 'Nombre sede o rectoría' },
+            sedes: { type: 'ARRAY', items: { type: 'STRING' }, description: 'Lista opcional de sedes' }
+          },
+          required: []
+        }
+      },
+      {
+        name: 'sugerencias_embudo_conversion',
+        description: 'Sugerencias accionables para mejorar conversión de leads y colocación, combinando embudo HubSpot + cumplimiento meta S2.',
+        parameters: {
+          type: 'OBJECT',
+          properties: {
+            nivel: { type: 'STRING' },
+            sel: { type: 'STRING' },
+            sedes: { type: 'ARRAY', items: { type: 'STRING' } }
+          },
+          required: []
+        }
       }
     ];
   }
@@ -13971,6 +13999,42 @@ function _parseCumpleMMDD(s){
     return s.sort(function(x,y){ return x.prioridad - y.prioridad; });
   }
 
+  function _scicSugerenciasEmbudoLocal(embudo, analisis){
+    var s = [];
+    var e = embudo || {};
+    var a = analisis || {};
+    if(!e.total_leads){
+      s.push({ prioridad: 1, accion: 'Cargar hoja «Embudo de conversión de leads» y actualizar Sheets para analizar conversión.' });
+      return s;
+    }
+    if((e.alertas && e.alertas.estancados) > 0){
+      s.push({ prioridad: 1, accion: 'Contactar hoy ' + e.alertas.estancados + ' lead(s) estancados en Nuevo/Intentando contactar (5+ días sin avance).' });
+    }
+    if((e.alertas && e.alertas.desfase) > 0){
+      s.push({ prioridad: 2, accion: 'Actualizar etapa HubSpot en ' + e.alertas.desfase + ' lead(s) con desfase: la operación SIGEC/GLPI/COLOC ya está más avanzada.' });
+    }
+    if((e.alertas && e.alertas.congelados_sin_facturar) > 0){
+      s.push({ prioridad: 2, accion: 'Priorizar cierre de ' + e.alertas.congelados_sin_facturar + ' lead(s) congelados sin facturar/aprobar en SIGEC/GLPI.' });
+    }
+    if(e.cuello_botella){
+      s.push({ prioridad: 3, accion: 'Atacar cuello de botella «' + e.cuello_botella.desde + ' → ' + e.cuello_botella.hacia + '» (solo ' + e.cuello_botella.conv_pct + '% avanza).' });
+    }
+    if(a.faltan_creditos > 0){
+      s.push({ prioridad: 3, accion: 'Vincular embudo con meta S2: faltan ' + a.faltan_creditos.toLocaleString('es-CO') + ' créditos · ritmo necesario ' + a.ritmo_necesario_dia + '/día.' });
+    }
+    if((e.sedes_peor_conv||[]).length){
+      var peor = e.sedes_peor_conv[0];
+      s.push({ prioridad: 4, accion: 'Reforzar sede «' + peor.sede + '» (conv. ' + peor.conv_pct + '% con ' + peor.leads + ' leads).' });
+    }
+    if((e.descalificados_pct||0) >= 15){
+      s.push({ prioridad: 4, accion: 'Reducir descalificación (' + e.descalificados_pct + '%): revisar motivos HubSpot y documentación desde primer contacto.' });
+    }
+    if(!s.length){
+      s.push({ prioridad: 1, accion: 'Embudo en semáforo ' + (e.semaforo||'—') + ' con ' + (e.conversion_global_pct||0) + '% conversión. Mantener ritmo y replicar buenas prácticas.' });
+    }
+    return s.sort(function(x,y){ return x.prioridad - y.prioridad; });
+  }
+
   async function _scicEjecutarHerramienta(nombre, args){
     nombre = String(nombre || '').trim();
     args = args || {};
@@ -14009,6 +14073,40 @@ function _parseCumpleMMDD(s){
           sedes_riesgo: rk,
           sugerencias_base: _scicSugerenciasMetaLocal(an, rk)
         };
+      }
+      if(nombre === 'analizar_embudo_leads'){
+        if(!window.IC_EMBUDO_API || typeof window.IC_EMBUDO_API.construir !== 'function'){
+          return { error: 'Módulo embudo no disponible' };
+        }
+        var raE = _scicResolverNivelArgs(args);
+        var fE = {};
+        if(raE.sedesFiltro && raE.sedesFiltro.length) fE.sedes = raE.sedesFiltro;
+        else if(raE.nivel === 'sede' && raE.sel) fE.sedes = [raE.sel];
+        else if(raE.nivel === 'rectoria' && raE.sel) fE.rectoria = raE.sel;
+        if(typeof window.IC_EMBUDO_API.cargarOperacion === 'function'){
+          await window.IC_EMBUDO_API.cargarOperacion(false);
+        }
+        var dE = window.IC_EMBUDO_API.construir(fE);
+        var serE = window.IC_EMBUDO_API.serializar ? window.IC_EMBUDO_API.serializar(dE, fE) : { total: dE.total };
+        return { ok: true, embudo: serE, semaforo: window.IC_EMBUDO_API.semaforo(dE) };
+      }
+      if(nombre === 'sugerencias_embudo_conversion'){
+        if(!window.IC_EMBUDO_API || typeof window.IC_EMBUDO_API.construir !== 'function'){
+          return { error: 'Módulo embudo no disponible' };
+        }
+        var raS = _scicResolverNivelArgs(args);
+        var fS = {};
+        if(raS.sedesFiltro && raS.sedesFiltro.length) fS.sedes = raS.sedesFiltro;
+        else if(raS.nivel === 'sede' && raS.sel) fS.sedes = [raS.sel];
+        else if(raS.nivel === 'rectoria' && raS.sel) fS.rectoria = raS.sel;
+        if(typeof window.IC_EMBUDO_API.cargarOperacion === 'function'){
+          await window.IC_EMBUDO_API.cargarOperacion(false);
+        }
+        var dS = window.IC_EMBUDO_API.construir(fS);
+        var anS = _scicAnalizarCumplimiento(args);
+        var embS = window.IC_EMBUDO_API.serializar ? window.IC_EMBUDO_API.serializar(dS, fS) : {};
+        var sugS = _scicSugerenciasEmbudoLocal(embS, anS);
+        return { ok: true, embudo: embS, cumplimiento: anS, sugerencias: sugS };
       }
       return { error: 'Herramienta desconocida: '+nombre };
     }catch(e){
@@ -14058,7 +14156,7 @@ function _parseCumpleMMDD(s){
       'Tu meta es ayudar a CUMPLIR la meta S2 de colocación (créditos).',
       'Colocado unificado = SIGEC facturadas + GLPI aprobadas (criterio oficial).',
       'SIEMPRE usa las herramientas para obtener datos en vivo antes de responder con cifras.',
-      'Flujo recomendado: refrescar_datos_sheets (si hace falta) → analizar_cumplimiento_meta o listar_sedes_en_riesgo → generar_sugerencias_meta.',
+      'Flujo recomendado: refrescar_datos_sheets (si hace falta) → analizar_cumplimiento_meta o analizar_embudo_leads → generar_sugerencias_meta o sugerencias_embudo_conversion.',
       'Responde en español. Estructura: Situación · Brecha vs meta · 3-5 acciones priorizadas · Riesgo si no se actúa.',
       'No inventes números. Si los datos no están listos, dilo y pide actualizar Sheets.',
       'Sé concreto: créditos/día, sedes a visitar, foco SIGEC vs GLPI.'
@@ -15631,7 +15729,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.95 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.96 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -16646,7 +16744,7 @@ function _parseCumpleMMDD(s){
     var sf = icSedesFiltro(f);
     if(!sf || !sf.length) return rows;
     return rows.filter(function(r){
-      return sf.some(function(s){ return icMatchSede(r.sede, s); });
+      return sf.some(function(s){ return !!icResolverSedeColoc(r.sede, [s]); });
     });
   }
   function icConstruirCruceEmbudoCedulas(f){
@@ -16658,7 +16756,8 @@ function _parseCumpleMMDD(s){
       if(!n || n.length < 5) return null;
       if(!map[n]) map[n] = {
         ced:n, sigec:[], glpi:[], tickets:[], facturada:0, glpi_aprob:0,
-        tiene_credito:!!base[n], es_congelado:false, cong_tickets:[], radicado:0, abierta:0
+        tiene_credito:!!base[n], es_congelado:false, cong_tickets:[], radicado:0, abierta:0,
+        cong_dias_max:0, cong_pendiente_txt:''
       };
       return map[n];
     }
@@ -16670,7 +16769,15 @@ function _parseCumpleMMDD(s){
       var tk = icNormTicket(r.Ticket || c[IC_SIG.TICKET]);
       var cls = icClasifSigec(r);
       if(tk) o.tickets.push(tk);
-      if(congSet[tk]){ o.es_congelado = true; o.cong_tickets.push(tk); }
+      if(congSet[tk]){
+        o.es_congelado = true;
+        o.cong_tickets.push(tk);
+        var ci = icInfoCongelado(tk);
+        if(ci){
+          if((ci.dias||0) > (o.cong_dias_max||0)) o.cong_dias_max = ci.dias||0;
+          if(ci.pendiente) o.cong_pendiente_txt = ci.pendiente;
+        }
+      }
       o.sigec.push({tk:tk, cls:cls, sede:icStr(r.Sede || c[IC_SIG.SED])});
       if(cls === 'facturada'){ o.facturada++; o.radicado++; }
       else if(cls === 'cerrada_fac') o.radicado++;
@@ -16686,11 +16793,20 @@ function _parseCumpleMMDD(s){
       var est = icStr(r.estado || r.Estado || c[IC_GLP.EST]).toLowerCase();
       var cls = gap ? 'aprobada' : (est.indexOf('cerr')>=0 ? 'cerrada' : 'abierta');
       if(tk) o.tickets.push(tk);
-      if(congSet[tk]){ o.es_congelado = true; o.cong_tickets.push(tk); }
+      if(congSet[tk]){
+        o.es_congelado = true;
+        o.cong_tickets.push(tk);
+        var cig = icInfoCongelado(tk);
+        if(cig){
+          if((cig.dias||0) > (o.cong_dias_max||0)) o.cong_dias_max = cig.dias||0;
+          if(cig.pendiente) o.cong_pendiente_txt = cig.pendiente;
+        }
+      }
       o.glpi.push({tk:tk, cls:cls, sede:icGlpiLeerSede(r)});
       if(gap){ o.glpi_aprob++; o.radicado++; }
       else if(cls === 'abierta') o.abierta++;
     });
+    Object.keys(base).forEach(function(ced){ ensure(ced); });
     return map;
   }
   function icEmbudoEtapaEsperadaOps(o){
@@ -16699,6 +16815,124 @@ function _parseCumpleMMDD(s){
     if(o.es_congelado) return IC_EMBUDO_STAGE_INDEX.congelada;
     if(o.radicado > 0 || o.sigec.length || o.glpi.length) return IC_EMBUDO_STAGE_INDEX.radicado;
     return -1;
+  }
+  function icEmbudoOpsEtapaLbl(o){
+    if(!o) return 'Sin cruce operativo';
+    var idx = icEmbudoEtapaEsperadaOps(o);
+    if(idx < 0) return 'Sin radicación SIGEC/GLPI';
+    return IC_EMBUDO_STAGES[idx] ? IC_EMBUDO_STAGES[idx].label : '—';
+  }
+  function icEmbudoEstadoOpsTxt(cruce){
+    if(!cruce) return 'Sin cédula / sin cruce';
+    if(cruce.facturada && cruce.glpi_aprob) return 'SIGEC facturada + GLPI aprobada';
+    if(cruce.facturada) return 'SIGEC facturada';
+    if(cruce.glpi_aprob) return 'GLPI aprobada';
+    if(cruce.tiene_credito) return 'En BASE COLOC (desembolsado)';
+    if(cruce.es_congelado) return 'Congelado · ' + (cruce.cong_tickets||[]).length + ' ticket(s)' + (cruce.cong_dias_max ? ' · ' + cruce.cong_dias_max + ' días' : '');
+    if(cruce.radicado > 0) return 'Radicado SIGEC/GLPI';
+    if(cruce.sigec.length || cruce.glpi.length) return 'Trámite abierto SIGEC/GLPI';
+    return 'Sin operación';
+  }
+  function icEmbudoResumenCruce(d){
+    var leads = (d && d.leads) ? d.leads : [];
+    var conCed = 0, conSigec = 0, conGlpi = 0, conColoc = 0, conCong = 0, sinCruce = 0;
+    leads.forEach(function(r){
+      if(r.cedula && r.cedula !== '—') conCed++;
+      if((r.sigec_n||0) > 0) conSigec++;
+      if((r.glpi_n||0) > 0) conGlpi++;
+      if(r.tiene_credito) conColoc++;
+      if(r.es_congelado) conCong++;
+      if(!r.sigec_n && !r.glpi_n && !r.tiene_credito) sinCruce++;
+    });
+    return {
+      total: d ? d.total : 0, conCedula: conCed, conSigec: conSigec, conGlpi: conGlpi,
+      conColoc: conColoc, conCongelado: conCong, sinCruceOperativo: sinCruce
+    };
+  }
+  function icEmbudoMapaAtencion(d){
+    if(!d) return [];
+    var pbAccion = '';
+    if(d.peorBottleneck && d.peorBottleneck.idx > 0){
+      pbAccion = 'Foco comercial en transición «' + IC_EMBUDO_STAGES[d.peorBottleneck.idx - 1].label
+        + ' → ' + IC_EMBUDO_STAGES[d.peorBottleneck.idx].label + '» (solo ' + Math.round(d.peorBottleneck.conv * 100) + '% avanza). '
+        + (IC_EMBUDO_BOTTLENECK_TIPS[IC_EMBUDO_STAGES[d.peorBottleneck.idx].key] || '');
+    }
+    return [
+      { id:'estancados', emoji:'⏳', titulo:'Estancados en contacto inicial', count: (d.estancados||[]).length, color:'#ca8a04',
+        accion:'Contactar hoy los leads con 5+ días en Nuevo o Intentando contactar sin avanzar de etapa.' },
+      { id:'desfase', emoji:'⚠️', titulo:'Desfase CRM vs operación', count: (d.desfase||[]).length, color:'#dc2626',
+        accion:'Actualizar etapa HubSpot: la operación (SIGEC/GLPI/COLOC) ya está más avanzada que el CRM.' },
+      { id:'cong_sin_fact', emoji:'❄️', titulo:'Congelados sin facturar ni aprobar', count: (d.congSinFact||[]).length, color:'#0891b2',
+        accion:'Priorizar cierre en SIGEC/GLPI para leads con ticket en hoja CONGELADOS.' },
+      { id:'credito', emoji:'📋', titulo:'En BASE COLOC sin etapa aprobada', count: (d.creditoSinAvance||[]).length, color:'#b91c1c',
+        accion:'Verificar desembolso confirmado y mover etapa HubSpot a Crédito aprobado.' },
+      { id:'descalificados', emoji:'🚫', titulo:'Descalificados', count: d.negCount ? (d.negCount.descalificado||0) : 0, color:'#dc2626',
+        accion:'Revisar motivos en HubSpot y mejorar documentación desde el primer contacto.' },
+      { id:'pb', emoji:'🔻', titulo:'Cuello de botella principal', count: pbAccion ? 1 : 0, color:'#7c2d12', accion: pbAccion }
+    ].filter(function(x){ return x.id === 'pb' ? !!x.accion : x.count > 0; });
+  }
+  function icEmbudoHtmlGuiaLectura(){
+    return '<div style="padding:12px 14px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:12px;margin-bottom:12px;font-size:11px;line-height:1.55;color:#134e4a">'
+      + '<b style="color:#003D45">Cómo leer este informe</b><br>'
+      + '<span style="display:inline-block;margin-top:6px">① <b>Embudo HubSpot</b> = etapa comercial del lead en CRM.</span> '
+      + '② <b>Cruce SIGEC/GLPI</b> = radicaciones y aprobaciones reales por cédula. '
+      + '③ <b>BASE COLOC</b> = desembolsos confirmados. '
+      + '④ <b>CONGELADOS</b> = tickets en hoja CONGELADOS vinculados por número de ticket SIGEC/GLPI.<br>'
+      + '<b style="color:#b91c1c">Atención:</b> si la etapa HubSpot está atrás de la operación → <b>Desfase</b>. '
+      + 'Si llevan días sin avanzar en contacto → <b>Estancados</b>.</div>';
+  }
+  function icEmbudoHtmlCruceStats(stats){
+    if(!stats) return '';
+    return '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:6px;margin-bottom:12px">'
+      + '<div style="padding:8px;background:#f8fafc;border-radius:8px;text-align:center;border:1px solid #e2e8f0"><div style="font-size:7px;color:#64748b;font-weight:700">LEADS</div><div style="font-size:16px;font-weight:900;color:#003D45">' + icFmt(stats.total) + '</div></div>'
+      + '<div style="padding:8px;background:#fef2f2;border-radius:8px;text-align:center;border:1px solid #fecaca"><div style="font-size:7px;color:#b91c1c;font-weight:700">CRUCE SIGEC</div><div style="font-size:16px;font-weight:900;color:#dc2626">' + icFmt(stats.conSigec) + '</div></div>'
+      + '<div style="padding:8px;background:#eff6ff;border-radius:8px;text-align:center;border:1px solid #bfdbfe"><div style="font-size:7px;color:#1d4ed8;font-weight:700">CRUCE GLPI</div><div style="font-size:16px;font-weight:900;color:#1e40af">' + icFmt(stats.conGlpi) + '</div></div>'
+      + '<div style="padding:8px;background:#f0fdf4;border-radius:8px;text-align:center;border:1px solid #bbf7d0"><div style="font-size:7px;color:#15803d;font-weight:700">BASE COLOC</div><div style="font-size:16px;font-weight:900;color:#166534">' + icFmt(stats.conColoc) + '</div></div>'
+      + '<div style="padding:8px;background:#ecfeff;border-radius:8px;text-align:center;border:1px solid #a5f3fc"><div style="font-size:7px;color:#0891b2;font-weight:700">CONGELADOS</div><div style="font-size:16px;font-weight:900;color:#0e7490">' + icFmt(stats.conCongelado) + '</div></div>'
+      + '<div style="padding:8px;background:#fff7ed;border-radius:8px;text-align:center;border:1px solid #fed7aa"><div style="font-size:7px;color:#c2410c;font-weight:700">SIN CRUCE</div><div style="font-size:16px;font-weight:900;color:#ea580c">' + icFmt(stats.sinCruceOperativo) + '</div></div>'
+      + '</div>';
+  }
+  function icEmbudoHtmlMapaAtencion(mapa){
+    if(!mapa || !mapa.length) return '';
+    var html = icSec('¿Dónde se quedan los leads?', 'Ubicación del bloqueo y acción recomendada para mejorar conversión');
+    mapa.forEach(function(m){
+      html += '<div style="display:flex;gap:12px;padding:12px 14px;margin-bottom:8px;background:#fff;border:1px solid #e2e8f0;border-left:4px solid ' + m.color + ';border-radius:10px">'
+        + '<div style="font-size:22px;line-height:1">' + m.emoji + '</div>'
+        + '<div style="flex:1"><div style="display:flex;justify-content:space-between;align-items:baseline">'
+        + '<span style="font-size:13px;font-weight:800;color:#003D45">' + m.titulo + '</span>'
+        + '<span style="font-size:18px;font-weight:900;color:' + m.color + '">' + (m.id === 'pb' ? '⚠' : icFmt(m.count)) + '</span></div>'
+        + '<div style="font-size:11px;color:#475569;margin-top:4px;line-height:1.5"><b>Qué hacer:</b> ' + m.accion + '</div></div></div>';
+    });
+    return html;
+  }
+  function icEmbudoSerializarParaIA(d, f){
+    if(!d) return {};
+    var sem = icEmbudoCalcSemaforo(d);
+    var cruce = icEmbudoResumenCruce(d);
+    var mapa = icEmbudoMapaAtencion(d);
+    return {
+      filtro: icFiltroResumen(f || {}),
+      semaforo: sem.sem,
+      total_leads: d.total,
+      conversion_global_pct: d.globalConv,
+      descalificados_pct: d.descPct,
+      cuello_botella: d.peorBottleneck && d.peorBottleneck.idx > 0 ? {
+        desde: IC_EMBUDO_STAGES[d.peorBottleneck.idx - 1].label,
+        hacia: IC_EMBUDO_STAGES[d.peorBottleneck.idx].label,
+        conv_pct: Math.round(d.peorBottleneck.conv * 100)
+      } : null,
+      cruce: cruce,
+      alertas: {
+        estancados: (d.estancados||[]).length,
+        desfase: (d.desfase||[]).length,
+        congelados_sin_facturar: (d.congSinFact||[]).length,
+        credito_sin_avance: (d.creditoSinAvance||[]).length
+      },
+      mapa_atencion: mapa.map(function(m){ return { titulo: m.titulo, count: m.count, accion: m.accion }; }),
+      diagnostico: (d.diag||[]).slice(0, 6).map(function(x){ return x.texto; }),
+      sedes_peor_conv: (d.rankSedes||[]).slice(0, 5).map(function(r){ return { sede: r.sede, leads: r.total, conv_pct: r.conv }; }),
+      transiciones_criticas: (d.transiciones||[]).filter(function(t){ return t.conv != null && t.conv < 50; }).slice(0, 4)
+    };
   }
   function icConstruirEmbudoLeads(f){
     f = f || {};
@@ -16711,12 +16945,13 @@ function _parseCumpleMMDD(s){
     leads.forEach(function(l){
       var etapa = l.etapa || icMatchEmbudoEtapa(l.etapaRaw);
       var idx = icEmbudoStageIdx(etapa);
-      var cruce = l.cedula ? cedMap[l.cedula] : null;
+      var cedKey = icNormCed(l.cedula);
+      var cruce = cedKey ? cedMap[cedKey] : null;
       var facturada = cruce && (cruce.facturada > 0 || cruce.glpi_aprob > 0);
       var esperada = icEmbudoEtapaEsperadaOps(cruce);
       var dias = icEmbudoDiasDesde(l.fecha);
       var item = {
-        nombre:l.nombre, cedula:l.cedula||'—', sede:l.sede, etapa:etapa, etapaLbl:IC_EMBUDO_STAGES[idx]?IC_EMBUDO_STAGES[idx].label:(etapa||'—'),
+        nombre:l.nombre, cedula:cedKey || l.cedula || '—', sede:l.sede, etapa:etapa, etapaLbl:IC_EMBUDO_STAGES[idx]?IC_EMBUDO_STAGES[idx].label:(etapa||'—'),
         etapaRaw:l.etapaRaw||'',
         fuente:l.fuente, propietario:l.propietario, dias:dias,
         tiene_credito:!!(cruce && cruce.tiene_credito),
@@ -16724,7 +16959,11 @@ function _parseCumpleMMDD(s){
         es_congelado:!!(cruce && cruce.es_congelado),
         sigec_n:cruce?cruce.sigec.length:0,
         glpi_n:cruce?cruce.glpi.length:0,
+        sigec_fact:cruce?cruce.facturada:0,
+        glpi_aprob:cruce?cruce.glpi_aprob:0,
         tickets:cruce?(cruce.tickets||[]).join('; '):'',
+        ops_etapa_lbl:icEmbudoOpsEtapaLbl(cruce),
+        estado_ops:icEmbudoEstadoOpsTxt(cruce),
         desfase:false, estancado:false, cong_sin_fact:false, cong_pendiente:false
       };
       if(etapa === 'descalificado' || etapa === 'rechazada'){
@@ -16801,9 +17040,12 @@ function _parseCumpleMMDD(s){
       porSede[sed].total++;
       var et = l.etapa || icMatchEmbudoEtapa(l.etapaRaw);
       var ix = icEmbudoStageIdx(et);
+      var cedKey = icNormCed(l.cedula);
+      var cr = cedKey ? cedMap[cedKey] : null;
+      var opsAprob = cr && (cr.facturada > 0 || cr.glpi_aprob > 0 || cr.tiene_credito);
       if(et==='descalificado') porSede[sed].desc++;
       else if(et==='rechazada') porSede[sed].rech++;
-      if(ix >= IC_EMBUDO_STAGE_INDEX.aprobado) porSede[sed].aprob++;
+      if(opsAprob || ix >= IC_EMBUDO_STAGE_INDEX.aprobado) porSede[sed].aprob++;
     });
     var rankSedes = Object.keys(porSede).map(function(s){
       var o = porSede[s];
@@ -16841,7 +17083,9 @@ function _parseCumpleMMDD(s){
       estancados:estancados, desfase:desfase,
       congSinFact:congSinFact, congPend:congPend, creditoSinAvance:creditoSinAvance,
       diag:diag, etapaCount:etapaCount, globalConv:globalConv, descPct:descPct, rechPct:rechPct,
-      transiciones:transiciones, rankSedes:rankSedes, peorBottleneck:{idx:peorIdx, conv:peorConv}
+      transiciones:transiciones, rankSedes:rankSedes, peorBottleneck:{idx:peorIdx, conv:peorConv},
+      cruceStats:icEmbudoResumenCruce({leads:rows, total:leads.length}),
+      mapaAtencion:icEmbudoMapaAtencion({estancados:estancados, desfase:desfase, congSinFact:congSinFact, creditoSinAvance:creditoSinAvance, negCount:negCount, peorBottleneck:{idx:peorIdx, conv:peorConv}})
     };
   }
 
@@ -16863,8 +17107,8 @@ function _parseCumpleMMDD(s){
     'perdida-cedulas':'Cruce por identificación: cédulas con cerrada/cerr.fac/rechazada vs facturada/GLPI aprobada. Pendientes de recuperar y exportación CSV.',
     'perdida-real':'Solo pérdida real por cédula: solicitudes cerradas + cerradas facturadas + rechazadas (SIGEC) cruzadas con facturadas y GLPI aprobadas. Sin recuperación = pérdida real. Export Excel.',
     'reincidencia':'Alerta: misma cédula con varios radicados distintos. Ranking de sedes con mayor reincidencia. Incluye vista de cédulas con más radicaciones cerradas sin facturar ni aprobar (SIGEC cerrada/rechazada, GLPI cerrada) con export Excel por cédula y estados.',
-    'embudo-leads':'Embudo de conversión de leads (HubSpot): etapas del pipeline cruzadas por cédula con colocación (BASE COLOC), SIGEC, GLPI y hoja CONGELADOS. Identifica estancados, desfase etapa vs operación, congelados sin facturar y leads con crédito sin avance.',
-    'embudo-leads-resumen':'Resumen ejecutivo del embudo de conversión de leads: semáforo, conversión global, cuello de botella, transiciones críticas y ranking de sedes. Ideal para lectura rápida por sede o nacional.',
+    'embudo-leads':'Embudo de conversión de leads (HubSpot): etapas del pipeline cruzadas por cédula con BASE COLOC, SIGEC, GLPI y CONGELADOS (por ticket). Identifica estancados, desfase etapa vs operación, congelados sin facturar y leads con crédito sin avance. Incluye mapa de atención y sugerencias CogniPYV.',
+    'embudo-leads-resumen':'Resumen ejecutivo del embudo: semáforo, conversión global, validación de cruces SIGEC/GLPI/COLOC/CONGELADOS, mapa de atención y cuello de botella. Ideal para lectura rápida.',
     'turno-vivo':'Tablero en vivo: malla de turnos (MALLA) + estado app + colocado del día por sede y estimado por asesor en franja.',
     'scorecard-sede':'Scorecard integral por sede: meta S2, curva, tiempos SLA, congelados, pérdida y cartera en radar ECharts.',
     'alertas-cognipyv':'Alertas automáticas SLA (>72h), congelados críticos y pérdida. Botón para enviar análisis a CogniPYV.',
@@ -17936,6 +18180,9 @@ function _parseCumpleMMDD(s){
       html += '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:12px">Sin datos. Use <b>Actualizar Sheet</b>.</div>';
       return html;
     }
+    html += icEmbudoHtmlGuiaLectura();
+    html += icEmbudoHtmlCruceStats(d.cruceStats || icEmbudoResumenCruce(d));
+    html += icEmbudoHtmlMapaAtencion(d.mapaAtencion || icEmbudoMapaAtencion(d));
     html += icEmbudoResumenCardHtml(d, {dark:false, titulo:'Semáforo embudo · '+icFiltroResumen(f)});
     html += '<div class="ic-kpi-grid" style="margin-top:12px">';
     html += icKpi('Conv. global', (d.globalConv||0)+'%', 'Nuevo → Aprobado', sem.color);
@@ -17978,6 +18225,7 @@ function _parseCumpleMMDD(s){
     (d.diag||[]).slice(0,5).forEach(function(it){
       html += '<div style="font-size:11px;padding:6px 0;border-bottom:1px solid #e2e8f0;color:#334155">• '+it.texto+'</div>';
     });
+    html += '<div style="margin-top:12px"><button type="button" class="ic-btn-export" style="background:linear-gradient(135deg,#92400e,#003D45);color:#FFD900;border:none" onclick="icEmbudoSolicitarGemini()">✨ Sugerencias CogniPYV para mejorar conversión</button></div>';
     return html;
   }
 
@@ -17995,14 +18243,18 @@ function _parseCumpleMMDD(s){
     html += '<div style="margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">';
     html += '<button type="button" class="ic-btn-export" onclick="icRefrescarEmbudoSheet()">↺ Actualizar Sheet</button>';
     html += '<button type="button" class="ic-btn-export" style="background:#6366f1" onclick="icEmbudoGuardarHistorico()">💾 Guardar período</button>';
+    html += '<button type="button" class="ic-btn-export" style="background:linear-gradient(135deg,#92400e,#003D45);color:#FFD900;border:none" onclick="icEmbudoSolicitarGemini()">✨ Sugerencias CogniPYV</button>';
     html += '<button type="button" class="ic-btn-export" onclick="icExportTabActivo(\'pdf\')">📄 Exportar PDF</button>';
     html += '<button type="button" class="ic-btn-export" onclick="icExportTabActivo(\'xlsx\')">⬇ Exportar Excel</button>';
-    html += '<span style="font-size:10px;color:#64748b;line-height:1.4">Datos desde Google Sheet · actualización manual si necesita datos en vivo</span>';
+    html += '<span style="font-size:10px;color:#64748b;line-height:1.4">Cruce por cédula (SIGEC/GLPI/COLOC) y por ticket (CONGELADOS)</span>';
     html += '</div>';
     if(!sheetN && !d.total){
       html += '<div style="text-align:center;padding:32px;color:#94a3b8;font-size:12px">Sin datos de la hoja aún. Use <b>Actualizar Sheet</b> o espere la carga automática.</div>';
       return html;
     }
+    html += icEmbudoHtmlGuiaLectura();
+    html += icEmbudoHtmlCruceStats(d.cruceStats || icEmbudoResumenCruce(d));
+    html += icEmbudoHtmlMapaAtencion(d.mapaAtencion || icEmbudoMapaAtencion(d));
     html += '<div class="ic-kpi-grid">';
     html += icKpi('Leads en filtro', icFmt(d.total), 'Hoja Embudo de conversión de leads', '#003D45');
     html += icKpi('Conv. global', (d.globalConv||0)+'%', 'Nuevo → Aprobado', d.globalConv>=15?'#16a34a':'#dc2626');
@@ -18189,19 +18441,20 @@ function _parseCumpleMMDD(s){
       html += '</tr></thead><tbody>';
       lista.slice(0,80).forEach(function(r){
         html += '<tr><td>'+r.nombre+'</td><td>'+r.cedula+'</td><td>'+r.sede+'</td><td>'+r.etapaLbl+'</td>'
+          +'<td style="font-size:9px;color:#475569">'+r.estado_ops+'</td>'
           +'<td style="text-align:right">'+(r.dias!=null?r.dias:'—')+'</td>'
           +'<td>'+(r.tiene_credito?'✅':'—')+'</td><td>'+(r.facturada?'✅':'—')+'</td>'
           +'<td>'+(r.es_congelado?'❄️':'—')+'</td><td style="font-size:9px">'+r.tickets+'</td></tr>';
       });
       html += '</tbody></table></div>';
     }
-    tblDetalle('Desfase etapa HubSpot vs SIGEC/GLPI/colocación', d.desfase, ['Nombre','Cédula','Sede','Etapa HubSpot','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
-    tblDetalle('Congelados sin facturar ni aprobar', d.congSinFact, ['Nombre','Cédula','Sede','Etapa HubSpot','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
-    tblDetalle('Congelados con trámite pendiente', d.congPend, ['Nombre','Cédula','Sede','Etapa HubSpot','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
-    tblDetalle('Leads estancados (5+ días en etapa inicial)', d.estancados, ['Nombre','Cédula','Sede','Etapa HubSpot','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    tblDetalle('Desfase etapa HubSpot vs SIGEC/GLPI/colocación', d.desfase, ['Nombre','Cédula','Sede','Etapa HubSpot','Operación real','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    tblDetalle('Congelados sin facturar ni aprobar', d.congSinFact, ['Nombre','Cédula','Sede','Etapa HubSpot','Operación real','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    tblDetalle('Congelados con trámite pendiente', d.congPend, ['Nombre','Cédula','Sede','Etapa HubSpot','Operación real','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    tblDetalle('Leads estancados (5+ días en etapa inicial)', d.estancados, ['Nombre','Cédula','Sede','Etapa HubSpot','Operación real','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
     html += icSec('Listado de leads (hoja HubSpot)','Solo lectura · datos desde Google Sheet'+(fl.etapa||fl.alerta?' · filtrado':'')+'');
     html += '<div style="overflow:auto;max-height:360px"><table class="ic-tbl"><thead><tr>'
-      +'<th>Nombre</th><th>Cédula</th><th>Sede</th><th>Etapa</th><th>Fuente</th><th>Propietario</th><th>Días</th><th>COLOC</th><th>SIGEC</th><th>GLPI</th><th>Cong.</th><th>Alertas</th></tr></thead><tbody>';
+      +'<th>Nombre</th><th>Cédula</th><th>Sede</th><th>Etapa CRM</th><th>Operación</th><th>Fuente</th><th>Propietario</th><th>Días</th><th>COLOC</th><th>SIGEC</th><th>GLPI</th><th>Cong.</th><th>Alertas</th></tr></thead><tbody>';
     leadsVis.slice(0,150).forEach(function(r){
       var alerts = [];
       if(r.estancado) alerts.push('Estancado');
@@ -18210,6 +18463,7 @@ function _parseCumpleMMDD(s){
       if(r.cong_pendiente) alerts.push('Cong.pend');
       if(r.tiene_credito && !r.facturada) alerts.push('Créd.s/avance');
       html += '<tr><td style="font-weight:600">'+r.nombre+'</td><td>'+r.cedula+'</td><td>'+r.sede+'</td><td>'+r.etapaLbl+'</td>'
+        +'<td style="font-size:9px;color:#475569;max-width:140px">'+r.estado_ops+'</td>'
         +'<td style="font-size:9px">'+r.fuente+'</td><td style="font-size:9px">'+r.propietario+'</td>'
         +'<td style="text-align:right">'+(r.dias!=null?r.dias:'—')+'</td>'
         +'<td>'+(r.tiene_credito?'✅':'—')+'</td><td style="text-align:right">'+r.sigec_n+'</td><td style="text-align:right">'+r.glpi_n+'</td>'
@@ -19383,6 +19637,21 @@ function _parseCumpleMMDD(s){
     });
   };
 
+  window.icEmbudoSolicitarGemini=function(){
+    var f = icFiltroActual();
+    var d = icConstruirEmbudoLeads(f);
+    var payload = icEmbudoSerializarParaIA(d, f);
+    var texto = 'Analiza el embudo de conversión de leads y propón acciones concretas para mejorar conversión y colocación (SIGEC+GLPI):\n\n'
+      + JSON.stringify(payload, null, 2)
+      + '\n\nEstructura tu respuesta: 1) Situación del embudo 2) Dónde se quedan los leads 3) 5 acciones priorizadas por impacto en colocación 4) Foco SIGEC vs GLPI vs CRM.';
+    if(typeof abrirCogniPYV==='function') abrirCogniPYV();
+    else if(typeof toggleCmdIAPanel==='function') toggleCmdIAPanel(true);
+    setTimeout(function(){
+      if(typeof cmdIAPreguntaRapida==='function') cmdIAPreguntaRapida(texto);
+      else if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Abra CogniPYV para ver sugerencias del embudo');
+    }, 600);
+  };
+
   function icInicializarFiltros(){
     if(typeof poblarSelectRectoriasUnificado==='function'){
       poblarSelectRectoriasUnificado('ic-rectoria','Todas las rectorías');
@@ -19591,10 +19860,13 @@ function _parseCumpleMMDD(s){
     stageIdx:icEmbudoStageIdx,
     semaforo:icEmbudoCalcSemaforo,
     renderCard:icEmbudoResumenCardHtml,
+    resumenCruce:icEmbudoResumenCruce,
+    mapaAtencion:icEmbudoMapaAtencion,
+    serializar:icEmbudoSerializarParaIA,
     cargarOperacion:function(forzar){ return icCargarDatosInformes(!!forzar); }
   };
 
-  console.log('[CMD] Informes Comerciales v5.4.95 — embudo en acompañamiento');
+  console.log('[CMD] Informes Comerciales v5.4.96 — embudo cruce validado + CogniPYV');
 })();
 
 </script>
