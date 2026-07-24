@@ -45,9 +45,9 @@ jobs:
           printf '%s\n' '<!DOCTYPE html>' '<html lang="es">' '<head>' \
             '<meta charset="UTF-8">' \
             '<meta http-equiv="refresh" content="0;url=seguimiento_comercial_CMD.html">' \
-            '<title>CMD PYV Comercial</title>' \
+            '<title>PYV Comercial</title>' \
             '</head>' '<body>' \
-            '<p><a href="seguimiento_comercial_CMD.html">Abrir PYV Comercial CMD</a></p>' \
+            '<p><a href="seguimiento_comercial_CMD.html">Abrir PYV Comercial</a></p>' \
             '</body>' '</html>' > _site/index.html
           ls -la _site
 
