@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.89   (APP_VERSION = 'pyv-comercial-5.4.89')
+  Versión actual: pyv-comercial-5.4.90   (APP_VERSION = 'pyv-comercial-5.4.90')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,7 +10,11 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
-  pyv-comercial-5.4.89 (2026-07-24)
+  pyv-comercial-5.4.90 (2026-07-24)
+    - Módulo standalone «Embudo de conversión de leads»: UI completa del adjunto (registro, carga masiva, embudo visual, descalificados, diagnóstico, histórico, PDF, Excel).
+    - Carga automática hoja HubSpot + cruces por cédula con colocación (BASE COLOC), SIGEC, GLPI y CONGELADOS.
+    - Botón único en accesos rápidos abre el módulo completo (ya no dentro del panel Informes).
+  pyv-comercial-5.4.90 (2026-07-24)
     - Botón visible «Embudo de conversión de leads» en accesos rápidos y menú Informes (nombre exacto solicitado).
     - Acceso directo abre el informe embudo-leads; sección propia en panel lateral de informes.
     - Embudo visual por etapa con conversión; bloque descalificados/rechazados en el informe.
@@ -382,11 +386,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.89">
-<meta name="build-id" content="pyv-comercial-5.4.89-20260724-1500">
-<title>SCIC pyv-comercial 5.4.89 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.90">
+<meta name="build-id" content="pyv-comercial-5.4.90-20260724-1530">
+<title>SCIC pyv-comercial 5.4.90 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.89';
+window.APP_VERSION='pyv-comercial-5.4.90';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1149,7 +1153,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.89</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.90</div>
 </div>
 
 
@@ -1158,7 +1162,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.89</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.90</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -1503,7 +1507,6 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <button type="button" onclick="icAbrirDesdeMenu('perdida-cedulas')" class="menu-qb menu-qb-red"><span>🔍</span> Pérd. Cédula</button>
           <button type="button" onclick="icAbrirDesdeMenu('perdida-real')" class="menu-qb menu-qb-red"><span>🎯</span> Pérd. Real</button>
           <button type="button" onclick="icAbrirDesdeMenu('reincidencia')" class="menu-qb menu-qb-amber"><span>🚨</span> Reincidencia</button>
-          <button type="button" onclick="icAbrirDesdeMenu('embudo-leads')" class="menu-qb menu-qb-teal" style="grid-column:1/-1;font-weight:800"><span>🎯</span> Embudo de conversión de leads</button>
           <button type="button" onclick="icAbrirDesdeMenu('congelados')" class="menu-qb menu-qb-sky"><span>❄️</span> Congelados</button>
           <button type="button" onclick="icAbrirDesdeMenu('mapa-operacion')" class="menu-qb menu-qb-purple"><span>🗺️</span> Mapa</button>
           <button type="button" onclick="icAbrirDesdeMenu('turno-vivo')" class="menu-qb menu-qb-lime"><span>📡</span> Turno</button>
@@ -4055,7 +4058,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.89';
+var APP_VERSION = 'pyv-comercial-5.4.90';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7828,6 +7831,165 @@ https://minutodediosportal.com/login/
   </div>
 </div>
 
+<!-- ═══════════ MÓDULO STANDALONE: Embudo de conversión de leads ═══════════ -->
+<div id="modal-embudo-conversion" style="display:none;position:fixed;inset:0;background:rgba(0,29,33,.92);z-index:10060;overflow-y:auto;padding:12px;-webkit-overflow-scrolling:touch">
+  <div class="emb-wrap">
+    <header class="emb-top">
+      <div>
+        <p class="emb-eyebrow">Cooperativa Minuto de Dios · Crédito Educativo</p>
+        <h1 class="emb-title">Embudo de conversión de leads</h1>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+        <div class="emb-top-meta" id="emb-topMeta">cargando…</div>
+        <button type="button" class="emb-btn-ghost" onclick="EMBUDO_MOD.refrescar()">↺ Actualizar Sheets</button>
+        <button type="button" class="emb-btn-close" onclick="EMBUDO_MOD.cerrar()" title="Cerrar">✕</button>
+      </div>
+    </header>
+    <div class="emb-grid">
+      <div class="emb-card">
+        <h2>Registro de leads</h2>
+        <p class="emb-sub">Agrega un lead nuevo o sincroniza desde HubSpot / Sheet. Cruce automático por cédula con colocación, SIGEC, GLPI y congelados.</p>
+        <form class="emb-add-form" id="emb-addForm">
+          <div><label for="emb-nombre">Nombre del lead</label><input type="text" id="emb-nombre" placeholder="Nombre y apellido" required></div>
+          <div><label for="emb-cedula">Identificación</label><input type="text" id="emb-cedula" placeholder="Cédula (opcional, para cruce)"></div>
+          <div><label for="emb-institucion">Institución / Sede</label><select id="emb-institucion" required><option value="">Selecciona…</option></select></div>
+          <div class="emb-full emb-btn-row"><button type="submit">Agregar lead</button></div>
+        </form>
+        <div class="emb-bulk">
+          <h3>Carga masiva</h3>
+          <p class="emb-sub">Excel o CSV con columnas <b>Nombre</b>, <b>Institución</b> y opcionalmente <b>Etapa</b>, <b>Identificación</b>.</p>
+          <div class="emb-bulk-actions">
+            <button type="button" class="emb-file-btn" onclick="EMBUDO_MOD.downloadTemplate()">⬇ Plantilla</button>
+            <label class="emb-file-btn">📤 Cargar archivo<input type="file" id="emb-bulkFile" accept=".xlsx,.xls,.csv" onchange="EMBUDO_MOD.handleBulkUpload(this.files[0])"></label>
+          </div>
+          <div class="emb-bulk-status" id="emb-bulkStatus"></div>
+        </div>
+        <div class="emb-filter-bar">
+          <label for="emb-filtroInst">Filtrar</label>
+          <select id="emb-filtroInst"><option value="todas">Todas las instituciones</option></select>
+          <select id="emb-filtroPeriodo"><option value="todos">Todos los períodos</option></select>
+          <select id="emb-filtroCruce"><option value="todos">Todos los cruces</option><option value="desfase">Desfase etapa</option><option value="estancado">Estancados 5+ días</option><option value="cong">Congelados s/facturar</option><option value="coloc">En BASE COLOC</option></select>
+          <span class="emb-lead-count" id="emb-leadCount"></span>
+        </div>
+        <div id="emb-leadsList"></div>
+      </div>
+      <div class="emb-card emb-card-funnel">
+        <h2>La realidad del embudo</h2>
+        <p class="emb-sub">Leads que alcanzaron cada etapa, con conversión al siguiente paso.</p>
+        <div class="emb-stamp" id="emb-stampBadge" style="display:none">APROBADO<br>✔</div>
+        <div id="emb-funnelContainer"></div>
+        <div class="emb-desc-summary">
+          <h3>Descalificados</h3>
+          <div class="emb-desc-total" id="emb-descTotal">0<small>del total de leads</small></div>
+          <div class="emb-desc-breakdown"><div id="emb-descByMotivo"></div><div id="emb-descByEtapa" style="margin-top:10px"></div></div>
+        </div>
+        <div class="emb-desc-summary">
+          <h3>Solicitudes rechazadas</h3>
+          <div class="emb-desc-total" id="emb-rechTotal">0<small>del total de leads</small></div>
+          <div class="emb-desc-breakdown"><div id="emb-rechByMotivo"></div><div id="emb-rechByEtapa" style="margin-top:10px"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="emb-card emb-diag-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div><h2>Cruce operativo (SIGEC · GLPI · Colocación · Congelados)</h2><p class="emb-sub">Análisis por identificación: dónde se quedan los leads frente a la operación real.</p></div>
+        <button type="button" class="emb-file-btn" onclick="EMBUDO_MOD.exportExcel()">⬇ Exportar Excel</button>
+      </div>
+      <div class="emb-diag-stats" id="emb-cruceStats"></div>
+      <div style="overflow:auto;max-height:280px;margin-top:12px"><table class="emb-tbl" id="emb-cruceTbl"><thead><tr><th>Nombre</th><th>Cédula</th><th>Sede</th><th>Etapa HubSpot</th><th>COLOC</th><th>SIGEC</th><th>GLPI</th><th>Cong.</th><th>Alertas</th></tr></thead><tbody id="emb-cruceBody"></tbody></table></div>
+    </div>
+    <div class="emb-card emb-diag-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div><h2>Diagnóstico comercial</h2><p class="emb-sub">Lectura automática del embudo + cruces operativos para priorizar gestión.</p></div>
+        <button type="button" class="emb-file-btn" onclick="EMBUDO_MOD.downloadReport()">📄 Informe (PDF)</button>
+      </div>
+      <div class="emb-diag-stats" id="emb-diagStats"></div>
+      <div class="emb-diag-list" id="emb-diagList"></div>
+    </div>
+    <div class="emb-card emb-diag-card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap">
+        <div><h2>Resultados históricos</h2><p class="emb-sub">Guarda el resultado del período/institución filtrado para comparar mes a mes.</p></div>
+        <button type="button" class="emb-file-btn" onclick="EMBUDO_MOD.guardarResultadoPeriodo()">💾 Guardar resultado</button>
+      </div>
+      <div id="emb-historicoList"></div>
+    </div>
+    <footer class="emb-foot">Datos HubSpot/Sheet + ajustes locales · Cruce SIGEC/GLPI/BASE COLOC/CONGELADOS · Cooperativa Minuto de Dios</footer>
+    <div id="emb-printReport" style="display:none"></div>
+  </div>
+</div>
+<style>
+#modal-embudo-conversion{--emb-bg:#EEF1EC;--emb-paper:#FFF;--emb-ink:#1E2A28;--emb-ink-soft:#5B6B66;--emb-line:#D8D9CF;--emb-primary:#1F4B43;--emb-primary-dark:#153531;--emb-primary-tint:#DCE8E3;--emb-gold:#C0913A;--emb-brick:#A6503A;--emb-brick-tint:#F2E0DA;font-family:'IBM Plex Sans',Ubuntu,sans-serif}
+#modal-embudo-conversion .emb-wrap{max-width:1180px;margin:0 auto;padding:8px 8px 48px}
+#modal-embudo-conversion .emb-top{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:2px solid var(--emb-ink);padding-bottom:16px;margin-bottom:24px;flex-wrap:wrap;gap:12px}
+#modal-embudo-conversion .emb-eyebrow{font-family:monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--emb-primary);margin:0 0 4px}
+#modal-embudo-conversion .emb-title{font-size:clamp(22px,3.5vw,34px);font-weight:700;margin:0;color:var(--emb-primary-dark)}
+#modal-embudo-conversion .emb-top-meta{font-family:monospace;font-size:11px;color:var(--emb-ink-soft);text-align:right}
+#modal-embudo-conversion .emb-grid{display:grid;grid-template-columns:1.15fr 1fr;gap:20px}
+@media(max-width:920px){#modal-embudo-conversion .emb-grid{grid-template-columns:1fr}}
+#modal-embudo-conversion .emb-card{background:var(--emb-paper);border:1px solid var(--emb-line);border-radius:6px;padding:20px;position:relative}
+#modal-embudo-conversion .emb-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--emb-primary);border-radius:6px 0 0 6px}
+#modal-embudo-conversion .emb-card h2{font-size:17px;font-weight:700;margin:0 0 4px;color:var(--emb-primary-dark)}
+#modal-embudo-conversion .emb-sub{font-size:12px;color:var(--emb-ink-soft);margin:0 0 14px;line-height:1.45}
+#modal-embudo-conversion .emb-add-form{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+#modal-embudo-conversion .emb-full{grid-column:1/-1}
+#modal-embudo-conversion label{font-size:10px;font-weight:700;color:var(--emb-ink-soft);text-transform:uppercase;letter-spacing:.04em;display:block;margin-bottom:4px}
+#modal-embudo-conversion input[type=text],#modal-embudo-conversion select{width:100%;padding:8px 10px;border:1px solid var(--emb-line);border-radius:4px;font-size:13px;background:#FBFBF9;color:var(--emb-ink);box-sizing:border-box}
+#modal-embudo-conversion button{font-weight:600;font-size:13px;border:none;border-radius:4px;cursor:pointer;padding:9px 16px;background:var(--emb-primary);color:#fff}
+#modal-embudo-conversion button:hover{background:var(--emb-primary-dark)}
+#modal-embudo-conversion .emb-btn-ghost{background:transparent;color:var(--emb-brick);border:1px solid var(--emb-brick);padding:7px 12px;font-size:12px}
+#modal-embudo-conversion .emb-btn-close{width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.08);color:var(--emb-ink);font-size:18px;padding:0}
+#modal-embudo-conversion .emb-btn-row{display:flex;justify-content:flex-end}
+#modal-embudo-conversion .emb-bulk{margin-top:18px;padding-top:16px;border-top:1px solid var(--emb-line)}
+#modal-embudo-conversion .emb-bulk h3{font-size:14px;margin:0 0 4px;color:var(--emb-primary-dark)}
+#modal-embudo-conversion .emb-bulk-actions{display:flex;gap:8px;flex-wrap:wrap}
+#modal-embudo-conversion .emb-file-btn{display:inline-flex;align-items:center;gap:6px;font-weight:600;font-size:12px;border:1px solid var(--emb-primary);color:var(--emb-primary);background:var(--emb-primary-tint);border-radius:4px;padding:8px 12px;cursor:pointer}
+#modal-embudo-conversion .emb-file-btn input{display:none}
+#modal-embudo-conversion .emb-bulk-status{margin-top:8px;font-size:12px;font-family:monospace;color:var(--emb-ink-soft);white-space:pre-line}
+#modal-embudo-conversion .emb-filter-bar{display:flex;align-items:center;gap:8px;margin:16px 0 12px;flex-wrap:wrap}
+#modal-embudo-conversion .emb-filter-bar select{min-width:140px;width:auto}
+#modal-embudo-conversion .emb-lead-count{font-family:monospace;font-size:11px;color:var(--emb-ink-soft);margin-left:auto}
+#modal-embudo-conversion .emb-lead-row{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--emb-line);font-size:12px}
+#modal-embudo-conversion .emb-lead-name{font-weight:600}
+#modal-embudo-conversion .emb-lead-inst{font-size:11px;color:var(--emb-ink-soft)}
+#modal-embudo-conversion .emb-lead-cruce{font-size:9px;margin-top:3px;display:flex;gap:4px;flex-wrap:wrap}
+#modal-embudo-conversion .emb-badge{font-family:monospace;padding:1px 5px;border-radius:3px;background:var(--emb-primary-tint);color:var(--emb-primary)}
+#modal-embudo-conversion .emb-badge-warn{background:#FEF3C7;color:#92400e}
+#modal-embudo-conversion .emb-badge-crit{background:#FEE2E2;color:#b91c1c}
+#modal-embudo-conversion .emb-stage-select{min-width:150px;font-size:11px;padding:5px}
+#modal-embudo-conversion .emb-lead-date{font-family:monospace;font-size:10px;color:var(--emb-ink-soft)}
+#modal-embudo-conversion .emb-disqualify-box{grid-column:1/-1;background:var(--emb-brick-tint);border:1px dashed var(--emb-brick);padding:10px;border-radius:4px;display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:6px}
+#modal-embudo-conversion .emb-funnel-stage{margin-bottom:12px}
+#modal-embudo-conversion .emb-funnel-label-row{display:flex;justify-content:space-between;margin-bottom:4px}
+#modal-embudo-conversion .emb-funnel-track{background:var(--emb-primary-tint);border-radius:3px;height:22px;overflow:hidden}
+#modal-embudo-conversion .emb-funnel-fill{background:linear-gradient(90deg,var(--emb-primary),var(--emb-primary-dark));height:100%;border-radius:3px;transition:width .4s}
+#modal-embudo-conversion .emb-funnel-conv{font-family:monospace;font-size:10px;color:var(--emb-ink-soft);margin-top:3px}
+#modal-embudo-conversion .emb-stamp{position:absolute;top:12px;right:14px;width:56px;height:56px;border:2px solid var(--emb-gold);border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;transform:rotate(-10deg);font-family:monospace;font-size:9px;font-weight:600;color:var(--emb-gold)}
+#modal-embudo-conversion .emb-card-funnel{position:relative}
+#modal-embudo-conversion .emb-desc-summary{margin-top:16px;padding-top:14px;border-top:1px solid var(--emb-line)}
+#modal-embudo-conversion .emb-desc-summary h3{font-size:14px;color:var(--emb-brick);margin:0 0 8px}
+#modal-embudo-conversion .emb-desc-total{font-family:monospace;font-size:24px;font-weight:600;color:var(--emb-brick)}
+#modal-embudo-conversion .emb-desc-total small{display:block;font-family:sans-serif;font-size:11px;color:var(--emb-ink-soft);font-weight:400}
+#modal-embudo-conversion .emb-desc-item{display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dotted var(--emb-line)}
+#modal-embudo-conversion .emb-diag-card{margin-top:20px}
+#modal-embudo-conversion .emb-diag-stats{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+#modal-embudo-conversion .emb-diag-stat{flex:1;min-width:120px}
+#modal-embudo-conversion .emb-diag-stat .num{font-family:monospace;font-size:22px;font-weight:600;color:var(--emb-primary-dark)}
+#modal-embudo-conversion .emb-diag-stat .lbl{font-size:10px;text-transform:uppercase;color:var(--emb-ink-soft);margin-top:4px}
+#modal-embudo-conversion .emb-diag-item{display:flex;gap:10px;padding:12px 0;border-bottom:1px solid var(--emb-line);font-size:12px;align-items:flex-start}
+#modal-embudo-conversion .emb-diag-item .tag{font-family:monospace;font-size:9px;text-transform:uppercase;padding:3px 8px;border-radius:3px;white-space:nowrap}
+#modal-embudo-conversion .emb-diag-item.critico .tag{background:var(--emb-brick-tint);color:var(--emb-brick)}
+#modal-embudo-conversion .emb-diag-item.atencion .tag{background:#F3E6CB;color:#8a6a26}
+#modal-embudo-conversion .emb-diag-item.positivo .tag{background:var(--emb-primary-tint);color:var(--emb-primary)}
+#modal-embudo-conversion .emb-tbl{width:100%;border-collapse:collapse;font-size:11px}
+#modal-embudo-conversion .emb-tbl th{text-align:left;font-size:9px;text-transform:uppercase;color:var(--emb-ink-soft);border-bottom:1px solid var(--emb-ink);padding:6px}
+#modal-embudo-conversion .emb-tbl td{padding:6px;border-bottom:1px solid var(--emb-line)}
+#modal-embudo-conversion .emb-hist-row{display:grid;grid-template-columns:1.4fr 1.6fr .6fr .9fr .8fr .8fr auto;gap:8px;padding:8px 0;border-bottom:1px solid var(--emb-line);font-size:11px;align-items:center}
+#modal-embudo-conversion .emb-hist-head{font-family:monospace;font-size:9px;text-transform:uppercase;color:var(--emb-ink-soft);border-bottom:1px solid var(--emb-ink)}
+#modal-embudo-conversion .emb-empty{text-align:center;padding:28px;color:var(--emb-ink-soft);font-size:12px}
+#modal-embudo-conversion .emb-foot{margin-top:24px;font-size:10px;color:var(--emb-ink-soft);text-align:center;font-family:monospace}
+@media print{body *{visibility:hidden}#emb-printReport,#emb-printReport *{visibility:visible}#emb-printReport{position:absolute;left:0;top:0;width:100%;display:block!important}}
+</style>
+
 <!-- ═══════════ HUB INFORMES COMERCIALES AVANZADOS ═══════════ -->
 <div id="modal-informes-comerciales" style="display:none;position:fixed;inset:0;background:rgba(0,29,33,.88);z-index:10050;overflow:hidden;padding:12px">
   <div style="max-width:1180px;margin:0 auto;height:100%;display:flex;flex-direction:column;background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.45)">
@@ -7859,8 +8021,6 @@ https://minutodediosportal.com/login/
         <button type="button" class="ic-tab" data-ic="pendientes" onclick="icSeleccionarTab('pendientes')">⏳ Pendientes Desembolso</button>
         <button type="button" class="ic-tab" data-ic="retomas" onclick="icSeleccionarTab('retomas')">🔄 Retomas</button>
         <button type="button" class="ic-tab" data-ic="tasa-aprob" onclick="icSeleccionarTab('tasa-aprob')">📉 Tasa/Pérdida</button>
-        <div class="ic-tab-sec">Embudo de conversión de leads</div>
-        <button type="button" class="ic-tab" data-ic="embudo-leads" onclick="icSeleccionarTab('embudo-leads')">🎯 Embudo de conversión de leads</button>
         <div class="ic-tab-sec">Inteligencia & Alertas</div>
         <button type="button" class="ic-tab" data-ic="intel-patrones" onclick="icSeleccionarTab('intel-patrones')">🧠 Patrones & Tiempos</button>
         <button type="button" class="ic-tab" data-ic="perdida-cedulas" onclick="icSeleccionarTab('perdida-cedulas')">🔍 Pérdida por Cédula</button>
@@ -15423,7 +15583,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.89 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.90 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -18765,10 +18925,10 @@ function _parseCumpleMMDD(s){
       icRenderInformeActivo();
     });
   };
-  /** Acceso directo al informe Embudo de conversión de leads (menú principal / Informes). */
+  /** Acceso directo — delegado al módulo standalone EMBUDO_MOD (definido más abajo). */
   window.abrirEmbudoConversionLeads=function(){
-    if(typeof menuDdAction==='function') menuDdAction('informes');
-    abrirInformesComerciales('embudo-leads');
+    if(window.EMBUDO_MOD&&typeof window.EMBUDO_MOD.abrir==='function') window.EMBUDO_MOD.abrir();
+    else if(typeof mostrarAlertaNav==='function') mostrarAlertaNav('Módulo Embudo de conversión de leads no disponible');
   };
   window.cerrarInformesComerciales=function(){
     var m=document.getElementById('modal-informes-comerciales');
@@ -18906,10 +19066,487 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.89 — embudo conversión leads + botón visible');
+  window.IC_EMBUDO_API={
+    matchEtapa:icMatchEmbudoEtapa,
+    stageIndex:IC_EMBUDO_STAGE_INDEX,
+    stages:IC_EMBUDO_STAGES,
+    construirCruce:icConstruirCruceEmbudoCedulas,
+    cargarEmbudo:icCargarEmbudoLeads,
+    etapaEsperada:icEmbudoEtapaEsperadaOps,
+    stageIdx:icEmbudoStageIdx,
+    cargarOperacion:function(forzar){ return icCargarDatosInformes(!!forzar); },
+    footerRows:typeof icAppFooterRows==='function'?icAppFooterRows:function(){return[];},
+    appendFooter:typeof icAppendFooterToAoa==='function'?icAppendFooterToAoa:function(a){return a;}
+  };
+
+  console.log('[CMD] Informes Comerciales v5.4.90 — API embudo expuesta');
 })();
 
 </script>
+
+<script>
+/* ═══ Módulo standalone Embudo de conversión de leads (código adjunto + cruces Sheets) ═══ */
+(function(){
+  var STAGES=[
+    {key:'nuevo',label:'Nuevo'},{key:'contactando',label:'Intentando contactar'},
+    {key:'conectado',label:'Conectado'},{key:'interes',label:'Manifiesta interés'},
+    {key:'radicado',label:'Crédito radicado'},{key:'congelada',label:'Solicitud congelada'},
+    {key:'aprobado',label:'Crédito aprobado'}
+  ];
+  var STAGE_INDEX={}; STAGES.forEach(function(s,i){STAGE_INDEX[s.key]=i;});
+  var MOTIVOS=['Documento faltante','Codeudor / garantía no firmada','Solicitud no terminada','Otro'];
+  var INSTITUCIONES=[
+    'COA Engativa Pres','COA Usaquen','COA Ciudad Bolivar - Cofraternidad','COA Santafe','COA Bosa',
+    'CO Kennedy','COA Girardot','CT La Mesa','CT Silvania','CR Madrid','CP Gualiva - Villeta',
+    'CT Facatativa','CT Funza','Chiquinquira','CR Soacha','CR Zipaquirá','CT Ubate',
+    'Virtual y Distancia','COA Bello','Urabá','Itagüi','CT El Bagre','CR Barranquilla','CR Cartagena',
+    'CR Santa Marta','COA Chinchina','CR Pereira','CR Cali','CR Buga','CT Buenaventura','CR Pasto',
+    'CR Bucaramanga','CT Barrancabermeja','CR Cucuta','CT Tibu','CT Ocaña','COA Villavicencio',
+    'COA Orocue','COA Mitu','CR Neiva','COA Garzon','CT Pitalito','CT Florencia','CT Mocoa',
+    'CR Ibague','CT Lerida','CT La Dorada','Pance','Alfonso Lopez','Melendez','Compatir',
+    'Unicatolica Centro','Popayan centro','Santander de Quilichao','Unicomfacauca - Popayan',
+    'Tecnológico Comfenalco - Cartagena','CURN Cartagena','Ternera','Manga','UniMonserrate - Bogotá',
+    'Tec. Minuto de Dios'
+  ];
+  var NEG=['descalificado','rechazada'];
+  var leads=[], historico=[], filtroInst='todas', filtroPeriodo='todos', filtroCruce='todos';
+  var _cedMap={}, _overrides={}, _inited=false;
+
+  function $(id){return document.getElementById(id);}
+  function uid(){return 'l_'+Date.now()+'_'+Math.random().toString(36).slice(2,7);}
+  function todayStr(){return new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'short',year:'numeric'});}
+  function norm(s){return String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim().replace(/\s+/g,' ');}
+  function normCed(c){return String(c||'').replace(/\D/g,'').replace(/^0+/,'');}
+  function lsGet(k){try{return localStorage.getItem('cmd_embudo_'+k);}catch(e){return null;}}
+  function lsSet(k,v){try{localStorage.setItem('cmd_embudo_'+k,v);}catch(e){}}
+  function api(){return window.IC_EMBUDO_API||{};}
+
+  function matchInstitucion(raw){
+    var n=norm(raw);
+    if(!n) return null;
+    var best=INSTITUCIONES.find(function(i){return norm(i)===n;});
+    if(best) return best;
+    best=INSTITUCIONES.find(function(i){return n.indexOf(norm(i))>=0||norm(i).indexOf(n)>=0;});
+    return best||raw||'Sin sede';
+  }
+  function matchEtapa(raw){
+    if(api().matchEtapa) return api().matchEtapa(raw);
+    if(!raw) return 'nuevo';
+    var n=norm(raw);
+    if(n.indexOf('descalific')>=0) return 'descalificado';
+    if(n.indexOf('rechaz')>=0) return 'rechazada';
+    var f=STAGES.find(function(s){return norm(s.label)===n||n.indexOf(norm(s.label))>=0;});
+    return f?f.key:'nuevo';
+  }
+  function periodoDeLead(l){return l.creadoTs?new Date(l.creadoTs).toISOString().slice(0,7):null;}
+  function nombrePeriodo(ym){
+    if(!ym) return '';
+    var p=ym.split('-'), d=new Date(parseInt(p[0]),parseInt(p[1])-1,1);
+    var n=d.toLocaleDateString('es-CO',{month:'long',year:'numeric'});
+    return n.charAt(0).toUpperCase()+n.slice(1);
+  }
+  function diasDesde(ts){if(!ts)return null;return Math.floor((Date.now()-ts)/86400000);}
+  function maxStageIndexReached(lead){
+    if(lead.etapa==='descalificado'||lead.etapa==='rechazada') return lead.etapaPrevia!=null?STAGE_INDEX[lead.etapaPrevia]:-1;
+    return STAGE_INDEX[lead.etapa]!=null?STAGE_INDEX[lead.etapa]:0;
+  }
+
+  function sheetToLead(r){
+    var id='sheet_'+(r.cedula||r.nombre||'').replace(/\W/g,'_').slice(0,40);
+    return {
+      id:id, nombre:r.nombre||'—', institucion:matchInstitucion(r.sede)||r.sede||'Sin sede',
+      etapa:matchEtapa(r.etapaRaw||r.etapa), etapaPrevia:null, motivo:null,
+      fecha:r.fecha?String(r.fecha).slice(0,12):todayStr(),
+      creadoTs:r.fecha?new Date(r.fecha).getTime():Date.now(),
+      cedula:normCed(r.cedula), fuente:r.fuente||'HubSpot', propietario:r.propietario||'',
+      fromSheet:true, manual:false
+    };
+  }
+
+  function mergeLeads(sheetRows, manualRows){
+    var map={}, out=[];
+    (sheetRows||[]).forEach(function(r){
+      var l=sheetToLead(r);
+      if(_overrides[l.id]) Object.assign(l,_overrides[l.id]);
+      map[l.id]=l; out.push(l);
+    });
+    (manualRows||[]).forEach(function(l){
+      if(!map[l.id]){ out.push(l); map[l.id]=l; }
+    });
+    return out;
+  }
+
+  function buildInstituciones(){
+    var set={};
+    INSTITUCIONES.forEach(function(i){set[i]=1;});
+    leads.forEach(function(l){if(l.institucion)set[l.institucion]=1;});
+    return Object.keys(set).sort();
+  }
+
+  function buildCruceMap(){
+    if(api().construirCruce) _cedMap=api().construirCruce({});
+    else _cedMap={};
+  }
+
+  function cruceFor(lead){
+    if(!lead.cedula||lead.cedula.length<5) return null;
+    return _cedMap[lead.cedula]||null;
+  }
+
+  function cruceAlerts(lead,c){
+    var alerts=[], idx=maxStageIndexReached(lead);
+    if(!c) return alerts;
+    var apiRef=api();
+    var esperada=apiRef.etapaEsperada?apiRef.etapaEsperada(c):-1;
+    var fact=c.facturada>0||c.glpi_aprob>0;
+    if(esperada>=0&&idx>=0&&idx<esperada) alerts.push('Desfase');
+    if((lead.etapa==='nuevo'||lead.etapa==='contactando')&&diasDesde(lead.creadoTs)>=5) alerts.push('Estancado');
+    if(c.es_congelado&&!fact) alerts.push('Cong.s/fact');
+    if(c.es_congelado&&(c.abierta>0)) alerts.push('Cong.pend');
+    if(c.tiene_credito&&idx<(apiRef.stageIndex?apiRef.stageIndex.aprobado:6)) alerts.push('Créd.s/avance');
+    return alerts;
+  }
+
+  function filteredLeads(){
+    return leads.filter(function(l){
+      if(filtroInst!=='todas'&&l.institucion!==filtroInst) return false;
+      if(filtroPeriodo!=='todos'&&periodoDeLead(l)!==filtroPeriodo) return false;
+      if(filtroCruce!=='todos'){
+        var c=cruceFor(l), al=cruceAlerts(l,c);
+        if(filtroCruce==='desfase'&&al.indexOf('Desfase')<0) return false;
+        if(filtroCruce==='estancado'&&al.indexOf('Estancado')<0) return false;
+        if(filtroCruce==='cong'&&al.indexOf('Cong.s/fact')<0&&al.indexOf('Cong.pend')<0) return false;
+        if(filtroCruce==='coloc'&&!(c&&c.tiene_credito)) return false;
+      }
+      return true;
+    });
+  }
+
+  function saveManual(){lsSet('manual',JSON.stringify(leads.filter(function(l){return l.manual;})));}
+  function saveOverrides(){lsSet('overrides',JSON.stringify(_overrides));}
+  function saveHistorico(){lsSet('historico',JSON.stringify(historico));}
+
+  function loadLocal(){
+    try{_overrides=JSON.parse(lsGet('overrides')||'{}');}catch(e){_overrides={};}
+    try{historico=JSON.parse(lsGet('historico')||'[]');}catch(e){historico=[];}
+    var manual=[];
+    try{manual=JSON.parse(lsGet('manual')||'[]');}catch(e){}
+    return manual;
+  }
+
+  function cargarDatos(forzar){
+    var ps=[];
+    if(api().cargarOperacion) ps.push(api().cargarOperacion(!!forzar).catch(function(){}));
+    else{
+      if(typeof _leerHojaSigecColocacion==='function') ps.push(_leerHojaSigecColocacion().catch(function(){}));
+      if(typeof _leerHojaGlpiColocacion==='function') ps.push(_leerHojaGlpiColocacion().catch(function(){}));
+      if(typeof _cargarBaseColoc==='function') ps.push(_cargarBaseColoc().catch(function(){}));
+    }
+    if(api().cargarEmbudo) ps.push(api().cargarEmbudo(!!forzar));
+    else if(typeof _leerHojaEmbudoLeads==='function') ps.push(_leerHojaEmbudoLeads().catch(function(){}));
+    return Promise.all(ps).then(function(){
+      var manual=loadLocal();
+      var sheet=window._embudoLeadsRows||[];
+      leads=mergeLeads(sheet,manual);
+      buildCruceMap();
+      var meta=$('emb-topMeta');
+      if(meta) meta.textContent=leads.length+' leads · '+sheet.length+' desde Sheet · cruces SIGEC/GLPI/COLOC activos';
+    });
+  }
+
+  function stageOptionsHtml(sel){
+    var h=STAGES.map(function(s){return '<option value="'+s.key+'"'+(s.key===sel?' selected':'')+'>'+s.label+'</option>';}).join('');
+    return h+'<option value="descalificado"'+(sel==='descalificado'?' selected':'')+'>Descalificado</option>'
+      +'<option value="rechazada"'+(sel==='rechazada'?' selected':'')+'>Solicitud rechazada</option>';
+  }
+
+  function renderLeadsList(){
+    var list=filteredLeads(), cont=$('emb-leadsList'), cnt=$('emb-leadCount');
+    if(cnt) cnt.textContent=list.length+' lead'+(list.length===1?'':'s');
+    if(!cont) return;
+    if(!list.length){cont.innerHTML='<div class="emb-empty">Sin leads en el filtro actual.</div>';return;}
+    cont.innerHTML=list.slice().reverse().map(function(lead){
+      var c=cruceFor(lead), al=cruceAlerts(lead,c), badges='';
+      if(c){
+        if(c.tiene_credito) badges+='<span class="emb-badge">COLOC</span>';
+        if(c.sigec&&c.sigec.length) badges+='<span class="emb-badge">SIGEC '+c.sigec.length+'</span>';
+        if(c.glpi&&c.glpi.length) badges+='<span class="emb-badge">GLPI '+c.glpi.length+'</span>';
+        if(c.es_congelado) badges+='<span class="emb-badge emb-badge-warn">CONG</span>';
+      }
+      al.forEach(function(a){badges+='<span class="emb-badge emb-badge-crit">'+a+'</span>';});
+      var dq='';
+      if(lead._pendingEtapaPrevia&&lead._pendingTarget){
+        var esR=lead._pendingTarget==='rechazada';
+        dq='<div class="emb-disqualify-box"><div><label>Motivo</label><select id="emb-motivo_'+lead.id+'"><option value="">Selecciona…</option>'
+          +MOTIVOS.map(function(m){return '<option value="'+m+'">'+m+'</option>';}).join('')
+          +'</select></div><div style="font-size:11px;color:var(--emb-ink-soft);align-self:center">Cayó en: <b>'
+          +STAGES[STAGE_INDEX[lead._pendingEtapaPrevia]].label+'</b></div><div style="display:flex;gap:6px">'
+          +'<button type="button" onclick="EMBUDO_MOD.confirmDisqualify(\''+lead.id+'\')">Confirmar</button>'
+          +'<button type="button" class="emb-btn-ghost" onclick="EMBUDO_MOD.cancelDisqualify(\''+lead.id+'\')">Cancelar</button></div></div>';
+      }
+      var meta='';
+      if((lead.etapa==='descalificado'||lead.etapa==='rechazada')&&lead.motivo&&lead.etapaPrevia!=null)
+        meta='<div style="font-size:10px;color:var(--emb-brick);margin-top:2px">'+lead.motivo+' · '+STAGES[STAGE_INDEX[lead.etapaPrevia]].label+'</div>';
+      return '<div class="emb-lead-row"><div><div class="emb-lead-name">'+lead.nombre
+        +(lead.fromSheet?'<span style="font-size:9px;color:#64748b;margin-left:4px">Sheet</span>':'')
+        +'</div><div class="emb-lead-inst">'+lead.institucion+(lead.cedula?' · '+lead.cedula:'')+'</div>'
+        +'<div class="emb-lead-cruce">'+badges+'</div>'+meta+'</div>'
+        +'<select class="emb-stage-select" onchange="EMBUDO_MOD.onStageChange(\''+lead.id+'\',this.value)">'+stageOptionsHtml(lead.etapa)+'</select>'
+        +'<div class="emb-lead-date">'+lead.fecha+'</div>'
+        +'<button type="button" class="emb-btn-ghost" onclick="EMBUDO_MOD.removeLead(\''+lead.id+'\')">Eliminar</button>'+dq+'</div>';
+    }).join('');
+  }
+
+  function renderFunnel(){
+    var list=filteredLeads(), cont=$('emb-funnelContainer');
+    if(!cont) return;
+    var reached=STAGES.map(function(s,i){return list.filter(function(l){return maxStageIndexReached(l)>=i;}).length;});
+    var base=reached[0]||1;
+    cont.innerHTML=STAGES.map(function(s,i){
+      var count=reached[i], pct=Math.round((count/base)*100)||0;
+      var conv='';
+      if(i>0){var prev=reached[i-1], cv=prev>0?Math.round((count/prev)*100):0;
+        conv='<div class="emb-funnel-conv">↳ '+cv+'% desde "'+STAGES[i-1].label+'"</div>';}
+      return '<div class="emb-funnel-stage"><div class="emb-funnel-label-row"><span style="font-weight:600;font-size:12px">'+s.label
+        +'</span><span style="font-family:monospace;font-weight:600">'+count+'</span></div>'
+        +'<div class="emb-funnel-track"><div class="emb-funnel-fill" style="width:'+Math.max(pct,count>0?4:0)+'%"></div></div>'+conv+'</div>';
+    }).join('');
+    var stamp=$('emb-stampBadge');
+    if(stamp) stamp.style.display=reached[reached.length-1]>0?'flex':'none';
+  }
+
+  function renderNeg(tipo, totalId, motivoId, etapaId){
+    var list=filteredLeads().filter(function(l){return l.etapa===tipo;}), total=filteredLeads().length;
+    var el=$(totalId);
+    if(el) el.innerHTML=list.length+'<small>de '+total+' leads ('+(total?Math.round(list.length/total*100):0)+'%)</small>';
+    var byM={}; MOTIVOS.forEach(function(m){byM[m]=0;});
+    list.forEach(function(l){if(l.motivo)byM[l.motivo]=(byM[l.motivo]||0)+1;});
+    var mEl=$(motivoId);
+    if(mEl) mEl.innerHTML=Object.keys(byM).filter(function(k){return byM[k]>0;}).map(function(k){
+      return '<div class="emb-desc-item">'+k+' <b>'+byM[k]+'</b></div>';}).join('')||'<div class="emb-desc-item" style="color:var(--emb-ink-soft)">Sin registros</div>';
+    var byE={}; STAGES.forEach(function(s){byE[s.key]=0;});
+    list.forEach(function(l){if(l.etapaPrevia!=null)byE[l.etapaPrevia]=(byE[l.etapaPrevia]||0)+1;});
+    var eEl=$(etapaId);
+    if(eEl) eEl.innerHTML=STAGES.filter(function(s){return byE[s.key]>0;}).map(function(s){
+      return '<div class="emb-desc-item">'+s.label+' <b>'+byE[s.key]+'</b></div>';}).join('')||'<div class="emb-desc-item" style="color:var(--emb-ink-soft)">Sin registros</div>';
+  }
+
+  function renderCruce(){
+    var list=filteredLeads(), desf=0, est=0, cong=0, coloc=0, alertRows=[];
+    list.forEach(function(l){
+      var c=cruceFor(l), al=cruceAlerts(l,c);
+      if(al.indexOf('Desfase')>=0) desf++;
+      if(al.indexOf('Estancado')>=0) est++;
+      if(al.indexOf('Cong.s/fact')>=0||al.indexOf('Cong.pend')>=0) cong++;
+      if(c&&c.tiene_credito) coloc++;
+      if(al.length) alertRows.push({l:l,c:c,al:al});
+    });
+    var st=$('emb-cruceStats');
+    if(st) st.innerHTML=[
+      {n:list.length,l:'Leads en filtro'},{n:desf,l:'Desfase etapa'},{n:est,l:'Estancados 5+ días'},
+      {n:cong,l:'Congelados alerta'},{n:coloc,l:'En BASE COLOC'}
+    ].map(function(s){return '<div class="emb-diag-stat"><div class="num">'+s.n+'</div><div class="lbl">'+s.l+'</div></div>';}).join('');
+    var body=$('emb-cruceBody');
+    if(body) body.innerHTML=alertRows.slice(0,100).map(function(r){
+      var l=r.l,c=r.c;
+      return '<tr><td style="font-weight:600">'+l.nombre+'</td><td>'+(l.cedula||'—')+'</td><td>'+l.institucion+'</td>'
+        +'<td>'+(STAGES[STAGE_INDEX[l.etapa]]?STAGES[STAGE_INDEX[l.etapa]].label:l.etapa)+'</td>'
+        +'<td>'+(c&&c.tiene_credito?'✅':'—')+'</td><td>'+(c?c.sigec.length:'—')+'</td><td>'+(c?c.glpi.length:'—')+'</td>'
+        +'<td>'+(c&&c.es_congelado?'❄️':'—')+'</td><td style="font-size:9px;color:#b91c1c">'+r.al.join(', ')+'</td></tr>';
+    }).join('')||'<tr><td colspan="9" style="text-align:center;color:#94a3b8">Sin alertas de cruce en el filtro</td></tr>';
+  }
+
+  function computeDiagnostico(){
+    var list=filteredLeads(), total=list.length, items=[];
+    var reached=STAGES.map(function(s,i){return list.filter(function(l){return maxStageIndexReached(l)>=i;}).length;});
+    var globalConv=reached[0]>0?Math.round((reached[reached.length-1]/reached[0])*100):0;
+    var descList=list.filter(function(l){return l.etapa==='descalificado';});
+    var descPct=total?Math.round(descList.length/total*100):0;
+    var stagnant=list.filter(function(l){return(l.etapa==='nuevo'||l.etapa==='contactando')&&diasDesde(l.creadoTs)>=5;});
+    var desf=0, congSf=0;
+    list.forEach(function(l){var al=cruceAlerts(l,cruceFor(l));
+      if(al.indexOf('Desfase')>=0) desf++;
+      if(al.indexOf('Cong.s/fact')>=0) congSf++;
+    });
+    var stats=[
+      {num:total,lbl:'Leads en vista'},{num:globalConv+'%',lbl:'Conv. nuevo→aprobado'},
+      {num:descPct+'%',lbl:'Descalificación'},{num:stagnant.length,lbl:'Estancados'},
+      {num:desf,lbl:'Desfase vs operación'},{num:congSf,lbl:'Cong. s/facturar'}
+    ];
+    if(total<3) return {stats:stats,items:[{tipo:'atencion',texto:'Registra al menos 3 leads para recomendaciones confiables.'}]};
+    var peorIdx=-1, peorConv=1;
+    for(var i=1;i<STAGES.length;i++){
+      if(reached[i-1]>=2){var cv=reached[i]/reached[i-1];if(cv<peorConv){peorConv=cv;peorIdx=i;}}
+    }
+    if(peorIdx>-1&&peorConv<0.6) items.push({tipo:peorConv<0.35?'critico':'atencion',
+      texto:'Cuello de botella en "'+STAGES[peorIdx-1].label+' → '+STAGES[peorIdx].label+'" ('+Math.round(peorConv*100)+'% avanza).'});
+    if(stagnant.length) items.push({tipo:stagnant.length>=3?'critico':'atencion',texto:stagnant.length+' lead(s) estancados 5+ días en etapa inicial.'});
+    if(desf) items.push({tipo:'critico',texto:desf+' lead(s) con SIGEC/GLPI/colocación más avanzado que etapa HubSpot (desfase operativo).'});
+    if(congSf) items.push({tipo:'critico',texto:congSf+' lead(s) en CONGELADOS sin facturar/aprobar — priorizar cierre.'});
+    if(!items.length) items.push({tipo:'positivo',texto:'Embudo sin alertas críticas en el filtro actual.'});
+    return {stats:stats,items:items};
+  }
+
+  function renderDiagnostico(){
+    var d=computeDiagnostico(), tags={critico:'Crítico',atencion:'Atención',positivo:'En buen camino'};
+    var st=$('emb-diagStats');
+    if(st) st.innerHTML=d.stats.map(function(s){return '<div class="emb-diag-stat"><div class="num">'+s.num+'</div><div class="lbl">'+s.lbl+'</div></div>';}).join('');
+    var li=$('emb-diagList');
+    if(li) li.innerHTML=d.items.map(function(it){
+      return '<div class="emb-diag-item '+it.tipo+'"><span class="tag">'+(tags[it.tipo]||it.tipo)+'</span><p style="margin:0">'+it.texto+'</p></div>';
+    }).join('');
+  }
+
+  function renderHistorico(){
+    var el=$('emb-historicoList');
+    if(!el) return;
+    if(!historico.length){el.innerHTML='<div class="emb-empty">Aún no hay períodos guardados.</div>';return;}
+    var ord=historico.slice().sort(function(a,b){return b.guardadoTs-a.guardadoTs;});
+    el.innerHTML='<div class="emb-hist-row emb-hist-head"><span>Período</span><span>Institución</span><span>Leads</span><span>Conv.</span><span>Desc.</span><span>Rech.</span><span></span></div>'
+      +ord.map(function(h){return '<div class="emb-hist-row"><span>'+h.periodo+'</span><span>'+h.institucion+'</span><span>'+h.totalLeads
+        +'</span><span>'+h.conversionGlobal+'%</span><span>'+h.descalificados+'</span><span>'+h.rechazados
+        +'</span><button type="button" class="emb-btn-ghost" onclick="EMBUDO_MOD.eliminarHistorico(\''+h.id+'\')">✕</button></div>';}).join('');
+  }
+
+  function populateFiltros(){
+    var insts=buildInstituciones(), sel=$('emb-filtroInst'), cur=sel?sel.value:'todas';
+    if(sel){sel.innerHTML='<option value="todas">Todas las instituciones</option>'+insts.map(function(i){return '<option value="'+i+'">'+i+'</option>';}).join('');sel.value=cur||'todas';}
+    var isel=$('emb-institucion');
+    if(isel){isel.innerHTML='<option value="">Selecciona…</option>'+insts.map(function(i){return '<option value="'+i+'">'+i+'</option>';}).join('');}
+    var psel=$('emb-filtroPeriodo'), per=Array.from(new Set(leads.map(periodoDeLead))).filter(Boolean).sort().reverse();
+    var cp=psel?psel.value:'todos';
+    if(psel){psel.innerHTML='<option value="todos">Todos los períodos</option>'+per.map(function(p){return '<option value="'+p+'">'+nombrePeriodo(p)+'</option>';}).join('');psel.value=cp||'todos';filtroPeriodo=psel.value;}
+  }
+
+  function render(){populateFiltros();renderLeadsList();renderFunnel();renderNeg('descalificado','emb-descTotal','emb-descByMotivo','emb-descByEtapa');
+    renderNeg('rechazada','emb-rechTotal','emb-rechByMotivo','emb-rechByEtapa');renderCruce();renderDiagnostico();renderHistorico();}
+
+  function bindEvents(){
+    if(_inited) return; _inited=true;
+    var form=$('emb-addForm');
+    if(form) form.addEventListener('submit',function(e){
+      e.preventDefault();
+      var nombre=$('emb-nombre').value.trim(), inst=$('emb-institucion').value, ced=normCed($('emb-cedula').value);
+      if(!nombre||!inst) return;
+      leads.push({id:uid(),nombre:nombre,institucion:inst,etapa:'nuevo',etapaPrevia:null,motivo:null,fecha:todayStr(),creadoTs:Date.now(),cedula:ced,manual:true,fromSheet:false});
+      $('emb-nombre').value='';$('emb-cedula').value='';$('emb-institucion').value='';
+      saveManual(); buildCruceMap(); render();
+    });
+    var fi=$('emb-filtroInst'); if(fi) fi.addEventListener('change',function(e){filtroInst=e.target.value;render();});
+    var fp=$('emb-filtroPeriodo'); if(fp) fp.addEventListener('change',function(e){filtroPeriodo=e.target.value;render();});
+    var fc=$('emb-filtroCruce'); if(fc) fc.addEventListener('change',function(e){filtroCruce=e.target.value;render();});
+  }
+
+  window.EMBUDO_MOD={
+    abrir:function(){
+      var m=$('modal-embudo-conversion');
+      if(!m) return;
+      m.style.display='block';
+      document.body.style.overflow='hidden';
+      bindEvents();
+      var meta=$('emb-topMeta'); if(meta) meta.textContent='Cargando datos desde Sheets…';
+      cargarDatos(false).then(function(){render();}).catch(function(){render();});
+    },
+    cerrar:function(){
+      var m=$('modal-embudo-conversion');
+      if(m) m.style.display='none';
+      document.body.style.overflow='';
+    },
+    refrescar:function(){
+      var meta=$('emb-topMeta'); if(meta) meta.textContent='Actualizando Sheets…';
+      cargarDatos(true).then(function(){render();});
+    },
+    onStageChange:function(id,val){
+      var lead=leads.find(function(l){return l.id===id;});
+      if(!lead) return;
+      if(NEG.indexOf(val)>=0){lead._pendingEtapaPrevia=lead.etapa;lead._pendingTarget=val;render();return;}
+      lead.etapa=val;lead.etapaPrevia=null;lead.motivo=null;
+      if(lead.fromSheet) _overrides[id]={etapa:val,etapaPrevia:null,motivo:null};
+      else saveManual(); saveOverrides(); render();
+    },
+    confirmDisqualify:function(id){
+      var lead=leads.find(function(l){return l.id===id;}), sel=$('emb-motivo_'+id);
+      if(!lead||!sel||!sel.value) return;
+      lead.etapaPrevia=lead._pendingEtapaPrevia; lead.etapa=lead._pendingTarget; lead.motivo=sel.value;
+      delete lead._pendingEtapaPrevia; delete lead._pendingTarget;
+      if(lead.fromSheet) _overrides[id]={etapa:lead.etapa,etapaPrevia:lead.etapaPrevia,motivo:lead.motivo};
+      else saveManual(); saveOverrides(); render();
+    },
+    cancelDisqualify:function(id){
+      var lead=leads.find(function(l){return l.id===id;});
+      if(lead){delete lead._pendingEtapaPrevia;delete lead._pendingTarget;} render();
+    },
+    removeLead:function(id){
+      leads=leads.filter(function(l){return l.id!==id;});
+      delete _overrides[id]; saveManual(); saveOverrides(); render();
+    },
+    guardarResultadoPeriodo:function(){
+      var list=filteredLeads();
+      var reached=STAGES.map(function(s,i){return list.filter(function(l){return maxStageIndexReached(l)>=i;}).length;});
+      historico.push({id:uid(),periodo:filtroPeriodo==='todos'?'Todos':nombrePeriodo(filtroPeriodo),
+        institucion:filtroInst==='todas'?'Todas':filtroInst,totalLeads:list.length,
+        conversionGlobal:reached[0]?Math.round((reached[reached.length-1]/reached[0])*100):0,
+        descalificados:list.filter(function(l){return l.etapa==='descalificado';}).length,
+        rechazados:list.filter(function(l){return l.etapa==='rechazada';}).length,guardadoTs:Date.now()});
+      saveHistorico(); renderHistorico();
+    },
+    eliminarHistorico:function(id){historico=historico.filter(function(h){return h.id!==id;});saveHistorico();renderHistorico();},
+    downloadTemplate:function(){
+      if(typeof XLSX==='undefined') return;
+      var ws=XLSX.utils.aoa_to_sheet([['Nombre','Institución','Etapa','Identificación'],['Ej: Laura Pérez','CR Barranquilla','Nuevo','1234567890']]);
+      var wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,'Leads'); XLSX.writeFile(wb,'plantilla_embudo_leads.xlsx');
+    },
+    handleBulkUpload:function(file){
+      var st=$('emb-bulkStatus'); if(!file||typeof XLSX==='undefined') return;
+      st.textContent='Leyendo archivo…';
+      file.arrayBuffer().then(function(buf){
+        var wb=XLSX.read(buf,{type:'array'}), rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});
+        var ag=0, sn=0, bad=[];
+        rows.forEach(function(row){
+          var keys=Object.keys(row), get=function(t){var k=keys.find(function(k){return norm(k).indexOf(norm(t))>=0;});return k?row[k]:'';};
+          var nombre=String(get('nombre')||'').trim(), inst=matchInstitucion(get('instituci')), et=matchEtapa(get('etapa')), ced=normCed(get('identific')||get('cedula'));
+          if(!nombre){sn++;return;} if(!inst){bad.push(nombre);return;}
+          leads.push({id:uid(),nombre:nombre,institucion:inst,etapa:et,etapaPrevia:null,motivo:null,fecha:todayStr(),creadoTs:Date.now(),cedula:ced,manual:true,fromSheet:false});
+          ag++;
+        });
+        saveManual(); buildCruceMap(); render();
+        st.textContent='✔ '+ag+' cargados.'+(sn?'\n⚠ '+sn+' sin nombre.':'')+(bad.length?'\n⚠ Inst. no reconocida: '+bad.slice(0,5).join(', '):'');
+        $('emb-bulkFile').value='';
+      }).catch(function(){st.textContent='⚠ Error leyendo archivo.';});
+    },
+    exportExcel:function(){
+      if(typeof XLSX==='undefined') return;
+      var list=filteredLeads(), wb=XLSX.utils.book_new(), apiRef=api();
+      var det=list.map(function(l){
+        var c=cruceFor(l), al=cruceAlerts(l,c);
+        return [l.nombre,l.cedula||'',l.institucion,l.etapa,l.fuente||'',l.propietario||'',
+          c&&c.tiene_credito?'SI':'NO',c?c.sigec.length:0,c?c.glpi.length:0,c&&c.es_congelado?'SI':'NO',al.join('; ')];
+      });
+      var aoa=[['Nombre','Cédula','Sede','Etapa','Fuente','Propietario','BASE COLOC','SIGEC','GLPI','Congelado','Alertas']].concat(det);
+      if(apiRef.appendFooter) aoa=apiRef.appendFooter(aoa);
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(aoa),'Leads cruce');
+      var reached=STAGES.map(function(s,i){return list.filter(function(l){return maxStageIndexReached(l)>=i;}).length;});
+      var funnel=[['Etapa','Alcanzaron','Conv.%']].concat(STAGES.map(function(s,i){
+        return [s.label,reached[i],i>0&&reached[i-1]?Math.round(reached[i]/reached[i-1]*100)+'%':'—'];
+      }));
+      if(apiRef.appendFooter) funnel=apiRef.appendFooter(funnel);
+      XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(funnel),'Embudo');
+      XLSX.writeFile(wb,'embudo_conversion_leads_'+new Date().toISOString().slice(0,10)+'.xlsx');
+    },
+    downloadReport:function(){
+      var list=filteredLeads(), d=computeDiagnostico(), tags={critico:'Crítico',atencion:'Atención',positivo:'En buen camino'};
+      var pr=$('emb-printReport');
+      if(!pr) return;
+      pr.innerHTML='<div style="padding:24px;font-family:sans-serif"><h1>Embudo de conversión de leads</h1><p>Corte: '
+        +new Date().toLocaleDateString('es-CO')+' · '+list.length+' leads</p>'
+        +d.items.map(function(it){return '<p><b>'+(tags[it.tipo]||'')+'</b> '+it.texto+'</p>';}).join('')
+        +'<p style="font-size:10px;color:#666;margin-top:24px">Cooperativa Minuto de Dios · PYV Comercial</p></div>';
+      pr.style.display='block'; window.print(); pr.style.display='none';
+    }
+  };
+})();
+</script>
+
 <footer class="app-footer" id="app-footer-global">
   <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:#94a3b8;font-size:10px;padding:14px 16px 20px">
     <span>© 2024–2026 Cooperativa Minuto de Dios</span>
