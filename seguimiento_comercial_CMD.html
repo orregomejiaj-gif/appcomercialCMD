@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.100   (APP_VERSION = 'pyv-comercial-5.4.100')
+  Versión actual: pyv-comercial-5.4.101   (APP_VERSION = 'pyv-comercial-5.4.101')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.101 (2026-07-24)
+    - Créditos de la app más visibles: barra destacada en login, menú, hojas y pie global.
   pyv-comercial-5.4.100 (2026-07-24)
     - Encabezados y pies de página: se retira branding Cooperativa Minuto de Dios y CMD (solo UI, sin tocar código técnico).
   pyv-comercial-5.4.99 (2026-07-24)
@@ -411,11 +413,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.100">
-<meta name="build-id" content="pyv-comercial-5.4.100-20260724-2100">
-<title>SCIC pyv-comercial 5.4.100</title>
+<meta name="app-version" content="pyv-comercial-5.4.101">
+<meta name="build-id" content="pyv-comercial-5.4.101-20260724-2240">
+<title>SCIC pyv-comercial 5.4.101</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.100';
+window.APP_VERSION='pyv-comercial-5.4.101';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -580,8 +582,10 @@ body.hdr-modo-login .hdr{display:none}
   #lock-overlay{font-size:13px;padding:10px 16px}
 
   /* ── FOOTER ── */
-  .app-footer{font-size:10px;padding:10px 12px}
-  .app-footer>div{flex-direction:column;gap:6px;text-align:center}
+  .app-footer{font-size:11px;padding:0}
+  .app-credits-bar{font-size:11px;padding:10px 12px}
+  .app-credits-bar .app-credits-author{font-size:12px}
+  .app-footer>div{flex-direction:column;gap:4px;text-align:center;padding:10px 12px}
   .app-footer span[style*="width:1px"]{display:none}
 
   /* ── ANTICIPO CALCULADORA ── */
@@ -741,7 +745,16 @@ select[multiple]{height:120px;padding:4px}
 .yn-btn.active-no{background:#fee2e2;border-color:var(--red);color:#991b1b;font-weight:700}
 
 /* FOOTER */
-.app-footer{max-width:1140px;margin:0 auto;padding:14px 14px 20px;}
+.app-footer{max-width:100%;margin:0;padding:0}
+.app-credits{text-align:center;line-height:1.55;font-size:11px;color:#64748b;letter-spacing:.2px}
+.app-credits-author{color:#003D45;font-weight:800}
+.app-credits-bar{text-align:center;padding:11px 16px;font-size:12px;line-height:1.55;letter-spacing:.25px;background:linear-gradient(180deg,#f8fafc,#eef2f7);border-top:2px solid #C8971E;color:#334155}
+.app-credits-bar .app-credits-author{color:#003D45;font-weight:800;font-size:13px}
+.app-credits-bar--dark{background:linear-gradient(180deg,rgba(0,61,69,.97),rgba(0,35,40,.99));border-top:2px solid #FFD900;color:rgba(255,255,255,.82)}
+.app-credits-bar--dark .app-credits-author{color:#FFD900;font-weight:800;font-size:13px}
+.app-credits-bar--fixed{position:fixed;left:0;right:0;bottom:0;z-index:99990;box-shadow:0 -4px 24px rgba(0,0,0,.28)}
+#app-footer-global{position:sticky;bottom:0;z-index:9000;width:100%;background:linear-gradient(180deg,#f8fafc,#eef2f7);border-top:2px solid #C8971E;box-shadow:0 -2px 16px rgba(0,61,69,.08)}
+.menu-footer.app-credits-bar{margin-top:18px;border-radius:10px;border:1px solid rgba(200,151,30,.35);box-shadow:0 2px 10px rgba(0,61,69,.06)}
 
 /* ACTA PREVIEW */
 .acta-pre{background:#fff;border:1px solid var(--border);border-radius:9px;padding:20px;font-size:12px;line-height:1.9;max-height:600px;overflow-y:auto}
@@ -1178,7 +1191,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.100</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.101</div>
 </div>
 
 
@@ -1187,7 +1200,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial</div>
           <div class="menu-brand-sub">Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.100</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.101</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -1263,7 +1276,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 <!-- ═══════════ ETAPA 1: LOGIN ═══════════ -->
 
 <!-- PANTALLA PASSWORD -->
-<div id="etapa-password" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#001f24 0%,#003D45 40%,#004d58 70%,#00616e 100%)">
+<div id="etapa-password" style="display:none;min-height:100vh;align-items:center;justify-content:center;padding:24px 24px 72px;background:linear-gradient(135deg,#001f24 0%,#003D45 40%,#004d58 70%,#00616e 100%)">
   <div style="width:100%;max-width:420px">
     <!-- Logo area -->
     <div style="text-align:center;margin-bottom:32px">
@@ -1338,14 +1351,14 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </button>
       </div>
     </div>
-    <!-- Version -->
-    <div style="text-align:center;margin-top:20px;color:rgba(255,255,255,.25);font-size:10px">
-      App Acompañamiento Comercial · Proceso PYV
+    <!-- Créditos -->
+    <div class="app-credits-bar app-credits-bar--dark app-credits-bar--fixed">
+      © 2024–2026 · Proceso PYV · SCIC · Desarrollado por <span class="app-credits-author">Juan Bernardo Orrego Mejía</span> · Todos los derechos reservados
     </div>
   </div>
 </div>
 
-<div id="etapa-login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:linear-gradient(160deg,#001418 0%,#003D45 50%,#001f1a 100%)">
+<div id="etapa-login" style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px 20px 72px;background:linear-gradient(160deg,#001418 0%,#003D45 50%,#001f1a 100%)">
   <div style="width:100%;max-width:1040px">
     <div style="text-align:center;margin-bottom:18px">
       <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,.05);border:1px solid rgba(200,151,30,.25);border-radius:40px;padding:7px 18px;margin-bottom:12px">
@@ -1383,7 +1396,9 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
           <i class="ti ti-arrow-right" style="margin-right:5px;font-size:11px"></i>Ingresar al SCIC
         </button>
-        <div style="text-align:center;margin-top:10px;color:rgba(255,255,255,.15);font-size:8px">2026</div>
+        <div class="app-credits" style="text-align:center;margin-top:10px;color:rgba(255,255,255,.55);font-size:10px">
+          Desarrollado por <span class="app-credits-author" style="color:#C8971E">Juan Bernardo Orrego Mejía</span>
+        </div>
         <div id="login-sheets-status" style="text-align:center;margin-top:8px;font-size:9px;color:rgba(255,255,255,.4);line-height:1.4">
           <i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Conectando con Google Sheets…
         </div>
@@ -1475,9 +1490,10 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       </div>
     </div>
   </div>
+  <div class="app-credits-bar app-credits-bar--dark app-credits-bar--fixed">
+    © 2024–2026 · Proceso PYV · SCIC · Desarrollado por <span class="app-credits-author">Juan Bernardo Orrego Mejía</span> · Todos los derechos reservados
+  </div>
 </div>
-
-<!-- ═══════════ ETAPA 2: MENÚ ═══════════ -->
 <div id="etapa-menu" class="menu-shell" style="display:none">
 
   <div class="menu-quick-bar">
@@ -1778,7 +1794,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         </div>
       </div>
 
-      <div class="menu-footer">© 2024–2026 · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía</div>
+      <div class="menu-footer app-credits-bar">© 2024–2026 · Proceso PYV · SCIC · Desarrollado por <span class="app-credits-author">Juan Bernardo Orrego Mejía</span> · Todos los derechos reservados</div>
     </div>
     </div>
   </div>
@@ -2212,7 +2228,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .scic-tab-desc-guia{font-size:10px;color:#64748b;margin-top:6px;padding-top:6px;border-top:1px dashed #99f6e4}
 @media(max-width:600px){.cmd-ia-fab{bottom:14px;right:14px;padding:10px 14px}.cmd-ia-panel{bottom:72px;right:14px}}
 
-.menu-footer{text-align:center;margin-top:18px;padding-top:12px;border-top:1px solid var(--border);color:var(--gray);font-size:9px;line-height:1.5}
+.menu-footer{text-align:center;margin-top:18px;padding-top:12px;line-height:1.55}
 .herr-tab{border:1px solid var(--border);background:var(--white);color:var(--text);border-radius:8px;padding:6px 10px;font-size:10px;font-weight:600;cursor:pointer;font-family:Ubuntu,sans-serif;transition:.15s}
 .herr-tab:hover,.herr-tab.active{background:var(--dark);color:var(--yellow);border-color:var(--dark)}
 .herr-launch-btn{display:flex;flex-direction:column;align-items:center;gap:6px;padding:16px 10px;background:var(--white);border:1.5px solid var(--border);border-radius:12px;cursor:pointer;font-family:Ubuntu,sans-serif;font-size:11px;font-weight:700;color:var(--dark);transition:.15s}
@@ -2376,7 +2392,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
     <div id="meta-asesor-display"><p style="font-size:13px;color:var(--text2)">Selecciona sede y cantidad de asesores para ver la meta individual.</p></div>
     <button class="btn btn-primary" style="margin-top:12px" onclick="guardarMetas()"><i class="ti ti-device-floppy"></i> Guardar metas</button>
   </div>
-  <div style="text-align:center;padding:20px 16px 8px;margin-top:16px"><div style="font-size:8px;color:#c1c9d6;letter-spacing:.4px">© 2024–2026 · Proceso PYV · Desarrollado por Juan Bernardo Orrego Mejía · Todos los derechos reservados</div></div>
+  <div class="app-credits-bar" style="margin-top:16px;border-radius:10px">© 2024–2026 · Proceso PYV · SCIC · Desarrollado por <span class="app-credits-author">Juan Bernardo Orrego Mejía</span> · Todos los derechos reservados</div>
 </div>
 
 <!-- HOJA 2 -->
@@ -4112,7 +4128,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.100';
+var APP_VERSION = 'pyv-comercial-5.4.101';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -6548,7 +6564,7 @@ document.addEventListener('DOMContentLoaded', function(){
     <div style="padding:12px 24px 16px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
       
             
-            <div style="font-size:10px;color:var(--text2)">17 aplicaciones · Proceso PYV</div>
+            <div style="font-size:10px;color:var(--text2)">17 aplicaciones · Proceso PYV · <strong style="color:#003D45">Juan Bernardo Orrego Mejía</strong></div>
       <button onclick="cerrarAppsMenu()" class="btn" style="padding:8px 18px;font-size:12px">Cerrar</button>
     </div>
   </div>
@@ -19003,7 +19019,8 @@ function _parseCumpleMMDD(s){
     return [
       [],
       ['© 2024–2026 · Proceso PYV · SCIC'],
-      ['Desarrollado por Juan Bernardo Orrego Mejía · Todos los derechos reservados'],
+      ['Desarrollado por: Juan Bernardo Orrego Mejía'],
+      ['Todos los derechos reservados'],
       ['Versión APP', (typeof APP_VERSION!=='undefined'?APP_VERSION:window.APP_VERSION||'')]
     ];
   }
@@ -20086,13 +20103,11 @@ function _parseCumpleMMDD(s){
 </script>
 
 <footer class="app-footer" id="app-footer-global">
-  <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:#94a3b8;font-size:10px;padding:14px 16px 20px">
-    <span>© 2024–2026</span>
-    <span style="width:1px;height:10px;background:#cbd5e1;display:inline-block"></span>
-    <span>Proceso PYV · SCIC</span>
-    <span style="width:1px;height:10px;background:#cbd5e1;display:inline-block"></span>
-    <span>Desarrollado por Juan Bernardo Orrego Mejía</span>
-    <span style="width:1px;height:10px;background:#cbd5e1;display:inline-block"></span>
+  <div class="app-credits-bar">
+    <span>© 2024–2026 · Proceso PYV · SCIC</span>
+    <span style="margin:0 6px;opacity:.4">|</span>
+    <span>Desarrollado por <span class="app-credits-author">Juan Bernardo Orrego Mejía</span></span>
+    <span style="margin:0 6px;opacity:.4">|</span>
     <span>Todos los derechos reservados</span>
   </div>
 </footer>
