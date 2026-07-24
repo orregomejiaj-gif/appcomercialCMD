@@ -1563,6 +1563,19 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <button type="button" class="cmd-corte-link" id="cmd-vista-sedes-btn" onclick="cmdToggleVistaMenu()" title="Alternar entre vista nacional y tus sedes asignadas">Ver mis sedes →</button>
       </div>
 
+      <div class="menu-report-block menu-embudo-panel" id="menu-embudo-panel">
+        <div class="menu-embudo-hdr">
+          <div>
+            <div class="menu-embudo-title"><i class="ti ti-funnel"></i> Embudo de conversión de leads</div>
+            <div class="menu-embudo-sub" id="menu-embudo-sub">Semáforo nacional · cruce SIGEC · GLPI · COLOC · CONGELADOS</div>
+          </div>
+          <button type="button" class="menu-embudo-link" onclick="icAbrirDesdeMenu('embudo-leads-resumen')">Ver informe →</button>
+        </div>
+        <div id="menu-embudo-display">
+          <div class="menu-embudo-loading">Cargando embudo de conversión de leads…</div>
+        </div>
+      </div>
+
       <div class="menu-salud-panel" id="menu-salud-panel">
         <div class="menu-salud-hdr">
           <div>
@@ -2162,6 +2175,15 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .cmd-corte-link:hover{background:#005a66}
 .cmd-corte-link.cmd-vista-activa{background:#C8971E;color:#001f24}
 .cmd-corte-bar.cmd-vista-mis-sedes{border-left-color:#C8971E;background:linear-gradient(135deg,#fffbeb,#fff)}
+.menu-embudo-panel{margin-bottom:22px;padding:18px 20px;background:linear-gradient(135deg,#f0fdfa,#fff);border:1px solid rgba(0,176,185,.28);border-radius:16px;border-left:4px solid var(--teal);box-shadow:0 2px 12px rgba(0,61,69,.05)}
+.menu-embudo-hdr{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.menu-embudo-title{font-size:14px;font-weight:800;color:var(--dark)}
+.menu-embudo-sub{font-size:10px;color:var(--gray);margin-top:4px;max-width:520px;line-height:1.45}
+.menu-embudo-link{padding:6px 12px;border:none;border-radius:8px;background:var(--dark);color:#fff;font-size:10px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif;flex-shrink:0}
+.menu-embudo-link:hover{background:#005a66}
+.menu-embudo-loading{font-size:11px;color:var(--gray);text-align:center;padding:16px}
+.menu-embudo-inner{display:grid;grid-template-columns:1fr auto;gap:14px;align-items:start}
+@media(max-width:720px){.menu-embudo-inner{grid-template-columns:1fr}}
 .cmd-ia-fab{position:fixed;bottom:22px;right:22px;z-index:12000;display:flex;align-items:center;gap:8px;padding:12px 16px;border:none;border-radius:999px;background:linear-gradient(135deg,var(--dark),#005a66);color:#fff;font-family:Ubuntu,sans-serif;font-size:12px;font-weight:800;cursor:pointer;box-shadow:0 8px 28px rgba(0,61,69,.35);transition:transform .2s,box-shadow .2s}
 .cmd-ia-fab:hover{transform:translateY(-3px);box-shadow:0 12px 32px rgba(0,176,185,.35)}
 .cmd-ia-fab-icon{font-size:20px;line-height:1}
@@ -5011,6 +5033,7 @@ function _scicAsegurarSheetsListos(forzar){
     try{ if(typeof _mtsCargarMeta==='function') _mtsCargarMeta(); }catch(e){}
     try{ if(typeof _mtsSincronizarEjecSigecGlpi==='function') _mtsSincronizarEjecSigecGlpi(); }catch(e){}
     try{ if(typeof renderLoginEmbudoLeads==='function') renderLoginEmbudoLeads(); }catch(e){}
+    try{ if(typeof renderMenuEmbudoLeads==='function') renderMenuEmbudoLeads(); }catch(e){}
     return Promise.resolve();
   }
   if(window._scicSheetsPromesa && !forzar) return window._scicSheetsPromesa;
@@ -5027,6 +5050,7 @@ function _scicAsegurarSheetsListos(forzar){
     }
   }).then(function(){
     try{ if(typeof renderLoginEmbudoLeads==='function') renderLoginEmbudoLeads(); }catch(e){}
+    try{ if(typeof renderMenuEmbudoLeads==='function') renderMenuEmbudoLeads(); }catch(e){}
     window._scicSheetsPromesa = null;
   }).catch(function(err){
     window._scicSheetsPromesa = null;
@@ -8448,6 +8472,56 @@ function _parseCumpleMMDD(s){
   }
   window.renderLoginEmbudoLeads = renderLoginEmbudoLeads;
 
+  function renderMenuEmbudoLeads(sedesFiltro, ambitoLbl){
+    var el = document.getElementById('menu-embudo-display');
+    var sub = document.getElementById('menu-embudo-sub');
+    if(!el) return;
+    var esNacional = !sedesFiltro || !sedesFiltro.length;
+    if(sub) sub.textContent = esNacional
+      ? 'Semáforo nacional · cruce SIGEC · GLPI · COLOC · CONGELADOS'
+      : ('Semáforo · '+ (ambitoLbl || sedesFiltro.join(', ')) +' · cruce operativo por cédula');
+    var pintar = function(){
+      if(!window.IC_EMBUDO_API || typeof window.IC_EMBUDO_API.construir !== 'function'){
+        el.innerHTML = '<div class="menu-embudo-loading">Módulo embudo cargando…</div>';
+        return;
+      }
+      var f = {};
+      if(!esNacional) f.sedes = sedesFiltro;
+      var d = window.IC_EMBUDO_API.construir(f);
+      var sem = window.IC_EMBUDO_API.semaforo(d);
+      var titulo = esNacional ? 'Semáforo embudo · Nacional' : ('Semáforo embudo · ' + (ambitoLbl || sedesFiltro[0] || 'Sedes'));
+      var html = '<div class="menu-embudo-inner">';
+      html += '<div>' + window.IC_EMBUDO_API.renderCard(d, {dark:false, compact:false, titulo:titulo}) + '</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:8px;min-width:140px">';
+      html += '<div style="text-align:center;padding:12px;background:#fff;border:1px solid #e2e8f0;border-radius:12px">';
+      html += '<div style="font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px">Semáforo</div>';
+      html += '<div style="width:56px;height:56px;border-radius:50%;border:4px solid '+sem.color+';display:flex;align-items:center;justify-content:center;margin:0 auto 4px;background:'+sem.color+'18">';
+      html += '<span style="font-size:9px;font-weight:900;color:'+sem.color+'">'+sem.sem+'</span></div>';
+      html += '<div style="font-size:18px;font-weight:900;color:#003D45">'+((d.globalConv||0)+'%')+'</div>';
+      html += '<div style="font-size:8px;color:#94a3b8">conv. global</div></div>';
+      html += '<button type="button" class="menu-embudo-link" style="width:100%" onclick="icAbrirDesdeMenu(\'embudo-leads\')">Análisis profundo</button>';
+      html += '<button type="button" class="menu-embudo-link" style="width:100%;background:#0891b2" onclick="icAbrirDesdeMenu(\'embudo-leads-resumen\')">Ver resumen</button>';
+      html += '</div></div>';
+      if(!d.total){
+        html = '<div class="menu-embudo-loading">Sin datos de embudo en el filtro actual. Actualice el Sheet «Embudo de conversión de leads».</div>';
+      }
+      el.innerHTML = html;
+    };
+    if(window._embudoLeadsRows && window._embudoLeadsRows.length){
+      pintar();
+      return;
+    }
+    el.innerHTML = '<div class="menu-embudo-loading"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando embudo desde Sheets…</div>';
+    if(typeof window.IC_EMBUDO_API !== 'undefined' && window.IC_EMBUDO_API.cargarEmbudo){
+      window.IC_EMBUDO_API.cargarEmbudo(false).then(pintar).catch(pintar);
+    } else if(typeof _leerHojaEmbudoLeads === 'function'){
+      _leerHojaEmbudoLeads().then(pintar).catch(pintar);
+    } else {
+      pintar();
+    }
+  }
+  window.renderMenuEmbudoLeads = renderMenuEmbudoLeads;
+
   // Login estricto: solo coincidencia exacta de nombre.apellido (parte local del correo)
   function _resolverEmpleadoExacto(input){
     var raw=(input||'').trim().toLowerCase();
@@ -9922,6 +9996,7 @@ function _parseCumpleMMDD(s){
       renderMenuInformeColocacion(vista.esNacional ? null : sedesFiltro);
       renderMenuVsAnterior(vista.esNacional ? null : sedesFiltro);
       renderMenuMcmRadar(vista.esNacional ? null : sedesFiltro);
+      renderMenuEmbudoLeads(vista.esNacional ? null : sedesFiltro, ambitoLbl);
       try{ if(typeof cmdActualizarBotonVistaMenu==='function') cmdActualizarBotonVistaMenu(); }catch(e){}
     }catch(e){ console.warn('[SCIC] actualizarMenuKPIs:',e&&e.message); }
   }
