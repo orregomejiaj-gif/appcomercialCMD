@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.87   (APP_VERSION = 'pyv-comercial-5.4.87')
+  Versión actual: pyv-comercial-5.4.88   (APP_VERSION = 'pyv-comercial-5.4.88')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.88 (2026-07-24)
+    - Nuevo informe Embudo de conversión de leads: carga hoja HubSpot, embudo por etapa, cruce por cédula con colocación/SIGEC/GLPI/congelados.
+    - Identifica leads estancados, con crédito sin avance de etapa, congelados sin facturar y congelados pendientes.
+    - Export Excel con embudo, diagnóstico, detalle y cruces; pie de página CMD en todas las hojas exportadas.
   pyv-comercial-5.4.87 (2026-07-21)
     - Fix Informe Cartera: rectoría Virtual y Distancia carga datos Cygnus/SAP (match sede/rectoría y alias).
     - Alias sedes cartera: COA VIRTUAL, REC. UNIMINUTO VIRTUAL → Virtual y Distancia.
@@ -374,11 +378,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.87">
-<meta name="build-id" content="pyv-comercial-5.4.87-20260721-1710">
+<meta name="app-version" content="pyv-comercial-5.4.88">
+<meta name="build-id" content="pyv-comercial-5.4.88-20260724-1400">
 <title>SCIC pyv-comercial 5.4.85 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.87';
+window.APP_VERSION='pyv-comercial-5.4.88';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -4044,7 +4048,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.87';
+var APP_VERSION = 'pyv-comercial-5.4.88';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7853,6 +7857,7 @@ https://minutodediosportal.com/login/
         <button type="button" class="ic-tab" data-ic="perdida-cedulas" onclick="icSeleccionarTab('perdida-cedulas')">🔍 Pérdida por Cédula</button>
         <button type="button" class="ic-tab" data-ic="perdida-real" onclick="icSeleccionarTab('perdida-real')">🎯 Pérdida Real</button>
         <button type="button" class="ic-tab" data-ic="reincidencia" onclick="icSeleccionarTab('reincidencia')">🚨 Reincidencia Sedes</button>
+        <button type="button" class="ic-tab" data-ic="embudo-leads" onclick="icSeleccionarTab('embudo-leads')">🎯 Embudo Leads</button>
         <div class="ic-tab-sec">Siguiente Nivel</div>
         <button type="button" class="ic-tab" data-ic="turno-vivo" onclick="icSeleccionarTab('turno-vivo')">📡 Turno en Vivo</button>
         <button type="button" class="ic-tab" data-ic="scorecard-sede" onclick="icSeleccionarTab('scorecard-sede')">🎯 Scorecard Sede</button>
@@ -8814,6 +8819,67 @@ function _parseCumpleMMDD(s){
     });
   }
   window._leerHojaGlpiColocacion = _leerHojaGlpiColocacion;
+
+  /** Lee hoja Embudo de conversión de leads (repo leads / HubSpot). */
+  function _leerHojaEmbudoLeads(){
+    return new Promise(function(resolve, reject){
+      function embStr(v){ return v==null?'':String(v).trim(); }
+      function embNormCed(c){ return String(c||'').replace(/\D/g,'').replace(/^0+/,''); }
+      var sheetName = (typeof SHEETS_HOJAS !== 'undefined' && SHEETS_HOJAS.embudoLeads) ? SHEETS_HOJAS.embudoLeads : 'Embudo de conversión de leads';
+      var repoId = (typeof REPO_IDS !== 'undefined' && REPO_IDS.leads) ? REPO_IDS.leads : '1jd2xK04RVbJIAJZNYLpqe-uyJcn39ue_D2kmpL7-Jes';
+      var cb = '_embudoleads_' + Date.now() + '_' + Math.floor(Math.random() * 9999);
+      var sc = document.createElement('script');
+      var tm = setTimeout(function(){
+        try{ delete window[cb]; }catch(e){}
+        if(sc.parentNode) sc.parentNode.removeChild(sc);
+        reject(new Error('Timeout cargando Embudo de leads'));
+      }, 20000);
+      window[cb] = function(data){
+        clearTimeout(tm);
+        try{ delete window[cb]; }catch(e){}
+        if(sc.parentNode) sc.parentNode.removeChild(sc);
+        try{
+          if(!data || !data.table){ window._embudoLeadsRows = []; resolve([]); return; }
+          var cols = data.table.cols || [];
+          var idx = {};
+          cols.forEach(function(c, i){
+            var lbl = embStr(c.label || c.id).toLowerCase();
+            if(lbl.indexOf('nombre')>=0 && lbl.indexOf('lead')>=0) idx.nombre = i;
+            else if(lbl.indexOf('identific')>=0 || lbl.indexOf('cedula')>=0 || lbl.indexOf('cédula')>=0) idx.cedula = i;
+            else if(lbl === 'sede') idx.sede = i;
+            else if(lbl.indexOf('etapa')>=0) idx.etapa = i;
+            else if(lbl.indexOf('fuente')>=0 && lbl.indexOf('lead')>=0) idx.fuente = i;
+            else if(lbl.indexOf('creaci')>=0) idx.fecha = i;
+            else if(lbl.indexOf('propietario')>=0) idx.propietario = i;
+          });
+          var filas = (data.table.rows || []).map(function(row){
+            var c = (row.c || []).map(_celGvizSigec);
+            var cedRaw = idx.cedula != null ? c[idx.cedula] : '';
+            return {
+              id: embStr(c[0]),
+              nombre: embStr(idx.nombre != null ? c[idx.nombre] : c[1]),
+              cedula: embNormCed(cedRaw),
+              sede: embStr(idx.sede != null ? c[idx.sede] : c[3]),
+              etapaRaw: embStr(idx.etapa != null ? c[idx.etapa] : ''),
+              fuente: embStr(idx.fuente != null ? c[idx.fuente] : ''),
+              propietario: embStr(idx.propietario != null ? c[idx.propietario] : ''),
+              fecha: idx.fecha != null ? c[idx.fecha] : null,
+              _cols: c
+            };
+          }).filter(function(r){
+            return r.nombre && r.nombre.toLowerCase() !== 'nombre del lead';
+          });
+          window._embudoLeadsRows = filas;
+          console.log('[SCIC] Embudo leads:', filas.length, 'registros desde repo leads');
+          resolve(filas);
+        }catch(e){ reject(e); }
+      };
+      sc.onerror = function(){ clearTimeout(tm); reject(new Error('Error de red Embudo leads')); };
+      sc.src = 'https://docs.google.com/spreadsheets/d/' + repoId + '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&sheet=' + encodeURIComponent(sheetName) + '&_=' + Date.now();
+      document.head.appendChild(sc);
+    });
+  }
+  window._leerHojaEmbudoLeads = _leerHojaEmbudoLeads;
 
   function cargarSigecContadoresMenu(){
     return _leerHojaSigecColocacion().then(function(){
@@ -15349,7 +15415,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.85 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.88 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -16274,6 +16340,208 @@ function _parseCumpleMMDD(s){
     }, 40);
   };
 
+  var IC_EMBUDO_STAGES = [
+    {key:'nuevo', label:'Nuevo', idx:0},
+    {key:'contactando', label:'Intentando contactar', idx:1},
+    {key:'conectado', label:'Conectado', idx:2},
+    {key:'interes', label:'Manifiesta interés', idx:3},
+    {key:'radicado', label:'Crédito radicado', idx:4},
+    {key:'congelada', label:'Solicitud congelada', idx:5},
+    {key:'aprobado', label:'Crédito aprobado', idx:6}
+  ];
+  var IC_EMBUDO_STAGE_INDEX = {};
+  IC_EMBUDO_STAGES.forEach(function(s,i){ IC_EMBUDO_STAGE_INDEX[s.key]=i; });
+
+  function icMatchEmbudoEtapa(raw){
+    var n = icStr(raw).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+    if(!n) return 'nuevo';
+    if(n.indexOf('descalific')>=0) return 'descalificado';
+    if(n.indexOf('rechaz')>=0) return 'rechazada';
+    var i;
+    for(i=0;i<IC_EMBUDO_STAGES.length;i++){
+      var lbl = IC_EMBUDO_STAGES[i].label.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+      if(n===lbl || n.indexOf(lbl)>=0 || lbl.indexOf(n)>=0) return IC_EMBUDO_STAGES[i].key;
+    }
+    if(n.indexOf('contact')>=0) return 'contactando';
+    if(n.indexOf('conect')>=0) return 'conectado';
+    if(n.indexOf('interes')>=0) return 'interes';
+    if(n.indexOf('radic')>=0) return 'radicado';
+    if(n.indexOf('congel')>=0) return 'congelada';
+    if(n.indexOf('aprobad')>=0) return 'aprobado';
+    return 'nuevo';
+  }
+  function icEmbudoStageIdx(etapa){
+    if(etapa==='descalificado' || etapa==='rechazada') return -1;
+    return IC_EMBUDO_STAGE_INDEX[etapa]!=null ? IC_EMBUDO_STAGE_INDEX[etapa] : 0;
+  }
+  function icEmbudoDiasDesde(fecha){
+    if(!fecha) return null;
+    var d = fecha instanceof Date ? fecha : new Date(fecha);
+    if(isNaN(d.getTime())) return null;
+    return Math.floor((Date.now()-d.getTime())/86400000);
+  }
+  function icCargarEmbudoLeads(forzar){
+    if(!forzar && window._embudoLeadsRows && window._embudoLeadsRows.length) return Promise.resolve(window._embudoLeadsRows);
+    if(typeof _leerHojaEmbudoLeads==='function') return _leerHojaEmbudoLeads().catch(function(){ window._embudoLeadsRows=[]; return []; });
+    return Promise.resolve([]);
+  }
+  function icFiltrarEmbudoLeads(f){
+    f = f || {};
+    var rows = (window._embudoLeadsRows || []).map(function(r){
+      return Object.assign({}, r, {etapa: icMatchEmbudoEtapa(r.etapaRaw || r.etapa)});
+    });
+    var sf = icSedesFiltro(f);
+    if(!sf || !sf.length) return rows;
+    return rows.filter(function(r){
+      return sf.some(function(s){ return icMatchSede(r.sede, s); });
+    });
+  }
+  function icConstruirCruceEmbudoCedulas(f){
+    var congSet = icCongeladosSet();
+    var base = icBaseCedulas(f);
+    var map = {};
+    function ensure(ced){
+      var n = icNormCed(ced);
+      if(!n || n.length < 5) return null;
+      if(!map[n]) map[n] = {
+        ced:n, sigec:[], glpi:[], tickets:[], facturada:0, glpi_aprob:0,
+        tiene_credito:!!base[n], es_congelado:false, cong_tickets:[], radicado:0, abierta:0
+      };
+      return map[n];
+    }
+    icFilasSigec(f).forEach(function(r){
+      var ced = icCedulaSigec(r);
+      var o = ensure(ced);
+      if(!o) return;
+      var c = r._cols || [];
+      var tk = icNormTicket(r.Ticket || c[IC_SIG.TICKET]);
+      var cls = icClasifSigec(r);
+      if(tk) o.tickets.push(tk);
+      if(congSet[tk]){ o.es_congelado = true; o.cong_tickets.push(tk); }
+      o.sigec.push({tk:tk, cls:cls, sede:icStr(r.Sede || c[IC_SIG.SED])});
+      if(cls === 'facturada'){ o.facturada++; o.radicado++; }
+      else if(cls === 'cerrada_fac') o.radicado++;
+      else if(cls === 'abierta' || cls === 'pendiente' || cls === 'pendiente_doc') o.abierta++;
+    });
+    icFilasGlpi(f).forEach(function(r){
+      var ced = icCedulaGlpi(r);
+      var o = ensure(ced);
+      if(!o) return;
+      var c = r._cols || [];
+      var tk = icNormTicket(r.Ticket || c[IC_GLP.TICKET]);
+      var gap = icGlpiAprobada(r);
+      var est = icStr(r.estado || r.Estado || c[IC_GLP.EST]).toLowerCase();
+      var cls = gap ? 'aprobada' : (est.indexOf('cerr')>=0 ? 'cerrada' : 'abierta');
+      if(tk) o.tickets.push(tk);
+      if(congSet[tk]){ o.es_congelado = true; o.cong_tickets.push(tk); }
+      o.glpi.push({tk:tk, cls:cls, sede:icGlpiLeerSede(r)});
+      if(gap){ o.glpi_aprob++; o.radicado++; }
+      else if(cls === 'abierta') o.abierta++;
+    });
+    return map;
+  }
+  function icEmbudoEtapaEsperadaOps(o){
+    if(!o) return -1;
+    if(o.facturada || o.glpi_aprob || o.tiene_credito) return IC_EMBUDO_STAGE_INDEX.aprobado;
+    if(o.es_congelado) return IC_EMBUDO_STAGE_INDEX.congelada;
+    if(o.radicado > 0 || o.sigec.length || o.glpi.length) return IC_EMBUDO_STAGE_INDEX.radicado;
+    return -1;
+  }
+  function icConstruirEmbudoLeads(f){
+    f = f || {};
+    var leads = icFiltrarEmbudoLeads(f);
+    var cedMap = icConstruirCruceEmbudoCedulas(f);
+    var rows = [], funnel = {}, etapaCount = {}, desfase = [], estancados = [], congSinFact = [], congPend = [], creditoSinAvance = [];
+    IC_EMBUDO_STAGES.forEach(function(s){ funnel[s.key]=0; etapaCount[s.label]=0; });
+    var negCount = {descalificado:0, rechazada:0};
+    leads.forEach(function(l){
+      var etapa = l.etapa || icMatchEmbudoEtapa(l.etapaRaw);
+      var idx = icEmbudoStageIdx(etapa);
+      var cruce = l.cedula ? cedMap[l.cedula] : null;
+      var facturada = cruce && (cruce.facturada > 0 || cruce.glpi_aprob > 0);
+      var esperada = icEmbudoEtapaEsperadaOps(cruce);
+      var dias = icEmbudoDiasDesde(l.fecha);
+      var item = {
+        nombre:l.nombre, cedula:l.cedula||'—', sede:l.sede, etapa:etapa, etapaLbl:IC_EMBUDO_STAGES[idx]?IC_EMBUDO_STAGES[idx].label:(etapa||'—'),
+        fuente:l.fuente, propietario:l.propietario, dias:dias,
+        tiene_credito:!!(cruce && cruce.tiene_credito),
+        facturada:!!facturada,
+        es_congelado:!!(cruce && cruce.es_congelado),
+        sigec_n:cruce?cruce.sigec.length:0,
+        glpi_n:cruce?cruce.glpi.length:0,
+        tickets:cruce?(cruce.tickets||[]).join('; '):'',
+        desfase:false, estancado:false, cong_sin_fact:false, cong_pendiente:false
+      };
+      if(etapa === 'descalificado' || etapa === 'rechazada'){
+        negCount[etapa] = (negCount[etapa]||0) + 1;
+      } else {
+        etapaCount[item.etapaLbl] = (etapaCount[item.etapaLbl]||0) + 1;
+        IC_EMBUDO_STAGES.forEach(function(s,i){
+          if(idx >= i) funnel[s.key]++;
+        });
+      }
+      if(cruce && cruce.es_congelado && !facturada){
+        item.cong_sin_fact = true;
+        congSinFact.push(item);
+        if(cruce.abierta > 0 || (cruce.sigec.some(function(s){ return s.cls==='abierta'||s.cls==='pendiente'||s.cls==='pendiente_doc'; }))){
+          item.cong_pendiente = true;
+          congPend.push(item);
+        }
+      }
+      if(esperada >= 0 && idx >= 0 && idx < esperada){
+        item.desfase = true;
+        desfase.push(item);
+      }
+      if((etapa==='nuevo' || etapa==='contactando') && dias != null && dias >= 5){
+        item.estancado = true;
+        estancados.push(item);
+      }
+      if(item.tiene_credito && idx < IC_EMBUDO_STAGE_INDEX.aprobado){
+        creditoSinAvance.push(item);
+      }
+      rows.push(item);
+    });
+    var reached = IC_EMBUDO_STAGES.map(function(s){ return funnel[s.key]||0; });
+    var base = reached[0] || 1;
+    var funnelRows = IC_EMBUDO_STAGES.map(function(s,i){
+      var count = reached[i];
+      var prev = i>0 ? reached[i-1] : 0;
+      return {
+        etapa:s.label, key:s.key, count:count,
+        pct: Math.round((count/base)*100) || 0,
+        conv: i>0 && prev>0 ? Math.round((count/prev)*100) : null
+      };
+    });
+    var diag = [];
+    if(leads.length < 3){
+      diag.push({tipo:'atencion', texto:'Pocos leads en el filtro ('+leads.length+'). Registre más datos para lecturas confiables.'});
+    } else {
+      var peorIdx = -1, peorConv = 1;
+      for(var fi=1; fi<IC_EMBUDO_STAGES.length; fi++){
+        if(reached[fi-1] >= 2){
+          var conv = reached[fi]/reached[fi-1];
+          if(conv < peorConv){ peorConv = conv; peorIdx = fi; }
+        }
+      }
+      if(peorIdx > -1 && peorConv < 0.6){
+        diag.push({tipo: peorConv < 0.35 ? 'critico' : 'atencion',
+          texto:'Cuello de botella en "'+IC_EMBUDO_STAGES[peorIdx-1].label+' → '+IC_EMBUDO_STAGES[peorIdx].label+'" ('+Math.round(peorConv*100)+'% avanza).'});
+      }
+      if(estancados.length) diag.push({tipo: estancados.length>=3?'critico':'atencion', texto:estancados.length+' lead(s) llevan 5+ días en Nuevo/Intentando contactar sin avanzar.'});
+      if(desfase.length) diag.push({tipo:'critico', texto:desfase.length+' lead(s) con crédito/SIGEC/GLPI más avanzado que la etapa registrada en HubSpot (desfase operativo).'});
+      if(congSinFact.length) diag.push({tipo:'critico', texto:congSinFact.length+' lead(s) estuvieron en CONGELADOS y la solicitud aún no está facturada/aprobada.'});
+      if(congPend.length) diag.push({tipo:'atencion', texto:congPend.length+' lead(s) congelados con trámite aún pendiente (sin cierre favorable).'});
+      if(creditoSinAvance.length) diag.push({tipo:'atencion', texto:creditoSinAvance.length+' lead(s) ya desembolsados (BASE COLOC) pero etapa HubSpot no refleja aprobación.'});
+      if(!diag.length) diag.push({tipo:'positivo', texto:'Embudo sin alertas críticas en el filtro actual. Siga el seguimiento por etapa.'});
+    }
+  return {
+      leads:rows, total:leads.length, funnel:funnelRows, reached:reached,
+      negCount:negCount, estancados:estancados, desfase:desfase,
+      congSinFact:congSinFact, congPend:congPend, creditoSinAvance:creditoSinAvance,
+      diag:diag, etapaCount:etapaCount
+    };
+  }
+
   var IC_DESCS={
     'estado-sedes-hoy':'Panorama por sede al día de hoy: meta S2, colocado (SIGEC facturadas + GLPI aprobadas), deberíamos según curva, brecha y semáforo. Filtre por rectoría y/o seleccione varias sedes.',
     'informe-colocacion':'Exclusivamente INFORME COLOCACION P ACTUAL (sheet colocación): meta S2, acumulado, valores, año anterior, variación y semáforo. Sin SIGEC ni GLPI.',
@@ -16292,6 +16560,7 @@ function _parseCumpleMMDD(s){
     'perdida-cedulas':'Cruce por identificación: cédulas con cerrada/cerr.fac/rechazada vs facturada/GLPI aprobada. Pendientes de recuperar y exportación CSV.',
     'perdida-real':'Solo pérdida real por cédula: solicitudes cerradas + cerradas facturadas + rechazadas (SIGEC) cruzadas con facturadas y GLPI aprobadas. Sin recuperación = pérdida real. Export Excel.',
     'reincidencia':'Alerta: misma cédula con varios radicados distintos. Ranking de sedes con mayor reincidencia. Incluye vista de cédulas con más radicaciones cerradas sin facturar ni aprobar (SIGEC cerrada/rechazada, GLPI cerrada) con export Excel por cédula y estados.',
+    'embudo-leads':'Embudo de conversión de leads (HubSpot): etapas del pipeline cruzadas por cédula con colocación (BASE COLOC), SIGEC, GLPI y hoja CONGELADOS. Identifica estancados, desfase etapa vs operación, congelados sin facturar y leads con crédito sin avance.',
     'turno-vivo':'Tablero en vivo: malla de turnos (MALLA) + estado app + colocado del día por sede y estimado por asesor en franja.',
     'scorecard-sede':'Scorecard integral por sede: meta S2, curva, tiempos SLA, congelados, pérdida y cartera en radar ECharts.',
     'alertas-cognipyv':'Alertas automáticas SLA (>72h), congelados críticos y pérdida. Botón para enviar análisis a CogniPYV.',
@@ -17219,6 +17488,81 @@ function _parseCumpleMMDD(s){
     if(vista === 'cerradas') return icRenderReincidenciaCerradas(f, intel);
     return icRenderReincidenciaReinc(f, intel);
   }
+
+  function icRenderEmbudoLeads(f){
+    var d = icConstruirEmbudoLeads(f);
+    var html = icAvisoEstadoDatos();
+    html += '<div class="ic-explain">'+IC_DESCS['embudo-leads']+' · <b>'+icFmt(d.total)+'</b> leads en filtro · Fuente: hoja Embudo de conversión de leads</div>';
+    html += '<div class="ic-kpi-grid">';
+    html += icKpi('Leads en filtro', icFmt(d.total), 'HubSpot / Sheet leads', '#003D45');
+    html += icKpi('Estancados 5+ días', icFmt(d.estancados.length), 'Nuevo / Intentando contactar', '#ca8a04');
+    html += icKpi('Desfase etapa', icFmt(d.desfase.length), 'SIGEC/GLPI más avanzado que HubSpot', '#dc2626');
+    html += icKpi('Cong. s/ facturar', icFmt(d.congSinFact.length), 'En hoja CONGELADOS sin fact./aprob.', '#0891b2');
+    html += icKpi('Cong. pendientes', icFmt(d.congPend.length), 'Congelados con trámite abierto', '#6366f1');
+    html += icKpi('Crédito s/ avance', icFmt(d.creditoSinAvance.length), 'En BASE COLOC, etapa HubSpot atrás', '#b91c1c');
+    html += '</div>';
+    html += '<div class="ic-chart-row">';
+    html += '<div class="ic-chart-box"><h4>Embudo por etapa alcanzada</h4><div id="ic-chart-embudo-leads" class="ic-chart ic-chart-tall"></div></div>';
+    html += '<div class="ic-chart-box"><h4>Distribución etapa actual</h4><div id="ic-chart-embudo-etapa" class="ic-chart ic-chart-tall"></div></div>';
+    html += '</div>';
+    icQueueChart('ic-chart-embudo-leads', {
+      grid:{left:120,right:24,top:12,bottom:24},
+      xAxis:{type:'value'},
+      yAxis:{type:'category',data:d.funnel.map(function(x){return x.etapa;}).reverse(),axisLabel:{fontSize:9}},
+      series:[{type:'bar',data:d.funnel.map(function(x){return x.count;}).reverse(),itemStyle:{color:'#003D45'},
+        label:{show:true,position:'right',fontSize:9,formatter:function(p){ var r=d.funnel[d.funnel.length-1-p.dataIndex]; return r.count+(r.conv!=null?' ('+r.conv+'%)':''); }}}]
+    });
+    var pieData = Object.keys(d.etapaCount).filter(function(k){ return d.etapaCount[k]>0; }).map(function(k){
+      return {name:k, value:d.etapaCount[k]};
+    });
+    icQueueChart('ic-chart-embudo-etapa', {
+      tooltip:{trigger:'item'},
+      series:[{type:'pie',radius:['38%','68%'],data:pieData,label:{fontSize:9}}]
+    });
+    html += icSec('Diagnóstico comercial','Lectura automática para priorizar gestión de leads');
+    var tagLbl = {critico:'Crítico', atencion:'Atención', positivo:'En buen camino'};
+    d.diag.forEach(function(it){
+      html += '<div style="display:flex;gap:10px;padding:10px 0;border-bottom:1px solid #e2e8f0;font-size:12px;align-items:flex-start">'
+        +'<span style="font-family:monospace;font-size:10px;padding:3px 8px;border-radius:4px;white-space:nowrap;background:'
+        +(it.tipo==='critico'?'#fee2e2;color:#b91c1c':it.tipo==='atencion'?'#fef3c7;color:#92400e':'#dcfce7;color:#166534')+'">'
+        +(tagLbl[it.tipo]||it.tipo)+'</span><span>'+it.texto+'</span></div>';
+    });
+    function tblDetalle(titulo, lista, cols){
+      html += icSec(titulo, icFmt(lista.length)+' registros');
+      html += '<div style="overflow:auto;max-height:300px"><table class="ic-tbl"><thead><tr>';
+      cols.forEach(function(c){ html += '<th>'+c+'</th>'; });
+      html += '</tr></thead><tbody>';
+      lista.slice(0,80).forEach(function(r){
+        html += '<tr><td>'+r.nombre+'</td><td>'+r.cedula+'</td><td>'+r.sede+'</td><td>'+r.etapaLbl+'</td>'
+          +'<td style="text-align:right">'+(r.dias!=null?r.dias:'—')+'</td>'
+          +'<td>'+(r.tiene_credito?'✅':'—')+'</td><td>'+(r.facturada?'✅':'—')+'</td>'
+          +'<td>'+(r.es_congelado?'❄️':'—')+'</td><td style="font-size:9px">'+r.tickets+'</td></tr>';
+      });
+      html += '</tbody></table></div>';
+    }
+    tblDetalle('Desfase etapa HubSpot vs SIGEC/GLPI/colocación', d.desfase, ['Nombre','Cédula','Sede','Etapa HubSpot','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    tblDetalle('Congelados sin facturar ni aprobar', d.congSinFact, ['Nombre','Cédula','Sede','Etapa HubSpot','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    tblDetalle('Congelados con trámite pendiente', d.congPend, ['Nombre','Cédula','Sede','Etapa HubSpot','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    tblDetalle('Leads estancados (5+ días en etapa inicial)', d.estancados, ['Nombre','Cédula','Sede','Etapa HubSpot','Días','BASE COLOC','Fact./Aprob.','Cong.','Tickets']);
+    html += icSec('Detalle completo leads','Cruce por identificación con operación');
+    html += '<div style="overflow:auto;max-height:360px"><table class="ic-tbl"><thead><tr>'
+      +'<th>Nombre</th><th>Cédula</th><th>Sede</th><th>Etapa</th><th>Fuente</th><th>Días</th><th>COLOC</th><th>SIGEC</th><th>GLPI</th><th>Cong.</th><th>Alertas</th></tr></thead><tbody>';
+    d.leads.slice(0,120).forEach(function(r){
+      var alerts = [];
+      if(r.estancado) alerts.push('Estancado');
+      if(r.desfase) alerts.push('Desfase');
+      if(r.cong_sin_fact) alerts.push('Cong.s/fact');
+      if(r.cong_pendiente) alerts.push('Cong.pend');
+      if(r.tiene_credito && !r.facturada) alerts.push('Créd.s/avance');
+      html += '<tr><td style="font-weight:600">'+r.nombre+'</td><td>'+r.cedula+'</td><td>'+r.sede+'</td><td>'+r.etapaLbl+'</td>'
+        +'<td style="font-size:9px">'+r.fuente+'</td><td style="text-align:right">'+(r.dias!=null?r.dias:'—')+'</td>'
+        +'<td>'+(r.tiene_credito?'✅':'—')+'</td><td style="text-align:right">'+r.sigec_n+'</td><td style="text-align:right">'+r.glpi_n+'</td>'
+        +'<td>'+(r.es_congelado?'❄️':'—')+'</td><td style="font-size:9px;color:#b91c1c">'+(alerts.join(', ')||'—')+'</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    return html;
+  }
+
   window.icReincidenciaCambiarVista = function(v){
     window._icReincVista = v || 'reinc';
     if(IC_TAB === 'reincidencia') icRenderInformeActivo();
@@ -17495,6 +17839,7 @@ function _parseCumpleMMDD(s){
       p.push('Cartera Cyg '+((cd.ciDistCyg&&cd.ciDistCyg.total)||0)+' / SAP '+((cd.ciDistSAP&&cd.ciDistSAP.total)||0));
     else p.push('Cartera: pendiente o vacía');
     if(window._icDatosInformesCargando) p.push('(sincronizando Sheets)');
+    p.push('Embudo leads: '+(window._embudoLeadsRows&&window._embudoLeadsRows.length||0));
     return p.join(' · ');
   }
   function icSheetMetaExport(tab, f){
@@ -17509,10 +17854,24 @@ function _parseCumpleMMDD(s){
       ['Rectorías', amb.rectorias.join('; ')],
       ['Sedes', amb.sedes.join('; ')],
       ['Estado datos Sheets', icEstadoDatosExport()],
+      ['Leads embudo', (window._embudoLeadsRows&&window._embudoLeadsRows.length)||0],
       ['Fecha exportación', new Date().toLocaleString('es-CO')],
       ['Versión', (typeof APP_VERSION!=='undefined'?APP_VERSION:window.APP_VERSION||'')],
       []
     ];
+  }
+  function icAppFooterRows(){
+    return [
+      [],
+      ['© 2024–2026 Cooperativa Minuto de Dios · Proceso PYV · SCIC'],
+      ['Desarrollado por Juan Bernardo Orrego Mejía · Todos los derechos reservados'],
+      ['Versión APP', (typeof APP_VERSION!=='undefined'?APP_VERSION:window.APP_VERSION||'')]
+    ];
+  }
+  function icAppendFooterToAoa(aoa){
+    aoa = (aoa || [[]]).slice();
+    icAppFooterRows().forEach(function(row){ aoa.push(row); });
+    return aoa;
   }
   function icHojasDesdeDom(el, tab, f){
     var sheets=[{name:'Meta', aoa:icSheetMetaExport(tab,f)}];
@@ -17614,6 +17973,39 @@ function _parseCumpleMMDD(s){
         {name:'Detalle tickets',aoa:[['Cédula','Ticket','Sede','Origen','Estado actual','Cerr. s/fact.']].concat(det)},
         {name:'Cerradas por sede',aoa:[['Sede','Cédulas','Cierres s/fact.']].concat(sedCerr)}
       ];
+    },
+    'embudo-leads':function(f){
+      var d = icConstruirEmbudoLeads(f);
+      var funnel = d.funnel.map(function(r){
+        return [r.etapa, r.count, r.pct+'%', r.conv!=null?r.conv+'%':'—'];
+      });
+      var det = d.leads.map(function(r){
+        var alerts = [];
+        if(r.estancado) alerts.push('Estancado');
+        if(r.desfase) alerts.push('Desfase');
+        if(r.cong_sin_fact) alerts.push('Cong.s/fact');
+        if(r.cong_pendiente) alerts.push('Cong.pend');
+        if(r.tiene_credito && !r.facturada) alerts.push('Créd.s/avance');
+        return [r.nombre, r.cedula, r.sede, r.etapaLbl, r.fuente, r.dias!=null?r.dias:'',
+          r.tiene_credito?'SI':'NO', r.facturada?'SI':'NO', r.sigec_n, r.glpi_n,
+          r.es_congelado?'SI':'NO', alerts.join('; '), r.tickets];
+      });
+      var diag = (d.diag||[]).map(function(it){ return [it.tipo, it.texto]; });
+      var kpi = [
+        ['Leads filtro', d.total],
+        ['Estancados 5+ días', d.estancados.length],
+        ['Desfase etapa', d.desfase.length],
+        ['Cong. sin facturar', d.congSinFact.length],
+        ['Cong. pendientes', d.congPend.length],
+        ['Crédito sin avance etapa', d.creditoSinAvance.length]
+      ];
+      return [
+        {name:'Meta', aoa:icSheetMetaExport('embudo-leads',f)},
+        {name:'KPIs', aoa:[['Indicador','Valor']].concat(kpi)},
+        {name:'Embudo etapas', aoa:[['Etapa','Leads alcanzaron','% total','Conv. etapa ant.']].concat(funnel)},
+        {name:'Diagnóstico', aoa:[['Nivel','Mensaje']].concat(diag)},
+        {name:'Detalle leads', aoa:[['Nombre','Cédula','Sede','Etapa','Fuente','Días','BASE COLOC','Fact/Aprob','# SIGEC','# GLPI','Congelado','Alertas','Tickets']].concat(det)}
+      ];
     }
   };
 
@@ -17655,7 +18047,7 @@ function _parseCumpleMMDD(s){
         var name=base, n=2;
         while(used[name]){ name=icNombreHojaXlsx(base.slice(0,24), n++); }
         used[name]=1;
-        var aoa=sh.aoa||[[]];
+        var aoa=icAppendFooterToAoa(sh.aoa||[[]]);
         XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), name);
       });
       if(typeof _cmdXlsxDownload==='function') _cmdXlsxDownload(wb, nombre+'.xlsx');
@@ -18184,6 +18576,7 @@ function _parseCumpleMMDD(s){
     'perdida-cedulas':icRenderPerdidaCedulas,
     'perdida-real':icRenderPerdidaReal,
     'reincidencia':icRenderReincidencia,
+    'embudo-leads':icRenderEmbudoLeads,
     'turno-vivo':icRenderTurnoVivo,
     'scorecard-sede':icRenderScorecardSede,
     'alertas-cognipyv':icRenderAlertasCognipyv,
@@ -18193,7 +18586,7 @@ function _parseCumpleMMDD(s){
   };
 
   var IC_TABS_PESADOS = {
-    'intel-patrones':1,'perdida-cedulas':1,'perdida-real':1,'reincidencia':1,'scorecard-sede':1,
+    'intel-patrones':1,'perdida-cedulas':1,'perdida-real':1,'reincidencia':1,'embudo-leads':1,'scorecard-sede':1,
     'alertas-cognipyv':1,'tiempos':1,'mapa-operacion':1,'congelados':1,
     'pendientes':1,'retomas':1,'tasa-aprob':1
   };
@@ -18327,6 +18720,7 @@ function _parseCumpleMMDD(s){
       window._baseColocFilas=null;
       window._congeladosRaw=null;
       window._icCongMapCache=null;
+      window._embudoLeadsRows=null;
       _icIntelCache = {key:'', data:null};
       _icMinutosCache = {};
       _icMinutosCacheKeys = 0;
@@ -18347,6 +18741,7 @@ function _parseCumpleMMDD(s){
     ps.push(window.icEnriquecerColocUniversidad());
     ps.push(icCargarBaseFilas(forzar));
     ps.push(icCargarCongeladosRaw(forzar));
+    ps.push(icCargarEmbudoLeads(forzar));
     if(typeof _cargarMallaTurnos==='function' && (!(window._mallaTurnosHoy||[]).length || forzar))
       ps.push(_cargarMallaTurnos().catch(function(){}));
     if(typeof _cargarCartera==='function' && (!(window._cartData && window._cartData.ciDistCyg && window._cartData.ciDistCyg.total>0) || forzar))
@@ -18444,7 +18839,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.85 — informe pérdida real por cédula');
+  console.log('[CMD] Informes Comerciales v5.4.88 — embudo conversión leads + footer Excel');
 })();
 
 </script>
