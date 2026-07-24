@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.94   (APP_VERSION = 'pyv-comercial-5.4.94')
+  Versión actual: pyv-comercial-5.4.95   (APP_VERSION = 'pyv-comercial-5.4.95')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.95 (2026-07-24)
+    - Acompañamiento comercial (Hoja 2): semáforos e información del embudo de conversión de leads para las sedes seleccionadas.
   pyv-comercial-5.4.94 (2026-07-24)
     - Bienvenida instantánea tras login: modal visible de inmediato con datos en caché; Sheets y embudo se actualizan en segundo plano (sin recarga forzada).
   pyv-comercial-5.4.93 (2026-07-24)
@@ -399,11 +401,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.94">
-<meta name="build-id" content="pyv-comercial-5.4.94-20260730-1545">
-<title>SCIC pyv-comercial 5.4.94 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.95">
+<meta name="build-id" content="pyv-comercial-5.4.95-20260730-1600">
+<title>SCIC pyv-comercial 5.4.95 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.94';
+window.APP_VERSION='pyv-comercial-5.4.95';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1166,7 +1168,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.94</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.95</div>
 </div>
 
 
@@ -1175,7 +1177,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.94</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.95</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -2356,6 +2358,10 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
   <div class="card" id="card-sigec-seg-h2" style="display:none">
     <div class="card-hdr"><div class="cico"><i class="ti ti-chart-dots-3"></i></div><h2>Resumen SIGEC — sedes en acompañamiento</h2></div>
     <div id="sigec-seg-h2-display"></div>
+  </div>
+  <div class="card" id="card-embudo-seg-h2" style="display:none">
+    <div class="card-hdr"><div class="cico"><i class="ti ti-funnel"></i></div><h2>Embudo de conversión de leads — sedes en acompañamiento</h2></div>
+    <div id="embudo-seg-h2-display"><div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Selecciona sedes en la Hoja 1 para ver el embudo.</div></div>
   </div>
   <!-- SEGUIMIENTO COORD -->
   <div id="seg-coord" style="display:none">
@@ -4075,7 +4081,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.94';
+var APP_VERSION = 'pyv-comercial-5.4.95';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -9943,6 +9949,7 @@ function _parseCumpleMMDD(s){
       }
       if(typeof coordRenderar5Semaforos==='function') coordRenderar5Semaforos();
       if(typeof renderSeguimientoSigecPanel==='function') renderSeguimientoSigecPanel();
+      if(typeof renderSeguimientoEmbudoPanel==='function') renderSeguimientoEmbudoPanel();
     };
     if(typeof _segH2SincronizarDesdeSheets==='function'){
       _segH2SincronizarDesdeSheets(sedes).then(pintar).catch(pintar);
@@ -15406,6 +15413,90 @@ function _parseCumpleMMDD(s){
   }
   window.renderSeguimientoSigecPanel = renderSeguimientoSigecPanel;
 
+  function renderSeguimientoEmbudoPanel(){
+    var sedes = (typeof state!=='undefined' && state.sedes) ? state.sedes : [];
+    var cardH2 = document.getElementById('card-embudo-seg-h2');
+    var elH2 = document.getElementById('embudo-seg-h2-display');
+    var visible = sedes.length > 0;
+    if(cardH2) cardH2.style.display = visible ? 'block' : 'none';
+    if(!visible || !elH2) return;
+
+    var pintar = function(){
+      if(!window.IC_EMBUDO_API || typeof window.IC_EMBUDO_API.construir !== 'function'){
+        elH2.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px">Módulo embudo no disponible</div>';
+        return;
+      }
+      if(!(window._embudoLeadsRows && window._embudoLeadsRows.length)){
+        elH2.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando embudo de conversión de leads desde Sheets…</div>';
+        return;
+      }
+      var dAll = window.IC_EMBUDO_API.construir({sedes: sedes});
+      var semAll = window.IC_EMBUDO_API.semaforo(dAll);
+      var html = '<div style="font-size:11px;color:#64748b;margin-bottom:10px">'
+        + sedes.length + ' sede' + (sedes.length !== 1 ? 's' : '') + ' · Datos HubSpot · Semáforo consolidado: <strong style="color:' + semAll.color + '">' + _segSemEmoji(semAll.sem) + ' ' + semAll.sem + '</strong></div>';
+      html += '<div style="margin-bottom:12px">'
+        + window.IC_EMBUDO_API.renderCard(dAll, {dark: false, compact: false, titulo: 'Resumen embudo — sedes seleccionadas'})
+        + '</div>';
+      html += '<div style="font-size:10px;font-weight:800;color:#003D45;margin:8px 0 6px">Semáforo embudo por sede</div>';
+      html += '<div style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px">';
+      sedes.forEach(function(sd){
+        var dSd = window.IC_EMBUDO_API.construir({sedes: [sd]});
+        var sem = window.IC_EMBUDO_API.semaforo(dSd);
+        var pbTxt = '—';
+        if(dSd.peorBottleneck && dSd.peorBottleneck.idx > 0 && window.IC_EMBUDO_API.stages){
+          var st = window.IC_EMBUDO_API.stages;
+          pbTxt = st[dSd.peorBottleneck.idx - 1].label + ' → ' + st[dSd.peorBottleneck.idx].label
+            + ' (' + Math.round(dSd.peorBottleneck.conv * 100) + '% avanza)';
+        }
+        html += '<div style="padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid #e2e8f0">';
+        html += '<div style="display:flex;align-items:center;justify-content:space-between;font-size:11px;margin-bottom:4px">';
+        html += '<span style="font-weight:700;color:#003D45">' + sd + '</span>';
+        html += '<span style="font-weight:700;color:' + sem.color + '">' + _segSemEmoji(sem.sem) + ' ' + sem.sem + '</span></div>';
+        html += '<div style="font-size:10px;color:#64748b;display:flex;flex-wrap:wrap;gap:8px">';
+        html += '<span><b>' + _segFmtN(dSd.total || 0) + '</b> leads</span>';
+        html += '<span><b style="color:' + sem.color + '">' + (dSd.globalConv || 0) + '%</b> conv.</span>';
+        html += '<span><b style="color:#ca8a04">' + (dSd.estancados || []).length + '</b> estanc.</span>';
+        html += '<span><b style="color:#dc2626">' + (dSd.desfase || []).length + '</b> desfase</span>';
+        html += '</div>';
+        html += '<div style="font-size:9px;color:#94a3b8;margin-top:4px;line-height:1.4">Cuello: ' + pbTxt + '</div>';
+        html += '</div>';
+      });
+      html += '</div>';
+      if(dAll.funnel && dAll.funnel.length){
+        html += '<div style="font-size:10px;font-weight:800;color:#003D45;margin:8px 0 6px">Etapas del embudo (consolidado)</div>';
+        html += '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(95px,1fr));gap:6px;margin-bottom:12px">';
+        dAll.funnel.forEach(function(fr){
+          html += '<div style="background:#f8fafc;border-radius:8px;padding:8px;text-align:center;border:1px solid #e2e8f0">'
+            + '<div style="font-size:7px;color:#64748b;font-weight:700;text-transform:uppercase">' + fr.etapa + '</div>'
+            + '<div style="font-size:14px;font-weight:900;color:#003D45">' + _segFmtN(fr.count) + '</div>'
+            + (fr.conv != null ? '<div style="font-size:8px;color:#94a3b8">' + fr.conv + '% conv.</div>' : '')
+            + '</div>';
+        });
+        html += '</div>';
+      }
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
+      html += '<button type="button" onclick="icAbrirDesdeMenu(\'embudo-leads-resumen\')" style="flex:1;min-width:180px;padding:10px;border:1px solid #003D45;border-radius:8px;background:#e0f7f8;color:#003D45;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">📋 Ver resumen embudo</button>';
+      html += '<button type="button" onclick="icAbrirDesdeMenu(\'embudo-leads\')" style="flex:1;min-width:180px;padding:10px;border:1px solid #0d6e75;border-radius:8px;background:#fff;color:#0d6e75;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">🔍 Análisis profundo</button>';
+      html += '</div>';
+      elH2.innerHTML = html;
+    };
+
+    if(!(window._embudoLeadsRows && window._embudoLeadsRows.length)){
+      if(window.IC_EMBUDO_API && typeof window.IC_EMBUDO_API.cargarEmbudo === 'function'){
+        elH2.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando embudo de conversión de leads…</div>';
+        window.IC_EMBUDO_API.cargarEmbudo(false).then(pintar).catch(pintar);
+        return;
+      }
+      if(typeof _leerHojaEmbudoLeads === 'function'){
+        elH2.innerHTML = '<div style="text-align:center;padding:16px;color:#94a3b8;font-size:12px"><i class="ti ti-loader" style="animation:spin 1s linear infinite"></i> Cargando embudo de conversión de leads…</div>';
+        _leerHojaEmbudoLeads().then(pintar).catch(pintar);
+        return;
+      }
+    }
+    pintar();
+  }
+  window.renderSeguimientoEmbudoPanel = renderSeguimientoEmbudoPanel;
+
   var _origRefreshH1 = window.refreshH1Metas;
   window.refreshH1Metas = function(){
     if(_origRefreshH1) _origRefreshH1();
@@ -15540,7 +15631,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.94 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.95 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -19503,7 +19594,7 @@ function _parseCumpleMMDD(s){
     cargarOperacion:function(forzar){ return icCargarDatosInformes(!!forzar); }
   };
 
-  console.log('[CMD] Informes Comerciales v5.4.94 — bienvenida instantánea');
+  console.log('[CMD] Informes Comerciales v5.4.95 — embudo en acompañamiento');
 })();
 
 </script>
