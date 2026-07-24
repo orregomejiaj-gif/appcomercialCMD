@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.88   (APP_VERSION = 'pyv-comercial-5.4.88')
+  Versión actual: pyv-comercial-5.4.89   (APP_VERSION = 'pyv-comercial-5.4.89')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,10 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.89 (2026-07-24)
+    - Botón visible «Embudo de conversión de leads» en accesos rápidos y menú Informes (nombre exacto solicitado).
+    - Acceso directo abre el informe embudo-leads; sección propia en panel lateral de informes.
+    - Embudo visual por etapa con conversión; bloque descalificados/rechazados en el informe.
   pyv-comercial-5.4.88 (2026-07-24)
     - Nuevo informe Embudo de conversión de leads: carga hoja HubSpot, embudo por etapa, cruce por cédula con colocación/SIGEC/GLPI/congelados.
     - Identifica leads estancados, con crédito sin avance de etapa, congelados sin facturar y congelados pendientes.
@@ -378,11 +382,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.88">
-<meta name="build-id" content="pyv-comercial-5.4.88-20260724-1400">
-<title>SCIC pyv-comercial 5.4.88 — Cooperativa Minuto de Dios</title>
+<meta name="app-version" content="pyv-comercial-5.4.89">
+<meta name="build-id" content="pyv-comercial-5.4.89-20260724-1500">
+<title>SCIC pyv-comercial 5.4.89 — Cooperativa Minuto de Dios</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.88';
+window.APP_VERSION='pyv-comercial-5.4.89';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -1145,7 +1149,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button class="btn-h" onclick="exportarDatos()" style="background:var(--dark);border-color:var(--dark);color:#fff"><i class="ti ti-download"></i> Exportar</button>
       <input type="file" id="comp-file" style="display:none" accept=".json" onchange="cargarJSONComp(event)">
     </div>
-    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.88</div>
+    <div id="app-version-badge" style="font-size:9px;font-weight:700;color:rgba(255,217,0,.7);letter-spacing:.5px;margin-top:1px;display:block">pyv-comercial 5.4.89</div>
 </div>
 
 
@@ -1154,7 +1158,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
         <div class="hdr-menu-info">
           <div class="menu-brand-title">Centro de Monitoreo Comercial CMD</div>
           <div class="menu-brand-sub">Cooperativa Minuto de Dios · Proceso PYV</div>
-          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.88</div>
+          <div id="menu-version-badge" class="menu-version-badge">pyv-comercial 5.4.89</div>
           <div id="menu-ultima-actualizacion" style="font-size:9px;color:rgba(255,255,255,.55);margin-top:3px">Sincronizando con Sheets…</div>
           <div class="menu-horizon-badges">
             <span class="menu-hz menu-hz-live" id="menu-hz-live-badge">🟢 Operación en vivo · actualización continua</span>
@@ -1453,6 +1457,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
       <button type="button" onclick="abrirConsultaDinamica()" class="menu-qf menu-qf-ops" title="Estado operativo integral"><span class="menu-qf-icon">📊</span><span class="menu-qf-lbl">Estado Operativo</span></button>
       <button type="button" onclick="abrirMetasDiarias()" class="menu-qf menu-qf-meta" title="Cumplimiento y metas diarias"><span class="menu-qf-icon">🏆</span><span class="menu-qf-lbl">Cumplimiento</span></button>
       <button type="button" onclick="abrirInformesComerciales()" class="menu-qf menu-qf-informes" title="Panel completo de informes"><span class="menu-qf-icon">📑</span><span class="menu-qf-lbl">Panel Informes</span></button>
+      <button type="button" onclick="abrirEmbudoConversionLeads()" class="menu-qf menu-qf-embudo" title="Embudo de conversión de leads · HubSpot + cruces SIGEC/GLPI"><span class="menu-qf-icon">🎯</span><span class="menu-qf-lbl">Embudo de conversión de leads</span></button>
       <button type="button" onclick="abrirSCIC('pulso')" class="menu-qf menu-qf-scic" title="ISCIC nacional"><span class="menu-qf-icon">🧠</span><span class="menu-qf-lbl">SCIC Pulso</span></button>
     </div>
     <div class="menu-quick-dropdowns">
@@ -1498,6 +1503,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
           <button type="button" onclick="icAbrirDesdeMenu('perdida-cedulas')" class="menu-qb menu-qb-red"><span>🔍</span> Pérd. Cédula</button>
           <button type="button" onclick="icAbrirDesdeMenu('perdida-real')" class="menu-qb menu-qb-red"><span>🎯</span> Pérd. Real</button>
           <button type="button" onclick="icAbrirDesdeMenu('reincidencia')" class="menu-qb menu-qb-amber"><span>🚨</span> Reincidencia</button>
+          <button type="button" onclick="icAbrirDesdeMenu('embudo-leads')" class="menu-qb menu-qb-teal" style="grid-column:1/-1;font-weight:800"><span>🎯</span> Embudo de conversión de leads</button>
           <button type="button" onclick="icAbrirDesdeMenu('congelados')" class="menu-qb menu-qb-sky"><span>❄️</span> Congelados</button>
           <button type="button" onclick="icAbrirDesdeMenu('mapa-operacion')" class="menu-qb menu-qb-purple"><span>🗺️</span> Mapa</button>
           <button type="button" onclick="icAbrirDesdeMenu('turno-vivo')" class="menu-qb menu-qb-lime"><span>📡</span> Turno</button>
@@ -1807,6 +1813,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .menu-qf-ops{background:linear-gradient(135deg,#0d9488,#14b8a6);box-shadow:0 3px 10px rgba(13,148,136,.35)}
 .menu-qf-meta{background:linear-gradient(135deg,#2563eb,#3b82f6);box-shadow:0 3px 10px rgba(37,99,235,.35)}
 .menu-qf-informes{background:linear-gradient(135deg,#7c3aed,#a855f7);box-shadow:0 3px 10px rgba(124,58,237,.35)}
+.menu-qf-embudo{background:linear-gradient(135deg,#1F4B43,#0d9488);box-shadow:0 3px 10px rgba(31,75,67,.35)}
 .menu-qf-scic{background:linear-gradient(135deg,#ea580c,#f97316);box-shadow:0 3px 10px rgba(234,88,12,.35)}
 .menu-quick-dropdowns{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;position:relative;z-index:50}
 .menu-dd{position:relative}
@@ -4048,7 +4055,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.88';
+var APP_VERSION = 'pyv-comercial-5.4.89';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -7828,7 +7835,7 @@ https://minutodediosportal.com/login/
       <div>
         <div style="color:#FFD900;font-size:10px;font-weight:700;letter-spacing:.6px;text-transform:uppercase">Informes Comerciales CMD</div>
         <div style="color:#fff;font-size:17px;font-weight:800">📑 Panel de Informes · Colocación · Operación · Inteligencia</div>
-        <div style="color:rgba(255,255,255,.55);font-size:10px;margin-top:3px" id="ic-modal-sub">Patrones · pérdida por cédula · reincidencia · tiempos · congelados · alertas</div>
+        <div style="color:rgba(255,255,255,.55);font-size:10px;margin-top:3px" id="ic-modal-sub">Patrones · pérdida · reincidencia · embudo de leads · congelados · alertas</div>
       </div>
       <div style="display:flex;gap:8px;align-items:center">
         <button type="button" onclick="icRefrescarInformes()" style="padding:8px 12px;border:none;border-radius:8px;background:rgba(255,255,255,.15);color:#fff;font-size:11px;font-weight:700;cursor:pointer;font-family:Ubuntu,sans-serif">↺ Actualizar</button>
@@ -7852,12 +7859,13 @@ https://minutodediosportal.com/login/
         <button type="button" class="ic-tab" data-ic="pendientes" onclick="icSeleccionarTab('pendientes')">⏳ Pendientes Desembolso</button>
         <button type="button" class="ic-tab" data-ic="retomas" onclick="icSeleccionarTab('retomas')">🔄 Retomas</button>
         <button type="button" class="ic-tab" data-ic="tasa-aprob" onclick="icSeleccionarTab('tasa-aprob')">📉 Tasa/Pérdida</button>
+        <div class="ic-tab-sec">Embudo de conversión de leads</div>
+        <button type="button" class="ic-tab" data-ic="embudo-leads" onclick="icSeleccionarTab('embudo-leads')">🎯 Embudo de conversión de leads</button>
         <div class="ic-tab-sec">Inteligencia & Alertas</div>
         <button type="button" class="ic-tab" data-ic="intel-patrones" onclick="icSeleccionarTab('intel-patrones')">🧠 Patrones & Tiempos</button>
         <button type="button" class="ic-tab" data-ic="perdida-cedulas" onclick="icSeleccionarTab('perdida-cedulas')">🔍 Pérdida por Cédula</button>
         <button type="button" class="ic-tab" data-ic="perdida-real" onclick="icSeleccionarTab('perdida-real')">🎯 Pérdida Real</button>
         <button type="button" class="ic-tab" data-ic="reincidencia" onclick="icSeleccionarTab('reincidencia')">🚨 Reincidencia Sedes</button>
-        <button type="button" class="ic-tab" data-ic="embudo-leads" onclick="icSeleccionarTab('embudo-leads')">🎯 Embudo Leads</button>
         <div class="ic-tab-sec">Siguiente Nivel</div>
         <button type="button" class="ic-tab" data-ic="turno-vivo" onclick="icSeleccionarTab('turno-vivo')">📡 Turno en Vivo</button>
         <button type="button" class="ic-tab" data-ic="scorecard-sede" onclick="icSeleccionarTab('scorecard-sede')">🎯 Scorecard Sede</button>
@@ -15415,7 +15423,7 @@ function _parseCumpleMMDD(s){
 
 <!-- pyv-comercial-5.4.25: Informes Comerciales -->
 <script>
-/* CMD Informes Comerciales v5.4.88 — injected into seguimiento_comercial_CMD.html */
+/* CMD Informes Comerciales v5.4.89 — injected into seguimiento_comercial_CMD.html */
 (function(){
   var IC_TAB = 'cobertura-uni';
   var IC_SIG = {TICKET:0,FC:1,CED:2,EST:15,TIPO:12,NR:20,FF:13,FA:34,SED:30,VAL:7};
@@ -16452,6 +16460,7 @@ function _parseCumpleMMDD(s){
     var leads = icFiltrarEmbudoLeads(f);
     var cedMap = icConstruirCruceEmbudoCedulas(f);
     var rows = [], funnel = {}, etapaCount = {}, desfase = [], estancados = [], congSinFact = [], congPend = [], creditoSinAvance = [];
+    var descBySede = {}, descByEtapaRaw = {}, rechBySede = {};
     IC_EMBUDO_STAGES.forEach(function(s){ funnel[s.key]=0; etapaCount[s.label]=0; });
     var negCount = {descalificado:0, rechazada:0};
     leads.forEach(function(l){
@@ -16463,6 +16472,7 @@ function _parseCumpleMMDD(s){
       var dias = icEmbudoDiasDesde(l.fecha);
       var item = {
         nombre:l.nombre, cedula:l.cedula||'—', sede:l.sede, etapa:etapa, etapaLbl:IC_EMBUDO_STAGES[idx]?IC_EMBUDO_STAGES[idx].label:(etapa||'—'),
+        etapaRaw:l.etapaRaw||'',
         fuente:l.fuente, propietario:l.propietario, dias:dias,
         tiene_credito:!!(cruce && cruce.tiene_credito),
         facturada:!!facturada,
@@ -16474,6 +16484,14 @@ function _parseCumpleMMDD(s){
       };
       if(etapa === 'descalificado' || etapa === 'rechazada'){
         negCount[etapa] = (negCount[etapa]||0) + 1;
+        var sedK = l.sede || 'Sin sede';
+        var rawK = l.etapaRaw || etapa;
+        if(etapa === 'descalificado'){
+          descBySede[sedK] = (descBySede[sedK]||0) + 1;
+          descByEtapaRaw[rawK] = (descByEtapaRaw[rawK]||0) + 1;
+        } else {
+          rechBySede[sedK] = (rechBySede[sedK]||0) + 1;
+        }
       } else {
         etapaCount[item.etapaLbl] = (etapaCount[item.etapaLbl]||0) + 1;
         IC_EMBUDO_STAGES.forEach(function(s,i){
@@ -16536,7 +16554,8 @@ function _parseCumpleMMDD(s){
     }
   return {
       leads:rows, total:leads.length, funnel:funnelRows, reached:reached,
-      negCount:negCount, estancados:estancados, desfase:desfase,
+      negCount:negCount, descBySede:descBySede, descByEtapaRaw:descByEtapaRaw, rechBySede:rechBySede,
+      estancados:estancados, desfase:desfase,
       congSinFact:congSinFact, congPend:congPend, creditoSinAvance:creditoSinAvance,
       diag:diag, etapaCount:etapaCount
     };
@@ -17495,12 +17514,53 @@ function _parseCumpleMMDD(s){
     html += '<div class="ic-explain">'+IC_DESCS['embudo-leads']+' · <b>'+icFmt(d.total)+'</b> leads en filtro · Fuente: hoja Embudo de conversión de leads</div>';
     html += '<div class="ic-kpi-grid">';
     html += icKpi('Leads en filtro', icFmt(d.total), 'HubSpot / Sheet leads', '#003D45');
+    html += icKpi('Descalificados', icFmt(d.negCount.descalificado||0), 'Etapa HubSpot descalificado', '#A6503A');
     html += icKpi('Estancados 5+ días', icFmt(d.estancados.length), 'Nuevo / Intentando contactar', '#ca8a04');
     html += icKpi('Desfase etapa', icFmt(d.desfase.length), 'SIGEC/GLPI más avanzado que HubSpot', '#dc2626');
     html += icKpi('Cong. s/ facturar', icFmt(d.congSinFact.length), 'En hoja CONGELADOS sin fact./aprob.', '#0891b2');
     html += icKpi('Cong. pendientes', icFmt(d.congPend.length), 'Congelados con trámite abierto', '#6366f1');
     html += icKpi('Crédito s/ avance', icFmt(d.creditoSinAvance.length), 'En BASE COLOC, etapa HubSpot atrás', '#b91c1c');
     html += '</div>';
+    html += icSec('La realidad del embudo','Leads que alcanzaron cada etapa, con conversión al siguiente paso');
+    var maxF = d.funnel.length ? Math.max.apply(null, d.funnel.map(function(x){return x.count;})) || 1 : 1;
+    d.funnel.forEach(function(st, i){
+      var pctW = Math.round((st.count/maxF)*100);
+      var fillCls = st.key==='aprobado'?'#C0913A':(st.key==='congelada'?'#5B8DA6':'#1F4B43');
+      html += '<div style="margin-bottom:14px">'
+        +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">'
+        +'<span style="font-size:12px;font-weight:600;color:#1E2A28">'+st.etapa+'</span>'
+        +'<span style="font-family:monospace;font-size:12px;font-weight:600;color:#1F4B43">'+st.count+'</span></div>'
+        +'<div style="background:#DCE8E3;border-radius:3px;height:24px;overflow:hidden">'
+        +'<div style="width:'+pctW+'%;background:linear-gradient(90deg,'+fillCls+','+fillCls+'cc);height:100%;border-radius:3px;min-width:'+(st.count>0?'2%':'0')+'"></div></div>';
+      if(i>0 && st.conv!=null){
+        html += '<div style="font-family:monospace;font-size:10px;color:#5B6B66;margin-top:3px">↓ '+st.conv+'% avanza desde etapa anterior</div>';
+      }
+      html += '</div>';
+    });
+    if((d.negCount.descalificado||0)>0 || (d.negCount.rechazada||0)>0){
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:8px">';
+      if(d.negCount.descalificado){
+        html += '<div style="background:#F2E0DA;border:1px solid #A6503A;border-radius:8px;padding:14px">'
+          +'<div style="font-family:serif;font-size:15px;font-weight:600;color:#A6503A;margin-bottom:6px">Descalificados</div>'
+          +'<div style="font-family:monospace;font-size:26px;font-weight:600;color:#A6503A">'+d.negCount.descalificado
+          +'<small style="display:block;font-family:sans-serif;font-size:11px;color:#5B6B66;font-weight:400">del total de leads en filtro</small></div>';
+        var descSedes = Object.keys(d.descBySede||{}).sort(function(a,b){return (d.descBySede[b]||0)-(d.descBySede[a]||0);});
+        if(descSedes.length){
+          html += '<div style="margin-top:10px;font-size:11px;color:#5B6B66;text-transform:uppercase;letter-spacing:.04em">Por sede</div>';
+          descSedes.slice(0,8).forEach(function(s){
+            html += '<div style="display:flex;justify-content:space-between;font-size:12px;padding:4px 0;border-bottom:1px dotted #D8D9CF"><span>'+s+'</span><b style="font-family:monospace;color:#A6503A">'+d.descBySede[s]+'</b></div>';
+          });
+        }
+        html += '</div>';
+      }
+      if(d.negCount.rechazada){
+        html += '<div style="background:#FEF3C7;border:1px solid #ca8a04;border-radius:8px;padding:14px">'
+          +'<div style="font-family:serif;font-size:15px;font-weight:600;color:#92400e;margin-bottom:6px">Solicitudes rechazadas</div>'
+          +'<div style="font-family:monospace;font-size:26px;font-weight:600;color:#92400e">'+d.negCount.rechazada
+          +'<small style="display:block;font-family:sans-serif;font-size:11px;color:#5B6B66;font-weight:400">del total de leads en filtro</small></div></div>';
+      }
+      html += '</div>';
+    }
     html += '<div class="ic-chart-row">';
     html += '<div class="ic-chart-box"><h4>Embudo por etapa alcanzada</h4><div id="ic-chart-embudo-leads" class="ic-chart ic-chart-tall"></div></div>';
     html += '<div class="ic-chart-box"><h4>Distribución etapa actual</h4><div id="ic-chart-embudo-etapa" class="ic-chart ic-chart-tall"></div></div>';
@@ -17993,6 +18053,8 @@ function _parseCumpleMMDD(s){
       var diag = (d.diag||[]).map(function(it){ return [it.tipo, it.texto]; });
       var kpi = [
         ['Leads filtro', d.total],
+        ['Descalificados', d.negCount.descalificado||0],
+        ['Rechazadas', d.negCount.rechazada||0],
         ['Estancados 5+ días', d.estancados.length],
         ['Desfase etapa', d.desfase.length],
         ['Cong. sin facturar', d.congSinFact.length],
@@ -18703,6 +18765,11 @@ function _parseCumpleMMDD(s){
       icRenderInformeActivo();
     });
   };
+  /** Acceso directo al informe Embudo de conversión de leads (menú principal / Informes). */
+  window.abrirEmbudoConversionLeads=function(){
+    if(typeof menuDdAction==='function') menuDdAction('informes');
+    abrirInformesComerciales('embudo-leads');
+  };
   window.cerrarInformesComerciales=function(){
     var m=document.getElementById('modal-informes-comerciales');
     if(m) m.style.display='none';
@@ -18839,7 +18906,7 @@ function _parseCumpleMMDD(s){
     };
   }
 
-  console.log('[CMD] Informes Comerciales v5.4.88 — embudo conversión leads + footer Excel');
+  console.log('[CMD] Informes Comerciales v5.4.89 — embudo conversión leads + botón visible');
 })();
 
 </script>
