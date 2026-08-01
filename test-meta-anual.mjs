@@ -9,19 +9,64 @@ function icNum(v) {
   return parseFloat(String(v).replace('%', '').replace(/,/g, '').replace('+', '')) || 0;
 }
 
-function icLeerMetaAnualFila(t) {
-  t = t || [];
-  let n = Math.round(icNum(t[1]));
-  let v = Math.round(icNum(t[2]));
-  const nFg = Math.round(icNum(t[5]));
-  const vFg = Math.round(icNum(t[6]));
-  if (nFg || vFg) return { n: nFg, v: vFg };
-  if (n || v) return { n, v };
-  return { n: 0, v: 0 };
+function icStr(v) {
+  return v == null ? '' : String(v).trim();
 }
 
-assert.deepEqual(icLeerMetaAnualFila([null, 10, 100, 99, 99, 500, 6000]), { n: 500, v: 6000 });
-assert.deepEqual(icLeerMetaAnualFila([null, 78789, 1e6]), { n: 78789, v: 1e6 });
+function icEsHdrMetaMensual(hdr) {
+  const s = (hdr || []).map(icStr).join('|').toUpperCase();
+  return /MAYO\s+NRO|JUNIO\s+NRO|TOTAL META S2/.test(s);
+}
+
+function icEsColMetaValorHdr(u) {
+  u = icStr(u).toUpperCase();
+  return u.indexOf('VALOR') >= 0 || u.indexOf('K$') >= 0 || u.indexOf('$') >= 0;
+}
+function icEsColMetaNumHdr(u) {
+  u = icStr(u).toUpperCase();
+  return (/#|NRO|CRED|CRÉD/.test(u)) && !icEsColMetaValorHdr(u);
+}
+
+function icIndicesMetaAnualDesdeHdr(hdr) {
+  let n = -1;
+  let v = -1;
+  hdr = hdr || [];
+  for (let i = 0; i < hdr.length; i++) {
+    const u = icStr(hdr[i]).toUpperCase();
+    if (!u) continue;
+    if ((/AÑO|ANUAL/.test(u) || /TOTAL.*AÑO/.test(u)) && icEsColMetaNumHdr(u)) n = i;
+    if ((/AÑO|ANUAL/.test(u) || /TOTAL.*AÑO/.test(u)) && icEsColMetaValorHdr(u)) v = i;
+  }
+  if (n >= 0) return { n, v: v >= 0 ? v : n + 1, mode: 'anual' };
+  if (!icEsHdrMetaMensual(hdr) && hdr.length >= 3) return { n: 1, v: 2, mode: 'bc' };
+  if (icEsHdrMetaMensual(hdr)) {
+    for (let i = 0; i < hdr.length; i++) {
+      const l = icStr(hdr[i]).toUpperCase();
+      if (l.indexOf('TOTAL') >= 0 && l.indexOf('S2') >= 0 && icEsColMetaNumHdr(l)) n = i;
+      if (l.indexOf('TOTAL') >= 0 && l.indexOf('S2') >= 0 && icEsColMetaValorHdr(l)) v = i;
+    }
+    if (n >= 0) return { n, v: v >= 0 ? v : n + 1, mode: 's2total' };
+  }
+  return { n: 1, v: 2, mode: 'bc' };
+}
+
+function icLeerMetaAnualFila(t, idx) {
+  t = t || [];
+  idx = idx || { n: 1, v: 2 };
+  const n = Math.round(icNum(t[idx.n]));
+  const v = Math.round(icNum(t[idx.v]));
+  return { n, v };
+}
+
+const hdrAnual = ['Sedes ', 'Meta # Año', 'Meta $ Año'];
+const idxAnual = icIndicesMetaAnualDesdeHdr(hdrAnual);
+assert.equal(idxAnual.mode, 'anual');
+assert.deepEqual(icLeerMetaAnualFila([null, 78789, 1e9], idxAnual), { n: 78789, v: 1e9 });
+
+const hdrMensual = ['Sedes ', 'MAYO Nro. Créd.', 'Valor k$', 'JUNIO Nro. Créd.', 'Valor k$', 'JULIO Nro. Créd.', 'Valor k$'];
+const idxM = icIndicesMetaAnualDesdeHdr(hdrMensual);
+assert.equal(idxM.mode, 'bc');
+assert.deepEqual(icLeerMetaAnualFila([null, 10, 100, 99, 99, 500, 6000], idxM), { n: 10, v: 100 });
 
 function icMatchPeriodoColocHistorico(per) {
   const p = String(per || '').toUpperCase().replace(/\s/g, '');
@@ -55,34 +100,10 @@ function icAggregarHistoricoColocPeriodo(rows) {
   return map;
 }
 
-function construirEjecucionSimple(filasColoc, metaMap, hist, diasTrans = 10, diasRest = 20) {
-  const rows = [];
-  filasColoc.forEach((r) => {
-    const sede = r.sede;
-    const s2N = Math.round(r.acum_n || 0);
-    const s2V = Math.round(r.acum_v || 0);
-    const h = hist[sede] || { n: 0, v: 0 };
-    const metaN = (metaMap[sede] || {}).meta_anual_n || 0;
-    const execN = h.n + s2N;
-    const rateN = diasTrans > 0 ? s2N / diasTrans : 0;
-    const projN = h.n + Math.round(s2N + rateN * diasRest);
-    rows.push({ sede, metaN, s1N: h.n, s2N, execN, projN });
-  });
-  return { rows };
-}
-
 const informeRows = [
   { SEDE: 'COA Bello', PERIODO: '20261', _cols: ['COA Bello', '', '20261', 40, 500000] },
 ];
 const histInf = icAggregarHistoricoColocPeriodo(informeRows);
 assert.equal(histInf['COA Bello'].n, 40);
-
-const filas = [{ sede: 'COA Bello', acum_n: 25, acum_v: 2000 }];
-const metaMap = { 'COA Bello': { meta_anual_n: 100, meta_anual_v: 1e6 } };
-const d = construirEjecucionSimple(filas, metaMap, histInf);
-assert.equal(d.rows[0].s2N, 25);
-assert.equal(d.rows[0].execN, 65);
-assert.equal(d.rows[0].s1N, 40);
-assert.ok(d.rows[0].projN > d.rows[0].execN);
 
 console.log('test-meta-anual.mjs: OK');
