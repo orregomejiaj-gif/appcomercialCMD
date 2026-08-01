@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.107   (APP_VERSION = 'pyv-comercial-5.4.107')
+  Versión actual: pyv-comercial-5.4.108   (APP_VERSION = 'pyv-comercial-5.4.108')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.108 (2026-08-01)
+  - Meta Anual: S1 desde INFORME COLOCACION HISTORICO (ACUM CRED #, ~28.790) + S2 ACUM P Actual; meta META TOTAL AÑO.
   pyv-comercial-5.4.107 (2026-08-01)
   - Meta Anual: ejecución = ACUM CRED # histórico 20261 + ACUM CRED # P Actual (no SIGEC+GLPI).
   pyv-comercial-5.4.106 (2026-08-01)
@@ -425,11 +427,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.107">
-<meta name="build-id" content="pyv-comercial-5.4.107-20260801-1655">
+<meta name="app-version" content="pyv-comercial-5.4.108">
+<meta name="build-id" content="pyv-comercial-5.4.108-20260801-1700">
 <title>SCIC pyv-comercial 5.4.104</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.107';
+window.APP_VERSION='pyv-comercial-5.4.108';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -4143,7 +4145,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.107';
+var APP_VERSION = 'pyv-comercial-5.4.108';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -16190,20 +16192,110 @@ function _parseCumpleMMDD(s){
     if(f.nivel==='sede'&&f.sel) return false;
     return true;
   }
+  function icFetchGvizFilas(sheetName, repoId, skipHeaderRows, range){
+    var rid=repoId||(typeof REPO_IDS!=='undefined'&&REPO_IDS.colocacion)||'';
+    if(!rid) return Promise.resolve([]);
+    var url='https://docs.google.com/spreadsheets/d/'+rid+'/gviz/tq?tqx=out:json&sheet='+encodeURIComponent(sheetName);
+    if(range) url+='&headers=1&range='+encodeURIComponent(range);
+    url+='&_='+Date.now();
+    return fetch(url,{mode:'cors'}).then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.text();
+    }).then(function(text){
+      var m=String(text||'').match(/setResponse\(([\s\S]*)\)\s*;?\s*$/);
+      if(!m||!m[1]) return [];
+      var data=JSON.parse(m[1]);
+      if(!data||!data.table) return [];
+      var cols=(data.table.cols||[]).map(function(c){ return icStr(c.label||c.id||''); });
+      var allRows=(data.table.rows||[]).map(function(row){
+        var obj={}, vals=[];
+        (row.c||[]).forEach(function(cell,i){
+          var v=cell?(cell.v!=null&&cell.v!==''?cell.v:(cell.f||'')):'';
+          vals[i]=v;
+          var key=cols[i]||('col'+i);
+          if(key) obj[key]=v;
+        });
+        obj._cols=vals;
+        return obj;
+      });
+      var skip=skipHeaderRows||0;
+      if(skip>0&&allRows.length>skip){
+        var hdrIdx=Math.min(skip-1,allRows.length-2);
+        var hdrCols=(allRows[hdrIdx]._cols||[]).map(function(v){ return icStr(v); });
+        return allRows.slice(hdrIdx+1).map(function(row){
+          var o={}, vals=row._cols||[];
+          hdrCols.forEach(function(k,i){ if(k) o[k]=vals[i]!=null?vals[i]:''; });
+          o._cols=vals;
+          return o;
+        }).filter(function(r){ return (r._cols||[]).some(function(v){ return v!==''&&v!=null; }); });
+      }
+      return allRows.filter(function(r){ return (r._cols||[]).some(function(v){ return v!==''&&v!=null; }); });
+    }).catch(function(){ return []; });
+  }
+  function icEsSedeInformeColoc(sede){
+    if(!sede||sede.length<3) return false;
+    var su=sede.toUpperCase();
+    if(/^TOTAL|SUBTOTAL|^SEDE$|^META$|^ACUM/.test(su)) return false;
+    if(/PRINCIPAL BOGOT/i.test(su)) return false;
+    if(/^\d{6,}$/.test(String(sede).replace(/\D/g,''))) return false;
+    if(/^[0-9.]+$/.test(sede)) return false;
+    return /[A-Za-zÁÉÍÓÚÑáéíóúñ]/.test(sede);
+  }
+  function icTieneFormatoInformeColoc(rows){
+    var ok=0;
+    (rows||[]).slice(0,40).forEach(function(r){
+      var c=r._cols||[];
+      if(icEsSedeInformeColoc(icStr(r.SEDE||r.Sede||c[0]))) ok++;
+    });
+    return ok>=3;
+  }
+  function icMapInformeColocacionS1(rows){
+    var map={}, metaMap={}, soloS1=false;
+    var nPer=0, nS1=0;
+    (rows||[]).forEach(function(row){
+      var c=row._cols||[];
+      var per=icStr(row.PERIODO||row['PERIODO']||c[2]);
+      if(icMatchPeriodoColocHistorico(per)) nS1++;
+      if(per) nPer++;
+    });
+    if(nPer>0&&nS1>=nPer*0.5) soloS1=true;
+    if(!nPer&&icTieneFormatoInformeColoc(rows)) soloS1=true;
+    (rows||[]).forEach(function(row){
+      var c=row._cols||[];
+      var raw=icStr(row.SEDE||row.Sede||row['SEDE']||c[0]);
+      if(!icEsSedeInformeColoc(raw)) return;
+      var su=raw.toUpperCase();
+      var periodo=icStr(row.PERIODO||row['PERIODO']||c[2]);
+      var n=Math.round(icNum(row['ACUM\nCRED #']||row['ACUM CRED #']||c[3]));
+      var v=Math.round(icNum(row['ACUM\nVALOR $']||row['ACUM VALOR $']||c[4]));
+      if(/^TOTAL/.test(su)){
+        if(n>0) window._histColocS1TotalN=Math.max(window._histColocS1TotalN||0,n);
+        if(v>0) window._histColocS1TotalV=Math.max(window._histColocS1TotalV||0,v);
+        return;
+      }
+      if(!soloS1&&!icMatchPeriodoColocHistorico(periodo)) return;
+      if(soloS1&&periodo&&!icMatchPeriodoColocHistorico(periodo)) return;
+      var sede=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(raw):raw;
+      map[sede]={n:n,v:v};
+      var mn=Math.round(icNum(row['META\n# TOTAL']||row['META # TOTAL']||c[5]));
+      var mv=Math.round(icNum(row['META\n$ TOTAL']||row['META $ TOTAL']||c[6]));
+      if(mn||mv) metaMap[sede]={meta_n:mn,meta_v:mv};
+    });
+    map._meta=metaMap;
+    return map;
+  }
   function icMatchPeriodoColocHistorico(per){
-    var p=icStr(per).toUpperCase().replace(/\s/g,'');
-    return p==='20261'||p==='202561'||p==='26S1'||p==='S1-2026';
+    var p=icStr(per).toUpperCase().replace(/\s/g,'').replace(/-/g,'');
+    return p==='20261'||p==='202561'||p==='26S1'||p==='S12026'||p==='S1'||p==='2026S1';
   }
   function icEsInformeColocHistorico(row){
     if(!row) return false;
     var c=row._cols||[];
     var sede=icStr(row.SEDE||row.Sede||row['SEDE']||c[0]);
+    if(!icEsSedeInformeColoc(sede)) return false;
     var per=icStr(row.PERIODO||row['PERIODO']||c[2]);
     var acum=icNum(row['ACUM\nCRED #']||row['ACUM CRED #']||c[3]);
-    if(sede.length>2&&per.length>0&&!/^TOTAL/i.test(sede.toUpperCase())) return true;
-    if(sede.length>2&&acum>0&&per.length>0) return true;
-    if(row.Radicado!=null&&row.Radicado!=='') return false;
-    return false;
+    return per.length>0||acum>0;
   }
   function icFusionarHistoricoColocInforme(map){
     map=map||{};
@@ -16215,27 +16307,8 @@ function _parseCumpleMMDD(s){
     });
     return map;
   }
-  function icAggregarHistoricoColocPeriodo(rows, periodo){
-    var map={}, metaMap={};
-    (rows||[]).forEach(function(row){
-      var c=row._cols||[];
-      if(!icEsInformeColocHistorico(row)) return;
-      var per=row.PERIODO||row['PERIODO']||c[2];
-      if(!icMatchPeriodoColocHistorico(per)) return;
-      var raw=icStr(row.SEDE||row.Sede||row['SEDE']||c[0]);
-      var sede=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(raw):raw;
-      var n=Math.round(icNum(row['ACUM\nCRED #']||row['ACUM CRED #']||c[3]));
-      var v=Math.round(icNum(row['ACUM\nVALOR $']||row['ACUM VALOR $']||c[4]));
-      var mn=Math.round(icNum(row['META\n# TOTAL']||row['META # TOTAL']||c[5]));
-      var mv=Math.round(icNum(row['META\n$ TOTAL']||row['META $ TOTAL']||c[6]));
-      map[sede]={n:n,v:v};
-      if(mn||mv) metaMap[sede]={meta_n:mn,meta_v:mv};
-    });
-    map._meta=metaMap;
-    return map;
-  }
-  function icAggregarHistorico2026_1(rows){
-    return icAggregarHistoricoColocPeriodo(rows,'20261');
+  function icAggregarHistoricoColocPeriodo(rows){
+    return icMapInformeColocacionS1(rows);
   }
   function icLookupHist2026(sede, histMap, sedesLista){
     if(!sede) return {n:0,v:0};
@@ -16288,32 +16361,97 @@ function _parseCumpleMMDD(s){
       window._metaAnualData=window._metaAnualData||[];
     });
   }
+  function icLeerHistoricoInformeS1DesdeHoja(sheetName){
+    if(!sheetName) return Promise.resolve({});
+    var repo=(typeof REPO_IDS!=='undefined'&&REPO_IDS.colocacion)||'';
+  function intentar(rows){
+      if(!icTieneFormatoInformeColoc(rows)) return {};
+      return icMapInformeColocacionS1(rows);
+    }
+    return icFetchGvizFilas(sheetName,repo,1).then(function(rows){
+      var map=intentar(rows);
+      if(Object.keys(map).filter(function(k){ return k!=='_meta'; }).length) return map;
+      return icFetchGvizFilas(sheetName,repo,0).then(intentar);
+    });
+  }
   function icCargarHistoricoColoc2026_1(forzar){
     if(!forzar&&window._histColoc2026_1_loaded) return Promise.resolve();
-    var hojaHist=(SHEETS_HOJAS.colocacionHist||SHEETS_HOJAS.colHistorico||SHEETS_HOJAS.colHist2026_1);
-    if(typeof _leerHoja!=='function'||typeof SHEETS_HOJAS==='undefined'||!hojaHist) return Promise.resolve();
-    return _leerHoja(hojaHist).then(function(rows){
-      window._histColoc2026_1=icAggregarHistoricoColocPeriodo(rows,'20261');
+    window._histColocS1TotalN=0;
+    window._histColocS1TotalV=0;
+    var hojaHist=(SHEETS_HOJAS.colocacionHist||SHEETS_HOJAS.colHistorico||'INFORME COLOCACION HISTORICO');
+    var hojaAlt=(SHEETS_HOJAS.colHistInforme||'INFORME COLOC HISTORICO');
+    var ps=[];
+    ps.push(icLeerHistoricoInformeS1DesdeHoja(hojaHist));
+    ps.push(icLeerHistoricoInformeS1DesdeHoja(hojaAlt));
+    if(typeof _cargarHistoricoColocacion==='function'){
+      ps.push(_cargarHistoricoColocacion().catch(function(){}));
+    }else if(typeof _leerHoja==='function'){
+      ps.push(_leerHoja(hojaHist,1).then(function(rows){
+        window._historicoColoc=(rows||[]).filter(icEsInformeColocHistorico).map(function(e){
+          var t=e._cols||[];
+          return {
+            sede:(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(icStr(e.SEDE||t[0])):icStr(e.SEDE||t[0]),
+            periodo:icStr(e.PERIODO||t[2]),
+            acum_n:Math.round(icNum(e['ACUM CRED #']||t[3])),
+            acum_v:Math.round(icNum(e['ACUM VALOR $']||t[4]))
+          };
+        });
+      }).catch(function(){}));
+    }
+    return Promise.all(ps).then(function(results){
+      var map=results[0]||{};
+      var alt=results[1]||{};
+      var n0=Object.keys(map).filter(function(k){ return k!=='_meta'; }).length;
+      var n1=Object.keys(alt).filter(function(k){ return k!=='_meta'; }).length;
+      if(n1>n0) map=alt;
+      window._histColoc2026_1=map;
       icFusionarHistoricoColocInforme(window._histColoc2026_1);
       window._histColoc2026_1_loaded=true;
-      var nSedes=Object.keys(window._histColoc2026_1).filter(function(k){ return k!=='_meta'; }).length;
-      if(!nSedes&&typeof _cargarHistoricoColocacion==='function'){
-        return _cargarHistoricoColocacion().then(function(){
-          icFusionarHistoricoColocInforme(window._histColoc2026_1);
-          nSedes=Object.keys(window._histColoc2026_1).filter(function(k){ return k!=='_meta'; }).length;
-        });
-      }
-    }).then(function(){
-      var nSedes=Object.keys(window._histColoc2026_1||{}).filter(function(k){ return k!=='_meta'; }).length;
-      console.log('[IC] Histórico colocación período 20261 (ACUM CRED #): '+nSedes+' sedes');
+      var sum=0;
+      Object.keys(window._histColoc2026_1).forEach(function(k){
+        if(k!=='_meta') sum+=(window._histColoc2026_1[k].n||0);
+      });
+      console.log('[IC] Histórico S1 (ACUM CRED #): '+Object.keys(window._histColoc2026_1).filter(function(k){ return k!=='_meta'; }).length+' sedes · suma # '+sum+(window._histColocS1TotalN?' · total fila '+window._histColocS1TotalN:''));
     }).catch(function(e){
-      console.warn('[IC] Histórico 2026-1:',e&&e.message);
+      console.warn('[IC] Histórico S1:',e&&e.message);
       window._histColoc2026_1=window._histColoc2026_1||{};
       window._histColoc2026_1_loaded=true;
     });
   }
+  function icFilasMetaAnualEjecucion(f){
+    var coloc=icFilasColoc(f);
+    var bySede={}, i;
+    coloc.forEach(function(r){
+      if(r.sede) bySede[r.sede]=r;
+    });
+    (window._metaAnualData||[]).forEach(function(m){
+      if(!m.sede||bySede[m.sede]) return;
+      bySede[m.sede]={sede:m.sede, rectoria:'', acum_n:0, acum_v:0};
+    });
+    var hist=window._histColoc2026_1||{};
+    Object.keys(hist).forEach(function(k){
+      if(k==='_meta') return;
+      if(bySede[k]) return;
+      var rect='';
+      if(typeof PG_SEDE_RECTORIA!=='undefined') rect=PG_SEDE_RECTORIA[k]||'';
+      bySede[k]={sede:k, rectoria:rect, acum_n:0, acum_v:0};
+    });
+    var out=Object.keys(bySede).map(function(k){ return bySede[k]; });
+    if(f&&f.sedes&&f.sedes.length){
+      return out.filter(function(r){ return f.sedes.some(function(s){ return icMatchSede(r.sede,s); }); });
+    }
+    var rect=f&&(f.rectoria||(f.nivel==='rectoria'?f.sel:''));
+    if(rect){
+      var sedesRect=icListaSedes(rect);
+      return out.filter(function(r){
+        if(icStr(r.rectoria)===icStr(rect)) return true;
+        return sedesRect.some(function(s){ return icMatchSede(r.sede,s); });
+      });
+    }
+    return out;
+  }
   function icConstruirEjecucionMetaAnual(f){
-    var filasColoc=icFilasColoc(f);
+    var filasColoc=icFilasMetaAnualEjecucion(f);
     var sedesLista=filasColoc.map(function(r){ return r.sede; }).filter(Boolean);
     var metaMap=icMetaAnualMapa();
     var hist=window._histColoc2026_1||{};
@@ -16368,6 +16506,14 @@ function _parseCumpleMMDD(s){
       if(sheetMeta.n>0){
         tot.metaN=sheetMeta.n;
         tot.metaV=sheetMeta.v;
+      }
+      if(window._histColocS1TotalN>0&&tot.s1N<window._histColocS1TotalN*0.9){
+        tot.execN=tot.execN+(window._histColocS1TotalN-tot.s1N);
+        tot.s1N=window._histColocS1TotalN;
+        if(window._histColocS1TotalV>0&&tot.s1V<window._histColocS1TotalV*0.9){
+          tot.execV=tot.execV+(window._histColocS1TotalV-tot.s1V);
+          tot.s1V=window._histColocS1TotalV;
+        }
       }
     }
     tot.pctN=tot.metaN>0?Math.round(tot.execN/tot.metaN*100):0;
@@ -17633,7 +17779,7 @@ function _parseCumpleMMDD(s){
   var IC_DESCS={
     'estado-sedes-hoy':'Panorama por sede al día de hoy: meta S2, colocado (SIGEC facturadas + GLPI aprobadas), deberíamos según curva, brecha y semáforo. Filtre por rectoría y/o seleccione varias sedes.',
     'informe-colocacion':'Exclusivamente INFORME COLOCACION P ACTUAL (sheet colocación): meta S2, acumulado, valores, año anterior, variación y semáforo. Sin SIGEC ni GLPI.',
-    'ejecucion-meta-anual':'Ejecución 2026 vs meta total anual (META TOTAL AÑO): ejecutado año = ACUM CRED # / ACUM VALOR $ del INFORME COLOCACION HISTORICO (1.er período, ej. 20261) + ACUM CRED # / ACUM VALOR $ del INFORME COLOCACION P ACTUAL (período en curso).',
+    'ejecucion-meta-anual':'Ejecución 2026 vs META TOTAL AÑO (metas por sede): ejecutado = ACUM CRED # del INFORME COLOCACION HISTORICO (1.er período / 20261, ref. nacional ~28.790) + ACUM CRED # del INFORME COLOCACION P ACTUAL (período en curso).',
     'coloc-vs-sigec-glpi':'Reconciliación: acumulado del INFORME COLOCACION P ACTUAL vs colocado SIGEC (facturadas) + GLPI (aprobadas) por sede. Muestra brechas y semáforo de conciliación.',
     'cobertura-uni':'Cobertura = colocado SIGEC+GLPI ÷ Total Real PARA LA UNIVERSIDAD (hoja INFORME DE MATRICULAS). También muestra acum_n del informe P Actual.',
     'cobertura-mat':'Cobertura matrículas = (SIGEC facturadas + GLPI aprobadas) ÷ total matriculados UNIMINUTO.',
@@ -20003,7 +20149,7 @@ function _parseCumpleMMDD(s){
     html+=icSec('Vista gerencial — cumplimiento meta anual','META TOTAL AÑO · ejecución = Histórico ACUM # (S1) + P Actual ACUM # (S2)');
     html+='<div class="ic-kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">';
     html+=icKpi('Meta anual #',icFmt(Math.round(t.metaN)),'Hoja META TOTAL AÑO'+(window._metaAnualSoloHoja?' · total sedes':' · ámbito'),'#003D45');
-    html+=icKpi('Ejecutado año #',icFmt(t.execN),t.pctN+'% · S1 '+icFmt(t.s1N)+' + S2 '+icFmt(t.s2N),'#16a34a');
+    html+=icKpi('Ejecutado año #',icFmt(t.execN),t.pctN+'% · S1 '+icFmt(t.s1N)+(window._histColocS1TotalN?' (hist.)':'')+' + S2 '+icFmt(t.s2N),'#16a34a');
     html+=icKpi('Meta anual $',icFmtM(t.metaV),'Valor meta anual','#003D45');
     html+=icKpi('Ejecutado año $',icFmtM(t.execV),t.pctV+'% · S1 '+icFmtM(t.s1V)+' + S2 '+icFmtM(t.s2V),'#1d4ed8');
     html+=icKpi('Proyección cierre #',icFmt(t.projN),t.pctProj+'% meta · '+d.diasRest+' d rest. S2',t.pctProj>=100?'#16a34a':'#d97706');
@@ -20433,6 +20579,8 @@ function _parseCumpleMMDD(s){
       window._metaAnualSoloHoja=null;
       window._histColoc2026_1=null;
       window._histColoc2026_1_loaded=false;
+      window._histColocS1TotalN=0;
+      window._histColocS1TotalV=0;
       window._icMatriculaUniLista=null;
       _icIntelCache = {key:'', data:null};
       _icMinutosCache = {};
