@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.111   (APP_VERSION = 'pyv-comercial-5.4.111')
+  Versión actual: pyv-comercial-5.4.112   (APP_VERSION = 'pyv-comercial-5.4.112')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.112 (2026-08-01)
+  - Meta Anual: S2 = SIGEC facturadas + GLPI aprobadas; sedes canónicas sin duplicar y con rectoría.
   pyv-comercial-5.4.111 (2026-08-01)
   - Meta Anual: hoja exacta "META TOTAL AÑO " (meta #/$); S1 = " INFORME COLOCACION HISTORICO" (~28.790); S2 = ACUM P Actual.
   pyv-comercial-5.4.110 (2026-08-01)
@@ -433,11 +435,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.111">
-<meta name="build-id" content="pyv-comercial-5.4.111-20260801-1745">
+<meta name="app-version" content="pyv-comercial-5.4.112">
+<meta name="build-id" content="pyv-comercial-5.4.112-20260801-1757">
 <title>SCIC pyv-comercial 5.4.104</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.111';
+window.APP_VERSION='pyv-comercial-5.4.112';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -4151,7 +4153,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.111';
+var APP_VERSION = 'pyv-comercial-5.4.112';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -4341,14 +4343,28 @@ var SEDE_EQUIVALENCIAS_COLOCACION = {
   'POPAYAN':'Popayan centro','UNICOMFACAUCA - POPAYAN':'Unicomfacauca - Popayan',
   'SANTANDER DE QUILICHAO':'Santander de Quilichao',
   'TECMD':'Tec. Minuto de Dios','TECNOLÓGICO COMFENALCO - CARTAGENA':'Tecnológico Comfenalco - Cartagena',
-  'UNIMONSERRATE - BOGOTA':'UniMonserrate - Bogotá'
+  'UNIMONSERRATE - BOGOTA':'UniMonserrate - Bogotá',
+  'SEDE PRINCIPAL BOGOTÁ':'COA Engativa Pres','SEDE PRINCIPAL BOGOTA':'COA Engativa Pres',
+  'PRINCIPAL BOGOTÁ':'COA Engativa Pres','PRINCIPAL BOGOTA':'COA Engativa Pres',
+  'CT CI COPROGRESO':'COA Usaquen','CI COPROGRESO':'COA Usaquen','COPROGRESO':'COA Usaquen',
+  'CO RAFAEL URIBE - SABIDURIA':'COA Santafe','CO RAFAEL URIBE - SABIDURÍA':'COA Santafe',
+  'RAFAEL URIBE - SABIDURIA':'COA Santafe','RAFAEL URIBE':'COA Santafe',
+  'APARTADÓ':'Urabá','APARTADO':'Urabá',
+  'CERES CIUDAD BOLIVAR - COFRATERNIDAD':'COA Ciudad Bolivar - Cofraternidad',
+  'SECCIONAL BELLO':'COA Bello','CR GIRARDOT':'COA Girardot','CR VILLAVICENCIO':'COA Villavicencio',
+  'CERES OROCUE':'COA Orocue','CERES MITU':'COA Mitu','CERES PUERTO CARREÑO':'COA Puerto Carreño',
+  'CERES GARZON':'COA Garzon','CERES CHINCHINA':'COA Chinchina','TEC.MINUTO DE DIOS':'Tec. Minuto de Dios'
 };
 
 // Función crítica: normalizar nombre de sede entre fuentes
 function normalizarSedeColocacion(nombreCrudo) {
   var n = (nombreCrudo || '').toString().trim();
-  return SEDE_EQUIVALENCIAS_COLOCACION[n.toUpperCase()] ||
-         SEDE_EQUIVALENCIAS_COLOCACION[n] || n;
+  if(!n) return '';
+  if(SEDE_EQUIVALENCIAS_COLOCACION[n.toUpperCase()]) return SEDE_EQUIVALENCIAS_COLOCACION[n.toUpperCase()];
+  if(SEDE_EQUIVALENCIAS_COLOCACION[n]) return SEDE_EQUIVALENCIAS_COLOCACION[n];
+  var sin = n.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(SEDE_EQUIVALENCIAS_COLOCACION[sin]) return SEDE_EQUIVALENCIAS_COLOCACION[sin];
+  return n;
 }
 window.normalizarSedeColocacion = normalizarSedeColocacion;
 
@@ -16125,9 +16141,8 @@ function _parseCumpleMMDD(s){
     if(!ss.total) return '';
     return '<tr style="background:#fff7ed"><td style="font-weight:600;color:#c2410c" colspan="'+cols+'">⚠ Sin sede asignada (SIGEC '+icFmt(ss.sig)+' + GLPI '+icFmt(ss.glpi)+' = '+icFmt(ss.total)+')</td></tr>';
   }
-  function icMapaColocadoPorSede(f){
-    var filas=icFilasColoc(f);
-    var sedes=filas.map(function(r){ return r.sede; }).filter(Boolean);
+  function icMapaColocadoPorSedesLista(f, sedes){
+    sedes=(sedes||[]).filter(Boolean);
     var map={}, sinSede={sig:0,glpi:0};
     sedes.forEach(function(s){ map[s]={sig:0,glpi:0}; });
     icFilasSigec(f).forEach(function(r){
@@ -16146,6 +16161,32 @@ function _parseCumpleMMDD(s){
     });
     map._sinSede=sinSede;
     return map;
+  }
+  function icMapaColocadoPorSede(f){
+    var filas=icFilasColoc(f);
+    var sedes=filas.map(function(r){ return r.sede; }).filter(Boolean);
+    return icMapaColocadoPorSedesLista(f, sedes);
+  }
+  function icCanonSedeInforme(raw){
+    if(!raw) return '';
+    var norm=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(raw):icStr(raw);
+    var lista=icListaSedes('');
+    var resolved=icResolverSedeColoc(norm, lista);
+    if(resolved) return resolved;
+    var colocSedes=(window._coloc_data||[]).map(function(r){ return r.sede; }).filter(Boolean);
+    resolved=icResolverSedeColoc(norm, colocSedes);
+    if(resolved) return resolved;
+    return norm||icStr(raw);
+  }
+  function icRectSedeInforme(sede){
+    if(!sede) return '';
+    var map=(typeof PG_SEDE_RECTORIA!=='undefined'&&PG_SEDE_RECTORIA)||window.PG_SEDE_RECTORIA||{};
+    if(map[sede]) return map[sede];
+    var keys=Object.keys(map);
+    var resolved=icResolverSedeColoc(sede, keys);
+    if(resolved&&map[resolved]) return map[resolved];
+    var col=(window._coloc_data||[]).find(function(r){ return icMatchSede(r.sede,sede)||icMatchSedeMatricula(r.sede,sede); });
+    return (col&&col.rectoria)||'';
   }
   function icColocadoSigecGlpi(f){
     var sigF=0, glpA=0;
@@ -16212,7 +16253,8 @@ function _parseCumpleMMDD(s){
         return;
       }
       if(!par.n&&!par.v) return;
-      var sede=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(sedeRaw):sedeRaw;
+      var sede=(typeof icCanonSedeInforme==='function')?icCanonSedeInforme(sedeRaw):((typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(sedeRaw):sedeRaw);
+      if(!sede) return;
       out.push({sede:sede, meta_anual_n:par.n, meta_anual_v:par.v, meta_s2_n:0, meta_s2_v:0});
     });
     window._metaAnualSoloHoja=true;
@@ -16352,8 +16394,9 @@ function _parseCumpleMMDD(s){
       }
       if(!soloS1&&!icMatchPeriodoColocHistorico(periodo)) return;
       if(soloS1&&periodo&&!icMatchPeriodoColocHistorico(periodo)) return;
-      var sede=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(raw):raw;
-      map[sede]={n:n,v:v};
+      var sede=(typeof icCanonSedeInforme==='function')?icCanonSedeInforme(raw):((typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(raw):raw);
+      if(!sede) return;
+      if(!map[sede] || n>=(map[sede].n||0)) map[sede]={n:n,v:v};
       var mn=Math.round(icNum(row['META\n# TOTAL']||row['META # TOTAL']||c[5]));
       var mv=Math.round(icNum(row['META\n$ TOTAL']||row['META $ TOTAL']||c[6]));
       if(mn||mv) metaMap[sede]={meta_n:mn,meta_v:mv};
@@ -16567,33 +16610,43 @@ function _parseCumpleMMDD(s){
     });
   }
   function icFilasMetaAnualEjecucion(f){
-    var coloc=icFilasColoc(f);
-    var bySede={}, i;
-    coloc.forEach(function(r){
-      if(r.sede) bySede[r.sede]=r;
+    var bySede={};
+    function upsert(sedeRaw, patch){
+      patch=patch||{};
+      var sede=icCanonSedeInforme(sedeRaw);
+      if(!sede) return null;
+      if(!bySede[sede]){
+        bySede[sede]={sede:sede, rectoria:icRectSedeInforme(sede), acum_n:0, acum_v:0};
+      }
+      var row=bySede[sede];
+      if(patch.acum_n!=null) row.acum_n=patch.acum_n;
+      if(patch.acum_v!=null) row.acum_v=patch.acum_v;
+      if(patch.rectoria) row.rectoria=patch.rectoria;
+      if(!row.rectoria) row.rectoria=icRectSedeInforme(sede);
+      return row;
+    }
+    icFilasColoc(f).forEach(function(r){
+      if(!r.sede) return;
+      upsert(r.sede, {acum_n:r.acum_n||0, acum_v:r.acum_v||0, rectoria:r.rectoria||''});
     });
     (window._metaAnualData||[]).forEach(function(m){
-      if(!m.sede||bySede[m.sede]) return;
-      bySede[m.sede]={sede:m.sede, rectoria:'', acum_n:0, acum_v:0};
+      if(m.sede) upsert(m.sede, {});
     });
     var hist=window._histColoc2026_1||{};
     Object.keys(hist).forEach(function(k){
       if(k==='_meta') return;
-      if(bySede[k]) return;
-      var rect='';
-      if(typeof PG_SEDE_RECTORIA!=='undefined') rect=PG_SEDE_RECTORIA[k]||'';
-      bySede[k]={sede:k, rectoria:rect, acum_n:0, acum_v:0};
+      upsert(k, {});
     });
     var out=Object.keys(bySede).map(function(k){ return bySede[k]; });
     if(f&&f.sedes&&f.sedes.length){
-      return out.filter(function(r){ return f.sedes.some(function(s){ return icMatchSede(r.sede,s); }); });
+      return out.filter(function(r){ return f.sedes.some(function(s){ return icMatchSede(r.sede,s)||icMatchSedeMatricula(r.sede,s); }); });
     }
     var rect=f&&(f.rectoria||(f.nivel==='rectoria'?f.sel:''));
     if(rect){
       var sedesRect=icListaSedes(rect);
       return out.filter(function(r){
         if(icStr(r.rectoria)===icStr(rect)) return true;
-        return sedesRect.some(function(s){ return icMatchSede(r.sede,s); });
+        return sedesRect.some(function(s){ return icMatchSede(r.sede,s)||icMatchSedeMatricula(r.sede,s); });
       });
     }
     return out;
@@ -16612,10 +16665,14 @@ function _parseCumpleMMDD(s){
     var diasTrans=Math.max(1, Math.floor((finTrans-s2Ini)/diaMs)+1);
     var diasRest=Math.max(0, Math.floor((s2Fin-hoy)/diaMs));
     var rows=[], tot={metaN:0,metaV:0,s1N:0,s1V:0,s2N:0,s2V:0,execN:0,execV:0,projN:0,projV:0};
+    var mapaSG=icMapaColocadoPorSedesLista(f, sedesLista);
+    var combNac=icColocadoSigecGlpi(f);
     filasColoc.forEach(function(r){
       var sede=r.sede||'';
-      // S2 = período actual (INFORME COLOCACION P ACTUAL · ACUM)
-      var s2N=Math.round(r.acum_n||0);
+      var sk=icSedeKeyEnMapa(sede,mapaSG,sedesLista);
+      var sg=mapaSG[sk]||mapaSG[sede]||{sig:0,glpi:0};
+      // S2 = SIGEC facturadas + GLPI aprobadas
+      var s2N=Math.round((sg.sig||0)+(sg.glpi||0));
       var s2V=Math.round(r.acum_v||0);
       var h=icLookupHist2026(sede, hist, sedesLista);
       var meta=icLookupMetaAnual(sede, metaMap, sedesLista);
@@ -16633,9 +16690,10 @@ function _parseCumpleMMDD(s){
       var pctV=metaV>0?Math.round(execV/metaV*100):0;
       var pctProj=metaN>0?Math.round(projN/metaN*100):0;
       var sem=pctProj>=100?'VERDE':pctProj>=85?'AMARILLO':pctProj>=70?'NARANJA':'ROJO';
+      var rectoria=r.rectoria||icRectSedeInforme(sede)||'';
       rows.push({
-        sede:sede, rectoria:r.rectoria||'', metaN:metaN, metaV:metaV,
-        s1N:h.n||0, s1V:h.v||0, s2N:s2N, s2V:s2V, sig:0, glpi:0,
+        sede:sede, rectoria:rectoria, metaN:metaN, metaV:metaV,
+        s1N:h.n||0, s1V:h.v||0, s2N:s2N, s2V:s2V, sig:sg.sig||0, glpi:sg.glpi||0,
         execN:execN, execV:execV, projN:projN, projV:projV,
         pctN:pctN, pctV:pctV, pctProj:pctProj, sem:sem,
         diasRest:diasRest, brechaN:Math.max(0,metaN-projN), brechaV:Math.max(0,metaV-projV)
@@ -16660,6 +16718,10 @@ function _parseCumpleMMDD(s){
           tot.execV=tot.execV+(window._histColocS1TotalV-tot.s1V);
           tot.s1V=window._histColocS1TotalV;
         }
+      }
+      if(combNac.total>0&&tot.s2N<combNac.total*0.98){
+        tot.execN=tot.execN+(combNac.total-tot.s2N);
+        tot.s2N=combNac.total;
       }
     }
     tot.pctN=tot.metaN>0?Math.round(tot.execN/tot.metaN*100):0;
@@ -17925,7 +17987,7 @@ function _parseCumpleMMDD(s){
   var IC_DESCS={
     'estado-sedes-hoy':'Panorama por sede al día de hoy: meta S2, colocado (SIGEC facturadas + GLPI aprobadas), deberíamos según curva, brecha y semáforo. Filtre por rectoría y/o seleccione varias sedes.',
     'informe-colocacion':'Exclusivamente INFORME COLOCACION P ACTUAL (sheet colocación): meta S2, acumulado, valores, año anterior, variación y semáforo. Sin SIGEC ni GLPI.',
-    'ejecucion-meta-anual':'Ejecución 2026 vs meta anual (repositorio metas, hoja META TOTAL AÑO : meta # y $ por sede; total proceso = suma sedes). Ejecutado = S1 INFORME COLOCACION HISTORICO (~28.790) + S2 ACUM INFORME COLOCACION P ACTUAL.',
+    'ejecucion-meta-anual':'Ejecución 2026 vs meta anual (repositorio metas, hoja META TOTAL AÑO : meta # y $ por sede; total = suma sedes). Ejecutado = S1 INFORME COLOCACION HISTORICO (~28.790) + S2 SIGEC facturadas + GLPI aprobadas. Sedes canónicas sin duplicar.',
     'coloc-vs-sigec-glpi':'Reconciliación: acumulado del INFORME COLOCACION P ACTUAL vs colocado SIGEC (facturadas) + GLPI (aprobadas) por sede. Muestra brechas y semáforo de conciliación.',
     'cobertura-uni':'Cobertura = colocado SIGEC+GLPI ÷ Total Real PARA LA UNIVERSIDAD (hoja INFORME DE MATRICULAS). También muestra acum_n del informe P Actual.',
     'cobertura-mat':'Cobertura matrículas = (SIGEC facturadas + GLPI aprobadas) ÷ total matriculados UNIMINUTO.',
@@ -20292,16 +20354,16 @@ function _parseCumpleMMDD(s){
     }
     var t=d.tot;
     var html='<div class="ic-explain">'+IC_DESCS['ejecucion-meta-anual']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
-    html+=icSec('Vista gerencial — cumplimiento meta anual','META TOTAL AÑO · ejecutado = Histórico S1 + ACUM P Actual S2');
+    html+=icSec('Vista gerencial — cumplimiento meta anual','META TOTAL AÑO · ejecutado = Histórico S1 + SIGEC+GLPI S2');
     html+='<div class="ic-kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">';
     html+=icKpi('Meta anual #',icFmt(Math.round(t.metaN)),'Hoja META TOTAL AÑO · meta #'+(window._metaAnualSoloHoja?' · suma sedes':' · ámbito'),'#003D45');
-    html+=icKpi('Ejecutado año #',icFmt(t.execN),t.pctN+'% · S1 '+icFmt(t.s1N)+(window._histColocS1TotalN?' (hist.)':'')+' + S2 '+icFmt(t.s2N)+' (P Actual)','#16a34a');
+    html+=icKpi('Ejecutado año #',icFmt(t.execN),t.pctN+'% · S1 '+icFmt(t.s1N)+(window._histColocS1TotalN?' (hist.)':'')+' + S2 '+icFmt(t.s2N)+' (SIGEC+GLPI)','#16a34a');
     html+=icKpi('Meta anual $',icFmtM(t.metaV),'Valor meta anual','#003D45');
     html+=icKpi('Ejecutado año $',icFmtM(t.execV),t.pctV+'% · S1 '+icFmtM(t.s1V)+' + S2 '+icFmtM(t.s2V),'#1d4ed8');
     html+=icKpi('Proyección cierre #',icFmt(t.projN),t.pctProj+'% meta · '+d.diasRest+' d rest. S2',t.pctProj>=100?'#16a34a':'#d97706');
     html+=icKpi('Proyección cierre $',icFmtM(t.projV),'Run-rate S2 + cerrado S1','#6366f1');
     html+='</div><div style="margin:10px 0 14px;text-align:center">'+icSemHtml(t.sem)+' <span style="font-size:11px;color:#64748b">Semáforo: proyección al cierre vs meta anual</span></div>';
-    html+=icSec('Proyección por sede hacia meta anual','S2 = ACUM P Actual · S1 = INFORME COLOCACION HISTORICO (S1 2026)');
+    html+=icSec('Proyección por sede hacia meta anual','S2 = SIGEC facturadas + GLPI aprobadas · S1 = INFORME COLOCACION HISTORICO (S1 2026)');
     html+='<div style="overflow:auto;max-height:480px"><table class="ic-tbl"><thead><tr>'
       +'<th>Sede</th><th>Rectoría</th><th>Meta año #</th><th>S1 #</th><th>S2 #</th><th>Ejec año #</th><th>% #</th>'
       +'<th>Meta año $</th><th>S1 $</th><th>S2 $</th><th>Ejec año $</th><th>% $</th>'
@@ -20310,7 +20372,7 @@ function _parseCumpleMMDD(s){
       html+='<tr><td style="font-weight:600">'+r.sede+'</td><td style="font-size:9px;color:#64748b">'+r.rectoria+'</td>'
         +'<td style="text-align:right">'+icFmt(Math.round(r.metaN))+'</td>'
         +'<td style="text-align:right;color:#64748b">'+icFmt(r.s1N)+'</td>'
-        +'<td style="text-align:right" title="ACUM P Actual">'+icFmt(r.s2N)+'</td>'
+        +'<td style="text-align:right" title="SIGEC '+r.sig+' + GLPI '+r.glpi+'">'+icFmt(r.s2N)+'</td>'
         +'<td style="text-align:right;font-weight:700;color:#16a34a">'+icFmt(r.execN)+'</td>'
         +'<td style="text-align:right">'+r.pctN+'%</td>'
         +'<td style="text-align:right">'+icFmtM(r.metaV)+'</td>'

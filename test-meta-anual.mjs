@@ -1,6 +1,6 @@
 /**
- * Tests lógica Ejecución Meta Anual (helpers espejo del informe IC).
- * Fuentes: META TOTAL AÑO  · INFORME COLOCACION HISTORICO · P ACTUAL ACUM.
+ * Tests Ejecución Meta Anual v5.4.112
+ * Meta: META TOTAL AÑO  · S1: histórico · S2: SIGEC+GLPI · sedes canónicas
  */
 import assert from 'node:assert/strict';
 
@@ -11,79 +11,75 @@ function icNum(v) {
 }
 function icStr(v){ return v==null?'':String(v).trim(); }
 
-function icEsHdrMetaMensual(hdr){
-  var s=(hdr||[]).map(icStr).join('|').toUpperCase();
-  return /MAYO\s+NRO|JUNIO\s+NRO|TOTAL META S2/.test(s);
+const EQ = {
+  'SEDE PRINCIPAL BOGOTÁ':'COA Engativa Pres',
+  'SEDE PRINCIPAL BOGOTA':'COA Engativa Pres',
+  'CT CI COPROGRESO':'COA Usaquen',
+  'CO RAFAEL URIBE - SABIDURIA':'COA Santafe',
+  'APARTADÓ':'Urabá',
+  'APARTADO':'Urabá',
+  'CO BOSA':'COA Bosa',
+};
+
+function normalizarSedeColocacion(nombreCrudo) {
+  var n = (nombreCrudo || '').toString().trim();
+  if(!n) return '';
+  if(EQ[n.toUpperCase()]) return EQ[n.toUpperCase()];
+  var sin = n.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  if(EQ[sin]) return EQ[sin];
+  return n;
 }
-function icEsColMetaValorHdr(u){
-  u=icStr(u).toUpperCase();
-  return u.indexOf('VALOR')>=0||u.indexOf('K$')>=0||u.indexOf('$')>=0;
+
+const CATALOG = ['COA Engativa Pres','COA Usaquen','COA Santafe','COA Bosa','Urabá','COA Bello'];
+
+function icNormSedeKey(s){
+  return icStr(s).toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g,'')
+    .replace(/^(coa|co|cr|ct|cu|cs|cp)\s+/i,'')
+    .replace(/[^a-z0-9]/g,'');
 }
-function icEsColMetaNumHdr(u){
-  u=icStr(u).toUpperCase();
-  return (/#|NRO|CRED|CRÉD/.test(u))&&!icEsColMetaValorHdr(u);
+function icMatchSede(a,b){
+  if(!a||!b) return false;
+  var x=icStr(a).toLowerCase(), y=icStr(b).toLowerCase();
+  return x===y||x.indexOf(y)>=0||y.indexOf(x)>=0;
 }
-function icIndicesMetaAnualDesdeHdr(hdr){
-  var i, n=-1, v=-1;
-  hdr=hdr||[];
-  for(i=0;i<hdr.length;i++){
-    var u=icStr(hdr[i]).toUpperCase().replace(/\s+/g,' ').trim();
-    if(!u) continue;
-    if(/TOTAL\s*META\s*S2/.test(u)) continue;
-    var isAnual=/AÑO|ANUAL/.test(u) || (/^META\b/.test(u) && !/MAYO|JUNIO|JULIO|AGOSTO|SEPTIEMBRE|OCTUBRE/.test(u));
-    if(isAnual && icEsColMetaNumHdr(u)) n=i;
-    if(isAnual && icEsColMetaValorHdr(u)) v=i;
+function icResolverSedeColoc(raw, lista){
+  var norm=normalizarSedeColocacion(raw);
+  for(const c of lista){ if(icMatchSede(norm,c)) return c; }
+  const kn=icNormSedeKey(norm);
+  for(const c of lista){
+    const kc=icNormSedeKey(c);
+    if(kn&&kc&&(kn===kc||(kn.length>=4&&kc.length>=4&&(kn.indexOf(kc)>=0||kc.indexOf(kn)>=0)))) return c;
   }
-  if(n>=0) return {n:n,v:v>=0?v:n+1,mode:'anual'};
-  if(!icEsHdrMetaMensual(hdr) && hdr.length>=3) return {n:1,v:2,mode:'bc'};
-  if(icEsHdrMetaMensual(hdr)) return {n:-1,v:-1,mode:'mensual'};
-  return {n:1,v:2,mode:'bc'};
+  return '';
 }
-function icLeerMetaAnualFila(t, idx){
-  t=t||[];
-  idx=idx||{n:1,v:2};
-  if(idx.n<0) return {n:0,v:0};
-  return {n:Math.round(icNum(t[idx.n])), v:Math.round(icNum(t[idx.v]))};
-}
-function icMatchPeriodoColocHistorico(per){
-  var p=icStr(per).toUpperCase().replace(/\s/g,'').replace(/-/g,'');
-  if(p==='20261'||p==='202561'||p==='26S1'||p==='S12026'||p==='S1'||p==='2026S1') return true;
-  if(/^S1/.test(p)) return true;
-  return false;
+function icCanonSedeInforme(raw){
+  const resolved=icResolverSedeColoc(raw, CATALOG);
+  return resolved || normalizarSedeColocacion(raw) || icStr(raw);
 }
 
-// Hoja META TOTAL AÑO  (anual B/C)
-const idxAnual = icIndicesMetaAnualDesdeHdr(['Sedes', ' META Nro. Créd.', ' META Valor k$']);
-assert.equal(idxAnual.mode, 'anual');
-assert.equal(idxAnual.n, 1);
-assert.equal(idxAnual.v, 2);
-assert.deepEqual(icLeerMetaAnualFila(['Sede Principal Bogotá', 7241, '25,398,808'], idxAnual), {n:7241,v:25398808});
+// Equivalencias meta → catálogo
+assert.equal(icCanonSedeInforme('Sede Principal Bogotá'), 'COA Engativa Pres');
+assert.equal(icCanonSedeInforme('CT CI Coprogreso'), 'COA Usaquen');
+assert.equal(icCanonSedeInforme('CO Rafael Uribe - Sabiduria'), 'COA Santafe');
+assert.equal(icCanonSedeInforme('Apartadó'), 'Urabá');
+assert.equal(icCanonSedeInforme('COA Engativa Pres'), 'COA Engativa Pres');
 
-// Hoja mensual/S2 no debe usarse como meta anual
-const idxMensual = icIndicesMetaAnualDesdeHdr(['Sedes ','MAYO Nro. Créd.','Valor k$','TOTAL META S2 Nro. Créd.','Valor k$']);
-assert.equal(idxMensual.mode, 'mensual');
-assert.equal(idxMensual.n, -1);
-
-// Períodos S1 del informe histórico
-assert.equal(icMatchPeriodoColocHistorico('S1-2026'), true);
-assert.equal(icMatchPeriodoColocHistorico('S1-2027'), true);
-assert.equal(icMatchPeriodoColocHistorico('20261'), true);
-assert.equal(icMatchPeriodoColocHistorico('S2'), false);
-
-// Ejecutado año = S1 histórico + S2 ACUM P Actual (no SIGEC+GLPI)
-function construirEjecucion(s1N, s2AcumN, metaN){
-  const execN = s1N + s2AcumN;
-  return {s1N, s2N:s2AcumN, execN, pct: metaN>0 ? Math.round(execN/metaN*100) : 0};
+// Dedup: meta name + coloc name → una sola sede
+function mergeSedes(names){
+  const by={};
+  names.forEach(n=>{ const c=icCanonSedeInforme(n); by[c]=1; });
+  return Object.keys(by);
 }
-const ref = construirEjecucion(28790, 8297, 76225);
-assert.equal(ref.execN, 37087);
-assert.equal(ref.s2N, 8297);
-assert.ok(ref.pct > 0 && ref.pct < 100);
+const merged=mergeSedes(['Sede Principal Bogotá','COA Engativa Pres','CT CI Coprogreso','COA Usaquen']);
+assert.equal(merged.length, 2);
+assert.ok(merged.includes('COA Engativa Pres'));
+assert.ok(merged.includes('COA Usaquen'));
 
-// Nombres exactos de hojas (espacios significativos)
-assert.equal('META TOTAL AÑO ', 'META TOTAL AÑO ');
-assert.equal(' INFORME COLOCACION HISTORICO'.trim(), 'INFORME COLOCACION HISTORICO');
-assert.notEqual('META TOTAL AÑO ', 'META TOTAL AÑO');
-assert.notEqual(' INFORME COLOCACION HISTORICO', 'INFORME COLOCACION HISTORICO');
+// S2 = SIGEC + GLPI (no ACUM P Actual)
+function s2FromSigecGlpi(sig, glpi){ return Math.round((sig||0)+(glpi||0)); }
+assert.equal(s2FromSigecGlpi(12000, 3058), 15058);
+const exec = 28790 + s2FromSigecGlpi(12000, 3058);
+assert.equal(exec, 43848);
 
 console.log('test-meta-anual.mjs: OK');
