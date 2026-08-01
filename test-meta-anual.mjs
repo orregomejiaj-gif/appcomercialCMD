@@ -9,6 +9,20 @@ function icNum(v) {
   return parseFloat(String(v).replace('%', '').replace(/,/g, '').replace('+', '')) || 0;
 }
 
+function icLeerMetaAnualFila(t) {
+  t = t || [];
+  let n = Math.round(icNum(t[1]));
+  let v = Math.round(icNum(t[2]));
+  const nFg = Math.round(icNum(t[5]));
+  const vFg = Math.round(icNum(t[6]));
+  if (nFg || vFg) return { n: nFg, v: vFg };
+  if (n || v) return { n, v };
+  return { n: 0, v: 0 };
+}
+
+assert.deepEqual(icLeerMetaAnualFila([null, 10, 100, 99, 99, 500, 6000]), { n: 500, v: 6000 });
+assert.deepEqual(icLeerMetaAnualFila([null, 78789, 1e6]), { n: 78789, v: 1e6 });
+
 function icMatchPeriodoColocHistorico(per) {
   const p = String(per || '').toUpperCase().replace(/\s/g, '');
   return p === '20261' || p === '202561' || p === '26S1' || p === 'S1-2026';

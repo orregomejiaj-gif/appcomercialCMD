@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.105   (APP_VERSION = 'pyv-comercial-5.4.105')
+  Versión actual: pyv-comercial-5.4.106   (APP_VERSION = 'pyv-comercial-5.4.106')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.106 (2026-08-01)
+  - Meta Anual: hoja META TOTAL AÑO solo meta anual (F–G / B–C); total nacional = suma hoja; sin TOTAL META S2 ni mezcla histórico.
   pyv-comercial-5.4.105 (2026-08-01)
   - Fix informe Meta Anual: hoja META TOTAL AÑO, histórico 20261 desde INFORME COLOCACION HISTORICO, cobertura UNI.
   pyv-comercial-5.4.104 (2026-07-28)
@@ -421,11 +423,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.105">
-<meta name="build-id" content="pyv-comercial-5.4.105-20260801-1600">
+<meta name="app-version" content="pyv-comercial-5.4.106">
+<meta name="build-id" content="pyv-comercial-5.4.106-20260801-1640">
 <title>SCIC pyv-comercial 5.4.104</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.105';
+window.APP_VERSION='pyv-comercial-5.4.106';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -4139,7 +4141,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.105';
+var APP_VERSION = 'pyv-comercial-5.4.106';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -16141,6 +16143,19 @@ function _parseCumpleMMDD(s){
     icFilasGlpi(f).forEach(function(r){ if(icGlpiAprobada(r)) glpA++; });
     return {sigec:sigF, glpi:glpA, total:sigF+glpA};
   }
+  function icLeerMetaAnualFila(t){
+    t=t||[];
+    var n=Math.round(icNum(t[1]));
+    var v=Math.round(icNum(t[2]));
+    var nFg=Math.round(icNum(t[5]));
+    var vFg=Math.round(icNum(t[6]));
+    var nPq=Math.round(icNum(t[15]));
+    var vPq=Math.round(icNum(t[16]));
+    if(nFg||vFg) return {n:nFg,v:vFg};
+    if(n||v) return {n:n,v:v};
+    if(nPq||vPq) return {n:nPq,v:vPq};
+    return {n:0,v:0};
+  }
   function icParseMetaAnualSheet(rows){
     var out=[];
     (rows||[]).forEach(function(e){
@@ -16148,27 +16163,30 @@ function _parseCumpleMMDD(s){
       var sedeRaw=icStr(e['Sedes ']||e['Sedes']||e['SEDES']||e['Sede']||t[0]);
       if(!sedeRaw||sedeRaw.length<2) return;
       var su=sedeRaw.toUpperCase();
-      if(su==='SEDES'||/^TOTAL/.test(su)||/PRINCIPAL BOGOT/i.test(su)) return;
+      if(su==='SEDES'||su.indexOf('NRO')>=0||/^TOTAL/.test(su)||/PRINCIPAL BOGOT/i.test(su)) return;
       var sede=(typeof normalizarSedeColocacion==='function')?normalizarSedeColocacion(sedeRaw):sedeRaw;
-      var metaS2N=Math.round(icNum(t[13]));
-      var metaS2V=Math.round(icNum(t[14]));
-      var metaAnN=Math.round(icNum(t[15]));
-      var metaAnV=Math.round(icNum(t[16]));
-      var soloS2=false;
-      if(!metaAnN&&!metaAnV){
-        if(!metaS2N&&!metaS2V){
-          metaAnN=Math.round(icNum(t[5]));
-          metaAnV=Math.round(icNum(t[6]));
-        }
-      }
-      if(!metaAnN&&!metaAnV){
-        metaAnN=metaS2N;
-        metaAnV=metaS2V;
-        soloS2=true;
-      }
-      out.push({sede:sede, meta_anual_n:metaAnN, meta_anual_v:metaAnV, meta_s2_n:metaS2N, meta_s2_v:metaS2V, meta_solo_s2:soloS2});
+      var par=icLeerMetaAnualFila(t);
+      if(!par.n&&!par.v) return;
+      out.push({sede:sede, meta_anual_n:par.n, meta_anual_v:par.v, meta_s2_n:0, meta_s2_v:0});
     });
+    window._metaAnualSoloHoja=true;
     return out;
+  }
+  function icSumMetaAnualDesdeHoja(){
+    var n=0,v=0;
+    (window._metaAnualData||[]).forEach(function(m){
+      n+=m.meta_anual_n||0;
+      v+=m.meta_anual_v||0;
+    });
+    return {n:n,v:v};
+  }
+  function icEsFiltroMetaNacional(f){
+    f=f||{};
+    if(f.sedes&&f.sedes.length) return false;
+    if(f.rectoria) return false;
+    if(f.nivel==='rectoria'&&f.sel) return false;
+    if(f.nivel==='sede'&&f.sel) return false;
+    return true;
   }
   function icMatchPeriodoColocHistorico(per){
     var p=icStr(per).toUpperCase().replace(/\s/g,'');
@@ -16245,34 +16263,27 @@ function _parseCumpleMMDD(s){
   }
   function icMetaAnualMapa(){
     var map={};
-    var histMeta=(window._histColoc2026_1&&window._histColoc2026_1._meta)||{};
     (window._metaAnualData||[]).forEach(function(m){
       if(!m.sede) return;
       if(!map[m.sede]) map[m.sede]={meta_anual_n:0,meta_anual_v:0};
-      var anN=m.meta_anual_n||0, anV=m.meta_anual_v||0;
-      if(m.meta_solo_s2){
-        var hm=histMeta[m.sede];
-        if(!hm){
-          var keys=Object.keys(histMeta);
-          var resolved=icResolverSedeColoc(m.sede, keys);
-          if(resolved) hm=histMeta[resolved];
-        }
-        if(hm){
-          anN=(hm.meta_n||0)+(m.meta_s2_n||0);
-          anV=(hm.meta_v||0)+(m.meta_s2_v||0);
-        }
-      }
-      map[m.sede].meta_anual_n+=anN;
-      map[m.sede].meta_anual_v+=anV;
+      map[m.sede].meta_anual_n+=m.meta_anual_n||0;
+      map[m.sede].meta_anual_v+=m.meta_anual_v||0;
     });
     return map;
   }
   function icCargarMetaAnual(forzar){
     if(!forzar&&window._metaAnualData&&window._metaAnualData.length) return Promise.resolve();
     if(typeof _leerHoja!=='function'||typeof SHEETS_HOJAS==='undefined'||!SHEETS_HOJAS.metaAnual) return Promise.resolve();
-    return _leerHoja(SHEETS_HOJAS.metaAnual,2).then(function(rows){
+    return _leerHoja(SHEETS_HOJAS.metaAnual,1).then(function(rows){
       window._metaAnualData=icParseMetaAnualSheet(rows);
-      console.log('[IC] META TOTAL AÑO: '+window._metaAnualData.length+' sedes');
+      if(!window._metaAnualData.length){
+        return _leerHoja(SHEETS_HOJAS.metaAnual,2).then(function(rows2){
+          window._metaAnualData=icParseMetaAnualSheet(rows2);
+        });
+      }
+    }).then(function(){
+      var tot=icSumMetaAnualDesdeHoja();
+      console.log('[IC] META TOTAL AÑO: '+(window._metaAnualData||[]).length+' sedes · meta nacional # '+tot.n+(window._metaAnualSoloHoja?' (solo anual B/C)':''));
     }).catch(function(e){
       console.warn('[IC] META ANUAL:',e&&e.message);
       window._metaAnualData=window._metaAnualData||[];
@@ -16343,6 +16354,13 @@ function _parseCumpleMMDD(s){
       tot.projN+=projN; tot.projV+=projV;
     });
     rows.sort(function(a,b){ return (b.pctProj||0)-(a.pctProj||0); });
+    if(icEsFiltroMetaNacional(f)){
+      var sheetMeta=icSumMetaAnualDesdeHoja();
+      if(sheetMeta.n>0){
+        tot.metaN=sheetMeta.n;
+        tot.metaV=sheetMeta.v;
+      }
+    }
     tot.pctN=tot.metaN>0?Math.round(tot.execN/tot.metaN*100):0;
     tot.pctV=tot.metaV>0?Math.round(tot.execV/tot.metaV*100):0;
     tot.pctProj=tot.metaN>0?Math.round(tot.projN/tot.metaN*100):0;
@@ -17606,7 +17624,7 @@ function _parseCumpleMMDD(s){
   var IC_DESCS={
     'estado-sedes-hoy':'Panorama por sede al día de hoy: meta S2, colocado (SIGEC facturadas + GLPI aprobadas), deberíamos según curva, brecha y semáforo. Filtre por rectoría y/o seleccione varias sedes.',
     'informe-colocacion':'Exclusivamente INFORME COLOCACION P ACTUAL (sheet colocación): meta S2, acumulado, valores, año anterior, variación y semáforo. Sin SIGEC ni GLPI.',
-    'ejecucion-meta-anual':'Ejecución vs meta anual (hoja META TOTAL AÑO: TOTAL META AÑO cols F–G o P–Q; S2 en N–O): colocado año = INFORME COLOCACION HISTORICO período 20261/202561 (S1) + S2 actual SIGEC facturadas + GLPI aprobadas (#); valor S1 histórico + acum_v P ACTUAL (S2). Proyección al cierre S2.',
+    'ejecucion-meta-anual':'Ejecución vs meta anual: hoja META TOTAL AÑO (solo meta anual: Nro. créd. y Valor k$ en columnas B–C o F–G). Colocado año = histórico 20261 + S2 SIGEC+GLPI (#) y acum_v P ACTUAL ($). Total meta nacional = suma de toda la hoja.',
     'coloc-vs-sigec-glpi':'Reconciliación: acumulado del INFORME COLOCACION P ACTUAL vs colocado SIGEC (facturadas) + GLPI (aprobadas) por sede. Muestra brechas y semáforo de conciliación.',
     'cobertura-uni':'Cobertura = colocado SIGEC+GLPI ÷ Total Real PARA LA UNIVERSIDAD (hoja INFORME DE MATRICULAS). También muestra acum_n del informe P Actual.',
     'cobertura-mat':'Cobertura matrículas = (SIGEC facturadas + GLPI aprobadas) ÷ total matriculados UNIMINUTO.',
@@ -19975,7 +19993,7 @@ function _parseCumpleMMDD(s){
     var html='<div class="ic-explain">'+IC_DESCS['ejecucion-meta-anual']+' · Ámbito: <b>'+icFiltroResumen(f)+'</b></div>';
     html+=icSec('Vista gerencial — cumplimiento meta anual','Nacional · META ANUAL · HISTORICO 2026-1 · SIGEC+GLPI (#) · P Actual ($ S2)');
     html+='<div class="ic-kpi-grid" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr))">';
-    html+=icKpi('Meta anual #',icFmt(Math.round(t.metaN)),'Hoja META ANUAL','#003D45');
+    html+=icKpi('Meta anual #',icFmt(Math.round(t.metaN)),'Hoja META TOTAL AÑO'+(window._metaAnualSoloHoja?' · total sedes':' · ámbito'),'#003D45');
     html+=icKpi('Ejecutado año #',icFmt(t.execN),t.pctN+'% · S1 '+icFmt(t.s1N)+' + S2 '+icFmt(t.s2N),'#16a34a');
     html+=icKpi('Meta anual $',icFmtM(t.metaV),'Valor meta anual','#003D45');
     html+=icKpi('Ejecutado año $',icFmtM(t.execV),t.pctV+'% · S1 '+icFmtM(t.s1V)+' + S2 '+icFmtM(t.s2V),'#1d4ed8');
@@ -20403,6 +20421,7 @@ function _parseCumpleMMDD(s){
       window._icCongMapCache=null;
       window._embudoLeadsRows=null;
       window._metaAnualData=null;
+      window._metaAnualSoloHoja=null;
       window._histColoc2026_1=null;
       window._histColoc2026_1_loaded=false;
       window._icMatriculaUniLista=null;
