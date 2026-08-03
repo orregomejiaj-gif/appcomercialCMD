@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.114   (APP_VERSION = 'pyv-comercial-5.4.114')
+  Versión actual: pyv-comercial-5.4.115   (APP_VERSION = 'pyv-comercial-5.4.115')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.115 (2026-08-03)
+  - Meta Anual detalle por sede: contraste de encabezados tintados (texto oscuro, no blanco sobre pastel) y datos legibles.
   pyv-comercial-5.4.114 (2026-08-03)
   - Meta Anual: deuda S1 (meta−ejecutado, mín. 0) y columna Deuda S1 + Meta S2 (P Actual).
   pyv-comercial-5.4.113 (2026-08-03)
@@ -439,11 +441,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.114">
-<meta name="build-id" content="pyv-comercial-5.4.114-20260803-1925">
+<meta name="app-version" content="pyv-comercial-5.4.115">
+<meta name="build-id" content="pyv-comercial-5.4.115-20260803-1945">
 <title>SCIC pyv-comercial 5.4.104</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.114';
+window.APP_VERSION='pyv-comercial-5.4.115';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -2012,9 +2014,17 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 .ic-sec-sub{font-size:9px;color:#64748b;font-weight:600;margin-top:3px}
 .ic-explain{background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:10px 12px;font-size:10px;color:#334155;line-height:1.55;margin-bottom:14px}
 .ic-tbl{width:100%;border-collapse:collapse;font-size:10px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e2e8f0}
-.ic-tbl th{background:#003D45;color:#fff;padding:7px 8px;text-align:left;font-weight:700;position:sticky;top:0}
-.ic-tbl td{padding:6px 8px;border-bottom:1px solid #f1f5f9}
+.ic-tbl th{background:#003D45;color:#fff;padding:7px 8px;text-align:left;font-weight:700;position:sticky;top:0;z-index:2}
+.ic-tbl td{padding:6px 8px;border-bottom:1px solid #f1f5f9;color:#0f172a}
 .ic-tbl tr:nth-child(even) td{background:#fafbfc}
+/* Encabezados/celdas tintados: texto oscuro obligatorio (nunca blanco sobre pastel) */
+.ic-tbl th.ic-th-s1{background:#bbf7d0!important;color:#14532d!important}
+.ic-tbl th.ic-th-deu{background:#fecaca!important;color:#7f1d1d!important}
+.ic-tbl th.ic-th-reto{background:#fdba74!important;color:#7c2d12!important}
+.ic-tbl td.ic-td-s1{background:#ecfdf5!important;color:#14532d}
+.ic-tbl td.ic-td-deu{background:#fef2f2!important}
+.ic-tbl td.ic-td-reto{background:#fff7ed!important}
+.ic-tbl tfoot tr td{color:#0f172a}
 .ic-sem{display:inline-block;padding:2px 8px;border-radius:6px;font-size:9px;font-weight:800}
 .ic-sem-v{background:#dcfce7;color:#166534}.ic-sem-a{background:#fef9c3;color:#a16207}.ic-sem-r{background:#fee2e2;color:#b91c1c}
 .menu-sidebar{width:min(420px,38vw);flex-shrink:0;background:var(--white);border-left:1px solid var(--border);padding:20px 18px 28px;overflow-y:auto;max-height:calc(100vh - 180px);position:sticky;top:0;align-self:flex-start}
@@ -4157,7 +4167,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.114';
+var APP_VERSION = 'pyv-comercial-5.4.115';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -17075,7 +17085,8 @@ function _parseCumpleMMDD(s){
     return d;
   }
   function icKpi(lbl,val,sub,col){
-    return '<div class="ic-kpi" style="border-top-color:'+(col||'#003D45')+'"><div class="ic-kpi-lbl">'+lbl+'</div><div class="ic-kpi-val">'+val+'</div>'+(sub?'<div class="ic-kpi-sub">'+sub+'</div>':'')+'</div>';
+    var c=col||'#003D45';
+    return '<div class="ic-kpi" style="border-top-color:'+c+'"><div class="ic-kpi-lbl">'+lbl+'</div><div class="ic-kpi-val" style="color:'+c+'">'+val+'</div>'+(sub?'<div class="ic-kpi-sub">'+sub+'</div>':'')+'</div>';
   }
   function icSec(t,sub){ return '<div class="ic-sec">'+t+(sub?'<div class="ic-sec-sub">'+sub+'</div>':'')+'</div>'; }
   function icSigGlpiListo(){
@@ -20465,54 +20476,54 @@ function _parseCumpleMMDD(s){
     html+=icSec('Detalle por sede — deuda S1 y reto S2','Deuda S1 = Meta S1 − Ejec. S1 (mín. 0) · Reto = Deuda S1 + Meta S2 (P Actual)');
     html+='<div style="overflow:auto;max-height:480px"><table class="ic-tbl"><thead><tr>'
       +'<th>Sede</th><th>Rectoría</th>'
-      +'<th style="background:#ecfdf5">Meta S1 #</th><th style="background:#ecfdf5">Ejec. S1 #</th><th style="background:#ecfdf5">% S1</th>'
-      +'<th style="background:#fef2f2">Deuda S1 #</th><th style="background:#fff7ed">Meta S2 #</th><th style="background:#fff7ed">Deuda+Meta S2 #</th>'
-      +'<th style="background:#ecfdf5">Sem S1</th>'
+      +'<th class="ic-th-s1">Meta S1 #</th><th class="ic-th-s1">Ejec. S1 #</th><th class="ic-th-s1">% S1</th>'
+      +'<th class="ic-th-deu">Deuda S1 #</th><th class="ic-th-reto">Meta S2 #</th><th class="ic-th-reto">Deuda+Meta S2 #</th>'
+      +'<th class="ic-th-s1">Sem S1</th>'
       +'<th>Meta año #</th><th>S2 ejec. #</th><th>Ejec año #</th><th>% año</th>'
       +'<th>Meta año $</th><th>Deuda S1 $</th><th>Ejec año $</th><th>% $</th>'
       +'<th>Proy. #</th><th>% proy.</th><th>Sem</th></tr></thead><tbody>';
     d.rows.forEach(function(r){
-      var cS1=r.pctS1N>=100?'#16a34a':r.pctS1N>=85?'#ca8a04':r.pctS1N>=70?'#ea580c':'#dc2626';
-      var cDeu=(r.deudaS1N||0)>0?'#dc2626':'#16a34a';
-      html+='<tr><td style="font-weight:600">'+r.sede+'</td><td style="font-size:9px;color:#64748b">'+r.rectoria+'</td>'
-        +'<td style="text-align:right;background:#f0fdf4;font-weight:700;color:#065f46">'+icFmt(Math.round(r.s1MetaN||0))+'</td>'
-        +'<td style="text-align:right;background:#f0fdf4;font-weight:700;color:#047857">'+icFmt(r.s1N)+'</td>'
-        +'<td style="text-align:right;background:#f0fdf4;font-weight:800;color:'+cS1+'">'+(r.pctS1N||0)+'%</td>'
-        +'<td style="text-align:right;background:#fef2f2;font-weight:800;color:'+cDeu+'" title="Meta S1 − Ejec. S1">'+icFmt(r.deudaS1N||0)+'</td>'
-        +'<td style="text-align:right;background:#fff7ed;font-weight:700;color:#9a3412" title="Meta P Actual">'+icFmt(Math.round(r.metaS2N||0))+'</td>'
-        +'<td style="text-align:right;background:#fff7ed;font-weight:800;color:#b45309" title="Deuda S1 + Meta S2">'+icFmt(r.retoS2N||0)+'</td>'
-        +'<td style="background:#f0fdf4;text-align:center">'+icSemHtml(r.semS1||'ROJO')+'</td>'
-        +'<td style="text-align:right">'+icFmt(Math.round(r.metaN))+'</td>'
-        +'<td style="text-align:right" title="SIGEC '+r.sig+' + GLPI '+r.glpi+'">'+icFmt(r.s2N)+'</td>'
-        +'<td style="text-align:right;font-weight:700;color:#16a34a">'+icFmt(r.execN)+'</td>'
-        +'<td style="text-align:right">'+r.pctN+'%</td>'
-        +'<td style="text-align:right">'+icFmtM(r.metaV)+'</td>'
-        +'<td style="text-align:right;color:'+((r.deudaS1V||0)>0?'#dc2626':'#16a34a')+'">'+icFmtM(r.deudaS1V||0)+'</td>'
-        +'<td style="text-align:right;font-weight:700;color:#1d4ed8">'+icFmtM(r.execV)+'</td>'
-        +'<td style="text-align:right">'+r.pctV+'%</td>'
-        +'<td style="text-align:right">'+icFmt(r.projN)+'</td>'
-        +'<td style="text-align:right;font-weight:700">'+r.pctProj+'%</td>'
+      var cS1=r.pctS1N>=100?'#166534':r.pctS1N>=85?'#854d0e':r.pctS1N>=70?'#9a3412':'#991b1b';
+      var cDeu=(r.deudaS1N||0)>0?'#991b1b':'#166534';
+      html+='<tr><td style="font-weight:600;color:#0f172a">'+r.sede+'</td><td style="font-size:9px;color:#475569">'+r.rectoria+'</td>'
+        +'<td class="ic-td-s1" style="text-align:right;font-weight:700;color:#14532d">'+icFmt(Math.round(r.s1MetaN||0))+'</td>'
+        +'<td class="ic-td-s1" style="text-align:right;font-weight:700;color:#14532d">'+icFmt(r.s1N)+'</td>'
+        +'<td class="ic-td-s1" style="text-align:right;font-weight:800;color:'+cS1+'">'+(r.pctS1N||0)+'%</td>'
+        +'<td class="ic-td-deu" style="text-align:right;font-weight:800;color:'+cDeu+'" title="Meta S1 − Ejec. S1">'+icFmt(r.deudaS1N||0)+'</td>'
+        +'<td class="ic-td-reto" style="text-align:right;font-weight:700;color:#7c2d12" title="Meta P Actual">'+icFmt(Math.round(r.metaS2N||0))+'</td>'
+        +'<td class="ic-td-reto" style="text-align:right;font-weight:800;color:#9a3412" title="Deuda S1 + Meta S2">'+icFmt(r.retoS2N||0)+'</td>'
+        +'<td class="ic-td-s1" style="text-align:center">'+icSemHtml(r.semS1||'ROJO')+'</td>'
+        +'<td style="text-align:right;color:#0f172a">'+icFmt(Math.round(r.metaN))+'</td>'
+        +'<td style="text-align:right;color:#0f172a" title="SIGEC '+r.sig+' + GLPI '+r.glpi+'">'+icFmt(r.s2N)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:#166534">'+icFmt(r.execN)+'</td>'
+        +'<td style="text-align:right;color:#0f172a">'+r.pctN+'%</td>'
+        +'<td style="text-align:right;color:#0f172a">'+icFmtM(r.metaV)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:'+((r.deudaS1V||0)>0?'#991b1b':'#166534')+'">'+icFmtM(r.deudaS1V||0)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:#1e40af">'+icFmtM(r.execV)+'</td>'
+        +'<td style="text-align:right;color:#0f172a">'+r.pctV+'%</td>'
+        +'<td style="text-align:right;color:#0f172a">'+icFmt(r.projN)+'</td>'
+        +'<td style="text-align:right;font-weight:700;color:#0f172a">'+r.pctProj+'%</td>'
         +'<td>'+icSemHtml(r.sem)+'</td></tr>';
     });
-    html+='</tbody><tfoot><tr style="font-weight:700;background:#f8fafc;">'
-      +'<td>TOTAL</td><td></td>'
-      +'<td style="text-align:right;color:#065f46">'+icFmt(Math.round(t.s1MetaN||0))+'</td>'
-      +'<td style="text-align:right;color:#047857">'+icFmt(t.s1N)+'</td>'
-      +'<td style="text-align:right;color:'+barCol+'">'+(t.pctS1N||0)+'%</td>'
-      +'<td style="text-align:right;color:'+((t.deudaS1N||0)>0?'#dc2626':'#16a34a')+'">'+icFmt(t.deudaS1N||0)+'</td>'
-      +'<td style="text-align:right;color:#9a3412">'+icFmt(Math.round(t.metaS2N||0))+'</td>'
-      +'<td style="text-align:right;color:#b45309">'+icFmt(t.retoS2N||0)+'</td>'
-      +'<td style="text-align:center">'+icSemHtml(t.semS1||'ROJO')+'</td>'
-      +'<td style="text-align:right">'+icFmt(Math.round(t.metaN))+'</td>'
-      +'<td style="text-align:right">'+icFmt(t.s2N)+'</td>'
-      +'<td style="text-align:right;color:#16a34a">'+icFmt(t.execN)+'</td>'
-      +'<td style="text-align:right">'+t.pctN+'%</td>'
-      +'<td style="text-align:right">'+icFmtM(t.metaV)+'</td>'
-      +'<td style="text-align:right">'+icFmtM(t.deudaS1V||0)+'</td>'
-      +'<td style="text-align:right;color:#1d4ed8">'+icFmtM(t.execV)+'</td>'
-      +'<td style="text-align:right">'+t.pctV+'%</td>'
-      +'<td style="text-align:right">'+icFmt(t.projN)+'</td>'
-      +'<td style="text-align:right">'+t.pctProj+'%</td>'
+    html+='</tbody><tfoot><tr style="font-weight:700;background:#e2e8f0">'
+      +'<td style="color:#0f172a">TOTAL</td><td></td>'
+      +'<td class="ic-td-s1" style="text-align:right;color:#14532d">'+icFmt(Math.round(t.s1MetaN||0))+'</td>'
+      +'<td class="ic-td-s1" style="text-align:right;color:#14532d">'+icFmt(t.s1N)+'</td>'
+      +'<td class="ic-td-s1" style="text-align:right;color:'+(t.pctS1N>=100?'#166534':t.pctS1N>=85?'#854d0e':t.pctS1N>=70?'#9a3412':'#991b1b')+'">'+(t.pctS1N||0)+'%</td>'
+      +'<td class="ic-td-deu" style="text-align:right;color:'+((t.deudaS1N||0)>0?'#991b1b':'#166534')+'">'+icFmt(t.deudaS1N||0)+'</td>'
+      +'<td class="ic-td-reto" style="text-align:right;color:#7c2d12">'+icFmt(Math.round(t.metaS2N||0))+'</td>'
+      +'<td class="ic-td-reto" style="text-align:right;color:#9a3412">'+icFmt(t.retoS2N||0)+'</td>'
+      +'<td class="ic-td-s1" style="text-align:center">'+icSemHtml(t.semS1||'ROJO')+'</td>'
+      +'<td style="text-align:right;color:#0f172a">'+icFmt(Math.round(t.metaN))+'</td>'
+      +'<td style="text-align:right;color:#0f172a">'+icFmt(t.s2N)+'</td>'
+      +'<td style="text-align:right;color:#166534">'+icFmt(t.execN)+'</td>'
+      +'<td style="text-align:right;color:#0f172a">'+t.pctN+'%</td>'
+      +'<td style="text-align:right;color:#0f172a">'+icFmtM(t.metaV)+'</td>'
+      +'<td style="text-align:right;color:'+((t.deudaS1V||0)>0?'#991b1b':'#166534')+'">'+icFmtM(t.deudaS1V||0)+'</td>'
+      +'<td style="text-align:right;color:#1e40af">'+icFmtM(t.execV)+'</td>'
+      +'<td style="text-align:right;color:#0f172a">'+t.pctV+'%</td>'
+      +'<td style="text-align:right;color:#0f172a">'+icFmt(t.projN)+'</td>'
+      +'<td style="text-align:right;color:#0f172a">'+t.pctProj+'%</td>'
       +'<td>'+icSemHtml(t.sem)+'</td></tr></tfoot></table></div>';
     return html;
   }
