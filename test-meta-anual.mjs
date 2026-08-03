@@ -1,19 +1,18 @@
 /**
- * Tests Ejecución Meta Anual v5.4.113 — meta S1 + % cumplimiento
+ * Tests Ejecución Meta Anual v5.4.114 — deuda S1 + Deuda+Meta S2
  */
 import assert from 'node:assert/strict';
 
-function pctS1(ejec, meta){
-  return meta>0 ? Math.round(ejec/meta*100) : 0;
+function deudaS1(meta, ejec) {
+  return Math.max(0, Math.round(meta - ejec));
 }
-assert.equal(pctS1(28790, 43911), 66);
-assert.equal(pctS1(3860, 3860), 100);
-assert.equal(pctS1(0, 100), 0);
+function retoS2(deuda, metaS2) {
+  return deuda + metaS2;
+}
 
-function semS1(pct){
-  return pct>=100?'VERDE':pct>=85?'AMARILLO':pct>=70?'NARANJA':'ROJO';
-}
-assert.equal(semS1(66), 'ROJO');
-assert.equal(semS1(100), 'VERDE');
+assert.equal(deudaS1(43911, 28790), 15121);
+assert.equal(deudaS1(100, 120), 0); // sobrante → deuda 0
+assert.equal(retoS2(30, 80), 110);
+assert.equal(retoS2(0, 80), 80);
 
 console.log('test-meta-anual.mjs: OK');

@@ -1,6 +1,6 @@
 <!-- 
   App Seguimiento Comercial CMD (SCIC) - Cooperativa Minuto de Dios
-  Versión actual: pyv-comercial-5.4.113   (APP_VERSION = 'pyv-comercial-5.4.113')
+  Versión actual: pyv-comercial-5.4.114   (APP_VERSION = 'pyv-comercial-5.4.114')
 
   ── CONTROL DE VERSIONES ──────────────────────────────────────────────
   Formato: {proceso}-{semver}  →  ej. pyv-comercial-5.0.0
@@ -10,6 +10,8 @@
   La etiqueta visible (#app-version-badge) se genera desde APP_VERSION.
 
   CHANGELOG
+  pyv-comercial-5.4.114 (2026-08-03)
+  - Meta Anual: deuda S1 (meta−ejecutado, mín. 0) y columna Deuda S1 + Meta S2 (P Actual).
   pyv-comercial-5.4.113 (2026-08-03)
   - Meta Anual: KPIs y columnas visibles de meta S1 2026 y % cumplimiento S1 (histórico).
   pyv-comercial-5.4.112 (2026-08-01)
@@ -437,11 +439,11 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
-<meta name="app-version" content="pyv-comercial-5.4.113">
-<meta name="build-id" content="pyv-comercial-5.4.113-20260803-1905">
+<meta name="app-version" content="pyv-comercial-5.4.114">
+<meta name="build-id" content="pyv-comercial-5.4.114-20260803-1925">
 <title>SCIC pyv-comercial 5.4.104</title>
 <script>
-window.APP_VERSION='pyv-comercial-5.4.113';
+window.APP_VERSION='pyv-comercial-5.4.114';
 function _cmdVersionLabel(){
   var s=window.APP_VERSION||'';
   var m=s.match(/^([a-z0-9][a-z0-9-]*)-(\d+\.\d+(?:\.\d+)?)$/i);
@@ -4155,7 +4157,7 @@ if(typeof RECTORIAS !== 'undefined') window.RECTORIAS = RECTORIAS;
 
 // Versión — formato {proceso}-{semver}; cada actualización incrementa el número
 var APP_PROCESS = 'pyv-comercial';
-var APP_VERSION = 'pyv-comercial-5.4.113';
+var APP_VERSION = 'pyv-comercial-5.4.114';
 
 // ════════════════════════════════════════════════════════════
 // SCIC v4.6 — DATOS MAESTROS HARDCODEADOS
@@ -16657,18 +16659,20 @@ function _parseCumpleMMDD(s){
       var sede=icCanonSedeInforme(sedeRaw);
       if(!sede) return null;
       if(!bySede[sede]){
-        bySede[sede]={sede:sede, rectoria:icRectSedeInforme(sede), acum_n:0, acum_v:0};
+        bySede[sede]={sede:sede, rectoria:icRectSedeInforme(sede), acum_n:0, acum_v:0, meta_n:0, meta_v:0};
       }
       var row=bySede[sede];
       if(patch.acum_n!=null) row.acum_n=patch.acum_n;
       if(patch.acum_v!=null) row.acum_v=patch.acum_v;
+      if(patch.meta_n!=null) row.meta_n=patch.meta_n;
+      if(patch.meta_v!=null) row.meta_v=patch.meta_v;
       if(patch.rectoria) row.rectoria=patch.rectoria;
       if(!row.rectoria) row.rectoria=icRectSedeInforme(sede);
       return row;
     }
     icFilasColoc(f).forEach(function(r){
       if(!r.sede) return;
-      upsert(r.sede, {acum_n:r.acum_n||0, acum_v:r.acum_v||0, rectoria:r.rectoria||''});
+      upsert(r.sede, {acum_n:r.acum_n||0, acum_v:r.acum_v||0, meta_n:r.meta_n||0, meta_v:r.meta_v||0, rectoria:r.rectoria||''});
     });
     (window._metaAnualData||[]).forEach(function(m){
       if(m.sede) upsert(m.sede, {});
@@ -16705,7 +16709,7 @@ function _parseCumpleMMDD(s){
     var finTrans=hoy>s2Fin?s2Fin:hoy;
     var diasTrans=Math.max(1, Math.floor((finTrans-s2Ini)/diaMs)+1);
     var diasRest=Math.max(0, Math.floor((s2Fin-hoy)/diaMs));
-    var rows=[], tot={metaN:0,metaV:0,s1N:0,s1V:0,s1MetaN:0,s1MetaV:0,s2N:0,s2V:0,execN:0,execV:0,projN:0,projV:0};
+    var rows=[], tot={metaN:0,metaV:0,s1N:0,s1V:0,s1MetaN:0,s1MetaV:0,deudaS1N:0,deudaS1V:0,metaS2N:0,metaS2V:0,retoS2N:0,retoS2V:0,s2N:0,s2V:0,execN:0,execV:0,projN:0,projV:0};
     var mapaSG=icMapaColocadoPorSedesLista(f, sedesLista);
     var combNac=icColocadoSigecGlpi(f);
     filasColoc.forEach(function(r){
@@ -16725,6 +16729,14 @@ function _parseCumpleMMDD(s){
       var pctS1N=s1MetaN>0?Math.round((h.n||0)/s1MetaN*100):0;
       var pctS1V=s1MetaV>0?Math.round((h.v||0)/s1MetaV*100):0;
       var semS1=pctS1N>=100?'VERDE':pctS1N>=85?'AMARILLO':pctS1N>=70?'NARANJA':'ROJO';
+      // Deuda S1 = brecha pendiente (meta − ejecutado), mínimo 0
+      var deudaS1N=Math.max(0, Math.round(s1MetaN-(h.n||0)));
+      var deudaS1V=Math.max(0, Math.round(s1MetaV-(h.v||0)));
+      // Meta periodo actual (S2) desde INFORME COLOCACION P ACTUAL
+      var metaS2N=Math.round(r.meta_n||0);
+      var metaS2V=Math.round(r.meta_v||0);
+      var retoS2N=deudaS1N+metaS2N;
+      var retoS2V=deudaS1V+metaS2V;
       var execN=(h.n||0)+s2N;
       var execV=(h.v||0)+s2V;
       var rateN=diasTrans>0?s2N/diasTrans:0;
@@ -16741,6 +16753,7 @@ function _parseCumpleMMDD(s){
       rows.push({
         sede:sede, rectoria:rectoria, metaN:metaN, metaV:metaV,
         s1MetaN:s1MetaN, s1MetaV:s1MetaV, pctS1N:pctS1N, pctS1V:pctS1V, semS1:semS1,
+        deudaS1N:deudaS1N, deudaS1V:deudaS1V, metaS2N:metaS2N, metaS2V:metaS2V, retoS2N:retoS2N, retoS2V:retoS2V,
         s1N:h.n||0, s1V:h.v||0, s2N:s2N, s2V:s2V, sig:sg.sig||0, glpi:sg.glpi||0,
         execN:execN, execV:execV, projN:projN, projV:projV,
         pctN:pctN, pctV:pctV, pctProj:pctProj, sem:sem,
@@ -16748,6 +16761,9 @@ function _parseCumpleMMDD(s){
       });
       tot.metaN+=metaN; tot.metaV+=metaV;
       tot.s1MetaN+=s1MetaN; tot.s1MetaV+=s1MetaV;
+      tot.deudaS1N+=deudaS1N; tot.deudaS1V+=deudaS1V;
+      tot.metaS2N+=metaS2N; tot.metaS2V+=metaS2V;
+      tot.retoS2N+=retoS2N; tot.retoS2V+=retoS2V;
       tot.s1N+=h.n||0; tot.s1V+=h.v||0;
       tot.s2N+=s2N; tot.s2V+=s2V;
       tot.execN+=execN; tot.execV+=execV;
@@ -16777,6 +16793,11 @@ function _parseCumpleMMDD(s){
         tot.execN=tot.execN+(combNac.total-tot.s2N);
         tot.s2N=combNac.total;
       }
+      // Recalcular deuda S1 nacional tras ajustes de totales
+      tot.deudaS1N=Math.max(0, Math.round((tot.s1MetaN||0)-(tot.s1N||0)));
+      tot.deudaS1V=Math.max(0, Math.round((tot.s1MetaV||0)-(tot.s1V||0)));
+      tot.retoS2N=(tot.deudaS1N||0)+(tot.metaS2N||0);
+      tot.retoS2V=(tot.deudaS1V||0)+(tot.metaS2V||0);
     }
     tot.pctN=tot.metaN>0?Math.round(tot.execN/tot.metaN*100):0;
     tot.pctV=tot.metaV>0?Math.round(tot.execV/tot.metaV*100):0;
@@ -18044,7 +18065,7 @@ function _parseCumpleMMDD(s){
   var IC_DESCS={
     'estado-sedes-hoy':'Panorama por sede al día de hoy: meta S2, colocado (SIGEC facturadas + GLPI aprobadas), deberíamos según curva, brecha y semáforo. Filtre por rectoría y/o seleccione varias sedes.',
     'informe-colocacion':'Exclusivamente INFORME COLOCACION P ACTUAL (sheet colocación): meta S2, acumulado, valores, año anterior, variación y semáforo. Sin SIGEC ni GLPI.',
-    'ejecucion-meta-anual':'Ejecución 2026 vs meta anual (META TOTAL AÑO ). Destaca meta S1 2026 y % cumplimiento del histórico; ejecutado año = S1 histórico + S2 SIGEC+GLPI.',
+    'ejecucion-meta-anual':'Ejecución 2026 vs meta anual. Incluye meta/ejecutado/% S1, deuda S1 (meta−ejecutado ≥0) y columna Deuda S1 + Meta S2 (P Actual). Ejecutado año = S1 histórico + S2 SIGEC+GLPI.',
     'coloc-vs-sigec-glpi':'Reconciliación: acumulado del INFORME COLOCACION P ACTUAL vs colocado SIGEC (facturadas) + GLPI (aprobadas) por sede. Muestra brechas y semáforo de conciliación.',
     'cobertura-uni':'Cobertura = colocado SIGEC+GLPI ÷ Total Real PARA LA UNIVERSIDAD (hoja INFORME DE MATRICULAS). También muestra acum_n del informe P Actual.',
     'cobertura-mat':'Cobertura matrículas = (SIGEC facturadas + GLPI aprobadas) ÷ total matriculados UNIMINUTO.',
@@ -19881,17 +19902,15 @@ function _parseCumpleMMDD(s){
       return [{name:'Meta',aoa:icSheetMetaExport('informe-colocacion',f)},
         {name:'Colocación P Actual', aoa:[['Sede','Rectoría','Meta #','Acum #','% Meta','Meta $','Acum $','Año ant.','VAR #','VAR %','Sem']].concat(rows)}];
     },
-        'ejecucion-meta-anual':function(f){
+    'ejecucion-meta-anual':function(f){
       var d=icConstruirEjecucionMetaAnual(f), rows=[];
       d.rows.forEach(function(r){
-        rows.push([r.sede,r.rectoria,r.s1MetaN,r.s1N,r.pctS1N,r.semS1,r.metaN,r.s2N,r.execN,r.pctN,r.metaV,r.s1V,r.s2V,r.execV,r.pctV,r.projN,r.pctProj,r.sem]);
+        rows.push([r.sede,r.rectoria,r.s1MetaN,r.s1N,r.pctS1N,r.deudaS1N,r.metaS2N,r.retoS2N,r.semS1,r.metaN,r.s2N,r.execN,r.pctN,r.metaV,r.deudaS1V,r.execV,r.pctV,r.projN,r.pctProj,r.sem]);
       });
       var t=d.tot;
-      rows.push(['TOTAL','',t.s1MetaN,t.s1N,t.pctS1N,t.semS1,t.metaN,t.s2N,t.execN,t.pctN,t.metaV,t.s1V,t.s2V,t.execV,t.pctV,t.projN,t.pctProj,t.sem]);
+      rows.push(['TOTAL','',t.s1MetaN,t.s1N,t.pctS1N,t.deudaS1N,t.metaS2N,t.retoS2N,t.semS1,t.metaN,t.s2N,t.execN,t.pctN,t.metaV,t.deudaS1V,t.execV,t.pctV,t.projN,t.pctProj,t.sem]);
       return [{name:'Meta',aoa:icSheetMetaExport('ejecucion-meta-anual',f)},
-        {name:'Ejecución Meta Anual', aoa:[['Sede','Rectoría','Meta S1 #','Ejec S1 #','% S1','Sem S1','Meta año #','S2 #','Ejec #','% año','Meta $','S1 $','S2 $','Ejec $','% $','Proy #','% proy','Sem']].concat(rows)}];
-    },
-        {name:'Ejecución Meta Anual', aoa:[['Sede','Rectoría','Meta año #','S1 #','S2 #','Ejec #','% #','Meta $','S1 $','S2 $','Ejec $','% $','Proy #','Proy $','% proy','Sem']].concat(rows)}];
+        {name:'Ejecución Meta Anual', aoa:[['Sede','Rectoría','Meta S1 #','Ejec S1 #','% S1','Deuda S1 #','Meta S2 #','Deuda+Meta S2 #','Sem S1','Meta año #','S2 ejec #','Ejec #','% año','Meta $','Deuda S1 $','Ejec $','% $','Proy #','% proy','Sem']].concat(rows)}];
     },
     'coloc-vs-sigec-glpi':function(f){
       var d=icConstruirColocVsSigecGlpi(f), rows=[];
@@ -20421,8 +20440,12 @@ function _parseCumpleMMDD(s){
     html+=icKpi('Meta S1 2026 #',icFmt(Math.round(t.s1MetaN||0)),'META # TOTAL del histórico S1','#065f46');
     html+=icKpi('Ejecutado S1 #',icFmt(t.s1N||0),'ACUM CRED # · período S1 2026','#047857');
     html+=icKpi('% Cumpl. S1',(t.pctS1N||0)+'%','Ejecutado S1 ÷ Meta S1',barCol);
+    html+=icKpi('Deuda S1 #',icFmt(t.deudaS1N||0),'Meta S1 − Ejecutado S1 (mín. 0)',(t.deudaS1N||0)>0?'#dc2626':'#16a34a');
+    html+=icKpi('Meta S2 #',icFmt(Math.round(t.metaS2N||0)),'P Actual · meta periodo actual','#003D45');
+    html+=icKpi('Deuda+Meta S2 #',icFmt(t.retoS2N||0),'Deuda S1 + Meta S2 (reto período)',(t.deudaS1N||0)>0?'#b45309':'#0f766e');
     html+=icKpi('Meta S1 $',icFmtM(t.s1MetaV||0),'META $ TOTAL histórico S1','#0f766e');
     html+=icKpi('Ejecutado S1 $',icFmtM(t.s1V||0),'ACUM VALOR $ S1','#0e7490');
+    html+=icKpi('Deuda S1 $',icFmtM(t.deudaS1V||0),'Brecha valor S1 pendiente',(t.deudaS1V||0)>0?'#dc2626':'#16a34a');
     html+='</div>';
     html+='<div style="margin-top:12px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
       +'<span style="font-size:12px;font-weight:700;color:#065f46">Cumplimiento meta S1 2026</span>'
@@ -20439,27 +20462,32 @@ function _parseCumpleMMDD(s){
     html+=icKpi('Proyección cierre #',icFmt(t.projN),t.pctProj+'% meta · '+d.diasRest+' d rest. S2',t.pctProj>=100?'#16a34a':'#d97706');
     html+=icKpi('Proyección cierre $',icFmtM(t.projV),'Run-rate S2 + cerrado S1','#6366f1');
     html+='</div><div style="margin:10px 0 14px;text-align:center">'+icSemHtml(t.sem)+' <span style="font-size:11px;color:#64748b">Semáforo: proyección al cierre vs meta anual</span></div>';
-    html+=icSec('Detalle por sede — meta S1 y proyección anual','S1 histórico (meta + ejecutado + %) · S2 = SIGEC+GLPI');
+    html+=icSec('Detalle por sede — deuda S1 y reto S2','Deuda S1 = Meta S1 − Ejec. S1 (mín. 0) · Reto = Deuda S1 + Meta S2 (P Actual)');
     html+='<div style="overflow:auto;max-height:480px"><table class="ic-tbl"><thead><tr>'
       +'<th>Sede</th><th>Rectoría</th>'
-      +'<th style="background:#ecfdf5">Meta S1 #</th><th style="background:#ecfdf5">Ejec. S1 #</th><th style="background:#ecfdf5">% S1</th><th style="background:#ecfdf5">Sem S1</th>'
-      +'<th>Meta año #</th><th>S2 #</th><th>Ejec año #</th><th>% año</th>'
-      +'<th>Meta año $</th><th>S1 $</th><th>S2 $</th><th>Ejec año $</th><th>% $</th>'
+      +'<th style="background:#ecfdf5">Meta S1 #</th><th style="background:#ecfdf5">Ejec. S1 #</th><th style="background:#ecfdf5">% S1</th>'
+      +'<th style="background:#fef2f2">Deuda S1 #</th><th style="background:#fff7ed">Meta S2 #</th><th style="background:#fff7ed">Deuda+Meta S2 #</th>'
+      +'<th style="background:#ecfdf5">Sem S1</th>'
+      +'<th>Meta año #</th><th>S2 ejec. #</th><th>Ejec año #</th><th>% año</th>'
+      +'<th>Meta año $</th><th>Deuda S1 $</th><th>Ejec año $</th><th>% $</th>'
       +'<th>Proy. #</th><th>% proy.</th><th>Sem</th></tr></thead><tbody>';
     d.rows.forEach(function(r){
       var cS1=r.pctS1N>=100?'#16a34a':r.pctS1N>=85?'#ca8a04':r.pctS1N>=70?'#ea580c':'#dc2626';
+      var cDeu=(r.deudaS1N||0)>0?'#dc2626':'#16a34a';
       html+='<tr><td style="font-weight:600">'+r.sede+'</td><td style="font-size:9px;color:#64748b">'+r.rectoria+'</td>'
         +'<td style="text-align:right;background:#f0fdf4;font-weight:700;color:#065f46">'+icFmt(Math.round(r.s1MetaN||0))+'</td>'
         +'<td style="text-align:right;background:#f0fdf4;font-weight:700;color:#047857">'+icFmt(r.s1N)+'</td>'
         +'<td style="text-align:right;background:#f0fdf4;font-weight:800;color:'+cS1+'">'+(r.pctS1N||0)+'%</td>'
+        +'<td style="text-align:right;background:#fef2f2;font-weight:800;color:'+cDeu+'" title="Meta S1 − Ejec. S1">'+icFmt(r.deudaS1N||0)+'</td>'
+        +'<td style="text-align:right;background:#fff7ed;font-weight:700;color:#9a3412" title="Meta P Actual">'+icFmt(Math.round(r.metaS2N||0))+'</td>'
+        +'<td style="text-align:right;background:#fff7ed;font-weight:800;color:#b45309" title="Deuda S1 + Meta S2">'+icFmt(r.retoS2N||0)+'</td>'
         +'<td style="background:#f0fdf4;text-align:center">'+icSemHtml(r.semS1||'ROJO')+'</td>'
         +'<td style="text-align:right">'+icFmt(Math.round(r.metaN))+'</td>'
         +'<td style="text-align:right" title="SIGEC '+r.sig+' + GLPI '+r.glpi+'">'+icFmt(r.s2N)+'</td>'
         +'<td style="text-align:right;font-weight:700;color:#16a34a">'+icFmt(r.execN)+'</td>'
         +'<td style="text-align:right">'+r.pctN+'%</td>'
         +'<td style="text-align:right">'+icFmtM(r.metaV)+'</td>'
-        +'<td style="text-align:right;color:#64748b">'+icFmtM(r.s1V)+'</td>'
-        +'<td style="text-align:right">'+icFmtM(r.s2V)+'</td>'
+        +'<td style="text-align:right;color:'+((r.deudaS1V||0)>0?'#dc2626':'#16a34a')+'">'+icFmtM(r.deudaS1V||0)+'</td>'
         +'<td style="text-align:right;font-weight:700;color:#1d4ed8">'+icFmtM(r.execV)+'</td>'
         +'<td style="text-align:right">'+r.pctV+'%</td>'
         +'<td style="text-align:right">'+icFmt(r.projN)+'</td>'
@@ -20471,14 +20499,16 @@ function _parseCumpleMMDD(s){
       +'<td style="text-align:right;color:#065f46">'+icFmt(Math.round(t.s1MetaN||0))+'</td>'
       +'<td style="text-align:right;color:#047857">'+icFmt(t.s1N)+'</td>'
       +'<td style="text-align:right;color:'+barCol+'">'+(t.pctS1N||0)+'%</td>'
+      +'<td style="text-align:right;color:'+((t.deudaS1N||0)>0?'#dc2626':'#16a34a')+'">'+icFmt(t.deudaS1N||0)+'</td>'
+      +'<td style="text-align:right;color:#9a3412">'+icFmt(Math.round(t.metaS2N||0))+'</td>'
+      +'<td style="text-align:right;color:#b45309">'+icFmt(t.retoS2N||0)+'</td>'
       +'<td style="text-align:center">'+icSemHtml(t.semS1||'ROJO')+'</td>'
       +'<td style="text-align:right">'+icFmt(Math.round(t.metaN))+'</td>'
       +'<td style="text-align:right">'+icFmt(t.s2N)+'</td>'
       +'<td style="text-align:right;color:#16a34a">'+icFmt(t.execN)+'</td>'
       +'<td style="text-align:right">'+t.pctN+'%</td>'
       +'<td style="text-align:right">'+icFmtM(t.metaV)+'</td>'
-      +'<td style="text-align:right">'+icFmtM(t.s1V)+'</td>'
-      +'<td style="text-align:right">'+icFmtM(t.s2V)+'</td>'
+      +'<td style="text-align:right">'+icFmtM(t.deudaS1V||0)+'</td>'
       +'<td style="text-align:right;color:#1d4ed8">'+icFmtM(t.execV)+'</td>'
       +'<td style="text-align:right">'+t.pctV+'%</td>'
       +'<td style="text-align:right">'+icFmt(t.projN)+'</td>'
